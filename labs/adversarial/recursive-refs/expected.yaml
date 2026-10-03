@@ -1,0 +1,9 @@
+# §100: recursive $refs — parsed without crashing; the cycle is
+# *recorded* and reported as OAS019 (HIGH, "circular reference depth
+# risk"). OAS010/OAS020 are honest candidates for a doc with no
+# security requirement or tags.
+expected_findings:
+  - OAS019
+  - OAS010
+  - OAS020
+forbidden_findings: []

@@ -1,0 +1,8 @@
+# §100: malformed spec — the `openapi` marker carries it past the
+# detector, the parser records MALFORMED, and OAS001 fires (correct:
+# a spec-carrying document that cannot load is a HIGH-confidence
+# finding, not a false positive).
+expected_findings:
+  - OAS001
+expected_issues:
+  - MALFORMED

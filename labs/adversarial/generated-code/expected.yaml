@@ -1,0 +1,7 @@
+# §100: generated code — the call site is real evidence (a literal
+# request), so it may appear; what matters is no *invented* entities
+# or findings beyond it.
+expected_findings: []
+forbidden_findings: []
+expected_clients:
+  - client_gen

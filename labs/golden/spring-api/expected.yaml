@@ -1,0 +1,11 @@
+# §99 golden: Spring service — contract-only; no Spring adapter exists,
+# so implementation entities must NOT appear (honest absence).
+run: [openapi]
+expected_entities:
+  - getUser
+forbidden_entities:
+  - endpoint:   # no framework routes without an adapter
+  - operation:spring
+expected_findings: []
+forbidden_findings:
+  - OAS*

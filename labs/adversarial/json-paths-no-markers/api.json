@@ -1,0 +1,7 @@
+{
+  "paths": {
+    "/users": {"handler": "UsersController.list"},
+    "/orders": {"handler": "OrdersController.list"}
+  },
+  "deployment": {"region": "us-east-1"}
+}

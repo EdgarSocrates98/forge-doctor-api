@@ -1,0 +1,14 @@
+# §227 second demo target: GET /checkout p95 regression attributed to
+# the payments downstream call — candidate language only, no causality.
+run: [runtime]
+expected_findings:
+  - APIPERF001   # p95 regression on /checkout
+  - APIPERF003   # downstream payments latency regression
+  - OBSAPI001    # no correlation-id evidence in the fixture (candidate)
+expected_description_contains:
+  - payments
+forbidden_description_contains:
+  - caused by
+  - root cause is
+expected_runtime_signals:
+  - tracing

@@ -1,0 +1,4 @@
+# §99 golden: gRPC service — declared proto only, no service config.
+run: [grpc]
+expected_findings: []
+forbidden_findings: []

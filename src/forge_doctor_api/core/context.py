@@ -9,11 +9,16 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath
 from typing import BinaryIO
 
 Clock = Callable[[], datetime]
+
+
+def system_clock() -> Clock:
+    """The one wall-clock source — injected at process boundaries only."""
+    return lambda: datetime.now(UTC)
 
 
 class ContextError(ValueError):

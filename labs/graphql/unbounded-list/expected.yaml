@@ -1,0 +1,6 @@
+# §98 graphql domain: `users` list has no pagination arguments ->
+# GQL007 unbounded-list candidate.
+run: [graphql]
+expected_findings:
+  - GQL007
+forbidden_findings: []

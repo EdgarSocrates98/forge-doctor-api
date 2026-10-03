@@ -1,0 +1,5 @@
+# §98 asyncapi domain: channel carrying no message schema.
+run: [asyncapi]
+expected_findings:
+  - ASYNC001
+forbidden_findings: []

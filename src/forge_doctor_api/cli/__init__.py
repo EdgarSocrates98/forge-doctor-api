@@ -176,6 +176,65 @@ def inventory(
             )
 
 
+@app.command()
+def lab(
+    target: Annotated[str, typer.Argument(help="Labs corpus directory.")] = "labs",
+    json_out: Annotated[bool, typer.Option("--json", help="JSON output.")] = False,
+    no_record: Annotated[
+        bool, typer.Option("--no-record", help="Skip factory/runs record.")
+    ] = False,
+) -> None:
+    """§199-§201 Forge Lab: run every scenario + report per-family precision."""
+    from forge_doctor_api.core.context import system_clock
+    from forge_doctor_api.lab import run_labs, write_run_record
+
+    root = Path(target).resolve()
+    if not root.is_dir():
+        _stderr.print(f"lab: not a directory: {target}")
+        raise typer.Exit(code=2)
+    ctx = ProjectContext.from_root(root, clock=system_clock())
+    report = run_labs(ctx)
+    if not no_record:
+        stamp = ctx.now().strftime("%Y%m%dT%H%M%SZ")
+        record = write_run_record(report, root.parent / "factory" / "runs", stamp)
+        _stderr.print(f"lab: run record -> {record}")
+    if json_out:
+        typer.echo(json.dumps(report.to_dict(), indent=2, sort_keys=True))
+        raise typer.Exit(code=0 if report.failed == 0 else 1)
+
+    _console.print(f"Forge Lab: {report.passed} passed, {report.failed} failed")
+    for r in report.results:
+        mark = "[green]PASS[/green]" if r.passed else "[red]FAIL[/red]"
+        _console.print(f"  {mark} {r.domain}/{r.name}")
+        if not r.passed:
+            for label, values in (
+                ("missing findings", r.missing_findings),
+                ("unexpected findings", r.unexpected_findings),
+                ("forbidden hits", r.forbidden_hits),
+                ("missing entities", r.missing_entities),
+                ("forbidden entities", r.forbidden_entity_hits),
+                ("missing clients", r.missing_clients),
+                ("missing breaking", r.missing_breaking),
+                ("missing signals", r.missing_runtime_signals),
+                ("missing issues", r.missing_issues),
+                ("wording", r.wording_violations),
+            ):
+                for v in values:
+                    _console.print(f"      {label}: {v}")
+    if report.families:
+        _console.print("[bold]Per-family precision/recall[/bold]")
+        table = Table("family", "expected", "hits", "misses", "fp", "precision", "recall")
+        for f in report.families:
+            table.add_row(
+                f.family, str(f.expected), str(f.hits), str(f.misses),
+                str(f.false_positives),
+                "-" if f.precision is None else f"{f.precision:.2f}",
+                "-" if f.recall is None else f"{f.recall:.2f}",
+            )
+        _console.print(table)
+    raise typer.Exit(code=0 if report.failed == 0 else 1)
+
+
 @contract_app.command("inspect")
 def contract_inspect() -> None:
     """Inspect an API contract."""

@@ -1,0 +1,48 @@
+openapi: "3.0.3"
+info:
+  title: Users API
+  version: "1.0"
+  x-owner: users-team
+paths:
+  /users/{id}:
+    get:
+      operationId: getUser
+      summary: fetch a user
+      tags: [users]
+      security:
+        - apiKey: []
+      x-ownership-check: true
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: {type: string}
+      responses:
+        '200':
+          description: the user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: not found
+  /users:
+    post:
+      operationId: createUser
+      summary: create a user
+      tags: [users]
+      security:
+        - apiKey: []
+      responses:
+        '201':
+          description: created
+components:
+  securitySchemes:
+    apiKey: {type: apiKey, in: header, name: X-Key}
+  schemas:
+    User:
+      type: object
+      description: a platform user
+      properties:
+        id: {type: string}
+        email: {type: string}

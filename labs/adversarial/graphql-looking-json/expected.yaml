@@ -1,0 +1,5 @@
+# §100: a GraphQL *query payload* is not a schema — detection requires
+# .graphql/.gql SDL or `__schema` introspection shape.
+expected_findings: []
+forbidden_findings:
+  - GQL*

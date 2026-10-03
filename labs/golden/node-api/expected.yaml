@@ -1,0 +1,10 @@
+# §99 golden: Node/express service — contract-only (no adapter).
+run: [openapi]
+expected_entities:
+  - getItem
+forbidden_entities:
+  - endpoint:
+  - operation:express
+expected_findings: []
+forbidden_findings:
+  - OAS*
