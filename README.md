@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/logo.png" alt="Forge Doctor API" width="440">
+</p>
+
 # Forge Doctor API
 
 Deterministic, offline-first, evidence-first engine for API architecture intelligence.
