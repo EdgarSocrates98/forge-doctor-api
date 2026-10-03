@@ -26,6 +26,21 @@ class ResponseSchemaSource(StrEnum):
 
 
 @dataclass(frozen=True, kw_only=True)
+class RouteParam(Model):
+    """One handler parameter as static evidence.
+
+    `location_in` mirrors the OpenAPI vocabulary (`path`, `query`, `header`,
+    `cookie`, `body`) plus `dependency` for `Depends`/`Security` params.
+    `required` is True only when the parameter has no default.
+    """
+
+    name: str
+    location_in: str
+    required: bool = False
+    annotation: str | None = None
+
+
+@dataclass(frozen=True, kw_only=True)
 class RouteModel(Model):
     """One implemented route.
 
@@ -51,6 +66,7 @@ class RouteModel(Model):
     handler: str
     auth: tuple[str, ...] = ()
     middleware: tuple[str, ...] = ()
+    parameters: tuple[RouteParam, ...] = ()
     request_schema: str | None = None
     response_schema: str | None = None
     response_schema_source: ResponseSchemaSource | None = None

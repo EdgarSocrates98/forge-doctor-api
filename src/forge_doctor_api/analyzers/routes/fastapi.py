@@ -15,6 +15,7 @@ is recorded in `RouteScan.unknowns`, never guessed (§101).
 from __future__ import annotations
 
 import ast
+import re
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, field
 
@@ -26,6 +27,7 @@ from forge_doctor_api.analyzers.routes.model import (
     Attribution,
     ResponseSchemaSource,
     RouteModel,
+    RouteParam,
     RouteScan,
 )
 from forge_doctor_api.core.context import ProjectContext
@@ -39,8 +41,20 @@ from forge_doctor_api.core.models import (
 HTTP_METHODS = frozenset(
     {"get", "put", "post", "delete", "options", "head", "patch", "trace"}
 )
+_PATH_VARS = re.compile(r"\{([^{}/]+)\}")
 _DYNAMIC_ROUTERS = ("add_route", "mount", "add_websocket_route")
 _SCHEMA_WRAPPERS = ("Security", "Depends")
+# Framework-injected handler params — never API contract parameters.
+_FRAMEWORK_TYPES = frozenset(
+    {
+        "Request",
+        "Response",
+        "BackgroundTasks",
+        "WebSocket",
+        "WebSocketDisconnect",
+        "HTTPConnection",
+    }
+)
 
 
 def _ev(path: str, node: ast.AST, summary: str) -> Evidence:
@@ -107,6 +121,7 @@ class _RawRoute:
     handler: str  # qualified handler name within the module
     auth: tuple[str, ...]
     middleware: tuple[str, ...]
+    params: tuple[RouteParam, ...]
     body_params: tuple[str, ...]  # annotated param names; model check is pass 2
     response_schema: str | None
     response_source: ResponseSchemaSource | None
@@ -288,6 +303,7 @@ class _FileScan(ast.NodeVisitor):
                     handler=handler,
                     auth=(),
                     middleware=(),
+                    params=(),
                     body_params=(),
                     response_schema=None,
                     response_source=None,
@@ -361,7 +377,7 @@ class _FileScan(ast.NodeVisitor):
                 (f"dynamic route path on {qual}", _loc(self.facts.path, decorator))
             )
         dec_auth, dec_deps = self._decorator_deps(decorator)
-        param_auth, param_deps, body_params = self._params(node)
+        param_auth, param_deps, params = self._params(node, path)
         auth = tuple(sorted({*dec_auth, *param_auth}))
         deps = tuple(sorted({*dec_deps, *param_deps}))
         response_schema: str | None = None
@@ -390,7 +406,8 @@ class _FileScan(ast.NodeVisitor):
             handler=qual,
             auth=auth,
             middleware=deps,
-            body_params=body_params,
+            params=params,
+            body_params=tuple(p.annotation for p in params if p.annotation),
             response_schema=response_schema,
             response_source=source,
             status_codes=status_codes,
@@ -416,11 +433,19 @@ class _FileScan(ast.NodeVisitor):
         return auth, deps
 
     def _params(
-        self, node: ast.FunctionDef | ast.AsyncFunctionDef
-    ) -> tuple[list[str], list[str], tuple[str, ...]]:
+        self, node: ast.FunctionDef | ast.AsyncFunctionDef, path: str | None
+    ) -> tuple[list[str], list[str], tuple[RouteParam, ...]]:
+        """Parameter evidence: auth/dependency names plus a `RouteParam` per arg.
+
+        `location_in` comes from wrapper calls (`Path`, `Query`, `Header`,
+        `Cookie`, `Body`, `Form`, `File`, `Depends`, `Security`); otherwise the
+        path template marks `path` params, and the rest stay `param` until the
+        model check in pass 2 promotes known body models to `body`.
+        """
         auth: list[str] = []
         deps: list[str] = []
-        body_params: list[str] = []
+        params: list[RouteParam] = []
+        path_vars = frozenset(_PATH_VARS.findall(path or ""))
         pos = [*node.args.posonlyargs, *node.args.args]
         pos_defaults: list[ast.AST | None] = [None] * (len(pos) - len(node.args.defaults)) + list(
             node.args.defaults
@@ -430,19 +455,47 @@ class _FileScan(ast.NodeVisitor):
         for arg, default in pairs:
             if arg.arg in ("self", "cls"):
                 continue
+            annotation = (
+                _unparse(arg.annotation) if arg.annotation is not None else None
+            )
+            if annotation is not None:
+                head = annotation.split(".", 1)[0]
+                resolved = self.facts.imports.get(head, head)
+                tail = resolved.rsplit(".", 1)[-1]
+                if tail in _FRAMEWORK_TYPES and (
+                    resolved.startswith("fastapi") or head in _FRAMEWORK_TYPES
+                ):
+                    continue  # framework-injected, not an API parameter
+            location = "query"  # FastAPI default for scalar params
+            required = default is None
             if isinstance(default, ast.Call):
                 wrapper = (_call_name(default.func) or "").rsplit(".", 1)[-1]
                 inner = default.args[0] if default.args else None
-                name = (_call_name(inner) or _unparse(inner)) if inner is not None else "?"
+                target = (
+                    (_call_name(inner) or _unparse(inner)) if inner is not None else "?"
+                )
                 if wrapper == "Security":
-                    auth.append(name)
+                    auth.append(target)
+                    location = "dependency"
                 elif wrapper == "Depends":
-                    deps.append(name)
-            if isinstance(arg.annotation, ast.Name | ast.Attribute):
-                annotation = _call_name(arg.annotation)
-                if annotation:
-                    body_params.append(annotation)
-        return auth, deps, tuple(body_params)
+                    deps.append(target)
+                    location = "dependency"
+                elif wrapper in ("Path", "Query", "Header", "Cookie", "Body", "Form", "File"):
+                    location = wrapper.lower()
+                    has_inner_default = self._kw(default, "default") is not None
+                    required = not has_inner_default if wrapper != "Path" else True
+            if location == "query" and arg.arg in path_vars:
+                location = "path"
+                required = True
+            params.append(
+                RouteParam(
+                    name=arg.arg,
+                    location_in=location,
+                    required=required,
+                    annotation=annotation,
+                )
+            )
+        return auth, deps, tuple(params)
 
 
 class FastApiAdapter(FrameworkAdapter):
@@ -594,15 +647,38 @@ class FastApiAdapter(FrameworkAdapter):
         global_models: set[str],
         objects: dict[str, _Obj],
     ) -> RouteModel:
-        """Body params count as request schemas only when the annotation
-        resolves to a class known to subclass BaseModel somewhere in the
-        project (local or imported)."""
-        models = [
-            qual
-            for param in raw.body_params
-            for qual in (facts.imports.get(param.split(".", 1)[0]) or f"{facts.module}.{param}",)
-            if qual in global_models
-        ]
+        """Pass-2 classification: a param's location is `body` when its
+        annotation resolves to a known BaseModel subclass (local or imported),
+        `path` when its name appears in the full path template."""
+        full_path = self._join(prefix, raw.path or "")
+        full_vars = frozenset(_PATH_VARS.findall(full_path))
+
+        def qualify_param(name: str) -> str:
+            head, _, rest = name.partition(".")
+            base = facts.imports.get(head)
+            if base is None:
+                return f"{facts.module}.{name}"
+            return f"{base}.{rest}" if rest else base
+
+        model_quals = {qualify_param(p) for p in raw.body_params} & global_models
+        models = sorted(model_quals)
+        params: list[RouteParam] = []
+        for param in raw.params:
+            location = param.location_in
+            required = param.required
+            if location == "query":
+                if param.name in full_vars:
+                    location, required = "path", True
+                elif param.annotation and qualify_param(param.annotation) in model_quals:
+                    location = "body"
+            params.append(
+                RouteParam(
+                    name=param.name,
+                    location_in=location,
+                    required=required,
+                    annotation=param.annotation,
+                )
+            )
         owner = objects.get(facts.qualify(raw.owner) or "")
         middleware = tuple(
             sorted({*raw.middleware, *(owner.dependencies if owner else ()), *facts.app_middleware})
@@ -611,10 +687,11 @@ class FastApiAdapter(FrameworkAdapter):
             framework=self.framework,
             service=service,
             method=raw.method,
-            path=self._join(prefix, raw.path or ""),
+            path=full_path,
             handler=raw.handler,
             auth=tuple(sorted({*raw.auth, *(owner.auth if owner else ())})),
             middleware=middleware,
+            parameters=tuple(params),
             request_schema=models[0] if models else None,
             response_schema=raw.response_schema,
             response_schema_source=raw.response_source,

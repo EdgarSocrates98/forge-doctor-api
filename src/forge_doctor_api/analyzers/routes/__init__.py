@@ -7,6 +7,7 @@ from forge_doctor_api.analyzers.routes.model import (
     Attribution,
     ResponseSchemaSource,
     RouteModel,
+    RouteParam,
     RouteScan,
 )
 
@@ -16,6 +17,7 @@ __all__ = [
     "FrameworkAdapter",
     "ResponseSchemaSource",
     "RouteModel",
+    "RouteParam",
     "RouteScan",
     "scan_graph",
 ]
