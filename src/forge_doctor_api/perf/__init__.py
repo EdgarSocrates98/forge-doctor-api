@@ -37,6 +37,11 @@ from forge_doctor_api.perf.experiments import (
     RequestScenario,
     evaluate_experiment,
 )
+from forge_doctor_api.perf.fanout import (
+    FanoutSignal,
+    FanoutStatus,
+    fanout_signals,
+)
 from forge_doctor_api.perf.payload import PayloadShape, payload_shape_from_schema
 from forge_doctor_api.perf.signals import (
     ApiPerformanceSignal,
@@ -66,6 +71,8 @@ __all__ = [
     "Experiment",
     "ExperimentReport",
     "ExperimentVerdict",
+    "FanoutSignal",
+    "FanoutStatus",
     "PayloadShape",
     "PerformanceFamily",
     "RequestBaseline",
@@ -82,6 +89,7 @@ __all__ = [
     "critical_path",
     "evaluate_budget",
     "evaluate_experiment",
+    "fanout_signals",
     "mad",
     "median",
     "payload_shape_from_schema",
