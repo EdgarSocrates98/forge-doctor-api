@@ -109,9 +109,71 @@ def scan() -> None:
 
 
 @app.command()
-def inventory() -> None:
-    """List services, APIs, operations, protocols, versions and owners."""
-    _not_implemented("inventory")
+def inventory(
+    target: Annotated[str, typer.Argument(help="Workspace or repo directory.")] = ".",
+    json_out: Annotated[bool, typer.Option("--json", help="JSON output.")] = False,
+) -> None:
+    """§159 inventory: services, APIs, operations, protocols, owners."""
+    from forge_doctor_api.fleet import build_fleet_report
+    from forge_doctor_api.workspace import (
+        MemberRole,
+        Workspace,
+        WorkspaceMember,
+        load_workspace,
+    )
+
+    root = Path(target).resolve()
+    if not root.is_dir():
+        _stderr.print(f"inventory: not a directory: {target}")
+        raise typer.Exit(code=2)
+    ctx = ProjectContext.from_root(root)
+    workspace = load_workspace(ctx) or Workspace(
+        name=root.name,
+        members=(WorkspaceMember(
+            name=root.name, path=".", role=MemberRole.MIXED,
+        ),),
+    )
+    report = build_fleet_report(ctx, workspace)
+    if json_out:
+        typer.echo(json.dumps(report.to_dict(), indent=2, sort_keys=True))
+        return
+
+    _console.print(f"Workspace: {report.workspace}")
+    if report.members_missing:
+        _console.print(
+            f"  missing members: {', '.join(report.members_missing)} [UNKNOWN]"
+        )
+    table = Table("repo", "role", "styles", "apis", "ops", "gw", "ext", "owner")
+    for m in report.portfolio:
+        table.add_row(
+            m.repo, m.role, ",".join(m.styles) or "-", str(m.apis),
+            str(m.operations), str(m.gateways), str(m.external_apis),
+            m.owner or "unknown",
+        )
+    _console.print(table)
+    for q in report.questions:
+        _console.print(f"[bold]{q.question}[/bold]")
+        for e in q.entries:
+            _console.print(f"  {e.repo}: {e.detail}")
+        for u in q.unknowns:
+            _console.print(f"  [UNKNOWN] {u.missing}")
+    if report.complexity:
+        _console.print("[bold]Complexity signals (opportunities)[/bold]")
+        for s in report.complexity:
+            _console.print(f"  {s.kind}: {s.detail}")
+    if report.deprecations:
+        _console.print("[bold]Deprecation readiness[/bold]")
+        for dep in report.deprecations:
+            clients = (
+                "unknown" if dep.remaining_clients is None
+                else str(dep.remaining_clients)
+            )
+            _console.print(
+                f"  {dep.repo}: clients={clients} "
+                f"traffic={'unknown' if dep.observed_traffic is None else dep.observed_traffic} "
+                f"replacement={dep.replacement or 'none'} "
+                f"age={dep.contract_age_days if dep.contract_age_days is not None else 'unknown'}d"
+            )
 
 
 @contract_app.command("inspect")

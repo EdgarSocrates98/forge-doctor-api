@@ -10,7 +10,6 @@ runner = CliRunner()
 
 PLACEHOLDERS = [
     ["scan"],
-    ["inventory"],
     ["contract", "inspect"],
 ]
 
