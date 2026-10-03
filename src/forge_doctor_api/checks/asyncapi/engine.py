@@ -64,13 +64,15 @@ def _finding(
 
 
 def _channel_entity(channel: AsyncApiChannel) -> str:
-    return entity_id("async_channel", channel.location.path, channel.name)
+    return entity_id(
+        "async_channel", "asyncapi",
+        f"{channel.location.path}#{channel.name}")
 
 
 def _message_entity(message: AsyncApiMessage) -> str:
     return entity_id(
-        "message", message.location.path, message.name or message.pointer
-    )
+        "message", "asyncapi",
+        f"{message.location.path}#{message.name or message.pointer}")
 
 
 def _op_entity(op: AsyncApiOperation) -> str:

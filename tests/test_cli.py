@@ -9,7 +9,6 @@ from forge_doctor_api.cli import NOT_IMPLEMENTED_EXIT_CODE, app
 runner = CliRunner()
 
 PLACEHOLDERS = [
-    ["scan"],
     ["contract", "inspect"],
 ]
 

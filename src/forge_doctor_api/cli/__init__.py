@@ -57,6 +57,7 @@ from forge_doctor_api.reliability import (
     TimeoutConfig,
     load_reliability_model,
 )
+from forge_doctor_api.scan import ScanReport
 from forge_doctor_api.security import load_security_model
 from forge_doctor_api.security.model import SensitiveBusinessFlow
 
@@ -103,9 +104,122 @@ def _root(
 
 
 @app.command()
-def scan() -> None:
-    """Scan a project for API evidence."""
-    _not_implemented("scan")
+def scan(
+    target: Annotated[str, typer.Argument(help="Project directory.")] = ".",
+    fail_on: Annotated[
+        str | None,
+        typer.Option(
+            "--fail-on",
+            help="§178 gate categories, comma-separated: breaking,security,policy.",
+        ),
+    ] = None,
+    baseline: Annotated[
+        str | None,
+        typer.Option("--baseline", help="Baseline contract file/dir for the breaking gate."),
+    ] = None,
+    policy: Annotated[
+        str | None,
+        typer.Option("--policy", help="Extra policy file/dir merged into evaluation."),
+    ] = None,
+    fmt: Annotated[
+        str,
+        typer.Option("--format", help="console | json | jsonl | sarif | agent."),
+    ] = "console",
+    out: Annotated[
+        str | None, typer.Option("--out", help="Write the export to a file.")
+    ] = None,
+) -> None:
+    """§177 full scan: every deterministic pipeline + optional §178 gate."""
+    from forge_doctor_api.output.writers import (
+        write_agent,
+        write_jsonl,
+        write_sarif,
+    )
+    from forge_doctor_api.scan import (
+        GateCategory,
+        ScanReport,
+        _GateConfigError,
+        evaluate_gate,
+        export_scan,
+        scan_project,
+    )
+
+    categories: set[GateCategory] = set()
+    for part in (fail_on or "").split(","):
+        part = part.strip().lower()
+        if not part:
+            continue
+        try:
+            categories.add(GateCategory(part))
+        except ValueError:
+            _stderr.print(
+                f"unknown fail-on category: {part} "
+                "(expected breaking|security|policy)")
+            raise typer.Exit(code=2) from None
+
+    ctx = ProjectContext(root=Path(target).resolve())
+    before = ProjectContext(root=Path(baseline).resolve()) if baseline else None
+    extra_policy = (
+        ProjectContext(root=Path(policy).resolve()) if policy else None)
+    report = scan_project(ctx, before=before, extra_policy=extra_policy)
+    try:
+        failures = evaluate_gate(report.findings, report.diff,
+                                 frozenset(categories))
+    except _GateConfigError as exc:
+        _stderr.print(str(exc))
+        raise typer.Exit(code=2) from None
+    report = ScanReport(
+        findings=report.findings, diff=report.diff,
+        gate_failures=failures, unknowns=report.unknowns)
+
+    if fmt == "console":
+        _print_scan_console(report)
+    elif fmt == "json":
+        payload = export_scan(report)
+        payload["findings"] = [f.to_dict() for f in report.findings]
+        payload["unknowns"] = [u.to_dict() for u in report.unknowns]
+        _emit_text(json.dumps(payload, indent=2), out)
+    elif fmt == "jsonl":
+        _emit_text(write_jsonl(report.findings), out)
+    elif fmt == "sarif":
+        _emit_text(write_sarif(report.findings), out)
+    elif fmt == "agent":
+        _emit_text(write_agent(report.findings, report.unknowns), out)
+    else:
+        _stderr.print(f"unknown format: {fmt} "
+                      "(expected console|json|jsonl|sarif|agent)")
+        raise typer.Exit(code=2)
+
+    if failures:
+        raise typer.Exit(code=1)
+
+
+def _emit_text(text: str, out: str | None) -> None:
+    if out:
+        Path(out).write_text(text + ("\n" if text else ""), encoding="utf-8")
+    else:
+        typer.echo(text)
+
+
+def _print_scan_console(report: ScanReport) -> None:
+    table = Table("id", "severity", "confidence", "subject", "description")
+    for f in report.findings:
+        subject = f.entity_ids[0] if f.entity_ids else (
+            f.source_location.path if f.source_location else "-")
+        table.add_row(
+            f.id, f.severity.value, f.confidence.value, subject,
+            f.description[:80])
+    _console.print(table)
+    if report.unknowns:
+        _console.print(f"[dim]Unknowns: {len(report.unknowns)}[/dim]")
+    for failure in report.gate_failures:
+        _console.print(
+            f"[red]GATE {failure.category}[/red] {failure.detail}")
+    status = "[green]PASS[/green]" if report.gate_passed else "[red]FAIL[/red]"
+    _console.print(f"gate: {status}")
+
+
+
 
 
 @app.command()

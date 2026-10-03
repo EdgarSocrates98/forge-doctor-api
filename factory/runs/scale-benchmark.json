@@ -1,0 +1,47 @@
+{
+  "tool": "forge-doctor-api",
+  "results": [
+    {
+      "kind": "endpoints",
+      "scale": 100,
+      "operations": 100,
+      "seconds": 0.204,
+      "peak_mb": 1.1
+    },
+    {
+      "kind": "endpoints",
+      "scale": 1000,
+      "operations": 1000,
+      "seconds": 1.978,
+      "peak_mb": 10.9
+    },
+    {
+      "kind": "endpoints",
+      "scale": 10000,
+      "operations": 10000,
+      "seconds": 19.767,
+      "peak_mb": 107.6
+    },
+    {
+      "kind": "spans",
+      "scale": 10000,
+      "executions": 10000,
+      "seconds": 6.142,
+      "peak_mb": 16.9
+    },
+    {
+      "kind": "spans",
+      "scale": 100000,
+      "executions": 100000,
+      "seconds": 67.194,
+      "peak_mb": 169.3
+    },
+    {
+      "kind": "spans",
+      "scale": 1000000,
+      "executions": 1000000,
+      "seconds": 794.974,
+      "peak_mb": 1694.3
+    }
+  ]
+}

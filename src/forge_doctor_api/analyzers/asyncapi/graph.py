@@ -37,7 +37,9 @@ def async_graph(model: AsyncApiProjectModel, service: str) -> ServiceGraph:
 
     channels = {c.pointer: c for c in model.channels}
     channel_entity = {
-        c.pointer: entity_id(EntityKind.ASYNC_CHANNEL, c.location.path, c.name)
+        c.pointer: entity_id(
+            EntityKind.ASYNC_CHANNEL, "asyncapi",
+            f"{c.location.path}#{c.name}")
         for c in model.channels
     }
     for channel in model.channels:
@@ -49,7 +51,9 @@ def async_graph(model: AsyncApiProjectModel, service: str) -> ServiceGraph:
             )
         )
     message_entity = {
-        m.pointer: entity_id(EntityKind.MESSAGE, m.location.path, m.name or m.pointer)
+        m.pointer: entity_id(
+            EntityKind.MESSAGE, "asyncapi",
+            f"{m.location.path}#{m.name or m.pointer}")
         for m in model.messages
     }
     for message in model.messages:

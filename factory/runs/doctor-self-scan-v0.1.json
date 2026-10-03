@@ -1,0 +1,1893 @@
+{
+  "schema_version": "1.0",
+  "tool_version": "0.1.0",
+  "knowledge_versions": {
+    "asyncapi-versions": "2026.10",
+    "express-capabilities": "2026.10",
+    "fastapi-capabilities": "2026.10",
+    "spring-capabilities": "2026.10",
+    "aws-api-gateway-capabilities": "2026.10",
+    "gateway-capability-map": "2026.10",
+    "envoy-capabilities": "2026.10",
+    "kong-capabilities": "2026.10",
+    "nginx-capabilities": "2026.10",
+    "graphql-spec": "2026.10",
+    "grpc-behaviors": "2026.10",
+    "http-semantics": "2026.10",
+    "jsonschema-dialects": "2026.10",
+    "openapi-versions": "2026.10",
+    "owasp-api-security-top-10": "2023"
+  },
+  "gate_passed": true,
+  "gate_failures": [],
+  "findings": [
+    {
+      "confidence": "MEDIUM",
+      "description": "checkout:/checkout: p95 1200ms > baseline 300ms (threshold: max(1.5x, +3*MAD) -> 450ms; p50 1200 > 300) (window 2023-11-14T23)",
+      "entity_ids": [
+        "checkout:/checkout"
+      ],
+      "evidence": [
+        {
+          "kind": "DERIVED",
+          "line": null,
+          "offset": null,
+          "source": "(runtime)",
+          "summary": "checkout:/checkout: p95 1200ms > baseline 300ms (threshold: max(1.5x, +3*MAD) -> 450ms; p50 1200 > 300) (window 2023-11-14T23)"
+        }
+      ],
+      "evidence_kind": "DERIVED",
+      "id": "APIPERF001",
+      "remediation": null,
+      "severity": "HIGH",
+      "source_location": {
+        "column": null,
+        "line": null,
+        "path": "(runtime)"
+      },
+      "title": "p95 latency regression",
+      "unknowns": []
+    },
+    {
+      "confidence": "MEDIUM",
+      "description": "checkout:/checkout -> payments: downstream p95 900ms > baseline 100ms (threshold: max(1.5x, +3*MAD) -> 150ms; p50 900 > 100) (window 2023-11-14T23)",
+      "entity_ids": [
+        "checkout:/checkout"
+      ],
+      "evidence": [
+        {
+          "kind": "DERIVED",
+          "line": null,
+          "offset": null,
+          "source": "(runtime)",
+          "summary": "checkout:/checkout -> payments: downstream p95 900ms > baseline 100ms (threshold: max(1.5x, +3*MAD) -> 150ms; p50 900 > 100) (window 2023-11-14T23)"
+        }
+      ],
+      "evidence_kind": "DERIVED",
+      "id": "APIPERF003",
+      "remediation": null,
+      "severity": "HIGH",
+      "source_location": {
+        "column": null,
+        "line": null,
+        "path": "(runtime)"
+      },
+      "title": "Downstream latency regression",
+      "unknowns": []
+    },
+    {
+      "confidence": "LOW",
+      "description": "[candidate] (API1) GET /items/{id}: object-id parameter(s) id with no authorization evidence - BOLA risk candidate, manual review required",
+      "entity_ids": [],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 5,
+          "offset": null,
+          "source": "labs/golden/node-api/openapi.yaml",
+          "summary": "GET /items/{id}: object-id parameter(s) id with no authorization evidence - BOLA risk candidate, manual review required"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "APISEC001",
+      "remediation": "verify caller owns the referenced object before returning it",
+      "severity": "HIGH",
+      "source_location": {
+        "column": null,
+        "line": 5,
+        "path": "labs/golden/node-api/openapi.yaml"
+      },
+      "title": "Object-ID route without authorization evidence",
+      "unknowns": [
+        {
+          "missing": "object-level authorization evidence (ownership check, roles, scopes)",
+          "resolution": "declare x-ownership-check / x-roles / security scopes, or provide impl authz evidence",
+          "subject": "operation_id:getItem"
+        }
+      ]
+    },
+    {
+      "confidence": "LOW",
+      "description": "[candidate] (API1) GET /pets/{petId}: object-id parameter(s) petId with no authorization evidence - BOLA risk candidate, manual review required",
+      "entity_ids": [],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 68,
+          "offset": null,
+          "source": "tests/fixtures/openapi/v30/petstore.yaml",
+          "summary": "GET /pets/{petId}: object-id parameter(s) petId with no authorization evidence - BOLA risk candidate, manual review required"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "APISEC001",
+      "remediation": "verify caller owns the referenced object before returning it",
+      "severity": "HIGH",
+      "source_location": {
+        "column": null,
+        "line": 68,
+        "path": "tests/fixtures/openapi/v30/petstore.yaml"
+      },
+      "title": "Object-ID route without authorization evidence",
+      "unknowns": [
+        {
+          "missing": "object-level authorization evidence (ownership check, roles, scopes)",
+          "resolution": "declare x-ownership-check / x-roles / security scopes, or provide impl authz evidence",
+          "subject": "operation_id:getPet"
+        }
+      ]
+    },
+    {
+      "confidence": "MEDIUM",
+      "description": "[configuration risk] (API4) test_security: CORS allows any origin with credentials",
+      "entity_ids": [],
+      "evidence": [
+        {
+          "kind": "CONFIG",
+          "line": 218,
+          "offset": null,
+          "source": "tests/test_security.py",
+          "summary": "test_security: CORS allows any origin with credentials"
+        }
+      ],
+      "evidence_kind": "CONFIG",
+      "id": "APISEC004",
+      "remediation": null,
+      "severity": "MEDIUM",
+      "source_location": {
+        "column": null,
+        "line": 218,
+        "path": "tests/test_security.py"
+      },
+      "title": "Wildcard CORS",
+      "unknowns": []
+    },
+    {
+      "confidence": "LOW",
+      "description": "[candidate] (API4) POST /pets: public operation with no rate-limit evidence - candidate",
+      "entity_ids": [],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 42,
+          "offset": null,
+          "source": "tests/fixtures/openapi/v30/petstore.yaml",
+          "summary": "POST /pets: public operation with no rate-limit evidence - candidate"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "APISEC005",
+      "remediation": null,
+      "severity": "MEDIUM",
+      "source_location": {
+        "column": null,
+        "line": 42,
+        "path": "tests/fixtures/openapi/v30/petstore.yaml"
+      },
+      "title": "Missing rate-limit evidence on public operation",
+      "unknowns": [
+        {
+          "missing": "rate-limit policy",
+          "resolution": "rate limits may live in gateway config not provided",
+          "subject": "method_path:POST /pets"
+        }
+      ]
+    },
+    {
+      "confidence": "HIGH",
+      "description": "channel 'bareChannel' has no resolvable message payload schema",
+      "entity_ids": [
+        "async_channel:asyncapi:labs/asyncapi/channel-without-schema/asyncapi.yaml#bareChannel"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 6,
+          "offset": null,
+          "source": "labs/asyncapi/channel-without-schema/asyncapi.yaml",
+          "summary": "channel 'bareChannel' has no resolvable message payload schema"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "ASYNC001",
+      "remediation": null,
+      "severity": "MEDIUM",
+      "source_location": {
+        "column": 3,
+        "line": 6,
+        "path": "labs/asyncapi/channel-without-schema/asyncapi.yaml"
+      },
+      "title": "Channel without message schema",
+      "unknowns": []
+    },
+    {
+      "confidence": "LOW",
+      "description": "list field Query.users has no pagination arguments",
+      "entity_ids": [
+        "graphql_type:graphql:object:Query"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 3,
+          "offset": null,
+          "source": "labs/graphql/unbounded-list/schema.graphql",
+          "summary": "list field Query.users has no pagination arguments"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "GQL007",
+      "remediation": null,
+      "severity": "MEDIUM",
+      "source_location": {
+        "column": 3,
+        "line": 3,
+        "path": "labs/graphql/unbounded-list/schema.graphql"
+      },
+      "title": "Potentially unbounded list field",
+      "unknowns": [
+        {
+          "missing": "server-side result-set cap evidence",
+          "resolution": "runtime cardinality evidence or pagination arguments",
+          "subject": "Query.users"
+        }
+      ]
+    },
+    {
+      "confidence": "HIGH",
+      "description": "field number 2 on GetInvoiceResponse.total_cents is also listed as reserved",
+      "entity_ids": [],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 16,
+          "offset": null,
+          "source": "labs/grpc/reserved-field-reuse/service.proto",
+          "summary": "field number 2 on GetInvoiceResponse.total_cents is also listed as reserved"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "GRPC004",
+      "remediation": null,
+      "severity": "HIGH",
+      "source_location": {
+        "column": null,
+        "line": 16,
+        "path": "labs/grpc/reserved-field-reuse/service.proto"
+      },
+      "title": "Field number reused",
+      "unknowns": []
+    },
+    {
+      "confidence": "HIGH",
+      "description": "labs/adversarial/malformed-openapi/openapi.yaml: document is not parseable as YAML/JSON",
+      "entity_ids": [
+        "api:openapi:labs/adversarial/malformed-openapi/openapi.yaml"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": null,
+          "offset": null,
+          "source": "labs/adversarial/malformed-openapi/openapi.yaml",
+          "summary": "labs/adversarial/malformed-openapi/openapi.yaml: document is not parseable as YAML/JSON"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS001",
+      "remediation": "fix the document so it parses as a supported OpenAPI version",
+      "severity": "HIGH",
+      "source_location": {
+        "column": null,
+        "line": null,
+        "path": "labs/adversarial/malformed-openapi/openapi.yaml"
+      },
+      "title": "Invalid specification version",
+      "unknowns": []
+    },
+    {
+      "confidence": "HIGH",
+      "description": "tests/fixtures/openapi/adversarial/malformed.yaml: document is not parseable as YAML/JSON",
+      "entity_ids": [
+        "api:openapi:tests/fixtures/openapi/adversarial/malformed.yaml"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": null,
+          "offset": null,
+          "source": "tests/fixtures/openapi/adversarial/malformed.yaml",
+          "summary": "tests/fixtures/openapi/adversarial/malformed.yaml: document is not parseable as YAML/JSON"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS001",
+      "remediation": "fix the document so it parses as a supported OpenAPI version",
+      "severity": "HIGH",
+      "source_location": {
+        "column": null,
+        "line": null,
+        "path": "tests/fixtures/openapi/adversarial/malformed.yaml"
+      },
+      "title": "Invalid specification version",
+      "unknowns": []
+    },
+    {
+      "confidence": "HIGH",
+      "description": "tests/fixtures/openapi/adversarial/swagger2.json: specification version is outside the supported knowledge pack '2.0'",
+      "entity_ids": [
+        "api:openapi:tests/fixtures/openapi/adversarial/swagger2.json"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 1,
+          "offset": null,
+          "source": "tests/fixtures/openapi/adversarial/swagger2.json",
+          "summary": "tests/fixtures/openapi/adversarial/swagger2.json: specification version is outside the supported knowledge pack '2.0'"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS001",
+      "remediation": "fix the document so it parses as a supported OpenAPI version",
+      "severity": "MEDIUM",
+      "source_location": {
+        "column": 1,
+        "line": 1,
+        "path": "tests/fixtures/openapi/adversarial/swagger2.json"
+      },
+      "title": "Invalid specification version",
+      "unknowns": []
+    },
+    {
+      "confidence": "HIGH",
+      "description": "tests/fixtures/outside.yaml: document cannot be read",
+      "entity_ids": [
+        "api:openapi:tests/fixtures/outside.yaml"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": null,
+          "offset": null,
+          "source": "tests/fixtures/outside.yaml",
+          "summary": "tests/fixtures/outside.yaml: document cannot be read"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS001",
+      "remediation": "fix the document so it parses as a supported OpenAPI version",
+      "severity": "HIGH",
+      "source_location": {
+        "column": null,
+        "line": null,
+        "path": "tests/fixtures/outside.yaml"
+      },
+      "title": "Invalid specification version",
+      "unknowns": []
+    },
+    {
+      "confidence": "HIGH",
+      "description": "$ref '#/components/schemas/Missing' at /paths/~1items/get/responses/200/content/application~1json/schema: target not found",
+      "entity_ids": [
+        "api:openapi:labs/openapi/unresolved-ref/api.yaml#/paths/~1items/get/responses/200/content/application~1json/schema"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 14,
+          "offset": null,
+          "source": "labs/openapi/unresolved-ref/api.yaml",
+          "summary": "$ref '#/components/schemas/Missing' at /paths/~1items/get/responses/200/content/application~1json/schema: target not found"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS002",
+      "remediation": "point the reference at an existing in-project target",
+      "severity": "MEDIUM",
+      "source_location": {
+        "column": 24,
+        "line": 14,
+        "path": "labs/openapi/unresolved-ref/api.yaml"
+      },
+      "title": "Unresolved local reference",
+      "unknowns": []
+    },
+    {
+      "confidence": "HIGH",
+      "description": "$ref 'schemas/user.yaml#/DoesNotExist' at /components/schemas/Missing: target not found",
+      "entity_ids": [
+        "api:openapi:tests/fixtures/openapi/crossfile/root.yaml#/components/schemas/Missing"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 17,
+          "offset": null,
+          "source": "tests/fixtures/openapi/crossfile/root.yaml",
+          "summary": "$ref 'schemas/user.yaml#/DoesNotExist' at /components/schemas/Missing: target not found"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS002",
+      "remediation": "point the reference at an existing in-project target",
+      "severity": "MEDIUM",
+      "source_location": {
+        "column": 7,
+        "line": 17,
+        "path": "tests/fixtures/openapi/crossfile/root.yaml"
+      },
+      "title": "Unresolved local reference",
+      "unknowns": []
+    },
+    {
+      "confidence": "HIGH",
+      "description": "$ref '../../outside.yaml' at /paths/~1escape: target not found",
+      "entity_ids": [
+        "api:openapi:tests/fixtures/openapi/crossfile/root.yaml#/paths/~1escape"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 11,
+          "offset": null,
+          "source": "tests/fixtures/openapi/crossfile/root.yaml",
+          "summary": "$ref '../../outside.yaml' at /paths/~1escape: target not found"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS002",
+      "remediation": "point the reference at an existing in-project target",
+      "severity": "MEDIUM",
+      "source_location": {
+        "column": 5,
+        "line": 11,
+        "path": "tests/fixtures/openapi/crossfile/root.yaml"
+      },
+      "title": "Unresolved local reference",
+      "unknowns": []
+    },
+    {
+      "confidence": "HIGH",
+      "description": "operationId 'getUser' names 5 operations: labs/contracts/breaking-change-client-impact/after/openapi.yaml#/paths/~1users~1{id}/get, labs/contracts/breaking-change-client-impact/before/openapi.yaml#/paths/~1users~1{id}/get, labs/golden/fastapi-service/openapi.yaml#/paths/~1users~1{id}/get, labs/golden/spring-api/openapi.yaml#/paths/~1users~1{id}/get, labs/security/bola-candidate/api.yaml#/paths/~1users~1{id}/get",
+      "entity_ids": [
+        "operation:openapi:operation_id:getUser",
+        "operation:openapi:operation_id:getUser",
+        "operation:openapi:operation_id:getUser",
+        "operation:openapi:operation_id:getUser",
+        "operation:openapi:operation_id:getUser"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 7,
+          "offset": null,
+          "source": "labs/contracts/breaking-change-client-impact/after/openapi.yaml",
+          "summary": "operationId 'getUser' names 5 operations: labs/contracts/breaking-change-client-impact/after/openapi.yaml#/paths/~1users~1{id}/get, labs/contracts/breaking-change-client-impact/before/openapi.yaml#/paths/~1users~1{id}/get, labs/golden/fastapi-service/openapi.yaml#/paths/~1users~1{id}/get, labs/golden/spring-api/openapi.yaml#/paths/~1users~1{id}/get, labs/security/bola-candidate/api.yaml#/paths/~1users~1{id}/get"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS003",
+      "remediation": "give each operation a unique operationId",
+      "severity": "MEDIUM",
+      "source_location": {
+        "column": 5,
+        "line": 7,
+        "path": "labs/contracts/breaking-change-client-impact/after/openapi.yaml"
+      },
+      "title": "Duplicate operationId",
+      "unknowns": []
+    },
+    {
+      "confidence": "HIGH",
+      "description": "GET /self has no operationId",
+      "entity_ids": [
+        "operation:openapi:method_path:GET /self"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 9,
+          "offset": null,
+          "source": "tests/fixtures/openapi/adversarial/recursive.yaml",
+          "summary": "GET /self has no operationId"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS004",
+      "remediation": "add a unique operationId",
+      "severity": "LOW",
+      "source_location": {
+        "column": 5,
+        "line": 9,
+        "path": "tests/fixtures/openapi/adversarial/recursive.yaml"
+      },
+      "title": "Operation without operationId",
+      "unknowns": []
+    },
+    {
+      "confidence": "HIGH",
+      "description": "POST /pets has no operationId",
+      "entity_ids": [
+        "operation:openapi:method_path:POST /pets"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 42,
+          "offset": null,
+          "source": "tests/fixtures/openapi/v30/petstore.yaml",
+          "summary": "POST /pets has no operationId"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS004",
+      "remediation": "add a unique operationId",
+      "severity": "LOW",
+      "source_location": {
+        "column": 5,
+        "line": 42,
+        "path": "tests/fixtures/openapi/v30/petstore.yaml"
+      },
+      "title": "Operation without operationId",
+      "unknowns": []
+    },
+    {
+      "confidence": "HIGH",
+      "description": "PURGE /search has no operationId",
+      "entity_ids": [
+        "operation:openapi:method_path:PURGE /search"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 18,
+          "offset": null,
+          "source": "tests/fixtures/openapi/v32/api.yaml",
+          "summary": "PURGE /search has no operationId"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS004",
+      "remediation": "add a unique operationId",
+      "severity": "LOW",
+      "source_location": {
+        "column": 7,
+        "line": 18,
+        "path": "tests/fixtures/openapi/v32/api.yaml"
+      },
+      "title": "Operation without operationId",
+      "unknowns": []
+    },
+    {
+      "confidence": "LOW",
+      "description": "labs/adversarial/recursive-refs/openapi.yaml: no document-level security requirement protects 1 operations",
+      "entity_ids": [
+        "api:openapi:labs/adversarial/recursive-refs/openapi.yaml"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 1,
+          "offset": null,
+          "source": "labs/adversarial/recursive-refs/openapi.yaml",
+          "summary": "labs/adversarial/recursive-refs/openapi.yaml: no document-level security requirement protects 1 operations"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS010",
+      "remediation": "if this API is partner/public, add a document-level `security` requirement",
+      "severity": "HIGH",
+      "source_location": {
+        "column": 1,
+        "line": 1,
+        "path": "labs/adversarial/recursive-refs/openapi.yaml"
+      },
+      "title": "Public API without security requirement (candidate)",
+      "unknowns": [
+        {
+          "missing": "API exposure classification (internal/partner/public)",
+          "resolution": "declare exposure via gateway/org metadata or add a security requirement so the question is moot",
+          "subject": "labs/adversarial/recursive-refs/openapi.yaml"
+        }
+      ]
+    },
+    {
+      "confidence": "LOW",
+      "description": "labs/security/bola-candidate/api.yaml: no document-level security requirement protects 1 operations",
+      "entity_ids": [
+        "api:openapi:labs/security/bola-candidate/api.yaml"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 1,
+          "offset": null,
+          "source": "labs/security/bola-candidate/api.yaml",
+          "summary": "labs/security/bola-candidate/api.yaml: no document-level security requirement protects 1 operations"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS010",
+      "remediation": "if this API is partner/public, add a document-level `security` requirement",
+      "severity": "HIGH",
+      "source_location": {
+        "column": 1,
+        "line": 1,
+        "path": "labs/security/bola-candidate/api.yaml"
+      },
+      "title": "Public API without security requirement (candidate)",
+      "unknowns": [
+        {
+          "missing": "API exposure classification (internal/partner/public)",
+          "resolution": "declare exposure via gateway/org metadata or add a security requirement so the question is moot",
+          "subject": "labs/security/bola-candidate/api.yaml"
+        }
+      ]
+    },
+    {
+      "confidence": "LOW",
+      "description": "tests/fixtures/openapi/adversarial/recursive.yaml: no document-level security requirement protects 1 operations",
+      "entity_ids": [
+        "api:openapi:tests/fixtures/openapi/adversarial/recursive.yaml"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 1,
+          "offset": null,
+          "source": "tests/fixtures/openapi/adversarial/recursive.yaml",
+          "summary": "tests/fixtures/openapi/adversarial/recursive.yaml: no document-level security requirement protects 1 operations"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS010",
+      "remediation": "if this API is partner/public, add a document-level `security` requirement",
+      "severity": "HIGH",
+      "source_location": {
+        "column": 1,
+        "line": 1,
+        "path": "tests/fixtures/openapi/adversarial/recursive.yaml"
+      },
+      "title": "Public API without security requirement (candidate)",
+      "unknowns": [
+        {
+          "missing": "API exposure classification (internal/partner/public)",
+          "resolution": "declare exposure via gateway/org metadata or add a security requirement so the question is moot",
+          "subject": "tests/fixtures/openapi/adversarial/recursive.yaml"
+        }
+      ]
+    },
+    {
+      "confidence": "LOW",
+      "description": "tests/fixtures/openapi/v31/api.json: no document-level security requirement protects 1 operations",
+      "entity_ids": [
+        "api:openapi:tests/fixtures/openapi/v31/api.json"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 1,
+          "offset": null,
+          "source": "tests/fixtures/openapi/v31/api.json",
+          "summary": "tests/fixtures/openapi/v31/api.json: no document-level security requirement protects 1 operations"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS010",
+      "remediation": "if this API is partner/public, add a document-level `security` requirement",
+      "severity": "HIGH",
+      "source_location": {
+        "column": 1,
+        "line": 1,
+        "path": "tests/fixtures/openapi/v31/api.json"
+      },
+      "title": "Public API without security requirement (candidate)",
+      "unknowns": [
+        {
+          "missing": "API exposure classification (internal/partner/public)",
+          "resolution": "declare exposure via gateway/org metadata or add a security requirement so the question is moot",
+          "subject": "tests/fixtures/openapi/v31/api.json"
+        }
+      ]
+    },
+    {
+      "confidence": "LOW",
+      "description": "tests/fixtures/openapi/v32/api.yaml: no document-level security requirement protects 2 operations",
+      "entity_ids": [
+        "api:openapi:tests/fixtures/openapi/v32/api.yaml"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 1,
+          "offset": null,
+          "source": "tests/fixtures/openapi/v32/api.yaml",
+          "summary": "tests/fixtures/openapi/v32/api.yaml: no document-level security requirement protects 2 operations"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS010",
+      "remediation": "if this API is partner/public, add a document-level `security` requirement",
+      "severity": "HIGH",
+      "source_location": {
+        "column": 1,
+        "line": 1,
+        "path": "tests/fixtures/openapi/v32/api.yaml"
+      },
+      "title": "Public API without security requirement (candidate)",
+      "unknowns": [
+        {
+          "missing": "API exposure classification (internal/partner/public)",
+          "resolution": "declare exposure via gateway/org metadata or add a security requirement so the question is moot",
+          "subject": "tests/fixtures/openapi/v32/api.yaml"
+        }
+      ]
+    },
+    {
+      "confidence": "HIGH",
+      "description": "GET /charges/{id}: template variable {id} has no parameter declaration",
+      "entity_ids": [
+        "operation:openapi:operation_id:getCharge"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 5,
+          "offset": null,
+          "source": "labs/golden/microservices-topology/payments-api/api.yaml",
+          "summary": "GET /charges/{id}: template variable {id} has no parameter declaration"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS013",
+      "remediation": "declare a required `in: path` parameter named 'id'",
+      "severity": "HIGH",
+      "source_location": {
+        "column": 5,
+        "line": 5,
+        "path": "labs/golden/microservices-topology/payments-api/api.yaml"
+      },
+      "title": "Required path parameter not declared",
+      "unknowns": []
+    },
+    {
+      "confidence": "HIGH",
+      "description": "GET /users/{id}: template variable {id} has no parameter declaration",
+      "entity_ids": [
+        "operation:openapi:operation_id:getUser"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 7,
+          "offset": null,
+          "source": "labs/contracts/breaking-change-client-impact/after/openapi.yaml",
+          "summary": "GET /users/{id}: template variable {id} has no parameter declaration"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS013",
+      "remediation": "declare a required `in: path` parameter named 'id'",
+      "severity": "HIGH",
+      "source_location": {
+        "column": 5,
+        "line": 7,
+        "path": "labs/contracts/breaking-change-client-impact/after/openapi.yaml"
+      },
+      "title": "Required path parameter not declared",
+      "unknowns": []
+    },
+    {
+      "confidence": "HIGH",
+      "description": "GET /users/{id}: template variable {id} has no parameter declaration",
+      "entity_ids": [
+        "operation:openapi:operation_id:getUser"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 7,
+          "offset": null,
+          "source": "labs/contracts/breaking-change-client-impact/before/openapi.yaml",
+          "summary": "GET /users/{id}: template variable {id} has no parameter declaration"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS013",
+      "remediation": "declare a required `in: path` parameter named 'id'",
+      "severity": "HIGH",
+      "source_location": {
+        "column": 5,
+        "line": 7,
+        "path": "labs/contracts/breaking-change-client-impact/before/openapi.yaml"
+      },
+      "title": "Required path parameter not declared",
+      "unknowns": []
+    },
+    {
+      "confidence": "MEDIUM",
+      "description": "component schema 'Absolute' is never referenced",
+      "entity_ids": [
+        "schema:openapi:tests/fixtures/openapi/adversarial/remote-refs.yaml#/components/schemas/Absolute"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 16,
+          "offset": null,
+          "source": "tests/fixtures/openapi/adversarial/remote-refs.yaml",
+          "summary": "component schema 'Absolute' is never referenced"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS018",
+      "remediation": "remove the schema or reference it",
+      "severity": "INFO",
+      "source_location": {
+        "column": 5,
+        "line": 16,
+        "path": "tests/fixtures/openapi/adversarial/remote-refs.yaml"
+      },
+      "title": "Unused component schema",
+      "unknowns": []
+    },
+    {
+      "confidence": "MEDIUM",
+      "description": "component schema 'File' is never referenced",
+      "entity_ids": [
+        "schema:openapi:tests/fixtures/openapi/adversarial/remote-refs.yaml#/components/schemas/File"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 14,
+          "offset": null,
+          "source": "tests/fixtures/openapi/adversarial/remote-refs.yaml",
+          "summary": "component schema 'File' is never referenced"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS018",
+      "remediation": "remove the schema or reference it",
+      "severity": "INFO",
+      "source_location": {
+        "column": 5,
+        "line": 14,
+        "path": "tests/fixtures/openapi/adversarial/remote-refs.yaml"
+      },
+      "title": "Unused component schema",
+      "unknowns": []
+    },
+    {
+      "confidence": "MEDIUM",
+      "description": "component schema 'Http' is never referenced",
+      "entity_ids": [
+        "schema:openapi:tests/fixtures/openapi/adversarial/remote-refs.yaml#/components/schemas/Http"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 8,
+          "offset": null,
+          "source": "tests/fixtures/openapi/adversarial/remote-refs.yaml",
+          "summary": "component schema 'Http' is never referenced"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS018",
+      "remediation": "remove the schema or reference it",
+      "severity": "INFO",
+      "source_location": {
+        "column": 5,
+        "line": 8,
+        "path": "tests/fixtures/openapi/adversarial/remote-refs.yaml"
+      },
+      "title": "Unused component schema",
+      "unknowns": []
+    },
+    {
+      "confidence": "MEDIUM",
+      "description": "component schema 'Https' is never referenced",
+      "entity_ids": [
+        "schema:openapi:tests/fixtures/openapi/adversarial/remote-refs.yaml#/components/schemas/Https"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 10,
+          "offset": null,
+          "source": "tests/fixtures/openapi/adversarial/remote-refs.yaml",
+          "summary": "component schema 'Https' is never referenced"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS018",
+      "remediation": "remove the schema or reference it",
+      "severity": "INFO",
+      "source_location": {
+        "column": 5,
+        "line": 10,
+        "path": "tests/fixtures/openapi/adversarial/remote-refs.yaml"
+      },
+      "title": "Unused component schema",
+      "unknowns": []
+    },
+    {
+      "confidence": "MEDIUM",
+      "description": "component schema 'Urn' is never referenced",
+      "entity_ids": [
+        "schema:openapi:tests/fixtures/openapi/adversarial/remote-refs.yaml#/components/schemas/Urn"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 12,
+          "offset": null,
+          "source": "tests/fixtures/openapi/adversarial/remote-refs.yaml",
+          "summary": "component schema 'Urn' is never referenced"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS018",
+      "remediation": "remove the schema or reference it",
+      "severity": "INFO",
+      "source_location": {
+        "column": 5,
+        "line": 12,
+        "path": "tests/fixtures/openapi/adversarial/remote-refs.yaml"
+      },
+      "title": "Unused component schema",
+      "unknowns": []
+    },
+    {
+      "confidence": "MEDIUM",
+      "description": "component schema 'Missing' is never referenced",
+      "entity_ids": [
+        "schema:openapi:tests/fixtures/openapi/crossfile/root.yaml#/components/schemas/Missing"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 16,
+          "offset": null,
+          "source": "tests/fixtures/openapi/crossfile/root.yaml",
+          "summary": "component schema 'Missing' is never referenced"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS018",
+      "remediation": "remove the schema or reference it",
+      "severity": "INFO",
+      "source_location": {
+        "column": 5,
+        "line": 16,
+        "path": "tests/fixtures/openapi/crossfile/root.yaml"
+      },
+      "title": "Unused component schema",
+      "unknowns": []
+    },
+    {
+      "confidence": "MEDIUM",
+      "description": "component schema 'Node' is never referenced",
+      "entity_ids": [
+        "schema:openapi:tests/fixtures/openapi/crossfile/root.yaml#/components/schemas/Node"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 14,
+          "offset": null,
+          "source": "tests/fixtures/openapi/crossfile/root.yaml",
+          "summary": "component schema 'Node' is never referenced"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS018",
+      "remediation": "remove the schema or reference it",
+      "severity": "INFO",
+      "source_location": {
+        "column": 5,
+        "line": 14,
+        "path": "tests/fixtures/openapi/crossfile/root.yaml"
+      },
+      "title": "Unused component schema",
+      "unknowns": []
+    },
+    {
+      "confidence": "MEDIUM",
+      "description": "component schema 'Tree' is never referenced",
+      "entity_ids": [
+        "schema:openapi:tests/fixtures/openapi/v31/api.json#/components/schemas/Tree"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 22,
+          "offset": null,
+          "source": "tests/fixtures/openapi/v31/api.json",
+          "summary": "component schema 'Tree' is never referenced"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS018",
+      "remediation": "remove the schema or reference it",
+      "severity": "INFO",
+      "source_location": {
+        "column": 7,
+        "line": 22,
+        "path": "tests/fixtures/openapi/v31/api.json"
+      },
+      "title": "Unused component schema",
+      "unknowns": []
+    },
+    {
+      "confidence": "MEDIUM",
+      "description": "recursive reference structure (consumers must bound depth): labs/adversarial/recursive-refs/openapi.yaml#/components/schemas/Node",
+      "entity_ids": [
+        "api:openapi:labs/adversarial/recursive-refs/openapi.yaml#/components/schemas/Node/properties/child"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 18,
+          "offset": null,
+          "source": "labs/adversarial/recursive-refs/openapi.yaml",
+          "summary": "recursive reference structure (consumers must bound depth): labs/adversarial/recursive-refs/openapi.yaml#/components/schemas/Node"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS019",
+      "remediation": null,
+      "severity": "INFO",
+      "source_location": {
+        "column": 17,
+        "line": 18,
+        "path": "labs/adversarial/recursive-refs/openapi.yaml"
+      },
+      "title": "Circular reference depth risk",
+      "unknowns": []
+    },
+    {
+      "confidence": "HIGH",
+      "description": "reference cycle cannot resolve to a concrete object: tests/fixtures/openapi/adversarial/recursive.yaml#/components/parameters/P1",
+      "entity_ids": [
+        "api:openapi:tests/fixtures/openapi/adversarial/recursive.yaml#/components/parameters/P1"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 23,
+          "offset": null,
+          "source": "tests/fixtures/openapi/adversarial/recursive.yaml",
+          "summary": "reference cycle cannot resolve to a concrete object: tests/fixtures/openapi/adversarial/recursive.yaml#/components/parameters/P1"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS019",
+      "remediation": "break the alias chain with a concrete schema",
+      "severity": "MEDIUM",
+      "source_location": {
+        "column": 7,
+        "line": 23,
+        "path": "tests/fixtures/openapi/adversarial/recursive.yaml"
+      },
+      "title": "Circular reference depth risk",
+      "unknowns": []
+    },
+    {
+      "confidence": "HIGH",
+      "description": "reference cycle cannot resolve to a concrete object: tests/fixtures/openapi/adversarial/recursive.yaml#/components/pathItems/LoopA -> tests/fixtures/openapi/adversarial/recursive.yaml#/components/pathItems/LoopB",
+      "entity_ids": [
+        "api:openapi:tests/fixtures/openapi/adversarial/recursive.yaml#/components/pathItems/LoopA"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 18,
+          "offset": null,
+          "source": "tests/fixtures/openapi/adversarial/recursive.yaml",
+          "summary": "reference cycle cannot resolve to a concrete object: tests/fixtures/openapi/adversarial/recursive.yaml#/components/pathItems/LoopA -> tests/fixtures/openapi/adversarial/recursive.yaml#/components/pathItems/LoopB"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS019",
+      "remediation": "break the alias chain with a concrete schema",
+      "severity": "MEDIUM",
+      "source_location": {
+        "column": 7,
+        "line": 18,
+        "path": "tests/fixtures/openapi/adversarial/recursive.yaml"
+      },
+      "title": "Circular reference depth risk",
+      "unknowns": []
+    },
+    {
+      "confidence": "HIGH",
+      "description": "reference cycle cannot resolve to a concrete object: tests/fixtures/openapi/adversarial/recursive.yaml#/components/responses/R1 -> tests/fixtures/openapi/adversarial/recursive.yaml#/components/responses/R2",
+      "entity_ids": [
+        "api:openapi:tests/fixtures/openapi/adversarial/recursive.yaml#/components/responses/R1"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 26,
+          "offset": null,
+          "source": "tests/fixtures/openapi/adversarial/recursive.yaml",
+          "summary": "reference cycle cannot resolve to a concrete object: tests/fixtures/openapi/adversarial/recursive.yaml#/components/responses/R1 -> tests/fixtures/openapi/adversarial/recursive.yaml#/components/responses/R2"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS019",
+      "remediation": "break the alias chain with a concrete schema",
+      "severity": "MEDIUM",
+      "source_location": {
+        "column": 7,
+        "line": 26,
+        "path": "tests/fixtures/openapi/adversarial/recursive.yaml"
+      },
+      "title": "Circular reference depth risk",
+      "unknowns": []
+    },
+    {
+      "confidence": "MEDIUM",
+      "description": "recursive reference structure (consumers must bound depth): tests/fixtures/openapi/adversarial/recursive.yaml#/components/schemas/A -> tests/fixtures/openapi/adversarial/recursive.yaml#/components/schemas/B",
+      "entity_ids": [
+        "api:openapi:tests/fixtures/openapi/adversarial/recursive.yaml#/components/schemas/A/allOf/0"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 41,
+          "offset": null,
+          "source": "tests/fixtures/openapi/adversarial/recursive.yaml",
+          "summary": "recursive reference structure (consumers must bound depth): tests/fixtures/openapi/adversarial/recursive.yaml#/components/schemas/A -> tests/fixtures/openapi/adversarial/recursive.yaml#/components/schemas/B"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS019",
+      "remediation": null,
+      "severity": "INFO",
+      "source_location": {
+        "column": 11,
+        "line": 41,
+        "path": "tests/fixtures/openapi/adversarial/recursive.yaml"
+      },
+      "title": "Circular reference depth risk",
+      "unknowns": []
+    },
+    {
+      "confidence": "HIGH",
+      "description": "reference cycle cannot resolve to a concrete object: tests/fixtures/openapi/adversarial/recursive.yaml#/components/schemas/Self",
+      "entity_ids": [
+        "api:openapi:tests/fixtures/openapi/adversarial/recursive.yaml#/components/schemas/Self"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 31,
+          "offset": null,
+          "source": "tests/fixtures/openapi/adversarial/recursive.yaml",
+          "summary": "reference cycle cannot resolve to a concrete object: tests/fixtures/openapi/adversarial/recursive.yaml#/components/schemas/Self"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS019",
+      "remediation": "break the alias chain with a concrete schema",
+      "severity": "MEDIUM",
+      "source_location": {
+        "column": 7,
+        "line": 31,
+        "path": "tests/fixtures/openapi/adversarial/recursive.yaml"
+      },
+      "title": "Circular reference depth risk",
+      "unknowns": []
+    },
+    {
+      "confidence": "MEDIUM",
+      "description": "recursive reference structure (consumers must bound depth): tests/fixtures/openapi/adversarial/recursive.yaml#/components/schemas/Tree",
+      "entity_ids": [
+        "api:openapi:tests/fixtures/openapi/adversarial/recursive.yaml#/components/schemas/Tree/properties/children/items"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 38,
+          "offset": null,
+          "source": "tests/fixtures/openapi/adversarial/recursive.yaml",
+          "summary": "recursive reference structure (consumers must bound depth): tests/fixtures/openapi/adversarial/recursive.yaml#/components/schemas/Tree"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS019",
+      "remediation": null,
+      "severity": "INFO",
+      "source_location": {
+        "column": 13,
+        "line": 38,
+        "path": "tests/fixtures/openapi/adversarial/recursive.yaml"
+      },
+      "title": "Circular reference depth risk",
+      "unknowns": []
+    },
+    {
+      "confidence": "MEDIUM",
+      "description": "recursive reference structure (consumers must bound depth): tests/fixtures/openapi/crossfile/schemas/group.yaml#/Group -> tests/fixtures/openapi/crossfile/schemas/user.yaml#/User",
+      "entity_ids": [
+        "api:openapi:tests/fixtures/openapi/crossfile/schemas/group.yaml#/Group/properties/members/items"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 7,
+          "offset": null,
+          "source": "tests/fixtures/openapi/crossfile/schemas/group.yaml",
+          "summary": "recursive reference structure (consumers must bound depth): tests/fixtures/openapi/crossfile/schemas/group.yaml#/Group -> tests/fixtures/openapi/crossfile/schemas/user.yaml#/User"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS019",
+      "remediation": null,
+      "severity": "INFO",
+      "source_location": {
+        "column": 9,
+        "line": 7,
+        "path": "tests/fixtures/openapi/crossfile/schemas/group.yaml"
+      },
+      "title": "Circular reference depth risk",
+      "unknowns": []
+    },
+    {
+      "confidence": "MEDIUM",
+      "description": "recursive reference structure (consumers must bound depth): tests/fixtures/openapi/crossfile/schemas/user.yaml#/Node",
+      "entity_ids": [
+        "api:openapi:tests/fixtures/openapi/crossfile/schemas/user.yaml#/Node/properties/next"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 13,
+          "offset": null,
+          "source": "tests/fixtures/openapi/crossfile/schemas/user.yaml",
+          "summary": "recursive reference structure (consumers must bound depth): tests/fixtures/openapi/crossfile/schemas/user.yaml#/Node"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS019",
+      "remediation": null,
+      "severity": "INFO",
+      "source_location": {
+        "column": 7,
+        "line": 13,
+        "path": "tests/fixtures/openapi/crossfile/schemas/user.yaml"
+      },
+      "title": "Circular reference depth risk",
+      "unknowns": []
+    },
+    {
+      "confidence": "MEDIUM",
+      "description": "recursive reference structure (consumers must bound depth): tests/fixtures/openapi/v30/petstore.yaml#/components/schemas/Pet",
+      "entity_ids": [
+        "api:openapi:tests/fixtures/openapi/v30/petstore.yaml#/components/schemas/Pet/properties/parent"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 94,
+          "offset": null,
+          "source": "tests/fixtures/openapi/v30/petstore.yaml",
+          "summary": "recursive reference structure (consumers must bound depth): tests/fixtures/openapi/v30/petstore.yaml#/components/schemas/Pet"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS019",
+      "remediation": null,
+      "severity": "INFO",
+      "source_location": {
+        "column": 11,
+        "line": 94,
+        "path": "tests/fixtures/openapi/v30/petstore.yaml"
+      },
+      "title": "Circular reference depth risk",
+      "unknowns": []
+    },
+    {
+      "confidence": "LOW",
+      "description": "GET /self has no tags or domain grouping",
+      "entity_ids": [
+        "operation:openapi:method_path:GET /self"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 9,
+          "offset": null,
+          "source": "tests/fixtures/openapi/adversarial/recursive.yaml",
+          "summary": "GET /self has no tags or domain grouping"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS020",
+      "remediation": null,
+      "severity": "INFO",
+      "source_location": {
+        "column": 5,
+        "line": 9,
+        "path": "tests/fixtures/openapi/adversarial/recursive.yaml"
+      },
+      "title": "Operation without tags/domain ownership (candidate)",
+      "unknowns": [
+        {
+          "missing": "domain/owner attribution for the operation",
+          "resolution": "add tags or declare ownership metadata",
+          "subject": "method_path:GET /self"
+        }
+      ]
+    },
+    {
+      "confidence": "LOW",
+      "description": "PURGE /search has no tags or domain grouping",
+      "entity_ids": [
+        "operation:openapi:method_path:PURGE /search"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 18,
+          "offset": null,
+          "source": "tests/fixtures/openapi/v32/api.yaml",
+          "summary": "PURGE /search has no tags or domain grouping"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS020",
+      "remediation": null,
+      "severity": "INFO",
+      "source_location": {
+        "column": 7,
+        "line": 18,
+        "path": "tests/fixtures/openapi/v32/api.yaml"
+      },
+      "title": "Operation without tags/domain ownership (candidate)",
+      "unknowns": [
+        {
+          "missing": "domain/owner attribution for the operation",
+          "resolution": "add tags or declare ownership metadata",
+          "subject": "method_path:PURGE /search"
+        }
+      ]
+    },
+    {
+      "confidence": "LOW",
+      "description": "GET /charges/{id} has no tags or domain grouping",
+      "entity_ids": [
+        "operation:openapi:operation_id:getCharge"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 5,
+          "offset": null,
+          "source": "labs/golden/microservices-topology/payments-api/api.yaml",
+          "summary": "GET /charges/{id} has no tags or domain grouping"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS020",
+      "remediation": null,
+      "severity": "INFO",
+      "source_location": {
+        "column": 5,
+        "line": 5,
+        "path": "labs/golden/microservices-topology/payments-api/api.yaml"
+      },
+      "title": "Operation without tags/domain ownership (candidate)",
+      "unknowns": [
+        {
+          "missing": "domain/owner attribution for the operation",
+          "resolution": "add tags or declare ownership metadata",
+          "subject": "operation_id:getCharge"
+        }
+      ]
+    },
+    {
+      "confidence": "LOW",
+      "description": "GET /pets/{petId} has no tags or domain grouping",
+      "entity_ids": [
+        "operation:openapi:operation_id:getPet"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 68,
+          "offset": null,
+          "source": "tests/fixtures/openapi/v30/petstore.yaml",
+          "summary": "GET /pets/{petId} has no tags or domain grouping"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS020",
+      "remediation": null,
+      "severity": "INFO",
+      "source_location": {
+        "column": 5,
+        "line": 68,
+        "path": "tests/fixtures/openapi/v30/petstore.yaml"
+      },
+      "title": "Operation without tags/domain ownership (candidate)",
+      "unknowns": [
+        {
+          "missing": "domain/owner attribution for the operation",
+          "resolution": "add tags or declare ownership metadata",
+          "subject": "operation_id:getPet"
+        }
+      ]
+    },
+    {
+      "confidence": "LOW",
+      "description": "GET /users/{id} has no tags or domain grouping",
+      "entity_ids": [
+        "operation:openapi:operation_id:getUser"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 7,
+          "offset": null,
+          "source": "labs/contracts/breaking-change-client-impact/after/openapi.yaml",
+          "summary": "GET /users/{id} has no tags or domain grouping"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS020",
+      "remediation": null,
+      "severity": "INFO",
+      "source_location": {
+        "column": 5,
+        "line": 7,
+        "path": "labs/contracts/breaking-change-client-impact/after/openapi.yaml"
+      },
+      "title": "Operation without tags/domain ownership (candidate)",
+      "unknowns": [
+        {
+          "missing": "domain/owner attribution for the operation",
+          "resolution": "add tags or declare ownership metadata",
+          "subject": "operation_id:getUser"
+        }
+      ]
+    },
+    {
+      "confidence": "LOW",
+      "description": "GET /users/{id} has no tags or domain grouping",
+      "entity_ids": [
+        "operation:openapi:operation_id:getUser"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 7,
+          "offset": null,
+          "source": "labs/contracts/breaking-change-client-impact/before/openapi.yaml",
+          "summary": "GET /users/{id} has no tags or domain grouping"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS020",
+      "remediation": null,
+      "severity": "INFO",
+      "source_location": {
+        "column": 5,
+        "line": 7,
+        "path": "labs/contracts/breaking-change-client-impact/before/openapi.yaml"
+      },
+      "title": "Operation without tags/domain ownership (candidate)",
+      "unknowns": [
+        {
+          "missing": "domain/owner attribution for the operation",
+          "resolution": "add tags or declare ownership metadata",
+          "subject": "operation_id:getUser"
+        }
+      ]
+    },
+    {
+      "confidence": "LOW",
+      "description": "GET /users/{id} has no tags or domain grouping",
+      "entity_ids": [
+        "operation:openapi:operation_id:getUser"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 7,
+          "offset": null,
+          "source": "labs/security/bola-candidate/api.yaml",
+          "summary": "GET /users/{id} has no tags or domain grouping"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS020",
+      "remediation": null,
+      "severity": "INFO",
+      "source_location": {
+        "column": 5,
+        "line": 7,
+        "path": "labs/security/bola-candidate/api.yaml"
+      },
+      "title": "Operation without tags/domain ownership (candidate)",
+      "unknowns": [
+        {
+          "missing": "domain/owner attribution for the operation",
+          "resolution": "add tags or declare ownership metadata",
+          "subject": "operation_id:getUser"
+        }
+      ]
+    },
+    {
+      "confidence": "LOW",
+      "description": "GET /nodes has no tags or domain grouping",
+      "entity_ids": [
+        "operation:openapi:operation_id:listNodes"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 5,
+          "offset": null,
+          "source": "labs/adversarial/recursive-refs/openapi.yaml",
+          "summary": "GET /nodes has no tags or domain grouping"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS020",
+      "remediation": null,
+      "severity": "INFO",
+      "source_location": {
+        "column": 5,
+        "line": 5,
+        "path": "labs/adversarial/recursive-refs/openapi.yaml"
+      },
+      "title": "Operation without tags/domain ownership (candidate)",
+      "unknowns": [
+        {
+          "missing": "domain/owner attribution for the operation",
+          "resolution": "add tags or declare ownership metadata",
+          "subject": "operation_id:listNodes"
+        }
+      ]
+    },
+    {
+      "confidence": "LOW",
+      "description": "GET /users has no tags or domain grouping",
+      "entity_ids": [
+        "operation:openapi:operation_id:listUsers"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 1,
+          "offset": null,
+          "source": "tests/fixtures/openapi/crossfile/paths/users.yaml",
+          "summary": "GET /users has no tags or domain grouping"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS020",
+      "remediation": null,
+      "severity": "INFO",
+      "source_location": {
+        "column": 1,
+        "line": 1,
+        "path": "tests/fixtures/openapi/crossfile/paths/users.yaml"
+      },
+      "title": "Operation without tags/domain ownership (candidate)",
+      "unknowns": [
+        {
+          "missing": "domain/owner attribution for the operation",
+          "resolution": "add tags or declare ownership metadata",
+          "subject": "operation_id:listUsers"
+        }
+      ]
+    },
+    {
+      "confidence": "LOW",
+      "description": "QUERY /search has no tags or domain grouping",
+      "entity_ids": [
+        "operation:openapi:operation_id:searchQuery"
+      ],
+      "evidence": [
+        {
+          "kind": "STATIC",
+          "line": 12,
+          "offset": null,
+          "source": "tests/fixtures/openapi/v32/api.yaml",
+          "summary": "QUERY /search has no tags or domain grouping"
+        }
+      ],
+      "evidence_kind": "STATIC",
+      "id": "OAS020",
+      "remediation": null,
+      "severity": "INFO",
+      "source_location": {
+        "column": 5,
+        "line": 12,
+        "path": "tests/fixtures/openapi/v32/api.yaml"
+      },
+      "title": "Operation without tags/domain ownership (candidate)",
+      "unknowns": [
+        {
+          "missing": "domain/owner attribution for the operation",
+          "resolution": "add tags or declare ownership metadata",
+          "subject": "operation_id:searchQuery"
+        }
+      ]
+    },
+    {
+      "confidence": "LOW",
+      "description": "48 spans / 0 requests with no correlation-id or request-id evidence",
+      "entity_ids": [],
+      "evidence": [
+        {
+          "kind": "RUNTIME",
+          "line": null,
+          "offset": null,
+          "source": "(runtime)",
+          "summary": "48 spans / 0 requests with no correlation-id or request-id evidence"
+        }
+      ],
+      "evidence_kind": "RUNTIME",
+      "id": "OBSAPI001",
+      "remediation": null,
+      "severity": "MEDIUM",
+      "source_location": {
+        "column": null,
+        "line": null,
+        "path": "(runtime)"
+      },
+      "title": "Missing request correlation evidence",
+      "unknowns": [
+        {
+          "missing": "correlation-id/request-id attributes or headers",
+          "resolution": "correlation may exist in artifact fields this adapter does not map",
+          "subject": "request correlation"
+        }
+      ]
+    },
+    {
+      "confidence": "MEDIUM",
+      "description": "declared retries multiply to 9 potential attempts across gateway, payments-service (explicit configs only)",
+      "entity_ids": [],
+      "evidence": [
+        {
+          "kind": "CONFIG",
+          "line": null,
+          "offset": null,
+          "source": "(config)",
+          "summary": "declared retries multiply to 9 potential attempts across gateway, payments-service (explicit configs only)"
+        }
+      ],
+      "evidence_kind": "CONFIG",
+      "id": "RELAPI001",
+      "remediation": "review whether stacked retries are intended; verify idempotency before allowing amplification",
+      "severity": "HIGH",
+      "source_location": {
+        "column": null,
+        "line": null,
+        "path": "(config)"
+      },
+      "title": "Retry amplification candidate",
+      "unknowns": []
+    },
+    {
+      "confidence": "LOW",
+      "description": "retries declared at 'gateway' with idempotency unknown - manual review required",
+      "entity_ids": [],
+      "evidence": [
+        {
+          "kind": "CONFIG",
+          "line": null,
+          "offset": null,
+          "source": "labs/reliability/retry-amplification/cfg.yaml",
+          "summary": "retries declared at 'gateway' with idempotency unknown - manual review required"
+        }
+      ],
+      "evidence_kind": "CONFIG",
+      "id": "RELAPI002",
+      "remediation": "prove idempotency or bound retries before enabling amplification",
+      "severity": "MEDIUM",
+      "source_location": {
+        "column": null,
+        "line": null,
+        "path": "labs/reliability/retry-amplification/cfg.yaml"
+      },
+      "title": "Idempotency unknown on retried operation",
+      "unknowns": [
+        {
+          "missing": "idempotency evidence (\u00a742 sources)",
+          "resolution": "idempotency key, contract metadata, or handler semantics required before retrying is safe",
+          "subject": "gateway"
+        }
+      ]
+    },
+    {
+      "confidence": "LOW",
+      "description": "retries declared at 'payments-service' with idempotency unknown - manual review required",
+      "entity_ids": [],
+      "evidence": [
+        {
+          "kind": "CONFIG",
+          "line": null,
+          "offset": null,
+          "source": "labs/reliability/retry-amplification/cfg.yaml",
+          "summary": "retries declared at 'payments-service' with idempotency unknown - manual review required"
+        }
+      ],
+      "evidence_kind": "CONFIG",
+      "id": "RELAPI002",
+      "remediation": "prove idempotency or bound retries before enabling amplification",
+      "severity": "MEDIUM",
+      "source_location": {
+        "column": null,
+        "line": null,
+        "path": "labs/reliability/retry-amplification/cfg.yaml"
+      },
+      "title": "Idempotency unknown on retried operation",
+      "unknowns": [
+        {
+          "missing": "idempotency evidence (\u00a742 sources)",
+          "resolution": "idempotency key, contract metadata, or handler semantics required before retrying is safe",
+          "subject": "payments-service"
+        }
+      ]
+    },
+    {
+      "confidence": "LOW",
+      "description": "timeout evidence without call-site deadline propagation at: grpc",
+      "entity_ids": [],
+      "evidence": [
+        {
+          "kind": "CONFIG",
+          "line": null,
+          "offset": null,
+          "source": "(config)",
+          "summary": "timeout evidence without call-site deadline propagation at: grpc"
+        }
+      ],
+      "evidence_kind": "CONFIG",
+      "id": "RELAPI004",
+      "remediation": null,
+      "severity": "MEDIUM",
+      "source_location": {
+        "column": null,
+        "line": null,
+        "path": "(config)"
+      },
+      "title": "Deadline propagation gap",
+      "unknowns": [
+        {
+          "missing": "call-site deadline evidence on the s2s/grpc path",
+          "resolution": "verify callers pass deadlines downstream",
+          "subject": "deadline propagation"
+        }
+      ]
+    },
+    {
+      "confidence": "LOW",
+      "description": "retry/timeout evidence exists but no circuit-breaker configuration was found - candidate",
+      "entity_ids": [],
+      "evidence": [
+        {
+          "kind": "CONFIG",
+          "line": null,
+          "offset": null,
+          "source": "(config)",
+          "summary": "retry/timeout evidence exists but no circuit-breaker configuration was found - candidate"
+        }
+      ],
+      "evidence_kind": "CONFIG",
+      "id": "RELAPI005",
+      "remediation": null,
+      "severity": "LOW",
+      "source_location": {
+        "column": null,
+        "line": null,
+        "path": "(config)"
+      },
+      "title": "No circuit breaker evidence",
+      "unknowns": [
+        {
+          "missing": "declared circuit-breaker config",
+          "resolution": "CBs may live in mesh/app config not provided",
+          "subject": "circuit breakers"
+        }
+      ]
+    },
+    {
+      "confidence": "LOW",
+      "description": "no graceful-shutdown/drain configuration evidence - candidate",
+      "entity_ids": [],
+      "evidence": [
+        {
+          "kind": "CONFIG",
+          "line": null,
+          "offset": null,
+          "source": "(config)",
+          "summary": "no graceful-shutdown/drain configuration evidence - candidate"
+        }
+      ],
+      "evidence_kind": "CONFIG",
+      "id": "RELAPI007",
+      "remediation": null,
+      "severity": "LOW",
+      "source_location": {
+        "column": null,
+        "line": null,
+        "path": "(config)"
+      },
+      "title": "No graceful shutdown evidence",
+      "unknowns": [
+        {
+          "missing": "drain/shutdown configuration",
+          "resolution": "shutdown handling may live in platform config not provided",
+          "subject": "graceful shutdown"
+        }
+      ]
+    }
+  ],
+  "unknowns": [
+    {
+      "missing": "literal URL/method for the client call",
+      "resolution": "the call uses a computed URL or dynamic dispatch",
+      "subject": "labs/golden/microservices-topology/payments-sdk/sdk.py:5"
+    },
+    {
+      "missing": "external reference content",
+      "resolution": "provide the referenced document locally",
+      "subject": "/etc/openapi.yaml"
+    },
+    {
+      "missing": "external reference content",
+      "resolution": "provide the referenced document locally",
+      "subject": "file:///etc/passwd"
+    },
+    {
+      "missing": "external reference content",
+      "resolution": "provide the referenced document locally",
+      "subject": "http://example.com/schemas.yaml#/Pet"
+    },
+    {
+      "missing": "external reference content",
+      "resolution": "provide the referenced document locally",
+      "subject": "https://example.com/schemas.yaml#/Pet"
+    },
+    {
+      "missing": "external reference content",
+      "resolution": "provide the referenced document locally",
+      "subject": "urn:example:pet"
+    },
+    {
+      "missing": "external reference content",
+      "resolution": "provide the referenced document locally",
+      "subject": "https://example.com/remote.yaml#/paths/~1remote"
+    }
+  ]
+}
