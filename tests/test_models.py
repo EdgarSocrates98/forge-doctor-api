@@ -29,6 +29,7 @@ from forge_doctor_api.core.models import (
     RemediationSafety,
     RuntimeEvidence,
     Severity,
+    SourceLocation,
     UnknownFact,
     entity_id,
 )
@@ -43,6 +44,7 @@ UNKNOWN = UnknownFact(
     missing="gateway timeout config",
     resolution="provide gateway export",
 )
+LOCATION = SourceLocation(path="api/openapi.yaml", line=12, column=5)
 
 
 def sample_models() -> list[Model]:
@@ -52,11 +54,14 @@ def sample_models() -> list[Model]:
         Finding(
             id="OAS001",
             title="Missing operationId",
+            description="GET /payments/{id} has no operationId",
             severity=Severity.MEDIUM,
             confidence=Confidence.HIGH,
             evidence_kind=EvidenceKind.STATIC,
             evidence=(EVIDENCE,),
             entity_ids=("operation:openapi:getPayment",),
+            source_location=LOCATION,
+            remediation="add a unique operationId",
             unknowns=(UNKNOWN,),
         ),
         Entity(
@@ -141,6 +146,7 @@ def sample_models() -> list[Model]:
             tradeoffs=("migration cost",),
             unknowns=(UNKNOWN,),
         ),
+        LOCATION,
     ]
 
 
@@ -171,7 +177,7 @@ def test_all_universal_concepts_defined() -> None:
 
 def test_samples_cover_every_model_class() -> None:
     classes = {type(m).__name__ for m in sample_models()}
-    assert classes == REQUIRED_MODELS - {"Confidence", "Severity"}
+    assert classes == (REQUIRED_MODELS - {"Confidence", "Severity"}) | {"SourceLocation"}
 
 
 def test_evidence_kinds_match_spec() -> None:
@@ -249,8 +255,9 @@ def test_naive_datetime_rejected() -> None:
 
 def test_sets_rejected_in_serialization() -> None:
     finding = Finding(
-        id="X1",
+        id="TST001",
         title="t",
+        description="d",
         severity=Severity.LOW,
         confidence=Confidence.LOW,
         evidence_kind=EvidenceKind.DERIVED,
@@ -295,6 +302,7 @@ def test_entity_rejects_non_canonical_ids(raw_id: str, kind: str) -> None:
         lambda: Finding(
             id=" ",
             title="t",
+            description="d",
             severity=Severity.LOW,
             confidence=Confidence.LOW,
             evidence_kind=EvidenceKind.STATIC,

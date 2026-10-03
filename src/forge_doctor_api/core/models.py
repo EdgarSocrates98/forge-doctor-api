@@ -4,19 +4,24 @@ All models are frozen dataclasses with deterministic serialization:
 keys are emitted in sorted order, mappings are sorted, datetimes are
 normalized to UTC, and unordered collections (sets) are rejected so that
 iteration order can never leak into output. No model reads the clock;
-timestamps must be injected by the caller.
+timestamps must be injected by the caller. Every serialized payload passes
+through `redaction.redact` (§57, §125); free-text fields of the evidence and
+finding contracts are additionally redacted at construction.
 """
 
 from __future__ import annotations
 
 import json
 import math
+import re
 import types
 from collections.abc import Mapping
 from dataclasses import dataclass, field, fields
 from datetime import UTC, datetime
 from enum import Enum, StrEnum
-from typing import Any, Self, Union, get_args, get_origin, get_type_hints
+from typing import Any, Self, Union, cast, get_args, get_origin, get_type_hints
+
+from forge_doctor_api.core.redaction import redact, redact_text
 
 
 class ModelError(ValueError):
@@ -24,6 +29,15 @@ class ModelError(ValueError):
 
 
 class EvidenceKind(StrEnum):
+    """Where a fact came from (§6). Every finding must declare one.
+
+    - STATIC: source code, AST, interface definitions (OpenAPI, proto, schema).
+    - CONFIG: gateway, deployment, and policy configuration.
+    - OBSERVED_METADATA: exported artifacts and inventories.
+    - RUNTIME: logs, metrics, traces.
+    - DERIVED: correlation of other facts; never stronger than its inputs.
+    """
+
     STATIC = "STATIC"
     CONFIG = "CONFIG"
     OBSERVED_METADATA = "OBSERVED_METADATA"
@@ -32,6 +46,16 @@ class EvidenceKind(StrEnum):
 
 
 class Confidence(StrEnum):
+    """How strongly the evidence supports a claim.
+
+    - HIGH: direct, unambiguous evidence; a false positive would be a bug.
+    - MEDIUM: strong evidence with a known gap (e.g. only one side of a contract).
+    - LOW: heuristic or indirect evidence; surface as a candidate only.
+    - UNKNOWN: evidence is insufficient to decide. A first-class state, not an
+      error path: a finding at UNKNOWN must list the `UnknownFact`s that would
+      resolve it instead of guessing (§145).
+    """
+
     HIGH = "HIGH"
     MEDIUM = "MEDIUM"
     LOW = "LOW"
@@ -39,6 +63,19 @@ class Confidence(StrEnum):
 
 
 class Severity(StrEnum):
+    """Impact if the finding is real, independent of confidence.
+
+    - CRITICAL: breaks clients, leaks data, or blocks a release now.
+    - HIGH: likely production impact or security exposure.
+    - MEDIUM: correctness or contract-quality issue with bounded impact.
+    - LOW: hygiene issue; cheap to fix, small impact.
+    - INFO: observation with no direct impact.
+
+    There is no UNKNOWN severity: uncertainty is expressed through
+    `Confidence.UNKNOWN` plus `UnknownFact`s, keeping impact and certainty
+    orthogonal.
+    """
+
     CRITICAL = "CRITICAL"
     HIGH = "HIGH"
     MEDIUM = "MEDIUM"
@@ -61,7 +98,7 @@ class ExperimentVerdict(StrEnum):
 
 def _encode(value: Any) -> Any:
     if isinstance(value, Model):
-        return value.to_dict()
+        return value._encode_fields()
     if isinstance(value, Enum):
         return value.value
     if isinstance(value, datetime):
@@ -142,12 +179,27 @@ def _require_aware(name: str, value: datetime | None) -> None:
         raise ModelError(f"{name} must be timezone-aware")
 
 
+def _require_enum(name: str, value: object, enum: type[Enum]) -> None:
+    if not isinstance(value, enum):
+        raise ModelError(f"{name} must be a {enum.__name__}, got {value!r}")
+
+
+def _redact_attrs(obj: object, *names: str) -> None:
+    for name in names:
+        value = getattr(obj, name)
+        if isinstance(value, str):
+            object.__setattr__(obj, name, redact_text(value))
+
+
 @dataclass(frozen=True, kw_only=True)
 class Model:
-    """Base for all core models: deterministic dict/JSON round-trip."""
+    """Base for all core models: deterministic, redacted dict/JSON round-trip."""
+
+    def _encode_fields(self) -> dict[str, Any]:
+        return {f.name: _encode(getattr(self, f.name)) for f in sorted(fields(self), key=_name)}
 
     def to_dict(self) -> dict[str, Any]:
-        return {f.name: _encode(getattr(self, f.name)) for f in sorted(fields(self), key=_name)}
+        return cast(dict[str, Any], redact(self._encode_fields()))
 
     def to_json(self) -> str:
         return json.dumps(
@@ -190,6 +242,19 @@ def _name(f: Any) -> str:
     return str(f.name)
 
 
+CHECK_ID_PATTERN = re.compile(r"^(?P<namespace>[A-Z]{2,10})(?P<number>[0-9]{3,4})$")
+
+
+def check_namespace(check_id: str) -> str:
+    """Return the namespace prefix of a stable check id (`OAS001` -> `OAS`)."""
+    match = CHECK_ID_PATTERN.match(check_id) if isinstance(check_id, str) else None
+    if match is None:
+        raise ModelError(
+            f"check id must be an uppercase namespace followed by 3-4 digits: {check_id!r}"
+        )
+    return match["namespace"]
+
+
 def entity_id(kind: str, domain: str, identifier: str) -> str:
     """Build a canonical entity id `{kind}:{domain}:{identifier}` (§9)."""
     for part_name, part in (("kind", kind), ("domain", domain)):
@@ -210,12 +275,35 @@ class Evidence(Model):
     def __post_init__(self) -> None:
         _require_text("Evidence.source", self.source)
         _require_text("Evidence.summary", self.summary)
+        _require_enum("Evidence.kind", self.kind, EvidenceKind)
         if self.line is not None and self.line < 1:
             raise ModelError("Evidence.line must be >= 1")
+        _redact_attrs(self, "source", "summary")
+
+
+@dataclass(frozen=True, kw_only=True)
+class SourceLocation(Model):
+    """Project-relative POSIX path plus optional 1-based line and column."""
+
+    path: str
+    line: int | None = None
+    column: int | None = None
+
+    def __post_init__(self) -> None:
+        _require_text("SourceLocation.path", self.path)
+        if "\\" in self.path:
+            raise ModelError("SourceLocation.path must use '/' separators")
+        if self.line is not None and self.line < 1:
+            raise ModelError("SourceLocation.line must be >= 1")
+        if self.column is not None and (self.line is None or self.column < 1):
+            raise ModelError("SourceLocation.column must be >= 1 and requires line")
+        _redact_attrs(self, "path")
 
 
 @dataclass(frozen=True, kw_only=True)
 class UnknownFact(Model):
+    """A fact the engine could not establish: what is missing, what resolves it."""
+
     subject: str
     missing: str
     resolution: str
@@ -224,22 +312,46 @@ class UnknownFact(Model):
         _require_text("UnknownFact.subject", self.subject)
         _require_text("UnknownFact.missing", self.missing)
         _require_text("UnknownFact.resolution", self.resolution)
+        _redact_attrs(self, "subject", "missing", "resolution")
 
 
 @dataclass(frozen=True, kw_only=True)
 class Finding(Model):
+    """A check result. `id` is the stable namespaced check id (e.g. `OAS001`).
+
+    `entity_ids` are the affected entity refs; `remediation` is a short hint,
+    not an applied fix. A finding at `Confidence.UNKNOWN` must carry at least
+    one `UnknownFact` explaining what evidence is missing.
+    """
+
     id: str
     title: str
+    description: str
     severity: Severity
     confidence: Confidence
     evidence_kind: EvidenceKind
     evidence: tuple[Evidence, ...] = ()
     entity_ids: tuple[str, ...] = ()
+    source_location: SourceLocation | None = None
+    remediation: str | None = None
     unknowns: tuple[UnknownFact, ...] = ()
 
     def __post_init__(self) -> None:
-        _require_text("Finding.id", self.id)
+        check_namespace(self.id)
         _require_text("Finding.title", self.title)
+        _require_text("Finding.description", self.description)
+        _require_enum("Finding.severity", self.severity, Severity)
+        _require_enum("Finding.confidence", self.confidence, Confidence)
+        _require_enum("Finding.evidence_kind", self.evidence_kind, EvidenceKind)
+        if self.remediation is not None:
+            _require_text("Finding.remediation", self.remediation)
+        if self.confidence is Confidence.UNKNOWN and not self.unknowns:
+            raise ModelError("Finding with UNKNOWN confidence must list its unknowns")
+        _redact_attrs(self, "title", "description", "remediation")
+
+    @property
+    def namespace(self) -> str:
+        return check_namespace(self.id)
 
 
 @dataclass(frozen=True, kw_only=True)
