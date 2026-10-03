@@ -36,3 +36,34 @@ entries:
       source: https://github.com/grpc/proposal/blob/master/A6-client-retries.md
       source_version: "A6"
       last_verified: "2026-09-15"
+  http-to-grpc-status:
+    fields:
+      # §79 status-semantics mapping: HTTP status -> canonical gRPC code.
+      mapping:
+        "200": OK
+        "201": OK
+        "202": OK
+        "204": OK
+        "400": INVALID_ARGUMENT
+        "401": UNAUTHENTICATED
+        "403": PERMISSION_DENIED
+        "404": NOT_FOUND
+        "409": ABORTED
+        "410": NOT_FOUND
+        "412": FAILED_PRECONDITION
+        "413": RESOURCE_EXHAUSTED
+        "416": OUT_OF_RANGE
+        "422": INVALID_ARGUMENT
+        "429": RESOURCE_EXHAUSTED
+        "499": CANCELLED
+        "500": INTERNAL
+        "501": UNIMPLEMENTED
+        "502": UNAVAILABLE
+        "503": UNAVAILABLE
+        "504": DEADLINE_EXCEEDED
+      note: unmapped codes approximate to UNKNOWN / require explicit
+        status contract on the target
+    provenance:
+      source: https://github.com/googleapis/googleapis/blob/master/google/rpc/code.proto
+      source_version: "v1"
+      last_verified: "2026-09-30"
