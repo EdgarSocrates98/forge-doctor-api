@@ -35,6 +35,14 @@ output never contains OTLP payload fields
 - `error_budget` / SLO helpers in `reliability/slo.py` evaluate declared
   objectives against observed windows — and stay silent when a window
   has insufficient samples rather than emitting a noisy verdict.
+- `fanout_signals(routes, clients, executions)` → `FanoutSignal` (§59):
+  per-operation dependency width. Static tier counts distinct call-site
+  targets in a handler's source file (multi-handler files record an
+  attribution `UnknownFact` instead of guessing); runtime tier counts
+  distinct callees in `downstream_calls` → `CONFIRMED`. Runtime evidence
+  outranks static per §102 — a static count is never presented as
+  confirmed, and a caller-requested subject with no evidence yields an
+  explicit `CANDIDATE` row with `None` widths rather than no row.
 
 ## Scale
 

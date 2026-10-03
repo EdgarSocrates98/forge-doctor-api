@@ -124,8 +124,11 @@ assessments, and compact handoff bundles for agentic tools.
 - [docs/knowledge-packs.md](docs/knowledge-packs.md) — versioned knowledge data + plugin SDK
 - [docs/migration.md](docs/migration.md) — portability assessments + decision briefs
 - [docs/handoff.md](docs/handoff.md) — `ApiHandoffBundle`, `DoctorApi`, Forger routing
+- [docs/infrastructure.md](docs/infrastructure.md) — gateway/mesh declared config + Kubernetes/IaC evidence
+- [docs/cache.md](docs/cache.md) — declared cache policies, layers, invalidation risk
 - [docs/lab.md](docs/lab.md) — Forge Lab corpus, ground truth, precision/recall
 - [docs/release-v0.1.md](docs/release-v0.1.md) — quality gate, packaging, hermetic proofs
+- [docs/roadmap.md](docs/roadmap.md) — shipped coverage vs planned waves
 - [docs/development.md](docs/development.md) — repo layout, test/lint/typecheck, adding a check
 
 ## Repository layout

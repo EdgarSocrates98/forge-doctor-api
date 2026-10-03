@@ -19,6 +19,10 @@ src/forge_doctor_api/
 │   ├── grpc/        .proto files -> GrpcProjectModel
 │   ├── routes/      framework adapters (FastAPI) -> RouteScan
 │   ├── clients/     client call-site extraction -> ApiClientModel
+│   ├── gateway/     §71-73 declared gateway/mesh config (Kong, Envoy,
+│   │                AWS API Gateway, NGINX) -> GatewayModel, ServiceMeshModel
+│   ├── iac/         §74-76 K8s manifests + Terraform/Helm/CFN -> InfraModel
+│   ├── cache/       §151-153 declared cache policies -> ApiCacheModel
 │   ├── runtime/     OTLP traces + access logs -> TraceModel, executions,
 │   │                RequestHistory, ApiObservabilityModel
 │   └── version/     API versioning model (URI/header/media strategies)
@@ -43,6 +47,8 @@ src/forge_doctor_api/
 ├── knowledge/       versioned YAML packs + capability detection
 ├── plugins/         adapter Protocols + TrustClass boundaries
 ├── safefix/         spec-022 fix classification (SAFE/REVIEW/MANUAL)
+├── perf/            baselines, budgets, critical path, experiments,
+│                    capacity/cost signals, FanoutSignal (§59)
 ├── lab/             Forge Lab runner + precision/recall reports
 ├── output/          §175 writers: JSON, JSONL, SARIF 2.1.0, agent compact
 ├── scan.py          §177-§178 unified scan + gate evaluation
