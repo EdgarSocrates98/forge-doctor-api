@@ -522,8 +522,10 @@ def test_cli_semantic_diff_and_json(tmp_path: Path) -> None:
     result = runner.invoke(app, ["diff", "--semantic", str(old), str(new), "--json"])
     assert result.exit_code == 0
     payload = json.loads(result.output)
-    assert payload["changes"][0]["kind"] == "response_field_removed"
-    assert payload["findings"]["findings"][0]["id"] == "COMPAT007"
+    # §66 semantic diff emits typed events + the raw diff (spec 020 shape)
+    assert payload["diff"]["changes"][0]["kind"] == "response_field_removed"
+    assert payload["diff"]["findings"]["findings"][0]["id"] == "COMPAT007"
+    assert any(e["type"] == "SCHEMA_CHANGED" for e in payload["events"])
 
 
 def test_cli_compatibility_help() -> None:

@@ -12,9 +12,14 @@ from rich.table import Table
 from rich.text import Text
 
 from forge_doctor_api import __version__
+from forge_doctor_api.analyzers.clients.graph import client_graph
+from forge_doctor_api.analyzers.clients.model import ApiClientModel
+from forge_doctor_api.analyzers.clients.scan import scan_clients
+from forge_doctor_api.analyzers.openapi.graph import contract_graph
 from forge_doctor_api.analyzers.openapi.model import OpenApiProjectModel
 from forge_doctor_api.analyzers.openapi.parser import load_openapi_project
 from forge_doctor_api.analyzers.routes import FastApiAdapter
+from forge_doctor_api.analyzers.routes.graph import scan_graph
 from forge_doctor_api.analyzers.runtime.execution import (
     RequestExecution,
     executions_from_summaries,
@@ -25,6 +30,15 @@ from forge_doctor_api.analyzers.runtime.loader import (
     load_runtime_project,
 )
 from forge_doctor_api.analyzers.runtime.model import RequestSummary
+from forge_doctor_api.analyzers.version.detect import detect_version_model
+from forge_doctor_api.change import (
+    BlastRadiusReport,
+    blast_radius,
+    change_report,
+    config_events,
+    pr_summary,
+)
+from forge_doctor_api.change.model import ChangeEvent
 from forge_doctor_api.checks.apisec import run_security_checks
 from forge_doctor_api.checks.compat import ContractDiff, diff_models, semantic_fingerprint
 from forge_doctor_api.checks.compat.catalog import CompatibilityClass
@@ -32,6 +46,7 @@ from forge_doctor_api.checks.perf import run_perf_checks
 from forge_doctor_api.checks.relapi import run_reliability_checks
 from forge_doctor_api.core.context import ProjectContext
 from forge_doctor_api.core.export import export_findings
+from forge_doctor_api.core.graph import GraphError, ServiceGraph
 from forge_doctor_api.core.models import UnknownFact
 from forge_doctor_api.perf.baseline import build_baselines
 from forge_doctor_api.reliability import (
@@ -41,6 +56,7 @@ from forge_doctor_api.reliability import (
     load_reliability_model,
 )
 from forge_doctor_api.security import load_security_model
+from forge_doctor_api.security.model import SensitiveBusinessFlow
 
 NOT_IMPLEMENTED_EXIT_CODE = 3
 
@@ -126,6 +142,107 @@ def _diff_report(old: str, new: str) -> ContractDiff | None:
     return diff_models(old_model, new_model)
 
 
+def _load_side(target: str) -> tuple[OpenApiProjectModel | None, ProjectContext | None]:
+    """Load a contract model; directory inputs also expose their context for config diffs."""
+    path = Path(target).resolve()
+    if path.is_dir():
+        ctx = ProjectContext.from_root(path)
+        return load_openapi_project(ctx), ctx
+    if path.is_file():
+        return load_openapi_project(ProjectContext.from_root(path.parent), [path.name]), None
+    return None, None
+
+
+def _config_events_for(
+    old: OpenApiProjectModel,
+    new: OpenApiProjectModel,
+    old_ctx: ProjectContext | None,
+    new_ctx: ProjectContext | None,
+) -> tuple[ChangeEvent, ...]:
+    """Config-plane diff (§65): only when both sides are directory inputs."""
+    if old_ctx is None or new_ctx is None:
+        return ()
+    old_rel = load_reliability_model(old_ctx, list(old_ctx.iter_files()))
+    new_rel = load_reliability_model(new_ctx, list(new_ctx.iter_files()))
+    old_sec = load_security_model(old_ctx, list(old_ctx.iter_files()), openapi=old)
+    new_sec = load_security_model(new_ctx, list(new_ctx.iter_files()), openapi=new)
+    return config_events(
+        old_rel, new_rel, old_sec, new_sec,
+        detect_version_model(old), detect_version_model(new), old, new,
+    )
+
+
+def _print_events(events: tuple[ChangeEvent, ...], diff: ContractDiff, as_json: bool) -> None:
+    if as_json:
+        payload = {
+            "events": [e.to_dict() for e in events],
+            "diff": {
+                "changes": [c.to_dict() for c in diff.changes],
+                "findings": export_findings(diff.findings).to_dict(),
+            },
+        }
+        typer.echo(json.dumps(payload, indent=2, sort_keys=True))
+        return
+    if not events:
+        _console.print("no semantic changes")
+        return
+    for e in events:
+        _console.print(
+            f"{e.type.value}  [{e.classification.value}]  {e.kind}  "
+            f"{e.subject}  — {Text(e.detail).plain}",
+            markup=False,
+        )
+
+
+def _print_pr_summary(
+    events: tuple[ChangeEvent, ...],
+    affected_clients: tuple[str, ...],
+    reliability: ApiReliabilityModel | None,
+    extra_unknowns: int,
+) -> None:
+    s = pr_summary(
+        events,
+        affected_clients=affected_clients,
+        reliability=reliability,
+        extra_unknowns=extra_unknowns,
+    )
+    _console.print("Breaking API changes:", s.breaking_changes)
+    _console.print("Affected clients:", s.affected_clients)
+    _console.print("New public endpoint:", s.new_public_endpoints)
+    _console.print("Authorization changes:", s.authorization_changes)
+    _console.print("SLO-relevant dependency changes:", s.slo_relevant_dependency_changes)
+    _console.print("Unknowns:", s.unknowns)
+
+
+def _load_clients(clients_dir: str | None) -> ApiClientModel | None:
+    if clients_dir is None:
+        return None
+    path = Path(clients_dir).resolve()
+    if not path.is_dir():
+        _stderr.print(f"cannot read client source dir: {clients_dir}")
+        raise typer.Exit(code=2)
+    ctx = ProjectContext.from_root(path)
+    return scan_clients(ctx, list(ctx.iter_files()))
+
+
+def _print_blast(report: BlastRadiusReport, as_json: bool) -> None:
+    if as_json:
+        typer.echo(json.dumps(report.to_dict(), indent=2, sort_keys=True))
+        return
+    if not report.nodes:
+        _console.print("no impacted operations")
+        return
+    for node in report.nodes:
+        label = f"{node.method} {node.path}".strip() or node.operation
+        _console.print(f"{node.change_kind}  {label}  [{node.classification.value}]")
+        _console.print(f"  clients: {', '.join(node.clients) if node.clients else 'unknown'}")
+        _console.print(f"  services: {', '.join(node.services) if node.services else 'unknown'}")
+        paths = ", ".join(node.business_paths) if node.business_paths else "unknown"
+        _console.print(f"  business paths: {paths}")
+    for unknown in report.unknowns:
+        _console.print(f"UNKNOWN: {unknown.subject} — {unknown.missing}")
+
+
 def _print_diff(diff: ContractDiff, as_json: bool) -> None:
     if as_json:
         payload = {
@@ -207,15 +324,48 @@ def semantic_diff(
     old: Annotated[str, typer.Argument(help="Old contract file or directory.")],
     new: Annotated[str, typer.Argument(help="New contract file or directory.")],
     semantic: Annotated[
-        bool, typer.Option("--semantic", help="Emit the semantic change list.")
+        bool, typer.Option("--semantic", help="Emit typed change events (§65).")
     ] = True,
     json_out: Annotated[bool, typer.Option("--json", help="JSON output.")] = False,
+    pr: Annotated[
+        bool, typer.Option("--pr", help="Print the §67 PR-intel summary.")
+    ] = False,
+    clients: Annotated[
+        str | None, typer.Option("--clients", help="Directory of client sources (blast radius).")
+    ] = None,
 ) -> None:
-    """Semantic contract diff (§66)."""
-    diff = _diff_report(old, new)
-    if diff is None:
+    """Semantic contract diff (§66): typed change events + optional PR summary."""
+    old_model, old_ctx = _load_side(old)
+    new_model, new_ctx = _load_side(new)
+    if old_model is None or new_model is None:
+        _stderr.print(f"cannot read contract input: {old if old_model is None else new}")
         raise typer.Exit(code=2)
-    _print_diff(diff, json_out)
+    diff = diff_models(old_model, new_model)
+    events = change_report(diff, _config_events_for(old_model, new_model, old_ctx, new_ctx)).events
+    if semantic:
+        _print_events(events, diff, json_out)
+    else:
+        _print_diff(diff, json_out)
+    if pr:
+        client_model = _load_clients(clients)
+        report = (
+            blast_radius(diff, old_model, client_model)
+            if client_model is not None
+            else None
+        )
+        rel = (
+            load_reliability_model(new_ctx, list(new_ctx.iter_files()))
+            if new_ctx is not None
+            else None
+        )
+        extra = len(client_model.unknowns) if client_model is not None else 0
+        extra += len(report.unknowns) if report is not None else 0
+        _print_pr_summary(
+            events,
+            report.affected_clients if report is not None else (),
+            rel,
+            extra,
+        )
 
 
 @app.command("fingerprint")
@@ -231,15 +381,83 @@ def contract_fingerprint(
 
 
 @app.command()
-def graph() -> None:
-    """Show the service graph."""
-    _not_implemented("graph")
+def graph(
+    target: Annotated[str, typer.Argument(help="Directory with contract + source evidence.")],
+    json_out: Annotated[bool, typer.Option("--json", help="JSON output.")] = False,
+) -> None:
+    """Show the service graph built from contract + implementation + client evidence (§161)."""
+    path = Path(target).resolve()
+    if not path.is_dir():
+        _stderr.print(f"cannot read path: {target}")
+        raise typer.Exit(code=2)
+    ctx = ProjectContext.from_root(path)
+    files = list(ctx.iter_files())
+    openapi = load_openapi_project(ctx)
+    service_graph = contract_graph(openapi)
+    try:
+        scan = FastApiAdapter().scan(ctx, path.name)
+    except Exception:
+        scan = None
+    if scan is not None:
+        _merge_graph(service_graph, scan_graph(scan))
+    client_model = scan_clients(ctx, files)
+    _merge_graph(service_graph, client_graph(client_model))
+    if json_out:
+        typer.echo(json.dumps(service_graph.to_dict(), indent=2, sort_keys=True))
+        return
+    by_kind: dict[str, int] = {}
+    for entity in service_graph.entities():
+        by_kind[entity.kind] = by_kind.get(entity.kind, 0) + 1
+    rel_kinds: dict[str, int] = {}
+    for rel in service_graph.relationships():
+        rel_kinds[str(rel.kind)] = rel_kinds.get(str(rel.kind), 0) + 1
+    _console.print("entities:")
+    for kind in sorted(by_kind):
+        _console.print(f"  {kind}: {by_kind[kind]}")
+    _console.print("relationships:")
+    for kind in sorted(rel_kinds):
+        _console.print(f"  {kind}: {rel_kinds[kind]}")
+
+
+def _merge_graph(target_graph: ServiceGraph, other: ServiceGraph) -> None:
+    for entity in other.entities():
+        try:
+            target_graph.add_entity(entity)
+        except GraphError:
+            continue
+    for rel in other.relationships():
+        try:
+            target_graph.add_relationship(rel)
+        except GraphError:
+            continue
 
 
 @app.command("blast-radius")
-def blast_radius() -> None:
-    """Show the blast radius of a change."""
-    _not_implemented("blast-radius")
+def blast_radius_cmd(
+    old: Annotated[str, typer.Argument(help="Old contract file or directory.")],
+    new: Annotated[str, typer.Argument(help="New contract file or directory.")],
+    clients: Annotated[
+        str | None, typer.Option("--clients", help="Directory of client sources.")
+    ] = None,
+    json_out: Annotated[bool, typer.Option("--json", help="JSON output.")] = False,
+) -> None:
+    """§68 blast radius: changed operation -> clients -> services -> business paths."""
+    old_model, old_ctx = _load_side(old)
+    new_model, _ = _load_side(new)
+    if old_model is None or new_model is None:
+        _stderr.print(f"cannot read contract input: {old if old_model is None else new}")
+        raise typer.Exit(code=2)
+    diff = diff_models(old_model, new_model)
+    client_model = _load_clients(clients)
+    if client_model is None:
+        _stderr.print("blast radius requires --clients <dir> with client source code")
+        raise typer.Exit(code=2)
+    flows: tuple[SensitiveBusinessFlow, ...] = ()
+    if old_ctx is not None:
+        flows = load_security_model(
+            old_ctx, list(old_ctx.iter_files()), openapi=old_model
+        ).business_flows
+    _print_blast(blast_radius(diff, old_model, client_model, flows), json_out)
 
 
 def _load_executions(
