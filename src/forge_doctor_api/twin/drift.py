@@ -12,6 +12,10 @@ from typing import Any
 
 import yaml
 
+from forge_doctor_api.analyzers.gateway import (
+    gateway_route_map,
+    load_gateway_models,
+)
 from forge_doctor_api.analyzers.openapi.model import OpenApiProjectModel
 from forge_doctor_api.analyzers.routes.model import RouteModel, RouteScan
 from forge_doctor_api.analyzers.runtime.execution import RequestExecution
@@ -107,7 +111,11 @@ def auth_drift_entries(security: ApiSecurityModel) -> tuple[TwinDrift, ...]:
 
 
 def gateway_routes(context: ProjectContext, files: list[str]) -> dict[str, str]:
-    """Gateway routing prefixes/paths declared in config artifacts."""
+    """Gateway routing prefixes/paths declared in config artifacts.
+
+    Generic route-key walker plus the dialect parsers from
+    `analyzers.gateway` (§72) — both feed the same path→file vocabulary.
+    """
     found: dict[str, str] = {}
     for path in sorted(files):
         if Path(path).suffix.lower() not in {".yaml", ".yml", ".json"}:
@@ -117,6 +125,9 @@ def gateway_routes(context: ProjectContext, files: list[str]) -> dict[str, str]:
         except Exception:
             continue
         _collect_routes(doc, path, found)
+    for model in load_gateway_models(context, files)[0]:
+        for route_path in gateway_route_map(model):
+            found.setdefault(route_path, model.source.path)
     return found
 
 

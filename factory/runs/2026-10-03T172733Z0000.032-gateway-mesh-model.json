@@ -1,0 +1,15 @@
+{
+  "agent": "claude",
+  "command": [
+    "claude",
+    "-p",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\032-gateway-mesh-model.implement.claude.md)"
+  ],
+  "created_at": "2026-10-03T17:27:33+00:00",
+  "id": "032-gateway-mesh-model",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\032-gateway-mesh-model.implement.claude.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\032-gateway-mesh-model.md",
+  "spec_sha256": "5fe327320718cca210eb9d78a2175af0c387b85d642d3620a63fb70e5a51c320",
+  "status": "planned",
+  "title": "GatewayModel + ServiceMeshModel \u2014 declared gateway/mesh config surface"
+}
