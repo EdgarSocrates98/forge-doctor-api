@@ -39,6 +39,8 @@ _METHOD_KEYS = ("http.request.method", "http.method")
 _REQ_BYTES_KEYS = ("http.request.body.size", "http.request_content_length")
 _RESP_BYTES_KEYS = ("http.response.body.size", "http.response_content_length")
 _STATUS_KEYS = ("http.status_code", "http.response.status_code")
+_TIMEOUT_ERROR_KEYS = ("error.type", "otel.status_description", "error.message")
+_TIMEOUT_STATUSES = {"408", "504"}
 _CALLEE_KEYS = (
     "peer.service",
     "server.address",
@@ -82,6 +84,7 @@ class RequestExecution(Model):
     retries: int | None = None
     downstream_calls: tuple[DownstreamCall, ...] = ()
     cache_status: str | None = None
+    timed_out: bool | None = None
     evidence: tuple[Evidence, ...] = ()
     unknowns: tuple[UnknownFact, ...] = ()
 
@@ -138,6 +141,18 @@ def _span_status(s: Span) -> str | None:
     return None
 
 
+def _timed_out(s: Span) -> bool | None:
+    """True only on observed timeout evidence; None when nothing recorded."""
+    code = _first(s.attributes, _STATUS_KEYS)
+    err = _first(s.attributes, _TIMEOUT_ERROR_KEYS)
+    if code is None and err is None:
+        return None
+    return code in _TIMEOUT_STATUSES or (
+        err is not None
+        and any(k in err.lower() for k in ("timeout", "deadline", "timed out"))
+    )
+
+
 def _downstream_call(s: Span, caller: str | None) -> DownstreamCall:
     return DownstreamCall(
         caller=caller,
@@ -168,42 +183,72 @@ def executions_from_traces(
         spans = list(trace.spans)
         if not spans:
             continue
-        by_id = {s.span_id: s for s in spans if s.span_id}
+        by_id: dict[str, Span] = {}
+        dup_ids: set[str] = set()
+        for s in spans:
+            if not s.span_id:
+                continue
+            if s.span_id in by_id:
+                dup_ids.add(s.span_id)
+            else:
+                by_id[s.span_id] = s
+        if dup_ids:
+            unknowns.append(
+                UnknownFact(
+                    subject=f"trace {trace.trace_id}",
+                    missing="unique span ids",
+                    resolution=f"span id(s) {sorted(dup_ids)} appear more "
+                    "than once; parent attribution used the first",
+                )
+            )
         servers = [s for s in spans if s.kind is SpanKind.SERVER]
         roots = (
             servers
             if servers
             else [s for s in spans if not s.parent_id][:1]
         )
-        exec_by_span: dict[str, RequestExecution] = {}
-        calls_by_span: dict[str, list[DownstreamCall]] = {}
-        exec_order: list[Span] = []
+        # Identity-keyed: span ids can collide across merged exports.
+        exec_index: dict[int, int] = {}
+        exec_span_ids: set[str] = set()
+        pairs: list[tuple[Span, RequestExecution]] = []
 
         for s in roots:
-            exec_by_span[s.span_id or ""] = RequestExecution(
-                request_id=_first(s.attributes, _REQUEST_ID_KEYS),
-                trace_id=s.trace_id,
-                service=s.service,
-                operation=s.operation,
-                method=_first(s.attributes, _METHOD_KEYS),
-                route=s.attributes.get("http.route") or s.operation,
-                start_unix_nano=s.start_unix_nano,
-                duration_ms=s.duration_ms,
-                status=_span_status(s),
-                request_bytes=_int_attr(s, _REQ_BYTES_KEYS),
-                response_bytes=_int_attr(s, _RESP_BYTES_KEYS),
-                retries=_observed_retries(s.attributes),
-                cache_status=_first(s.attributes, _CACHE_KEYS),
-                evidence=s.evidence,
+            pairs.append(
+                (
+                    s,
+                    RequestExecution(
+                        request_id=_first(s.attributes, _REQUEST_ID_KEYS),
+                        trace_id=s.trace_id,
+                        service=s.service,
+                        operation=s.operation,
+                        method=_first(s.attributes, _METHOD_KEYS),
+                        route=s.attributes.get("http.route") or s.operation,
+                        start_unix_nano=s.start_unix_nano,
+                        duration_ms=s.duration_ms,
+                        status=_span_status(s),
+                        request_bytes=_int_attr(s, _REQ_BYTES_KEYS),
+                        response_bytes=_int_attr(s, _RESP_BYTES_KEYS),
+                        retries=_observed_retries(s.attributes),
+                        cache_status=_first(s.attributes, _CACHE_KEYS),
+                        timed_out=_timed_out(s),
+                        evidence=s.evidence,
+                    ),
+                )
             )
-            exec_order.append(s)
+            exec_index[id(s)] = len(pairs) - 1
+            if s.span_id:
+                exec_span_ids.add(s.span_id)
 
+        calls_by_exec: dict[int, list[DownstreamCall]] = {}
         for s in spans:
             if s.kind not in (SpanKind.CLIENT, SpanKind.PRODUCER):
                 continue
-            owner = _nearest_exec(s, by_id, exec_by_span)
-            if owner is None and exec_order:
-                owner = exec_order[0].span_id or ""
+            owner_span = _nearest_exec(s, by_id, exec_span_ids)
+            owner = (
+                exec_index.get(id(owner_span)) if owner_span is not None else None
+            )
+            if owner is None and pairs:
+                owner = 0
                 unknowns.append(
                     UnknownFact(
                         subject=f"span {s.span_id or '?'}",
@@ -214,17 +259,16 @@ def executions_from_traces(
                 )
             if owner is not None:
                 caller = by_id.get(s.parent_id or "")
-                calls_by_span.setdefault(owner, []).append(
+                calls_by_exec.setdefault(owner, []).append(
                     _downstream_call(
                         s, caller.service if caller else None
                     )
                 )
 
-        for s in exec_order:
-            ex = exec_by_span[s.span_id or ""]
+        for idx, (_span_obj, ex) in enumerate(pairs):
             calls = tuple(
                 sorted(
-                    calls_by_span.get(s.span_id or "", ()),
+                    calls_by_exec.get(idx, ()),
                     key=lambda c: (c.operation, c.callee or ""),
                 )
             )
@@ -260,6 +304,7 @@ def _with_calls(
         retries=ex.retries,
         downstream_calls=calls,
         cache_status=ex.cache_status,
+        timed_out=ex.timed_out,
         evidence=ex.evidence,
         unknowns=ex.unknowns,
     )
@@ -268,17 +313,17 @@ def _with_calls(
 def _nearest_exec(
     span: Span,
     by_id: dict[str, Span],
-    exec_by_span: dict[str, RequestExecution],
-) -> str | None:
+    exec_span_ids: set[str],
+) -> Span | None:
     seen: set[str] = set()
     node = span
     while node.parent_id and node.parent_id not in seen:
         seen.add(node.parent_id)
-        if node.parent_id in exec_by_span:
-            return node.parent_id
         parent = by_id.get(node.parent_id)
         if parent is None:
             return None
+        if node.parent_id in exec_span_ids:
+            return parent
         node = parent
     return None
 

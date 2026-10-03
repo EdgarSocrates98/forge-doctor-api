@@ -13,10 +13,23 @@ from rich.table import Table
 from forge_doctor_api import __version__
 from forge_doctor_api.analyzers.openapi.model import OpenApiProjectModel
 from forge_doctor_api.analyzers.openapi.parser import load_openapi_project
+from forge_doctor_api.analyzers.runtime.execution import (
+    RequestExecution,
+    executions_from_summaries,
+    executions_from_traces,
+)
+from forge_doctor_api.analyzers.runtime.loader import (
+    detect_adapter,
+    load_runtime_project,
+)
+from forge_doctor_api.analyzers.runtime.model import RequestSummary
 from forge_doctor_api.checks.compat import ContractDiff, diff_models, semantic_fingerprint
 from forge_doctor_api.checks.compat.catalog import CompatibilityClass
+from forge_doctor_api.checks.perf import run_perf_checks
 from forge_doctor_api.core.context import ProjectContext
 from forge_doctor_api.core.export import export_findings
+from forge_doctor_api.core.models import UnknownFact
+from forge_doctor_api.perf.baseline import build_baselines
 
 NOT_IMPLEMENTED_EXIT_CODE = 3
 
@@ -218,22 +231,143 @@ def blast_radius() -> None:
     _not_implemented("blast-radius")
 
 
+def _load_executions(
+    target: str,
+) -> tuple[tuple[RequestExecution, ...], tuple[UnknownFact, ...]] | None:
+    """Load runtime artifacts under `target` -> normalized executions."""
+    path = Path(target).resolve()
+    if not path.is_dir():
+        _stderr.print(f"cannot read runtime artifact path: {target}")
+        return None
+    context = ProjectContext.from_root(path)
+    files = list(context.iter_files())
+    traces, _obs, unknowns = load_runtime_project(
+        context, files, keep_spans=True
+    )
+    executions = list(executions_from_traces(traces)[0])
+    summaries = _summaries(context, files)
+    e2, u2 = executions_from_summaries(summaries)
+    executions.extend(e2)
+    unknowns = tuple(unknowns) + u2
+    executions.sort(
+        key=lambda e: (
+            e.start_unix_nano or 0,
+            e.request_id or "",
+            e.trace_id or "",
+            e.service or "",
+            e.operation,
+        )
+    )
+    return tuple(executions), tuple(unknowns)
+
+
+def _summaries(
+    context: ProjectContext, files: list[str]
+) -> tuple[RequestSummary, ...]:
+    out: list[RequestSummary] = []
+    for f in sorted(files):
+        fh = context.open_binary(f)
+        if fh is None:
+            continue
+        with fh:
+            head = fh.read(4096)
+            adapter = detect_adapter(f, head)
+            if adapter is None:
+                continue
+            fh.seek(0)
+            out.extend(adapter.iter_summaries(fh, f))
+    return tuple(out)
+
+
 @runtime_app.command("requests")
-def runtime_requests() -> None:
-    """Summarize request evidence."""
-    _not_implemented("runtime requests")
+def runtime_requests(
+    target: Annotated[str, typer.Argument(help="Directory with runtime artifacts.")],
+    json_out: Annotated[bool, typer.Option("--json", help="JSON output.")] = False,
+) -> None:
+    """Summarize normalized request executions (§28, §162)."""
+    loaded = _load_executions(target)
+    if loaded is None:
+        raise typer.Exit(code=2)
+    executions, _ = loaded
+    if json_out:
+        typer.echo(
+            json.dumps([e.to_dict() for e in executions], indent=2, sort_keys=True)
+        )
+        return
+    table = Table(show_lines=False)
+    for col in ("service", "operation", "method", "status", "ms", "downstream"):
+        table.add_column(col, no_wrap=True)
+    for e in executions:
+        table.add_row(
+            e.service or "?",
+            e.operation,
+            e.method or "-",
+            e.status or "-",
+            f"{e.duration_ms:.0f}" if e.duration_ms is not None else "-",
+            str(len(e.downstream_calls)),
+        )
+    _console.print(table)
+    _console.print(f"{len(executions)} request execution(s)")
 
 
 @runtime_app.command("baseline")
-def runtime_baseline() -> None:
-    """Build runtime baselines."""
-    _not_implemented("runtime baseline")
+def runtime_baseline(
+    target: Annotated[str, typer.Argument(help="Directory with runtime artifacts.")],
+    json_out: Annotated[bool, typer.Option("--json", help="JSON output.")] = False,
+) -> None:
+    """Build runtime baselines (§36, §88, §162)."""
+    loaded = _load_executions(target)
+    if loaded is None:
+        raise typer.Exit(code=2)
+    executions, _ = loaded
+    baselines = build_baselines(executions)
+    if json_out:
+        typer.echo(
+            json.dumps([b.to_dict() for b in baselines], indent=2, sort_keys=True)
+        )
+        return
+    table = Table(show_lines=False)
+    for col in ("dim", "key", "window", "n", "p95", "err%"):
+        table.add_column(col, no_wrap=True)
+    for b in baselines:
+        table.add_row(
+            b.dimension.value,
+            b.key,
+            b.window,
+            str(b.count),
+            f"{b.latency.p95:.0f}" if b.latency else "-",
+            f"{b.error_rate:.0%}" if b.error_rate is not None else "-",
+        )
+    _console.print(table)
 
 
 @runtime_app.command("regressions")
-def runtime_regressions() -> None:
-    """Detect runtime regressions against baselines."""
-    _not_implemented("runtime regressions")
+def runtime_regressions(
+    target: Annotated[str, typer.Argument(help="Directory with runtime artifacts.")],
+    json_out: Annotated[bool, typer.Option("--json", help="JSON output.")] = False,
+) -> None:
+    """Detect runtime regressions against baselines (§37, §162)."""
+    loaded = _load_executions(target)
+    if loaded is None:
+        raise typer.Exit(code=2)
+    executions, _ = loaded
+    findings = run_perf_checks(executions)
+    if json_out:
+        typer.echo(
+            json.dumps(
+                export_findings(findings).to_dict(), indent=2, sort_keys=True
+            )
+        )
+        return
+    if not findings:
+        _console.print("no regressions detected")
+        return
+    table = Table(show_lines=False)
+    for col in ("id", "severity", "confidence", "detail"):
+        table.add_column(col, no_wrap=(col != "detail"))
+    for f in findings:
+        table.add_row(f.id, f.severity.value, f.confidence.value, f.description)
+    _console.print(table)
 
 
 @security_app.command("inspect")

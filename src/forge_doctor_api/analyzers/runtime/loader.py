@@ -36,11 +36,15 @@ _CORRELATION_KEYS = (
 )
 
 
-def _detect(path: str, head: bytes) -> RuntimeArtifactAdapter | None:
+def detect_adapter(path: str, head: bytes) -> RuntimeArtifactAdapter | None:
+    """First adapter whose strong-marker gate accepts this artifact head."""
     for adapter in ADAPTERS:
         if adapter.detect(path, head):
             return adapter
     return None
+
+
+_detect = detect_adapter
 
 
 def _stream(context: ProjectContext, path: str) -> BinaryIO | None:
