@@ -1,0 +1,46 @@
+---
+id: 012-graphql
+title: GraphQL model, checks, and query-shape analysis
+agent: claude
+risk: high
+grill: required
+verification:
+  - python -m pytest -q
+  - python -m ruff check .
+  - python -m mypy src
+---
+
+# Grill Gate
+
+- Owner: project owner; decisions sourced from §22, §23, §24, §128, §184.
+- Problem: GraphQL schema + resolver surface needs contract intelligence, incl. its distinctive breaking-change shapes.
+- Out of scope: federation/subgraph composition, live introspection queries.
+- Review failure: N+1 asserted from static evidence alone (§23 forbids it), magic complexity numbers (§24), weak-marker GraphQL detection.
+- Riskiest assumption: parser strategy — OPEN: confirm `graphql-core` as an optional extra vs a minimal SDL parser; prompt prefers small deps (§3) and extras for specialized parsers (§3).
+- Smallest acceptable: SDL + introspection-export → `GraphQLProjectModel`; GQL001–010 as specified; `GraphQLQueryShape` with transparent metrics.
+
+# Context
+
+GraphQL uses the current spec (September 2025 edition) as normative base (§22, §128). `GraphQLProjectModel` models types, interfaces, unions, enums, scalars, queries, mutations, subscriptions, directives, arguments, resolvers, deprecations (§22). `GraphQLQueryShape` (§24): depth, field_count, list_expansions, resolver_count, estimated_complexity — no magic scores. Client query parsing (§184) upgrades usage evidence where available.
+
+# Acceptance Criteria
+
+- Parse GraphQL SDL and introspection JSON exports into `GraphQLProjectModel` (§22 fields), resolvers linked when statically discoverable (framework evidence or explicit mapping files).
+- Graph materialization: GraphQLType, GraphQLResolver entities + schema relationships.
+- Checks GQL001–010 per §23: deprecated field with active clients; field removed; required argument added; nullable→non-null; enum value removed; resolver without authorization evidence; unbounded list field; deep traversal candidate; N+1 candidate; introspection exposure policy mismatch — all emitted with correct evidence levels.
+- GQL009 (N+1) and depth/traversal findings are STATIC *candidates* until RUNTIME evidence confirms (§23, §102).
+- `GraphQLQueryShape` computes §24 metrics from parsed client queries (§184) — transparent formula, no opaque score.
+- Breaking-change classification for schema diffs routes through the unified compat engine classes (§121) with GraphQL-specific rules (GQL002–005 semantics).
+- Tests per §202 incl. adversarial (GraphQL-looking JSON, proto-like comments per §100).
+- `python -m pytest -q`, `python -m ruff check .`, `python -m mypy src` pass.
+
+# Constraints
+
+- `graphql-core` (if used) must be an optional extra — core stays lean (§3).
+- Static evidence stays candidate-level for runtime-flavored findings (§102).
+- No introspection against live endpoints — exports only (§1).
+
+# Review Notes
+
+- Verify nullable→non-null detection handles input vs output positions separately (mirrors §123 request/response split).
+- Confirm introspection-policy check is config-evidence-based, not assumed from defaults.
