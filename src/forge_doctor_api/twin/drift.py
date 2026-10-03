@@ -106,7 +106,7 @@ def auth_drift_entries(security: ApiSecurityModel) -> tuple[TwinDrift, ...]:
     return tuple(sorted(out, key=lambda x: x.subject))
 
 
-def _gateway_routes(context: ProjectContext, files: list[str]) -> dict[str, str]:
+def gateway_routes(context: ProjectContext, files: list[str]) -> dict[str, str]:
     """Gateway routing prefixes/paths declared in config artifacts."""
     found: dict[str, str] = {}
     for path in sorted(files):
@@ -146,7 +146,7 @@ def routing_drift(
     files: list[str],
 ) -> tuple[TwinDrift, ...]:
     """DECLARED vs DECLARED-config: gateway routes absent from contract."""
-    gw = _gateway_routes(context, files)
+    gw = gateway_routes(context, files)
     declared = {_norm_op_path(op.path) for op in openapi.operations}
     out = [
         TwinDrift(
