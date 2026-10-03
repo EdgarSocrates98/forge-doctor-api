@@ -1,0 +1,15 @@
+{
+  "agent": "claude",
+  "command": [
+    "claude",
+    "-p",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\006-route-discovery.implement.claude.md)"
+  ],
+  "created_at": "2026-10-03T11:46:00+00:00",
+  "id": "006-route-discovery",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\006-route-discovery.implement.claude.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\006-route-discovery.md",
+  "spec_sha256": "51653d365cc7da8d7e2592d9788bf343f603b936c1d3ed210387352fbcf4789d",
+  "status": "planned",
+  "title": "Route discovery \u2014 framework adapter contract + FastAPI"
+}
