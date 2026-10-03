@@ -195,6 +195,7 @@ def _to_span(
         parent_id=data.get("parentSpanId") or None,
         span_id=data.get("spanId") or None,
         trace_id=data.get("traceId") or None,
+        start_unix_nano=start or None,
         duration_ms=(end - start) / 1e6 if end >= start and end else None,
         status=_STATUS_MAP.get(status.get("code", 0), SpanStatus.UNSET),
         kind=_KIND_MAP.get(data.get("kind", 1), SpanKind.INTERNAL),

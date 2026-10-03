@@ -37,6 +37,7 @@ class Span(Model):
     parent_id: str | None = None
     span_id: str | None = None
     trace_id: str | None = None
+    start_unix_nano: int | None = None
     duration_ms: float | None = None
     status: SpanStatus = SpanStatus.UNSET
     kind: SpanKind = SpanKind.INTERNAL
