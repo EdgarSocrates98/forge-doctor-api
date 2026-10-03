@@ -1,0 +1,21 @@
+openapi: 3.2.0
+$self: https://example.com/api/openapi.yaml
+info:
+  title: Search
+  version: 3.0.0
+tags:
+  - name: search
+  - name: advanced
+    parent: search
+paths:
+  /search:
+    query:
+      operationId: searchQuery
+      responses:
+        '200':
+          description: ok
+    additionalOperations:
+      PURGE:
+        responses:
+          '204':
+            description: purged

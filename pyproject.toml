@@ -8,6 +8,7 @@ authors = [{ name = "Edgar Sócrates Caria" }]
 dependencies = [
     "typer>=0.12",
     "rich>=13.0",
+    "pyyaml>=6.0",
 ]
 
 [project.scripts]
@@ -20,6 +21,7 @@ packages = [{ include = "forge_doctor_api", from = "src" }]
 pytest = ">=8.0"
 ruff = ">=0.6"
 mypy = ">=1.10"
+types-PyYAML = ">=6.0"
 
 [build-system]
 requires = ["poetry-core>=2.0"]

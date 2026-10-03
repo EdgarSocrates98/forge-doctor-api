@@ -23,16 +23,17 @@ def test_project_metadata() -> None:
     assert project["scripts"] == {"forge-doctor-api": "forge_doctor_api.cli:main"}
 
 
-def test_runtime_dependencies_limited_to_typer_and_rich() -> None:
+def test_runtime_dependencies_limited_to_typer_rich_and_pyyaml() -> None:
     project = load_pyproject()["project"]
     assert isinstance(project, dict)
     names = sorted(dep.split(">")[0].split("=")[0].split("[")[0] for dep in project["dependencies"])
-    assert names == ["rich", "typer"]
+    # pyyaml: OpenAPI YAML parsing (spec 004); the only runtime dep beyond the CLI stack.
+    assert names == ["pyyaml", "rich", "typer"]
 
 
 def test_dev_dependencies() -> None:
     poetry = load_pyproject()["tool"]["poetry"]  # type: ignore[index]
-    assert set(poetry["group"]["dev"]["dependencies"]) == {"pytest", "ruff", "mypy"}
+    assert set(poetry["group"]["dev"]["dependencies"]) == {"pytest", "ruff", "mypy", "types-PyYAML"}
 
 
 def test_directory_layout() -> None:

@@ -182,6 +182,8 @@ def _encode(value: Any) -> Any:
 
 
 def _decode(tp: Any, value: Any, name: str) -> Any:
+    if tp is Any:
+        return value
     origin = get_origin(tp)
     if origin is Union or origin is types.UnionType:
         args = get_args(tp)
@@ -222,6 +224,10 @@ def _decode(tp: Any, value: Any, name: str) -> Any:
         if isinstance(value, bool) or not isinstance(value, int | float):
             raise ModelError(f"{name}: expected a number")
         return float(value)
+    if tp is bool:
+        if not isinstance(value, bool):
+            raise ModelError(f"{name}: expected a boolean")
+        return value
     if tp is int:
         if isinstance(value, bool) or not isinstance(value, int):
             raise ModelError(f"{name}: expected an integer")
