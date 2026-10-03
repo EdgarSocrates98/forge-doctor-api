@@ -12,8 +12,6 @@ PLACEHOLDERS = [
     ["scan"],
     ["inventory"],
     ["contract", "inspect"],
-    ["contract", "diff"],
-    ["contract", "compatibility"],
     ["graph"],
     ["blast-radius"],
     ["runtime", "requests"],

@@ -1,0 +1,15 @@
+{
+  "agent": "codex",
+  "command": [
+    "codex",
+    "exec",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\008-breaking-change-engine.implement.codex.md)"
+  ],
+  "created_at": "2026-10-03T12:06:42+00:00",
+  "id": "008-breaking-change-engine",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\008-breaking-change-engine.implement.codex.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\008-breaking-change-engine.md",
+  "spec_sha256": "e543d0737b26783265b6b1b3e5d87ce095e455bf6ed2544a70e30464748119f8",
+  "status": "planned",
+  "title": "ApiCompatibilityEngine \u2014 semantic diff and breaking changes"
+}
