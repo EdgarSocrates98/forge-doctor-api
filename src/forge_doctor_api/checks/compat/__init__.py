@@ -10,6 +10,7 @@ from forge_doctor_api.checks.compat.engine import (
     ContractChange,
     ContractDiff,
     diff_models,
+    diff_schema_content,
 )
 from forge_doctor_api.checks.compat.fingerprint import semantic_fingerprint
 
@@ -21,5 +22,6 @@ __all__ = [
     "ContractChange",
     "ContractDiff",
     "diff_models",
+    "diff_schema_content",
     "semantic_fingerprint",
 ]

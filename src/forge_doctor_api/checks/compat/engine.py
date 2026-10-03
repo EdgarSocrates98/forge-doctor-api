@@ -402,6 +402,26 @@ class _SchemaDiff:
             )
 
 
+def diff_schema_content(
+    old: Any,
+    new: Any,
+    *,
+    side: ChangeSide,
+    subject: str,
+    path: str = "schema",
+    schemas: dict[str, Any] | None = None,
+    location: SourceLocation | None = None,
+) -> tuple[ContractChange, ...]:
+    """Public schema-content diff for non-OpenAPI callers (§121 unified engine).
+
+    `schemas` maps component names to raw content for `$ref` resolution.
+    Request side = the writer's contract; response side = the reader's view.
+    """
+    differ = _SchemaDiff(schemas or {}, subject, side, location)
+    differ.diff(old, new, path)
+    return tuple(differ.out)
+
+
 def _op_key(op: OpenApiOperation) -> tuple[str, str]:
     return op.method, normalize_path(op.path)
 
