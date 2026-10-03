@@ -3,7 +3,7 @@ id: 025-fleet
 title: Fleet intelligence — portfolio, complexity, deprecation readiness, external APIs
 agent: claude
 risk: medium
-grill: required
+grill: completed
 verification:
   - python -m pytest -q
   - python -m ruff check .
@@ -17,7 +17,7 @@ verification:
 - Problem: answer fleet-level questions (who exposes what, what's unowned, what's repeatedly regressing) across a workspace.
 - Out of scope: migration execution (028), org dashboards/UI — output is data + CLI.
 - Review failure: complexity signals reported as errors (§112 says opportunity), a single "health score" (§191 forbids), external hosts leaked unsanitized (§115).
-- Riskiest assumption: aggregation semantics across partial workspaces — mitigate by UNKNOWN-propagation rules.
+- Riskiest assumption: aggregation semantics across partial workspaces — RESOLVED: UNKNOWN propagates upward; unscanned/partial repos are represented as UNKNOWN entries, never silently excluded.
 - Smallest acceptable: §110 question set + portfolio + complexity signals + `DeprecationReadiness` + `ExternalAPI` model + inventory CLI + §191-style count output.
 
 # Context

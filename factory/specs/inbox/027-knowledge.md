@@ -3,7 +3,7 @@ id: 027-knowledge
 title: Knowledge packs, provenance, capability packs, plugin SDK trust boundary
 agent: claude
 risk: medium
-grill: required
+grill: completed
 verification:
   - python -m pytest -q
   - python -m ruff check .
@@ -16,7 +16,7 @@ verification:
 - Problem: standards/framework knowledge must be versioned data (bundled, offline) so behavior updates without code changes.
 - Out of scope: live doc fetching (§129 forbids), third-party plugin runtime loading — SDK + trust classes only.
 - Review failure: knowledge embedded in code constants (must live in packs), mutable fact without provenance, untrusted plugin path executable by default.
-- Riskiest assumption: pack schema design — OPEN: confirm pack format = YAML documents under `knowledge/` with `source/source_version/last_verified` fields per §127.
+- Riskiest assumption: pack schema design — RESOLVED: YAML pack documents under `knowledge/` with `source`, `source_version`, `last_verified`, `effective_since`, `deprecated_since` provenance fields per §127; loader validates schema.
 - Smallest acceptable: `knowledge/` tree + loader + provenance model + standards packs (OpenAPI/OWASP) + `Capability`/`CapabilityDependency` engine + plugin trust classes.
 
 # Context

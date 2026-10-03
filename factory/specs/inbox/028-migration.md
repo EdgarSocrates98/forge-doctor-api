@@ -3,7 +3,7 @@ id: 028-migration
 title: Migration intelligence — portability classification and path analysis
 agent: claude
 risk: medium
-grill: required
+grill: completed
 verification:
   - python -m pytest -q
   - python -m ruff check .
@@ -16,7 +16,7 @@ verification:
 - Problem: answer "which migration preserves API semantics?" — REST→gRPC, REST→GraphQL, sync→async, gateway→gateway, v1→v2.
 - Out of scope: executing migrations, generating target artifacts — analysis/classification only.
 - Review failure: REST→GraphQL presented as direct endpoint→field mapping (§80 forbids), semantics losses unreported.
-- Riskiest assumption: comparison dimension coverage — mitigate with the §79/§81 explicit comparison checklists.
+- Riskiest assumption: comparison dimension coverage — RESOLVED: coverage = the explicit §79 (REST→gRPC) and §81 (sync→async) checklists, all dimensions mandatory; a clean verdict without full dimension coverage is a bug.
 - Smallest acceptable: `ApiMigrationIntelligence` + §78 classes + REST→gRPC and sync→async comparisons + contract-version diff + SDK-impact signal.
 
 # Context

@@ -3,7 +3,7 @@ id: 010-api-versioning
 title: API versioning and deprecation/sunset model
 agent: claude
 risk: medium
-grill: required
+grill: completed
 verification:
   - python -m pytest -q
   - python -m ruff check .
@@ -18,7 +18,7 @@ verification:
 - Review failure: version "detected" from naming guesses, lifecycle asserted without evidence.
 - Riskiest assumption: version signals are heterogeneous — mitigate by recording detection source and UNKNOWN when no signal exists.
 - Smallest acceptable: `ApiVersionModel` + detection of URI/header/media-type versioning + lifecycle fields.
-- OPEN: confirm first-pass ignores GraphQL/proto version signals as scoped above.
+- RESOLVED: first pass ignores GraphQL/proto version signals — deferred to specs 012/013 as scoped. Detection mechanisms are URI, header, media-type only.
 
 # Context
 

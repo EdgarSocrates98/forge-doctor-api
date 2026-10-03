@@ -3,7 +3,7 @@ id: 020-change-intelligence
 title: Change intelligence — semantic change events, PR intel, blast radius
 agent: claude
 risk: medium
-grill: required
+grill: completed
 verification:
   - python -m pytest -q
   - python -m ruff check .
@@ -17,7 +17,7 @@ verification:
 - Problem: turn diffs into typed change events that downstream engines (perf correlation, PR gate) consume.
 - Out of scope: git-host API integration (PR intel works from diffs/exports), policy gating decisions (023/030 own `fail-on` config).
 - Review failure: change types missed/duplicated, blast radius overstated beyond evidence, fingerprint instability across formatting.
-- Riskiest assumption: `ChangeEvent` granularity — OPEN: confirm change events emit at operation+element level (field/param/status), not file level.
+- Riskiest assumption: `ChangeEvent` granularity — RESOLVED: operation+element level (endpoint/field/param/status/policy), not file level; downstream engines (blast radius, PR counters) need element resolution.
 - Smallest acceptable: §65 change taxonomy + `diff --semantic` CLI + PR-intel summary + blast-radius chain + contract fingerprint baseline.
 
 # Context

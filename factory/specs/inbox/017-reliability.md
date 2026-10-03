@@ -3,7 +3,7 @@ id: 017-reliability
 title: Reliability model — timeouts, retries, idempotency, circuit breakers, SLO
 agent: claude
 risk: high
-grill: required
+grill: completed
 verification:
   - python -m pytest -q
   - python -m ruff check .
@@ -17,7 +17,7 @@ verification:
 - Problem: retry amplification, impossible timeout budgets, unproven idempotency — third demo target (§228).
 - Out of scope: live failure injection, mesh control-plane writes, remediation execution (022 classifies fixes only).
 - Review failure: amplification computed without explicit configs (§41 forbids), POST assumed non-idempotent / PUT assumed idempotent (§42 forbids), health endpoint inferred not discovered (§157).
-- Riskiest assumption: config-source coverage for retry/timeout evidence — OPEN: confirm first pass = gateway/envoy-style config + framework annotations + service config, with mesh (Istio/Linkerd) deferred per §73.
+- Riskiest assumption: config-source coverage for retry/timeout evidence — RESOLVED: gateway/Envoy-style config + framework annotations + service config files first; Istio/Linkerd mesh gets a reserved adapter interface only (§73), no implementation.
 - Smallest acceptable: `ApiReliabilityModel`, `RetryPolicy`, amplification math (explicit configs only), `IdempotencyEvidence`, `TimeoutBudget`, RELAPI### checks, SLO + error budget.
 
 # Context

@@ -3,7 +3,7 @@ id: 013-grpc
 title: gRPC/proto model, compatibility, and reliability checks
 agent: claude
 risk: high
-grill: required
+grill: completed
 verification:
   - python -m pytest -q
   - python -m ruff check .
@@ -16,7 +16,7 @@ verification:
 - Problem: proto contracts have strict compatibility semantics (field numbers, reserved) and unique reliability surface (deadlines, streaming).
 - Out of scope: protoc codegen, live gRPC calls, server reflection.
 - Review failure: field-number reuse missed, unary↔streaming change unclassified, retry finding on non-idempotent method asserted rather than candidate.
-- Riskiest assumption: proto parsing approach — OPEN: confirm a hand-rolled `.proto` parser (stdlib, deterministic, offline) vs a parsing dependency; protoc itself is out (execution/network).
+- Riskiest assumption: proto parsing approach — RESOLVED: hand-rolled `.proto` parser (stdlib only, deterministic, offline). protoc is out (execution/network per §1); no parsing dependency exists that covers proto2+proto3 without codegen.
 - Smallest acceptable: `.proto` → `GrpcProjectModel`; §26 compat classes; GRPC001–007; deadline/retry/health modeling.
 
 # Context

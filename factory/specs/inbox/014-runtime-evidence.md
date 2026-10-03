@@ -3,7 +3,7 @@ id: 014-runtime-evidence
 title: Runtime artifact ingestion — traces, spans, observability signals
 agent: claude
 risk: high
-grill: required
+grill: completed
 verification:
   - python -m pytest -q
   - python -m ruff check .
@@ -16,7 +16,7 @@ verification:
 - Problem: runtime evidence plane — static analysis alone can't confirm latency/fanout/N+1 (§102).
 - Out of scope: performance regression analysis (016), incident correlation (021), live collectors/agents.
 - Review failure: raw trace bodies retained (§173 forbids), non-streaming ingestion on huge exports (§171), weak format detection.
-- Riskiest assumption: first-pass format coverage — OPEN: confirm first pass = OTLP JSON + one access-log format (per §197 OTLP is first; suggest NGINX/Envoy access log second), with others queued behind the adapter contract.
+- Riskiest assumption: first-pass format coverage — RESOLVED: OTLP JSON traces first (§197 vendor-neutral), NGINX/Envoy access-log second for request summaries. Jaeger/Zipkin/gateway/cloud formats come later via the `RuntimeArtifactAdapter` contract, not ad-hoc.
 - Smallest acceptable: `RuntimeArtifact` adapters (OTLP first) → `TraceModel`/`Span` + observability signals, streaming readers, summary-only retention.
 
 # Context

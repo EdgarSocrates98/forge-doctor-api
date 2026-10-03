@@ -3,7 +3,7 @@ id: 011-asyncapi
 title: AsyncAPI model, graph edges, and ASYNC### checks
 agent: claude
 risk: high
-grill: required
+grill: completed
 verification:
   - python -m pytest -q
   - python -m ruff check .
@@ -18,7 +18,7 @@ verification:
 - Review failure: 2.x vs 3.x conflation, producer/consumer semantics inverted, checks firing on weak markers.
 - Riskiest assumption: dual-version (2.x + 3.x) parsing in one model — mitigate with version-aware normalization like spec 004.
 - Smallest acceptable: parse AsyncAPI docs → `AsyncApiModel` → PUBLISHES/SUBSCRIBES/PRODUCES edges + ASYNC001–008.
-- OPEN: confirm whether first pass prioritizes 3.x (3.1.0 is current per §20) with 2.x best-effort, or equal depth on both.
+- RESOLVED: equal depth on 2.x and 3.x — §20 requires both. Implementation: version-aware normalization into a single `AsyncApiModel` (3.x send/receive action semantics canonical; 2.x publish/subscribe verbs normalized into it), mirroring spec 004's OAS 3.0/3.1 approach.
 
 # Context
 

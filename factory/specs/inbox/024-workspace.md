@@ -3,7 +3,7 @@ id: 024-workspace
 title: Multi-repo workspace and cross-repo contracts
 agent: claude
 risk: medium
-grill: required
+grill: completed
 verification:
   - python -m pytest -q
   - python -m ruff check .
@@ -16,7 +16,7 @@ verification:
 - Problem: real API surfaces span repos — service repo, client repo, gateway repo, contracts repo must link.
 - Out of scope: fleet-level analytics (025), VCS-provider integrations.
 - Review failure: cross-repo edges asserted without declared links, workspace silently guessing repo roles.
-- Riskiest assumption: workspace manifest format — OPEN: confirm a `forge-doctor-api.workspace.yaml` (or similar) declaring repo roots + roles vs convention-based discovery.
+- Riskiest assumption: workspace manifest format — RESOLVED: explicit `forge-doctor-api.workspace.yaml` declaring member repo roots + roles. Membership is declared only; no convention-based discovery, no parent-dir walking (§203).
 - Smallest acceptable: `Workspace` model + manifest + per-repo scan assembly + cross-repo contract/client edges.
 
 # Context

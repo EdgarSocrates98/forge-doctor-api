@@ -3,7 +3,7 @@ id: 030-api-stabilization
 title: Release stabilization — outputs, CI gate, hermetic guarantees, packaging
 agent: claude
 risk: high
-grill: required
+grill: completed
 verification:
   - python -m pytest -q
   - python -m ruff check .
@@ -17,7 +17,7 @@ verification:
 - Problem: v0.1 must be releasable — deterministic outputs, CI gate, offline proofs, wheel/sdist, quality gate evidence.
 - Out of scope: publishing to a registry, signing, hosted dashboards; public-API commitment stays deferred (§210).
 - Review failure: network detected in test suite (§204), SARIF invalid, benchmark claims without run records, version bumped past 0.x.
-- Riskiest assumption: scope of CI gate — OPEN: confirm first gate = `scan` + `contract diff` + configurable `fail-on` (breaking/security/policy) per §177–§178, delivered as a reusable GitHub Action.
+- Riskiest assumption: scope of CI gate — RESOLVED: first gate = `scan` + `contract diff` + configurable `fail-on` (breaking/security/policy) per §177–§178, delivered as a reusable GitHub Action workflow; no other CI systems.
 - Smallest acceptable: output writers (console/JSON/JSONL/SARIF/agent-compact), `ApiErrorModel` standard error contract, GH Action scan + PR gate, offline/hermetic test proofs, wheel+sdist, quality-gate run record.
 
 # Context

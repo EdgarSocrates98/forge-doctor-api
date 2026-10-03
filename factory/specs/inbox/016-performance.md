@@ -3,7 +3,7 @@ id: 016-performance
 title: Performance intelligence — baselines, regressions, capacity, experiments
 agent: claude
 risk: high
-grill: required
+grill: completed
 verification:
   - python -m pytest -q
   - python -m ruff check .
@@ -17,7 +17,7 @@ verification:
 - Problem: answer "which runtime paths are slow / regressing / amplifying" — second demo target depends on it (§227).
 - Out of scope: SLO/error-budget math (017), incident narratives (021), billing computation (§93 explicitly not a billing calculator).
 - Review failure: magic scores, regressions asserted on thin samples, correlation presented as proven causality (§227).
-- Riskiest assumption: how much of the experiment engine lands in first pass — OPEN: confirm first pass = baselines + regression families + fanout/payload/capacity signals, with `Experiment`/`RequestScenario` verdict engine included but exercised only on synthetic lab data.
+- Riskiest assumption: how much of the experiment engine lands in first pass — RESOLVED: baselines + all §37 regression families + fanout/payload/capacity signals + `Experiment`/`RequestScenario` verdict engine, exercised only on synthetic/lab data (no live request execution in the Doctor).
 - Smallest acceptable: `RequestBaseline`, APIPERF001–008, critical-path decomposition, capacity signals, experiment verdict skeleton.
 
 # Context

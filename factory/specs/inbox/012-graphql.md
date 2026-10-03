@@ -3,7 +3,7 @@ id: 012-graphql
 title: GraphQL model, checks, and query-shape analysis
 agent: claude
 risk: high
-grill: required
+grill: completed
 verification:
   - python -m pytest -q
   - python -m ruff check .
@@ -16,7 +16,7 @@ verification:
 - Problem: GraphQL schema + resolver surface needs contract intelligence, incl. its distinctive breaking-change shapes.
 - Out of scope: federation/subgraph composition, live introspection queries.
 - Review failure: N+1 asserted from static evidence alone (§23 forbids it), magic complexity numbers (§24), weak-marker GraphQL detection.
-- Riskiest assumption: parser strategy — OPEN: confirm `graphql-core` as an optional extra vs a minimal SDL parser; prompt prefers small deps (§3) and extras for specialized parsers (§3).
+- Riskiest assumption: parser strategy — RESOLVED: `graphql-core` as an optional extra (§3 extras-for-specialized-parsers). It tracks the normative GraphQL spec precisely; a hand-rolled SDL parser risks subtle grammar divergence (block strings, directives, descriptions). Core package must import it lazily and degrade gracefully to UNKNOWN findings when absent.
 - Smallest acceptable: SDL + introspection-export → `GraphQLProjectModel`; GQL001–010 as specified; `GraphQLQueryShape` with transparent metrics.
 
 # Context

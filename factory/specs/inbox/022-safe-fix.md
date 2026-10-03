@@ -3,7 +3,7 @@ id: 022-safe-fix
 title: Remediation classification — SAFE / REVIEW_REQUIRED / MANUAL_ONLY
 agent: claude
 risk: medium
-grill: required
+grill: completed
 verification:
   - python -m pytest -q
   - python -m ruff check .
@@ -16,7 +16,7 @@ verification:
 - Problem: every suggested fix must carry a risk class so nothing dangerous is implied safe (§225 feeds handoff bundles later).
 - Out of scope: generating/applying patches — this spec classifies remediation *candidates* only.
 - Review failure: auth/breaking/rate-limit fixes classed below MANUAL_ONLY, missing justification per class.
-- Riskiest assumption: classification table completeness — mitigate by defaulting unmapped fix types to MANUAL_ONLY.
+- Riskiest assumption: classification table completeness — RESOLVED: §104 provides the complete three-class table; unmapped fix types default MANUAL_ONLY (default-deny, deterministic from table).
 - Smallest acceptable: `Remediation` model + rule table for §104 examples + classifier + findings linkage.
 
 # Context

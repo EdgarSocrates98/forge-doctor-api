@@ -3,7 +3,7 @@ id: 023-policy
 title: Policy engine — org policies, inheritance, exceptions, ownership
 agent: claude
 risk: medium
-grill: required
+grill: completed
 verification:
   - python -m pytest -q
   - python -m ruff check .
@@ -16,7 +16,7 @@ verification:
 - Problem: organizational rules (auth required, SLO required, deprecation limits, owner required) need a declarative engine feeding findings + PR gates.
 - Out of scope: policy *distribution* systems, OPA/Rego integration, the PR-gate CI wiring (030).
 - Review failure: exceptions honored without expiry/approval, inheritance order wrong, policies firing without declared org config.
-- Riskiest assumption: policy file format — OPEN: confirm simple YAML policy documents (repo-owned schema, documented) vs adopting an existing engine; lean YAML per §3 deps discipline.
+- Riskiest assumption: policy file format — RESOLVED: simple YAML policy documents with a repo-owned documented schema (§3 deps discipline); no external policy engine. Missing config → no policy findings (never invent org rules).
 - Smallest acceptable: policy model + evaluator over existing findings/models + inheritance + exceptions + ownership/tags resolution.
 
 # Context

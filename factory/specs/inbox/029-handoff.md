@@ -3,7 +3,7 @@ id: 029-handoff
 title: Handoff & integration — ApiHandoffBundle, MCP surface, Forger routing, decision intelligence
 agent: claude
 risk: medium
-grill: required
+grill: completed
 verification:
   - python -m pytest -q
   - python -m ruff check .
@@ -14,7 +14,7 @@ verification:
 
 - Owner: project owner; decisions sourced from §133–§138, §167, §215, §216.
 - Problem: the Doctor's structured output must reach API Forge/The Forger without shipping whole repos (token economy §135).
-- Out of scope: real MCP server transport wiring (interface + payload only — OPEN: confirm MCP endpoint surface ships as protocol definitions + local invocation, not a networked server in this pass), actual Forger implementation.
+- Out of scope: real MCP server transport wiring — RESOLVED: MCP surface ships as typed protocol definitions + local invocation behind `sdk.py`, not a networked server in this pass — and the actual Forger implementation.
 - Review failure: bundle contains raw repo content (§135 forbids), decision output presents subjective verdicts (§167 forbids), cross-domain graph merging (§138 forbids).
 - Riskiest assumption: bundle field sufficiency for downstream consumers — mitigate by including unknowns explicitly per §134.
 - Smallest acceptable: `ApiHandoffBundle` + `DecisionContext` answers + `ExternalReference` links + MCP method surface defined.

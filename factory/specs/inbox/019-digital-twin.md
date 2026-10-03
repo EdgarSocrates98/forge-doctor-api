@@ -3,7 +3,7 @@ id: 019-digital-twin
 title: API Digital Twin — five-state model and twin drift
 agent: claude
 risk: medium
-grill: required
+grill: completed
 verification:
   - python -m pytest -q
   - python -m ruff check .
@@ -16,7 +16,7 @@ verification:
 - Problem: unify desired/declared/implemented/observed/hypothetical state into one queryable twin.
 - Out of scope: twin-based what-if execution (experiment engine 016 produces HYPOTHETICAL inputs), fleet aggregation (025).
 - Review failure: states conflated (e.g. declared treated as observed), twin drift asserted without per-state evidence.
-- Riskiest assumption: twin is a *view* over existing models vs a new storage layer — OPEN: confirm twin assembles views over ServiceGraph/models rather than duplicating state.
+- Riskiest assumption: twin is a *view* over existing models vs a new storage layer — RESOLVED: view/projection over ServiceGraph + upstream models; no duplicated state (per Constraints). History snapshots store compact normalized references, not raw payloads (§172).
 - Smallest acceptable: five-state assembly + twin-drift classification + twin history recording.
 
 # Context

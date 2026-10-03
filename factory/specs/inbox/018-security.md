@@ -3,7 +3,7 @@ id: 018-security
 title: Security intelligence — OWASP API Top 10 passive analysis
 agent: claude
 risk: high
-grill: required
+grill: completed
 verification:
   - python -m pytest -q
   - python -m ruff check .
@@ -17,7 +17,7 @@ verification:
 - Problem: passive security-risk surface from contract/config/runtime artifacts — fourth demo target (§229).
 - Out of scope: active scanning, probing, exploitation, DAST of any kind (§1 — never offensive scanning).
 - Review failure: any "vulnerability confirmed" language from static analysis (§50 forbids), business-flow inference without declared evidence (§120), sensitive-category guessing by name (§124).
-- Riskiest assumption: which APISEC checks ship first — OPEN: confirm first pass = APISEC001–010 contract/config-evidence checks + authn/authz models + CORS/rate-limit/TLS evidence + redaction audit; unsafe-consumption (§116) and business-flow (§120) included but strictly candidate-level.
+- Riskiest assumption: which APISEC checks ship first — RESOLVED: APISEC001–010 as listed (contract/config evidence) + authn/authz models + CORS/rate-limit/TLS evidence + redaction audit. Unsafe-consumption (§116) and business-flow (§120) ship candidate-level only, matching acceptance criteria.
 - Smallest acceptable: `ApiSecurityModel`, OWASP mapping, auth models, APISEC001–010, redaction guarantee, demo §229.
 
 # Context

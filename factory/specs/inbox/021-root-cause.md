@@ -3,7 +3,7 @@ id: 021-root-cause
 title: Root cause engine — cascading failure analysis and diagnose CLI
 agent: claude
 risk: high
-grill: required
+grill: completed
 verification:
   - python -m pytest -q
   - python -m ruff check .
@@ -17,7 +17,7 @@ verification:
 - Problem: promote correlated signals into honest candidate root causes — "candidate", not verdict.
 - Out of scope: auto-remediation execution (022 classifies; nothing executes fixes), cross-domain handoff (029).
 - Review failure: causality asserted beyond evidence hierarchy, single-candidate presented without unknowns, missing evidence trail.
-- Riskiest assumption: evidence-hierarchy promotion rules — OPEN: confirm promotion = DERIVED only when RUNTIME+STATIC/CONFIG agree; STATIC-only stays candidate (§102–§103).
+- Riskiest assumption: evidence-hierarchy promotion rules — RESOLVED: a cause presents as DERIVED-correlated only when RUNTIME and STATIC/CONFIG evidence agree; STATIC-only or single-plane evidence stays candidate. Every promotion cites the chain; multiple candidates stay ranked by evidence tier.
 - Smallest acceptable: `ApiIncidentEpisode`, cascading-failure path detection, `diagnose` + `explain` CLIs per §165–§166.
 
 # Context
