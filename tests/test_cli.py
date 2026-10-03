@@ -12,8 +12,6 @@ PLACEHOLDERS = [
     ["scan"],
     ["inventory"],
     ["contract", "inspect"],
-    ["diagnose"],
-    ["explain", "OAS001"],
 ]
 
 

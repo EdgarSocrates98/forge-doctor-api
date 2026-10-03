@@ -42,12 +42,14 @@ from forge_doctor_api.change.model import ChangeEvent
 from forge_doctor_api.checks.apisec import run_security_checks
 from forge_doctor_api.checks.compat import ContractDiff, diff_models, semantic_fingerprint
 from forge_doctor_api.checks.compat.catalog import CompatibilityClass
+from forge_doctor_api.checks.oas.engine import run_openapi_checks
 from forge_doctor_api.checks.perf import run_perf_checks
 from forge_doctor_api.checks.relapi import run_reliability_checks
 from forge_doctor_api.core.context import ProjectContext
 from forge_doctor_api.core.export import export_findings
 from forge_doctor_api.core.graph import GraphError, ServiceGraph
-from forge_doctor_api.core.models import UnknownFact
+from forge_doctor_api.core.models import Finding, UnknownFact
+from forge_doctor_api.diagnose import diagnose as diagnose_episodes
 from forge_doctor_api.perf.baseline import build_baselines
 from forge_doctor_api.reliability import (
     ApiReliabilityModel,
@@ -763,15 +765,143 @@ def _ms_opt(value: str) -> float | None:
 
 
 @app.command()
-def diagnose() -> None:
-    """Cluster findings into symptoms, candidate root causes and unknowns."""
-    _not_implemented("diagnose")
+def diagnose(
+    target: Annotated[str, typer.Argument(
+        help="Directory with current-state evidence (contract + config + runtime artifacts).",
+    )],
+    before: Annotated[
+        str | None, typer.Option("--before", help="Prior-state directory for the change diff.")
+    ] = None,
+    json_out: Annotated[bool, typer.Option("--json", help="JSON output.")] = False,
+) -> None:
+    """§165 cluster findings into symptom/candidate causes/affected services/unknowns."""
+    path = Path(target).resolve()
+    if not path.is_dir():
+        _stderr.print(f"cannot read path: {target}")
+        raise typer.Exit(code=2)
+    loaded = _load_executions(target)
+    executions: tuple[RequestExecution, ...] = ()
+    load_unknowns: tuple[UnknownFact, ...] = ()
+    if loaded is not None:
+        executions, load_unknowns = loaded
+    ctx = ProjectContext.from_root(path)
+    reliability = load_reliability_model(ctx, list(ctx.iter_files()))
+
+    events: tuple[ChangeEvent, ...] = ()
+    if before is not None:
+        old_model, old_ctx = _load_side(before)
+        new_model, _ = _load_side(target)
+        if old_model is not None and new_model is not None:
+            diff = diff_models(old_model, new_model)
+            events = change_report(
+                diff, _config_events_for(old_model, new_model, old_ctx, ctx)
+            ).events
+
+    findings = run_perf_checks(executions)
+    report = diagnose_episodes(executions, findings, events, reliability)
+    if json_out:
+        typer.echo(json.dumps(report.to_dict(), indent=2, sort_keys=True))
+        return
+    if not report.episodes:
+        _console.print("no incident episodes")
+        for u in (*report.unknowns, *load_unknowns):
+            _console.print(f"UNKNOWN: {u.subject} — {u.missing}")
+        return
+    for ep in report.episodes:
+        _console.print(f"Symptom:\n  {ep.symptom}")
+        if ep.path:
+            _console.print("Path:")
+            for hop in ep.path:
+                _console.print(f"  -> {hop.service} [{hop.signal.value}] {hop.detail}")
+        if ep.changes:
+            _console.print("Change:")
+            for change in ep.changes:
+                _console.print(f"  {change}")
+        if ep.observed:
+            _console.print("Observed:")
+            for obs in ep.observed:
+                _console.print(f"  {obs.detail}")
+        _console.print("Candidate cause:")
+        if not ep.candidates:
+            _console.print("  (none evidenced)")
+        for c in ep.candidates:
+            _console.print(
+                f"  [{c.rank}] {c.tier.value} {c.subject} ({c.kind}) — {c.rationale}"
+            )
+        _console.print(f"  affected services: {', '.join(ep.affected_services)}")
+        if ep.slo:
+            _console.print(f"  slo objectives: {', '.join(ep.slo)}")
+    all_unknowns = (*report.unknowns, *load_unknowns)
+    if all_unknowns:
+        _console.print("Unknowns:")
+        for u in all_unknowns:
+            _console.print(f"  {u.subject}: {u.missing}")
+
+
+def _all_findings(
+    ctx: ProjectContext,
+    openapi: OpenApiProjectModel,
+    executions: tuple[RequestExecution, ...],
+) -> tuple[Finding, ...]:
+    """Every check engine feasible on `ctx` — explain needs the finding corpus."""
+    findings: list[Finding] = []
+    findings.extend(run_openapi_checks(openapi))
+    files = list(ctx.iter_files())
+    sec = load_security_model(ctx, files, openapi=openapi)
+    findings.extend(run_security_checks(sec, openapi=openapi))
+    rel = load_reliability_model(ctx, files)
+    findings.extend(run_reliability_checks(rel))
+    if executions:
+        findings.extend(run_perf_checks(executions))
+    return tuple(findings)
 
 
 @app.command()
-def explain(finding: Annotated[str, typer.Argument(help="Finding id to explain.")]) -> None:
-    """Explain a finding."""
-    _not_implemented("explain")
+def explain(
+    target: Annotated[str, typer.Argument(help="Directory the finding came from.")],
+    finding: Annotated[str, typer.Argument(help="Finding id or subject token to explain.")],
+    json_out: Annotated[bool, typer.Option("--json", help="JSON output.")] = False,
+) -> None:
+    """§166 render the evidence chain + classification reasoning for a finding."""
+    path = Path(target).resolve()
+    if not path.is_dir():
+        _stderr.print(f"cannot read path: {target}")
+        raise typer.Exit(code=2)
+    ctx = ProjectContext.from_root(path)
+    openapi = load_openapi_project(ctx)
+    loaded = _load_executions(target)
+    executions = loaded[0] if loaded else ()
+    findings = _all_findings(ctx, openapi, executions)
+    token = finding.lower()
+    matches = [
+        f for f in findings
+        if token in f.id.lower() or token in f.description.lower()
+        or any(token in e.lower() for e in f.entity_ids)
+    ]
+    if not matches:
+        _stderr.print(f"no finding matching: {finding}")
+        raise typer.Exit(code=2)
+    if len(matches) > 1:
+        _console.print(f"{len(matches)} findings match — disambiguate:")
+        for f in matches:
+            _console.print(f"  {f.id}  {Text(f.description).plain[:80]}")
+        raise typer.Exit(code=2)
+    f = matches[0]
+    if json_out:
+        typer.echo(json.dumps(f.to_dict(), indent=2, sort_keys=True))
+        return
+    _console.print(f"{f.id}  [{f.severity.value}] [{f.confidence.value}]")
+    _console.print(Text(f.description).plain)
+    _console.print(f"evidence kind: {f.evidence_kind.value}")
+    for ev in f.evidence:
+        loc = f"{ev.source}:{ev.line}" if ev.line else ev.source
+        _console.print(f"  {ev.kind.value}  {loc}  — {Text(ev.summary).plain}")
+    if f.source_location:
+        _console.print(f"source: {f.source_location.path}:{f.source_location.line or ''}")
+    for u in f.unknowns:
+        _console.print(f"UNKNOWN: {u.subject} — {u.missing} ({u.resolution})")
+    if f.remediation:
+        _console.print(f"remediation: {Text(f.remediation).plain}")
 
 
 def main() -> None:
