@@ -26,10 +26,17 @@ from forge_doctor_api.analyzers.runtime.model import RequestSummary
 from forge_doctor_api.checks.compat import ContractDiff, diff_models, semantic_fingerprint
 from forge_doctor_api.checks.compat.catalog import CompatibilityClass
 from forge_doctor_api.checks.perf import run_perf_checks
+from forge_doctor_api.checks.relapi import run_reliability_checks
 from forge_doctor_api.core.context import ProjectContext
 from forge_doctor_api.core.export import export_findings
 from forge_doctor_api.core.models import UnknownFact
 from forge_doctor_api.perf.baseline import build_baselines
+from forge_doctor_api.reliability import (
+    ApiReliabilityModel,
+    RetryPolicy,
+    TimeoutConfig,
+    load_reliability_model,
+)
 
 NOT_IMPLEMENTED_EXIT_CODE = 3
 
@@ -377,15 +384,123 @@ def security_inspect() -> None:
 
 
 @reliability_app.command("inspect")
-def reliability_inspect() -> None:
-    """Inspect reliability configuration."""
-    _not_implemented("reliability inspect")
+def reliability_inspect(
+    target: Annotated[str, typer.Argument(help="Directory with config artifacts.")],
+    json_out: Annotated[bool, typer.Option("--json", help="JSON output.")] = False,
+) -> None:
+    """Passive reliability inspection of declared config (§164)."""
+    path = Path(target).resolve()
+    if not path.is_dir():
+        _stderr.print(f"cannot read path: {target}")
+        raise typer.Exit(code=2)
+    context = ProjectContext.from_root(path)
+    model = load_reliability_model(context, list(context.iter_files()))
+    findings = run_reliability_checks(model)
+    if json_out:
+        payload = {
+            "model": model.to_dict(),
+            "findings": export_findings(findings).to_dict(),
+        }
+        typer.echo(json.dumps(payload, indent=2, sort_keys=True))
+        return
+    _console.print(
+        f"retry policies: {len(model.retry_policies)} | "
+        f"timeouts: {len(model.timeouts)} | "
+        f"circuit breakers: {len(model.circuit_breakers)} | "
+        f"health checks: {len(model.health_checks)}"
+    )
+    if not findings:
+        _console.print("no reliability findings")
+        return
+    table = Table(show_lines=False)
+    for col in ("id", "severity", "confidence", "detail"):
+        table.add_column(col, no_wrap=(col != "detail"))
+    for f in findings:
+        table.add_row(f.id, f.severity.value, f.confidence.value, f.description)
+    _console.print(table)
 
 
 @reliability_app.command("path")
-def reliability_path() -> None:
-    """Analyze reliability along a request path."""
-    _not_implemented("reliability path")
+def reliability_path(
+    target: Annotated[str, typer.Argument(help="Directory with config artifacts.")],
+    hops: Annotated[
+        list[str] | None,
+        typer.Option("--hop", help="Hop name in call order; repeatable."),
+    ] = None,
+    policy: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--policy",
+            help="Inline declared retry: scope=max_attempts; repeatable.",
+        ),
+    ] = None,
+    timeout: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--timeout",
+            help="Inline declared timeout: scope=ms; repeatable.",
+        ),
+    ] = None,
+    json_out: Annotated[bool, typer.Option("--json", help="JSON output.")] = False,
+) -> None:
+    """Reliability along an explicit call path (§164, §228)."""
+    path = Path(target).resolve()
+    if not path.is_dir():
+        _stderr.print(f"cannot read path: {target}")
+        raise typer.Exit(code=2)
+    context = ProjectContext.from_root(path)
+    model = load_reliability_model(context, list(context.iter_files()))
+    extra_retries = list(model.retry_policies)
+    for spec in policy or []:
+        scope, _, val = spec.partition("=")
+        if not scope or not val.isdigit():
+            _stderr.print(f"bad --policy value: {spec} (want scope=attempts)")
+            raise typer.Exit(code=2)
+        extra_retries.append(RetryPolicy(scope=scope, max_attempts=int(val)))
+    extra_timeouts = list(model.timeouts)
+    for spec in timeout or []:
+        scope, _, val = spec.partition("=")
+        ms = _ms_opt(val)
+        if not scope or ms is None:
+            _stderr.print(f"bad --timeout value: {spec} (want scope=ms)")
+            raise typer.Exit(code=2)
+        extra_timeouts.append(TimeoutConfig(scope=scope, timeout_ms=ms))
+    scoped = ApiReliabilityModel(
+        retry_policies=tuple(sorted(extra_retries, key=lambda r: r.scope)),
+        timeouts=tuple(sorted(extra_timeouts, key=lambda t: t.scope)),
+        circuit_breakers=model.circuit_breakers,
+        load_balancing=model.load_balancing,
+        health_checks=model.health_checks,
+        shutdown_evidence=model.shutdown_evidence,
+        idempotency=model.idempotency,
+    )
+    if not hops:
+        _stderr.print("provide at least one --hop in call order")
+        raise typer.Exit(code=2)
+    findings = run_reliability_checks(scoped, hops=tuple(hops))
+    if json_out:
+        typer.echo(
+            json.dumps(
+                export_findings(findings).to_dict(), indent=2, sort_keys=True
+            )
+        )
+        return
+    if not findings:
+        _console.print("no reliability findings along this path")
+        return
+    table = Table(show_lines=False)
+    for col in ("id", "severity", "confidence", "detail"):
+        table.add_column(col, no_wrap=(col != "detail"))
+    for f in findings:
+        table.add_row(f.id, f.severity.value, f.confidence.value, f.description)
+    _console.print(table)
+
+
+def _ms_opt(value: str) -> float | None:
+    try:
+        return float(value)
+    except ValueError:
+        return None
 
 
 @app.command()
