@@ -171,23 +171,34 @@ class OpenApiParameter(Model):
 
 @dataclass(frozen=True, kw_only=True)
 class OpenApiRequestBody(Model):
+    """`has_schema`/`schema_shapes` describe the resolved body's `content` map."""
+
     location: SourceLocation
     pointer: str
     required: bool = False
     content_types: tuple[str, ...] = ()
+    has_schema: bool = False
+    schema_shapes: tuple[str, ...] = ()
     ref: str | None = None
     component_name: str | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
 class OpenApiResponse(Model):
-    """`status` is the status code / `default` (operations) or None (components)."""
+    """`status` is the status code / `default` (operations) or None (components).
+
+    `has_schema`/`schema_shapes` describe the resolved response's `content`
+    map; `header_names` lists the declared response header names.
+    """
 
     location: SourceLocation
     pointer: str
     status: str | None = None
     description: str | None = None
     content_types: tuple[str, ...] = ()
+    has_schema: bool = False
+    schema_shapes: tuple[str, ...] = ()
+    header_names: tuple[str, ...] = ()
     ref: str | None = None
     component_name: str | None = None
 

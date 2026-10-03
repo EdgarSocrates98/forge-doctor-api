@@ -68,6 +68,7 @@ from forge_doctor_api.analyzers.openapi.refs import (
     strongly_connected,
     within,
 )
+from forge_doctor_api.analyzers.openapi.shape import content_schemas, header_names
 from forge_doctor_api.core.context import ContextError, ProjectContext
 from forge_doctor_api.core.models import Model, SourceLocation
 
@@ -686,6 +687,8 @@ class _Builder:
                 pointer=pointer,
                 required=_bool(target.get("required")),
                 content_types=_content_types(target),
+                has_schema=bool(content_schemas(target)),
+                schema_shapes=content_schemas(target),
                 ref=_str(node.get("$ref")) if isinstance(node, dict) else None,
                 component_name=component_name,
             ),
@@ -709,6 +712,9 @@ class _Builder:
                 status=status,
                 description=_str(target.get("description")),
                 content_types=_content_types(target),
+                has_schema=bool(content_schemas(target)),
+                schema_shapes=content_schemas(target),
+                header_names=header_names(target),
                 ref=_str(node.get("$ref")) if isinstance(node, dict) else None,
                 component_name=component_name,
             ),
