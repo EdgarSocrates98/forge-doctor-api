@@ -11,6 +11,7 @@ from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path, PurePosixPath
+from typing import BinaryIO
 
 Clock = Callable[[], datetime]
 
@@ -66,6 +67,13 @@ class ProjectContext:
 
     def read_text(self, relative: str) -> str:
         return self.resolve(relative).read_text(encoding="utf-8")
+
+    def open_binary(self, relative: str) -> BinaryIO | None:
+        """Open a project-relative file for streaming reads; None when absent."""
+        path = self.resolve(relative)
+        if not path.is_file():
+            return None
+        return path.open("rb")
 
     def iter_files(self, pattern: str = "**/*") -> Iterator[str]:
         """Yield project-relative file paths matching `pattern`, in sorted order."""

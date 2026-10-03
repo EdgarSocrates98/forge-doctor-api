@@ -374,6 +374,7 @@ class Evidence(Model):
     source: str
     summary: str
     line: int | None = None
+    offset: int | None = None
 
     def __post_init__(self) -> None:
         _require_text("Evidence.source", self.source)
@@ -381,6 +382,8 @@ class Evidence(Model):
         _require_enum("Evidence.kind", self.kind, EvidenceKind)
         if self.line is not None and self.line < 1:
             raise ModelError("Evidence.line must be >= 1")
+        if self.offset is not None and self.offset < 0:
+            raise ModelError("Evidence.offset must be >= 0")
         _redact_attrs(self, "source", "summary")
 
 
