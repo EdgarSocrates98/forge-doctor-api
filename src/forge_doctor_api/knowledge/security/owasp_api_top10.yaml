@@ -1,0 +1,35 @@
+# OWASP API Security Top 10 (2023) — bundled knowledge pack (§49, §128).
+# Versioned with the tool; never fetched at scan time (§129).
+pack: owasp-api-security-top-10
+edition: "2023"
+categories:
+  API1:
+    name: Broken Object Level Authorization
+    checks: [APISEC001]
+  API2:
+    name: Broken Authentication
+    checks: [APISEC003]
+  API3:
+    name: Broken Object Property Level Authorization
+    checks: [APISEC008]
+  API4:
+    name: Unrestricted Resource Consumption
+    checks: [APISEC005, APISEC006]
+  API5:
+    name: Broken Function Level Authorization
+    checks: [APISEC002]
+  API6:
+    name: Unrestricted Access to Sensitive Business Flows
+    checks: []
+  API7:
+    name: Server Side Request Forgery
+    checks: [APISEC007]
+  API8:
+    name: Security Misconfiguration
+    checks: [APISEC004]
+  API9:
+    name: Improper Inventory Management
+    checks: [APISEC009]
+  API10:
+    name: Unsafe Consumption of APIs
+    checks: [APISEC010]

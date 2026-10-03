@@ -14,7 +14,6 @@ PLACEHOLDERS = [
     ["contract", "inspect"],
     ["graph"],
     ["blast-radius"],
-    ["security", "inspect"],
     ["diagnose"],
     ["explain", "OAS001"],
 ]

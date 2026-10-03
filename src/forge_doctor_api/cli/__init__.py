@@ -9,10 +9,12 @@ from typing import Annotated
 import typer
 from rich.console import Console
 from rich.table import Table
+from rich.text import Text
 
 from forge_doctor_api import __version__
 from forge_doctor_api.analyzers.openapi.model import OpenApiProjectModel
 from forge_doctor_api.analyzers.openapi.parser import load_openapi_project
+from forge_doctor_api.analyzers.routes import FastApiAdapter
 from forge_doctor_api.analyzers.runtime.execution import (
     RequestExecution,
     executions_from_summaries,
@@ -23,6 +25,7 @@ from forge_doctor_api.analyzers.runtime.loader import (
     load_runtime_project,
 )
 from forge_doctor_api.analyzers.runtime.model import RequestSummary
+from forge_doctor_api.checks.apisec import run_security_checks
 from forge_doctor_api.checks.compat import ContractDiff, diff_models, semantic_fingerprint
 from forge_doctor_api.checks.compat.catalog import CompatibilityClass
 from forge_doctor_api.checks.perf import run_perf_checks
@@ -37,6 +40,7 @@ from forge_doctor_api.reliability import (
     TimeoutConfig,
     load_reliability_model,
 )
+from forge_doctor_api.security import load_security_model
 
 NOT_IMPLEMENTED_EXIT_CODE = 3
 
@@ -373,14 +377,51 @@ def runtime_regressions(
     for col in ("id", "severity", "confidence", "detail"):
         table.add_column(col, no_wrap=(col != "detail"))
     for f in findings:
-        table.add_row(f.id, f.severity.value, f.confidence.value, f.description)
+        table.add_row(f.id, f.severity.value, f.confidence.value, Text(f.description))
     _console.print(table)
 
 
 @security_app.command("inspect")
-def security_inspect() -> None:
-    """Passive security inspection."""
-    _not_implemented("security inspect")
+def security_inspect(
+    target: Annotated[str, typer.Argument(help="Project directory.")],
+    json_out: Annotated[bool, typer.Option("--json", help="JSON output.")] = False,
+) -> None:
+    """Passive security inspection (§163) - contract/config evidence only."""
+    path = Path(target).resolve()
+    if not path.is_dir():
+        _stderr.print(f"cannot read path: {target}")
+        raise typer.Exit(code=2)
+    context = ProjectContext.from_root(path)
+    files = list(context.iter_files())
+    openapi = load_openapi_project(context)
+    try:
+        scan = FastApiAdapter().scan(context, path.name)
+    except Exception:
+        scan = None
+    model = load_security_model(context, files, openapi=openapi, routes=scan)
+    findings = run_security_checks(model, openapi=openapi)
+    if json_out:
+        payload = {
+            "model": model.to_dict(),
+            "findings": export_findings(findings).to_dict(),
+        }
+        typer.echo(json.dumps(payload, indent=2, sort_keys=True))
+        return
+    _console.print(
+        f"auth schemes: {len(model.auth_schemes)} | "
+        f"authz policies: {len(model.authorization)} | "
+        f"drift: {len(model.auth_drift)} | "
+        f"cors: {len(model.cors)} | rate limits: {len(model.rate_limits)}"
+    )
+    if not findings:
+        _console.print("no security findings")
+        return
+    table = Table(show_lines=False)
+    for col in ("id", "severity", "confidence", "detail"):
+        table.add_column(col, no_wrap=(col != "detail"))
+    for f in findings:
+        table.add_row(f.id, f.severity.value, f.confidence.value, Text(f.description))
+    _console.print(table)
 
 
 @reliability_app.command("inspect")
@@ -416,7 +457,7 @@ def reliability_inspect(
     for col in ("id", "severity", "confidence", "detail"):
         table.add_column(col, no_wrap=(col != "detail"))
     for f in findings:
-        table.add_row(f.id, f.severity.value, f.confidence.value, f.description)
+        table.add_row(f.id, f.severity.value, f.confidence.value, Text(f.description))
     _console.print(table)
 
 
@@ -492,7 +533,7 @@ def reliability_path(
     for col in ("id", "severity", "confidence", "detail"):
         table.add_column(col, no_wrap=(col != "detail"))
     for f in findings:
-        table.add_row(f.id, f.severity.value, f.confidence.value, f.description)
+        table.add_row(f.id, f.severity.value, f.confidence.value, Text(f.description))
     _console.print(table)
 
 
