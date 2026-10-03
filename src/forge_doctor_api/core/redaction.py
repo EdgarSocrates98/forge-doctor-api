@@ -44,6 +44,12 @@ _PAIR = re.compile(
 _USERINFO = re.compile(r"(?P<pre>\b[A-Za-z][A-Za-z0-9+.-]*://[^\s:/@]+:)(?P<pw>[^\s@/]+)(?=@)")
 _AUTH_SCHEME = re.compile(r"\b(?P<scheme>Bearer|Basic)\s+(?P<tok>[A-Za-z0-9._~+/=-]+)")
 _JWT = re.compile(r"\beyJ[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]*")
+# Bare provider-shaped credentials without a key/scheme marker — Stripe,
+# AWS access keys, GitHub PATs, Slack tokens.
+_PROVIDER_TOKEN = re.compile(
+    r"\b(?:sk-(?:live|test)-[A-Za-z0-9]{8,}|sk_(?:live|test)_[A-Za-z0-9]{8,}"
+    r"|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{20,}|gho_[A-Za-z0-9]{20,}"
+    r"|xox[baprs]-[A-Za-z0-9-]{10,})\b")
 
 
 def is_sensitive_key(key: object) -> bool:
@@ -77,6 +83,7 @@ def _mask_scheme(match: re.Match[str]) -> str:
 def redact_text(text: str) -> str:
     """Mask secrets embedded in free text, headers, and URLs."""
     text = _USERINFO.sub(lambda m: f"{m['pre']}{MASK}", text)
+    text = _PROVIDER_TOKEN.sub(MASK, text)
     text = _AUTH_SCHEME.sub(_mask_scheme, text)
     text = _JWT.sub(MASK, text)
     text = _HEADER.sub(_mask_header, text)

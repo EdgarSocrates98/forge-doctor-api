@@ -861,7 +861,8 @@ def decide(
             caps.append(str(c.capability))
         for g in getattr(capabilities, "gaps", ()):
             constraints.append(
-                f"capability gap: {g.rule} requires {g.requires}")
+                f"capability gap: {g.rule} requires {g.missing} "
+                f"for {g.capability}")
 
     if question is DecisionQuestion.CAN_RETIRE_VERSION:
         if remaining_clients is None:
