@@ -1,35 +1,98 @@
 # OWASP API Security Top 10 (2023) — bundled knowledge pack (§49, §128).
 # Versioned with the tool; never fetched at scan time (§129).
+# Every category carries §127 provenance.
 pack: owasp-api-security-top-10
+domain: security
 edition: "2023"
-categories:
+maturity: checks
+entries:
   API1:
-    name: Broken Object Level Authorization
-    checks: [APISEC001]
+    fields:
+      name: Broken Object Level Authorization
+      checks: [APISEC001]
+    provenance:
+      source: https://owasp.org/API-Security/editions/2023/en/0xa1
+      source_version: "2023"
+      last_verified: "2026-09-15"
+      effective_since: "2023-06-05"
   API2:
-    name: Broken Authentication
-    checks: [APISEC003]
+    fields:
+      name: Broken Authentication
+      checks: [APISEC003]
+    provenance:
+      source: https://owasp.org/API-Security/editions/2023/en/0xa2
+      source_version: "2023"
+      last_verified: "2026-09-15"
+      effective_since: "2023-06-05"
   API3:
-    name: Broken Object Property Level Authorization
-    checks: [APISEC008]
+    fields:
+      name: Broken Object Property Level Authorization
+      checks: [APISEC008]
+    provenance:
+      source: https://owasp.org/API-Security/editions/2023/en/0xa3
+      source_version: "2023"
+      last_verified: "2026-09-15"
+      effective_since: "2023-06-05"
   API4:
-    name: Unrestricted Resource Consumption
-    checks: [APISEC005, APISEC006]
+    fields:
+      name: Unrestricted Resource Consumption
+      checks: [APISEC004, APISEC005]
+    provenance:
+      source: https://owasp.org/API-Security/editions/2023/en/0xa4
+      source_version: "2023"
+      last_verified: "2026-09-15"
+      effective_since: "2023-06-05"
   API5:
-    name: Broken Function Level Authorization
-    checks: [APISEC002]
+    fields:
+      name: Broken Function Level Authorization
+      checks: [APISEC002]
+    provenance:
+      source: https://owasp.org/API-Security/editions/2023/en/0xa5
+      source_version: "2023"
+      last_verified: "2026-09-15"
+      effective_since: "2023-06-05"
   API6:
-    name: Unrestricted Access to Sensitive Business Flows
-    checks: []
+    fields:
+      name: Unrestricted Access to Sensitive Business Flows
+      checks: [APISEC006]
+    provenance:
+      source: https://owasp.org/API-Security/editions/2023/en/0xa6
+      source_version: "2023"
+      last_verified: "2026-09-15"
+      effective_since: "2023-06-05"
   API7:
-    name: Server Side Request Forgery
-    checks: [APISEC007]
+    fields:
+      name: Server Side Request Forgery
+      checks: [APISEC007]
+    provenance:
+      source: https://owasp.org/API-Security/editions/2023/en/0xa7
+      source_version: "2023"
+      last_verified: "2026-09-15"
+      effective_since: "2023-06-05"
   API8:
-    name: Security Misconfiguration
-    checks: [APISEC004]
+    fields:
+      name: Security Misconfiguration
+      checks: [APISEC009]
+    provenance:
+      source: https://owasp.org/API-Security/editions/2023/en/0xa8
+      source_version: "2023"
+      last_verified: "2026-09-15"
+      effective_since: "2023-06-05"
   API9:
-    name: Improper Inventory Management
-    checks: [APISEC009]
+    fields:
+      name: Improper Inventory Management
+      checks: [APISEC009]
+    provenance:
+      source: https://owasp.org/API-Security/editions/2023/en/0xa9
+      source_version: "2023"
+      last_verified: "2026-09-15"
+      effective_since: "2023-06-05"
   API10:
-    name: Unsafe Consumption of APIs
-    checks: [APISEC010]
+    fields:
+      name: Unsafe Consumption of APIs
+      checks: [APISEC010]
+    provenance:
+      source: https://owasp.org/API-Security/editions/2023/en/0xa10
+      source_version: "2023"
+      last_verified: "2026-09-15"
+      effective_since: "2023-06-05"

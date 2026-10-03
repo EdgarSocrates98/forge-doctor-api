@@ -130,9 +130,11 @@ def test_export_is_deterministic_regardless_of_input_order() -> None:
 
 
 def test_empty_export_still_versioned() -> None:
-    assert export_findings([]).to_json() == (
-        f'{{"findings":[],"schema_version":"{SCHEMA_VERSION}","tool_version":"{__version__}"}}'
-    )
+    payload = json.loads(export_findings([]).to_json())
+    assert payload["findings"] == []
+    assert payload["schema_version"] == SCHEMA_VERSION
+    assert payload["tool_version"] == __version__
+    assert payload["knowledge_versions"]["openapi-versions"]
 
 
 # --- negative ---------------------------------------------------------------

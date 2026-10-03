@@ -1,25 +1,41 @@
-"""Bundled AsyncAPI knowledge pack (§20, §128).
+"""Bundled AsyncAPI knowledge facade (§20, §128, §129).
 
 AsyncAPI 2.x uses channel `publish`/`subscribe` verbs; 3.x uses operations
 with `action: send|receive`. Both normalize into one `AsyncApiModel` —
 `send` means the application produces onto the channel, `receive` means it
-consumes from it.
+consumes from it. Facts live in `knowledge/asyncapi/versions.yaml`.
 """
 
 from __future__ import annotations
 
 import re
 
-KNOWLEDGE_PACK_VERSION = "2026.09"
+from forge_doctor_api.knowledge.loader import load_pack
 
-SUPPORTED_FAMILIES: tuple[str, ...] = (
-    "2.0", "2.1", "2.2", "2.3", "2.4", "2.5", "2.6",
-    "3.0", "3.1",
-)
+_PACK = load_pack("asyncapi", "versions.yaml")
+KNOWLEDGE_PACK_VERSION = _PACK.edition
 
-KNOWN_RELEASES: tuple[str, ...] = (
-    "2.0.0", "2.1.0", "2.2.0", "2.3.0", "2.4.0", "2.5.0", "2.6.0",
-    "3.0.0", "3.1.0",
+
+def _families(*entry_ids: str) -> tuple[str, ...]:
+    out: list[str] = []
+    for entry_id in entry_ids:
+        entry = _PACK.entry(entry_id)
+        if entry is not None:
+            out.extend(
+                f for f in entry.fields.get("families", ())
+                if isinstance(f, str)
+            )
+    return tuple(out)
+
+
+SUPPORTED_FAMILIES: tuple[str, ...] = _families("asyncapi-2", "asyncapi-3")
+
+KNOWN_RELEASES: tuple[str, ...] = tuple(
+    release
+    for entry_id in ("asyncapi-2", "asyncapi-3")
+    if (entry := _PACK.entry(entry_id)) is not None
+    for release in entry.fields.get("releases", ())
+    if isinstance(release, str)
 )
 
 VERSION_PATTERN = re.compile(
@@ -28,10 +44,11 @@ VERSION_PATTERN = re.compile(
 )
 
 # Broker protocols this pack recognizes as binding evidence.
+_bindings = _PACK.entry("bindings")
 KNOWN_BINDINGS: tuple[str, ...] = (
-    "amqp", "amqp1", "anypointmq", "googlepubsub", "http", "ibmmq",
-    "jms", "kafka", "mercure", "mqtt", "mqtt5", "nats", "pulsar",
-    "redis", "sns", "solace", "sqs", "stomp", "ws",
+    tuple(p for p in _bindings.fields.get("protocols", ()) if isinstance(p, str))
+    if _bindings is not None
+    else ()
 )
 
 

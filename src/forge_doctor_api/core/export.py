@@ -1,19 +1,21 @@
 """Versioned finding export envelope (§174).
 
 Every exported payload carries `schema_version` (shape of this envelope and
-the finding contract) and `tool_version` (the producing build). Findings are
-sorted so that producer iteration order never leaks into output; serialization
-inherits redaction from `Model.to_dict`.
+the finding contract), `tool_version` (the producing build), and
+`knowledge_versions` (the bundled pack editions the findings were evaluated
+against). Findings are sorted so that producer iteration order never leaks
+into output; serialization inherits redaction from `Model.to_dict`.
 """
 
 from __future__ import annotations
 
 import re
 from collections.abc import Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from forge_doctor_api import __version__
 from forge_doctor_api.core.models import Finding, Model, ModelError, _require_text
+from forge_doctor_api.knowledge.loader import knowledge_versions
 
 SCHEMA_VERSION = "1.0"
 
@@ -24,6 +26,7 @@ _SCHEMA_VERSION_PATTERN = re.compile(r"^[0-9]+\.[0-9]+$")
 class FindingsExport(Model):
     schema_version: str
     tool_version: str
+    knowledge_versions: dict[str, str] = field(default_factory=dict)
     findings: tuple[Finding, ...] = ()
 
     def __post_init__(self) -> None:
@@ -45,5 +48,6 @@ def export_findings(findings: Iterable[Finding]) -> FindingsExport:
     return FindingsExport(
         schema_version=SCHEMA_VERSION,
         tool_version=__version__,
+        knowledge_versions=knowledge_versions(),
         findings=tuple(sorted(findings, key=_finding_order)),
     )

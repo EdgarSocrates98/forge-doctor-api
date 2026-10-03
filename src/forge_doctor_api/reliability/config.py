@@ -238,12 +238,26 @@ def _walk(
     idem = get("idempotency", "idempotent", "x_idempotent", "xIdempotent")
     in_idem_block = any(t in _IDEM_KEYS for t in trail)
     if (idem is not None and not isinstance(idem, dict)) or in_idem_block:
+        block_key = next(
+            (t for t in reversed(trail) if t in _IDEM_KEYS), None
+        )
+        if block_key is None and isinstance(node, dict):
+            block_key = next(
+                (str(k) for k in node
+                 if str(k).lower() in {k.lower() for k in _IDEM_KEYS}),
+                None,
+            )
+        block_ev = _ev(
+            path, _line_of(text, str(block_key or "idempotency")),
+            "idempotency config",
+        )
         sources: list[IdempotencySource] = []
         method = get("method", "http_method")
         if method is not None:
             sources.append(
                 IdempotencySource(
-                    kind="http_method", detail=str(method), supports=None
+                    kind="http_method", detail=str(method), supports=None,
+                    evidence=block_ev,
                 )
             )
         key = get("key_header", "idempotency_key", "idempotencyKey",
@@ -254,6 +268,7 @@ def _walk(
                     kind="idempotency_key",
                     detail=str(key) if isinstance(key, str) else "present",
                     supports=True,
+                    evidence=block_ev,
                 )
             )
         declared = get("idempotent", "declared", "x_idempotent")
@@ -265,6 +280,7 @@ def _walk(
                     kind="contract_metadata",
                     detail=f"declared idempotent={declared}",
                     supports=declared,
+                    evidence=block_ev,
                 )
             )
         uniq = get("unique_constraint", "db_uniqueness")
@@ -274,6 +290,7 @@ def _walk(
                     kind="db_uniqueness",
                     detail=str(uniq) if isinstance(uniq, str) else "present",
                     supports=True,
+                    evidence=block_ev,
                 )
             )
         subject = str(

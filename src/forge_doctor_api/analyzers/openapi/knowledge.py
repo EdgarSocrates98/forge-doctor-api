@@ -1,44 +1,48 @@
-"""Bundled OpenAPI knowledge pack (§10, §128, §129).
+"""Bundled OpenAPI knowledge facade (§10, §128, §129).
 
-Versioned with the tool and never fetched at scan time. Adding a family
-(e.g. a future 3.3) is a code change reviewed like any other.
+Facts live in `knowledge/openapi/versions.yaml` — this module only
+re-exports them in the shape the parser needs. Never fetched live.
 """
 
 from __future__ import annotations
 
 import re
+from typing import Any
 
-KNOWLEDGE_PACK_VERSION = "2026.09"
+from forge_doctor_api.knowledge.loader import load_pack
 
-SUPPORTED_FAMILIES: tuple[str, ...] = ("3.0", "3.1", "3.2")
+_PACK = load_pack("openapi", "versions.yaml")
+KNOWLEDGE_PACK_VERSION = _PACK.edition
 
-# Published patch releases known to this pack. Unknown patches inside a
-# supported family are still accepted: patch releases do not change structure.
-KNOWN_RELEASES: tuple[str, ...] = (
-    "3.0.0",
-    "3.0.1",
-    "3.0.2",
-    "3.0.3",
-    "3.0.4",
-    "3.1.0",
-    "3.1.1",
-    "3.1.2",
-    "3.2.0",
-    "3.2.1",
+
+def _family_fields(family: str) -> dict[str, Any]:
+    entry = _PACK.entry(f"openapi-{family}")
+    return entry.fields if entry is not None else {}
+
+
+SUPPORTED_FAMILIES: tuple[str, ...] = tuple(
+    e.fields["family"]
+    for e in _PACK.entries
+    if e.fields.get("supported") is True and isinstance(e.fields["family"], str)
 )
 
-HTTP_METHODS: tuple[str, ...] = (
-    "get",
-    "put",
-    "post",
-    "delete",
-    "options",
-    "head",
-    "patch",
-    "trace",
+KNOWN_RELEASES: tuple[str, ...] = tuple(
+    release
+    for e in _PACK.entries
+    if e.fields.get("supported") is True
+    for release in e.fields.get("releases", ())
+    if isinstance(release, str)
+)
+
+HTTP_METHODS: tuple[str, ...] = tuple(
+    m for m in _family_fields("3.0").get("http_methods", ())
+    if isinstance(m, str)
 )
 # OpenAPI 3.2 adds `query` and `additionalOperations` (custom methods).
-HTTP_METHODS_3_2: tuple[str, ...] = (*HTTP_METHODS, "query")
+HTTP_METHODS_3_2: tuple[str, ...] = tuple(
+    m for m in _family_fields("3.2").get("http_methods", ())
+    if isinstance(m, str)
+)
 
 VERSION_PATTERN = re.compile(
     r"^(?P<major>0|[1-9][0-9]*)\.(?P<minor>0|[1-9][0-9]*)\.(?P<patch>0|[1-9][0-9]*)"

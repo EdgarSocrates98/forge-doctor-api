@@ -1,0 +1,38 @@
+# §126/§128 gRPC official behaviors — bundled, never fetched.
+pack: grpc-behaviors
+domain: grpc
+edition: "2026.10"
+maturity: checks
+entries:
+  streaming-modes:
+    fields:
+      modes: [unary, client_streaming, server_streaming, bidi_streaming]
+    provenance:
+      source: https://grpc.io/docs/what-is-grpc/core-concepts/
+      source_version: "1.x"
+      last_verified: "2026-09-15"
+  deadlines:
+    fields:
+      note: deadlines propagate per-call; absence is a candidate finding
+      config_keys: [timeout, deadline, deadlineMs]
+    provenance:
+      source: https://grpc.io/docs/guides/deadlines/
+      source_version: "1.x"
+      last_verified: "2026-09-15"
+  health-check:
+    fields:
+      service: grpc.health.v1.Health
+      note: standard health-checking protocol for prod deployments
+    provenance:
+      source: https://github.com/grpc/grpc/blob/master/doc/health-checking.md
+      source_version: "v1"
+      last_verified: "2026-09-15"
+  retry-policy:
+    fields:
+      keys: [maxAttempts, initialBackoff, maxBackoff, backoffMultiplier,
+             retryableStatusCodes]
+      note: hedging is mutually exclusive with retry in one methodConfig
+    provenance:
+      source: https://github.com/grpc/proposal/blob/master/A6-client-retries.md
+      source_version: "A6"
+      last_verified: "2026-09-15"

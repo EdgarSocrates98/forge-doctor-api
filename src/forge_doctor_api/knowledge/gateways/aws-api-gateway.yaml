@@ -1,0 +1,16 @@
+# §130 capability pack: AWS API Gateway — platform -> capabilities.
+pack: aws-api-gateway-capabilities
+domain: gateways
+edition: "2026.10"
+maturity: detection
+entries:
+  aws-api-gateway:
+    fields:
+      platform: aws-api-gateway
+      capabilities: [api-keys, usage-plans, throttling, authorizers,
+                     request-validation]
+      config_surface: openapi x-amazon extensions + account config
+    provenance:
+      source: https://docs.aws.amazon.com/apigateway/
+      source_version: "2026"
+      last_verified: "2026-09-15"
