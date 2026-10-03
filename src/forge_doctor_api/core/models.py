@@ -83,6 +83,75 @@ class Severity(StrEnum):
     INFO = "INFO"
 
 
+class EntityKind(StrEnum):
+    """Known ServiceGraph entity kinds (§8.1); values are the canonical id prefix.
+
+    `Entity.kind` is a plain string validated by `ENTITY_KIND_PATTERN`, so a
+    graph serialized with a kind added later still decodes. Use
+    `EntityKind(kind)` membership to tell known kinds from extensions.
+    """
+
+    SERVICE = "service"
+    API = "api"
+    ENDPOINT = "endpoint"
+    OPERATION = "operation"
+    SCHEMA = "schema"
+    MESSAGE = "message"
+    EVENT = "event"
+    TOPIC = "topic"
+    QUEUE = "queue"
+    SUBSCRIPTION = "subscription"
+    CLIENT = "client"
+    GATEWAY = "gateway"
+    LOAD_BALANCER = "load_balancer"
+    IDENTITY_PROVIDER = "identity_provider"
+    CREDENTIAL = "credential"
+    DEPLOYMENT = "deployment"
+    RUNTIME = "runtime"
+    DATABASE = "database"
+    CACHE = "cache"
+    EXTERNAL_API = "external_api"
+    WEBHOOK = "webhook"
+    GRAPHQL_TYPE = "graphql_type"
+    GRAPHQL_RESOLVER = "graphql_resolver"
+    GRPC_SERVICE = "grpc_service"
+    GRPC_METHOD = "grpc_method"
+    PROTO_MESSAGE = "proto_message"
+    ASYNC_CHANNEL = "async_channel"
+    POLICY = "policy"
+    SLO = "slo"
+
+
+class RelationshipKind(StrEnum):
+    """Known ServiceGraph relationship kinds (§8.2).
+
+    Like `EntityKind`, `Relationship.kind` stays a validated string
+    (`RELATIONSHIP_KIND_PATTERN`) so new kinds never break stored graphs.
+    """
+
+    EXPOSES = "EXPOSES"
+    CALLS = "CALLS"
+    ROUTES_TO = "ROUTES_TO"
+    IMPLEMENTS = "IMPLEMENTS"
+    CONSUMES = "CONSUMES"
+    PRODUCES = "PRODUCES"
+    PUBLISHES = "PUBLISHES"
+    SUBSCRIBES = "SUBSCRIBES"
+    READS = "READS"
+    WRITES = "WRITES"
+    AUTHENTICATES_WITH = "AUTHENTICATES_WITH"
+    AUTHORIZED_BY = "AUTHORIZED_BY"
+    DEPENDS_ON = "DEPENDS_ON"
+    USES = "USES"
+    RETURNS = "RETURNS"
+    ACCEPTS = "ACCEPTS"
+    GOVERNS = "GOVERNS"
+    DEPLOYED_AS = "DEPLOYED_AS"
+    FRONTED_BY = "FRONTED_BY"
+    RETRIES = "RETRIES"
+    FALLS_BACK_TO = "FALLS_BACK_TO"
+
+
 class RemediationSafety(StrEnum):
     SAFE = "SAFE"
     REVIEW_REQUIRED = "REVIEW_REQUIRED"
@@ -255,6 +324,32 @@ def check_namespace(check_id: str) -> str:
     return match["namespace"]
 
 
+ENTITY_KIND_PATTERN = re.compile(r"^[a-z][a-z0-9_]*$")
+ENTITY_DOMAIN_PATTERN = re.compile(r"^[a-z0-9][a-z0-9_.-]*$")
+RELATIONSHIP_KIND_PATTERN = re.compile(r"^[A-Z][A-Z0-9_]*$")
+
+
+def parse_entity_id(raw: str) -> tuple[str, str, str]:
+    """Split a canonical id `{kind}:{domain}:{identifier}` (§9) or raise.
+
+    Canonical means exact: kind is lowercase snake_case, domain is lowercase
+    without whitespace, identifier is printable with no surrounding
+    whitespace. Nothing is normalized here, so two ids name the same entity
+    only when they are byte-identical (no fuzzy merge).
+    """
+    parts = raw.split(":", 2) if isinstance(raw, str) else []
+    if len(parts) != 3:
+        raise ModelError(f"entity id must be '{{kind}}:{{domain}}:{{identifier}}': {raw!r}")
+    kind, domain, identifier = parts
+    if not ENTITY_KIND_PATTERN.match(kind):
+        raise ModelError(f"entity id kind must be lowercase snake_case: {raw!r}")
+    if not ENTITY_DOMAIN_PATTERN.match(domain):
+        raise ModelError(f"entity id domain must be lowercase, no whitespace: {raw!r}")
+    if not identifier or identifier != identifier.strip() or not identifier.isprintable():
+        raise ModelError(f"entity id identifier must be non-empty and trimmed: {raw!r}")
+    return kind, domain, identifier
+
+
 def entity_id(kind: str, domain: str, identifier: str) -> str:
     """Build a canonical entity id `{kind}:{domain}:{identifier}` (§9)."""
     for part_name, part in (("kind", kind), ("domain", domain)):
@@ -262,7 +357,9 @@ def entity_id(kind: str, domain: str, identifier: str) -> str:
         if ":" in part:
             raise ModelError(f"{part_name} must not contain ':'")
     _require_text("identifier", identifier)
-    return f"{kind}:{domain}:{identifier}"
+    raw = f"{kind}:{domain}:{identifier}"
+    parse_entity_id(raw)
+    return raw
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -356,6 +453,12 @@ class Finding(Model):
 
 @dataclass(frozen=True, kw_only=True)
 class Entity(Model):
+    """A ServiceGraph node. `id` is canonical and its prefix must equal `kind`.
+
+    `kind` accepts an `EntityKind` or any string matching
+    `ENTITY_KIND_PATTERN` (extension kinds); it is stored as a plain string.
+    """
+
     id: str
     kind: str
     name: str
@@ -363,25 +466,49 @@ class Entity(Model):
 
     def __post_init__(self) -> None:
         _require_text("Entity.kind", self.kind)
+        object.__setattr__(self, "kind", str(self.kind))
+        if not ENTITY_KIND_PATTERN.match(self.kind):
+            raise ModelError(f"Entity.kind must be lowercase snake_case: {self.kind!r}")
         _require_text("Entity.name", self.name)
-        parts = self.id.split(":", 2) if isinstance(self.id, str) else []
-        if len(parts) != 3 or not all(part.strip() for part in parts):
-            raise ModelError(f"Entity.id must be '{{kind}}:{{domain}}:{{identifier}}': {self.id!r}")
-        if parts[0] != self.kind:
-            raise ModelError(f"Entity.id kind {parts[0]!r} does not match kind {self.kind!r}")
+        kind, _, _ = parse_entity_id(self.id)
+        if kind != self.kind:
+            raise ModelError(f"Entity.id kind {kind!r} does not match kind {self.kind!r}")
 
 
 @dataclass(frozen=True, kw_only=True)
 class Relationship(Model):
+    """A directed ServiceGraph edge an analyzer explicitly recorded (§8.2).
+
+    Edges are never inferred: at least one `Evidence` is required.
+    `confidence` has no default so certainty is always stated; an edge whose
+    existence or target is uncertain is recorded at `Confidence.UNKNOWN` (or
+    LOW) and, at UNKNOWN, must list the `UnknownFact`s that would resolve it.
+    Identity is `(source_id, kind, target_id)`.
+    """
+
     kind: str
     source_id: str
     target_id: str
+    confidence: Confidence
     evidence: tuple[Evidence, ...] = ()
+    unknowns: tuple[UnknownFact, ...] = ()
 
     def __post_init__(self) -> None:
         _require_text("Relationship.kind", self.kind)
-        _require_text("Relationship.source_id", self.source_id)
-        _require_text("Relationship.target_id", self.target_id)
+        object.__setattr__(self, "kind", str(self.kind))
+        if not RELATIONSHIP_KIND_PATTERN.match(self.kind):
+            raise ModelError(f"Relationship.kind must be UPPER_SNAKE_CASE: {self.kind!r}")
+        parse_entity_id(self.source_id)
+        parse_entity_id(self.target_id)
+        _require_enum("Relationship.confidence", self.confidence, Confidence)
+        if not self.evidence:
+            raise ModelError("Relationship must carry evidence: edges are never inferred")
+        if self.confidence is Confidence.UNKNOWN and not self.unknowns:
+            raise ModelError("Relationship with UNKNOWN confidence must list its unknowns")
+
+    @property
+    def key(self) -> tuple[str, str, str]:
+        return (self.source_id, self.kind, self.target_id)
 
 
 @dataclass(frozen=True, kw_only=True)

@@ -74,6 +74,7 @@ def sample_models() -> list[Model]:
             kind="CALLS",
             source_id="service:python:payments",
             target_id="service:python:ledger",
+            confidence=Confidence.HIGH,
             evidence=(EVIDENCE,),
         ),
         Capability(
