@@ -60,23 +60,44 @@ fact without evidence, and never hides an unknown behind a default.
 - **Raw payload retention.** `keep_spans=False` by default; exports
   carry summaries and references, never request bodies.
 
-## Roadmap anchors (§140–§141, §220–§223)
+## Roadmap anchors — passo-1 (specs 035+)
 
-The prompt's waves and the versioned milestones are tracked here —
-docs, not code, because they are direction rather than acceptance
-criteria:
+The passo-1 mission (`prompt_evo_passo1.md`) re-anchors the versions on
+the PROVE → CONNECT → SCALE → GENERALIZE → EXPAND sequence
+(§104). Baseline evidence: `docs/current-state.md`; gap ledger:
+`docs/gaps.md`; target shape: `docs/target-architecture.md`.
 
 - **v0.1 (shipped):** the deterministic core — contracts, evidence,
-  checks, twin, policies, fleet, handoff, stabilized release.
-- **v0.2 (planned):** deeper runtime correlation, expanded gateway
-  dialect coverage beyond the bounded four, richer IaC linkage,
-  CloudFormation parsing (currently recorded as deferred, §74).
-- **v0.3 (planned):** broader source adapters, performance model
-  refinements, expanded knowledge packs.
-- **v0.4–v0.5 (planned):** migration-path execution support,
-  cross-domain handoff depth (§137 — today the `DoctorApi` surface and
-  `api→forge` routing are the shipped slice), and whatever the Forge
-  Lab corpus proves necessary.
+  checks, twin, policies, fleet, handoff, stabilized release (specs
+  001–034).
+- **v0.2 — Trusted Unified Doctor:** independent quality CI,
+  deterministic integration gate, artifact discovery, `AnalysisPlan`,
+  `EvidenceStore`, unified `DoctorReport`, unified `scan` (specs
+  035–040).
+- **v0.3 — Scalable Doctor:** runtime streaming core, bounded memory,
+  online aggregation, benchmark gate, incremental-analysis groundwork
+  (specs 041–043, 065).
+- **v0.4 — Forge-Native Doctor:** Forge Protocol contracts + receipts +
+  content hashing, Handoff V2, Context Broker (`doctor://` refs,
+  slices, delta), real MCP server, public SDK (specs 044–049).
+- **v0.5 — Multi-Framework Doctor:** consolidated framework-adapter
+  contract, Spring Boot + Express/NestJS adapters with adversarial
+  fixtures, plugin manifest/registry/conformance/CLI, IaC + gateway
+  depth, graph 2.0 with slices (specs 050–057).
+- **v0.6+ — Proven Doctor:** real-world Forge Lab corpus with
+  coverage-confidence metrics, temporal intelligence
+  (snapshots/deltas/architectural regression), migration graph,
+  security/reliability/cache depth, knowledge-pack lifecycle, engine
+  benchmarks, analysis stats, output-contract polish, docs-as-contract,
+  ADRs, release + supply-chain engineering, cross-doctor contracts
+  (specs 058–070).
+
+Explicitly still deferred (roadmap, not implementation, per §115/§119):
+AWS SAM / CDK-synth / Serverless / Helm-depth / Kustomize parsing,
+live-system access of any kind, LLM-assisted features, composite
+health scores, name-similarity edges, framework generations two and
+three (Flask, DRF, Fastify, Quarkus, Micronaut, Go net/http, Gin, Echo,
+Chi) until generation one proves the contract.
 
 The rule for future versions is unchanged: a prompt section becomes
 code only through a spec with a Grill Gate, acceptance criteria,
