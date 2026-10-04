@@ -397,6 +397,10 @@ def _contracts_summary(openapi: OpenApiProjectModel) -> DomainSummary | None:
             ("unresolved_refs", len(openapi.unresolved_external_refs)),
         ),
         ids=tuple(d.location.path for d in openapi.documents),
+        digests=tuple(sorted(
+            (o.identity or f"{o.method} {o.path}",
+             hashlib.sha256(o.to_json().encode("utf-8")).hexdigest()[:16])
+            for o in openapi.operations)),
         summaries=tuple(
             f"{d.title or d.location.path} {d.api_version or ''}".strip()
             for d in openapi.documents

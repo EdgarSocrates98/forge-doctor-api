@@ -15,6 +15,7 @@ from forge_doctor_api.core.models import (
     Model,
     UnknownFact,
 )
+from forge_doctor_api.handoff.protocol import ForgeCapability
 from forge_doctor_api.safefix.model import Remediation
 
 
@@ -35,7 +36,14 @@ class ExternalReference(Model):
 
 @dataclass(frozen=True, kw_only=True)
 class ApiHandoffBundle(Model):
-    """§134 compact handoff unit for API Forge / The Forger."""
+    """§134 compact handoff unit for API Forge / The Forger.
+
+    `handoff_version=2` adds deterministic identity + content
+    addressing: `handoff_id` (sha256 of the bundle body),
+    `analysis_rev` (sha256 of the source report), per-domain content
+    hashes, `doctor://` context refs and typed capabilities. V1 keeps
+    these fields empty/None — identical serialized shape.
+    """
 
     schema_version: str = "1.0"
     service: str | None = None
@@ -51,6 +59,14 @@ class ApiHandoffBundle(Model):
     remediation_candidates: tuple[Remediation, ...] = ()
     unknowns: tuple[UnknownFact, ...] = ()
     knowledge_versions: dict[str, str] = field(default_factory=dict)
+
+    # --- V2 (§134/§26) — empty on V1 -------------------------------------
+    handoff_version: int = 1
+    handoff_id: str = ""
+    analysis_rev: str | None = None
+    domain_sha256: tuple[tuple[str, str], ...] = ()
+    context_refs: tuple[str, ...] = ()
+    capabilities: tuple[ForgeCapability, ...] = ()
 
 
 @dataclass(frozen=True, kw_only=True)

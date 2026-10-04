@@ -1216,5 +1216,33 @@ def explain(
         _console.print(f"remediation: {Text(f.remediation).plain}")
 
 
+@app.command()
+def mcp(
+    target: Annotated[str, typer.Argument(
+        help="Project directory to serve over MCP.",
+    )] = ".",
+    transport: Annotated[str, typer.Option(
+        "--transport", help="stdio (default).",
+    )] = "stdio",
+) -> None:
+    """§216 serve the Doctor over MCP (requires the `mcp` extra)."""
+    if transport != "stdio":
+        _stderr.print(f"unknown transport: {transport} (expected stdio)")
+        raise typer.Exit(code=2)
+    path = Path(target).resolve()
+    if not path.is_dir():
+        _stderr.print(f"cannot read path: {target}")
+        raise typer.Exit(code=2)
+    try:
+        from forge_doctor_api.handoff.mcp_server import (
+            McpDependencyError,
+            serve_stdio,
+        )
+        serve_stdio(path)
+    except McpDependencyError as exc:
+        _stderr.print(str(exc))
+        raise typer.Exit(code=2) from None
+
+
 def main() -> None:
     app()

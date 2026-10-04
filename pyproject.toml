@@ -19,6 +19,7 @@ dependencies = [
 
 [project.optional-dependencies]
 graphql = ["graphql-core>=3.2,<4"]
+mcp = ["mcp>=2.0,<3"]
 
 [project.scripts]
 forge-doctor-api = "forge_doctor_api.cli:main"
@@ -55,3 +56,12 @@ python_version = "3.11"
 strict = true
 mypy_path = "src"
 packages = ["forge_doctor_api"]
+
+[[tool.mypy.overrides]]
+module = ["mcp", "mcp.*"]
+follow_imports = "skip"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["forge_doctor_api.handoff.mcp_server"]
+disallow_untyped_decorators = false

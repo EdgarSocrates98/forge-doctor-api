@@ -13,11 +13,14 @@ class DomainSummary(Model):
 
     `counts`: label -> number (e.g. ("operations", 42)).
     `ids`: stable entity/operation identifiers (never payloads).
+    `digests`: stable id -> content-sha256 pairs enabling changed-vs-
+      added/removed discrimination in deltas (never payloads).
     `summaries`: one-line headline strings.
     `unknowns`: count of UnknownFacts the domain contributed.
     """
 
     counts: tuple[tuple[str, int], ...] = ()
     ids: tuple[str, ...] = ()
+    digests: tuple[tuple[str, str], ...] = ()
     summaries: tuple[str, ...] = ()
     unknowns: int = 0
