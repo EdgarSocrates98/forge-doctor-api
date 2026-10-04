@@ -582,3 +582,124 @@ def test_determinism(tmp_path: Path) -> None:
     d1 = [f.description for f in run_security_checks(m1, openapi=o1)]
     d2 = [f.description for f in run_security_checks(m2, openapi=o2)]
     assert d1 == d2
+
+
+# ---------- spec 061: auth-coverage chain + sensitive fields ----------
+
+def _sec(tmp_path: Path, doc: str):
+    return _load(tmp_path, {"o.yaml": HEADER + doc})
+
+
+def test_global_auth_inherited_no_011(tmp_path: Path) -> None:
+    """Op inheriting global security must not false-positive."""
+    m, oas = _sec(tmp_path, """
+paths:
+  /a:
+    get:
+      operationId: a
+      responses: {'200': {description: ok}}
+components:
+  securitySchemes:
+    b: {type: http, scheme: bearer}
+security:
+  - b: []
+""")
+    ids = [f.id for f in run_security_checks(m, openapi=oas)]
+    assert "APISEC011" not in ids
+
+
+def test_ambiguous_override_is_unknown(tmp_path: Path) -> None:
+    """Op declaring security that resolves to no requirement while a
+    global requirement exists -> UNKNOWN, never PASS/FAIL."""
+    m, oas = _sec(tmp_path, """
+paths:
+  /a:
+    get:
+      operationId: a
+      security:
+        - ghost: []
+      responses: {'200': {description: ok}}
+components:
+  securitySchemes:
+    b: {type: http, scheme: bearer}
+security:
+  - b: []
+""")
+    findings = run_security_checks(m, openapi=oas)
+    f = next((f for f in findings if f.id == "APISEC011"), None)
+    assert f is not None
+    assert f.unknowns, "ambiguous override must carry UnknownFact"
+
+
+def test_no_security_anywhere_is_011(tmp_path: Path) -> None:
+    m, oas = _sec(tmp_path, """
+paths:
+  /a:
+    get: {operationId: a, responses: {'200': {description: ok}}}
+""")
+    ids = [f.id for f in run_security_checks(m, openapi=oas)]
+    assert "APISEC011" in ids
+
+
+def test_sensitive_field_candidate(tmp_path: Path) -> None:
+    m, oas = _sec(tmp_path, """
+paths:
+  /a:
+    get: {operationId: a, responses: {'200': {description: ok}}}
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        name: {type: string}
+        password: {type: string}
+  securitySchemes:
+    b: {type: http, scheme: bearer}
+security:
+  - b: []
+""")
+    findings = run_security_checks(m, openapi=oas)
+    f = next((f for f in findings if f.id == "APISEC012"), None)
+    assert f is not None
+    assert "password" in f.description
+    assert f.confidence.value == "LOW"
+
+
+def test_declared_redaction_suppresses_012(tmp_path: Path) -> None:
+    m, oas = _sec(tmp_path, """
+paths:
+  /a:
+    get: {operationId: a, responses: {'200': {description: ok}}}
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        password: {type: string, writeOnly: true}
+  securitySchemes:
+    b: {type: http, scheme: bearer}
+security:
+  - b: []
+""")
+    ids = [f.id for f in run_security_checks(m, openapi=oas)]
+    assert "APISEC012" not in ids
+
+
+def test_format_password_suppresses_012(tmp_path: Path) -> None:
+    m, oas = _sec(tmp_path, """
+paths:
+  /a:
+    get: {operationId: a, responses: {'200': {description: ok}}}
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        password: {type: string, format: password}
+  securitySchemes:
+    b: {type: http, scheme: bearer}
+security:
+  - b: []
+""")
+    ids = [f.id for f in run_security_checks(m, openapi=oas)]
+    assert "APISEC012" not in ids

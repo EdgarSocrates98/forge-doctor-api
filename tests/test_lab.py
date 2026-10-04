@@ -19,6 +19,7 @@ from forge_doctor_api.core.models import (
     Severity,
 )
 from forge_doctor_api.lab import (
+    FamilyScore,
     LabObservations,
     LabScenario,
     aggregate_scores,
@@ -27,6 +28,7 @@ from forge_doctor_api.lab import (
     run_labs,
     write_run_record,
 )
+from forge_doctor_api.lab.runner import run_scenario
 
 REPO_LABS = Path(__file__).resolve().parent.parent / "labs"
 
@@ -274,9 +276,19 @@ def test_corpus_covers_required_domains() -> None:
 
 
 def test_corpus_is_deterministic() -> None:
-    a = run_labs(ProjectContext.from_root(REPO_LABS))
-    b = run_labs(ProjectContext.from_root(REPO_LABS))
-    assert a.to_dict() == b.to_dict()
+    a = _without_measurements(run_labs(ProjectContext.from_root(REPO_LABS)).to_dict())
+    b = _without_measurements(run_labs(ProjectContext.from_root(REPO_LABS)).to_dict())
+    assert a == b
+
+
+def _without_measurements(data: dict) -> dict:
+    """Timing/memory are harness measurements, not decision output —
+    they vary legitimately across runs (spec 058)."""
+    for key in ("results", "families"):
+        for entry in data.get(key, []):
+            entry["elapsed_ms"] = 0
+            entry["peak_bytes"] = 0
+    return data
 
 
 def test_demo_scenarios_present() -> None:
@@ -296,3 +308,55 @@ def test_negative_space_scenarios_exist() -> None:
     scenarios = discover_scenarios(ProjectContext.from_root(REPO_LABS))
     negative = [s for s in scenarios if not s.expected.findings]
     assert len(negative) >= 5
+
+
+# -- spec 058: real-world corpus + metrics -----------------------------------
+
+def test_realworld_corpus_present_and_required() -> None:
+    """spec 058: >=15 realworld cases covering the required matrix."""
+    scenarios = discover_scenarios(ProjectContext.from_root(REPO_LABS))
+    real = [s for s in scenarios if s.domain == "realworld"]
+    assert len(real) >= 15
+    assert all(s.provenance for s in real), (
+        "every realworld scenario needs a provenance block")
+    assert all(not s.problems for s in real), (
+        [f"{s.name}: {s.problems}" for s in real])
+
+
+def test_realworld_missing_provenance_fails() -> None:
+    labs_root = Path(__file__).parent / ".pytest-tmp" / "rwtree"
+    case = labs_root / "realworld" / "noprov"
+    case.mkdir(parents=True, exist_ok=True)
+    (case / "expected.yaml").write_text(
+        "expected_findings: []\n", encoding="utf-8")
+    ctx = ProjectContext.from_root(labs_root)
+    scenarios = discover_scenarios(ctx)
+    assert scenarios[0].problems
+    obs = run_scenario(ctx, scenarios[0])
+    result = compare(scenarios[0], obs)
+    assert not result.passed
+    assert result.problems
+
+
+def test_family_score_metrics() -> None:
+    score = FamilyScore(
+        family="OAS", expected=4, hits=3, misses=1, false_positives=2,
+        sample_size=10, unknowns=2, unsupported=1, parse_failures=0,
+        elapsed_ms=50, peak_bytes=1024)
+    assert score.tp == 3 and score.fp == 2 and score.fn == 1
+    assert score.precision == 0.6
+    assert score.recall == 0.75
+    assert score.unknown_rate == 0.2
+    assert score.unsupported_rate == 0.1
+    assert score.coverage_confidence == "medium"
+    d = score.to_dict()
+    assert d["coverage_confidence"] == "medium"
+    assert d["unknown_rate"] == 0.2
+
+
+def test_run_records_metrics() -> None:
+    report = run_labs(ProjectContext.from_root(REPO_LABS))
+    assert any(r.sample_size > 0 for r in report.results)
+    assert any(r.elapsed_ms >= 0 for r in report.results)
+    assert any(f.coverage_confidence in ("low", "medium")
+               for f in report.families)

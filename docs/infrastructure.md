@@ -141,3 +141,33 @@ inferred.
 positive case, dialect-mismatch negatives, mesh markers, the §76 chain
 positive + negative, Terraform/Helm/CFN handling, graph linkage, and
 determinism.
+
+## IaC depth (spec 055)
+
+`analyzers/iac/hcl.py` is a bounded Terraform scanner over the shared
+`textscan` stripper: comments and heredocs are stripped positionally,
+top-level block headers (`resource "aws_lb" "x"`) and simple
+`key = literal` attributes are extracted with per-field file/line
+evidence. Dynamic or nested expressions are never guessed — they
+become `None` plus an `UnknownFact`. Literal `count > 0` establishes
+resource existence; a dynamic `count` leaves existence unknown.
+
+`analyzers/iac/cloudformation.py` loads CloudFormation YAML safely
+through custom `!Ref`/`!GetAtt`/`!Sub` constructors — intrinsic values
+are recorded as dynamic + `UnknownFact`, `Resources` are extracted
+with type/property evidence. Malformed HCL/YAML never crashes the
+scan; commented blocks and strings containing `resource "aws_lb"`
+produce nothing.
+
+## Gateway depth (spec 056)
+
+Dialects: Kong (services/routes/plugins), Envoy (listeners/routes/
+clusters), Nginx (`location`/`upstream`), Traefik (routers/services/
+middlewares), AWS API Gateway, and declared mesh traffic edges
+(Istio `VirtualService`/`DestinationRule`, Linkerd `ServiceProfile`).
+
+The existence rule is uniform: a route whose target does not resolve
+to a *declared* upstream/service stays in the model with
+`service=None` and an `UnknownFact` — name-matched edges are never
+created. Commented directives, `location` text inside string values,
+and template variables produce no routes and no entities.

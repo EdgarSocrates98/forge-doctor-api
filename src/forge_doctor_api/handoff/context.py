@@ -137,7 +137,10 @@ def content_digest(text: str) -> str:
 
 
 def _finding_ref(f: Finding) -> str:
-    subject = f.entity_ids[0] if f.entity_ids else ""
+    # entity_ids are optional on a Finding; fall back to the first
+    # evidence source so every finding gets a mintable ref.
+    subject = (f.entity_ids[0] if f.entity_ids
+               else (f.evidence[0].source if f.evidence else "report"))
     return mint("finding", id=f.id, subject=subject,
                 digest=content_digest(
                     f"{f.id}|{subject}|{f.description}"))
@@ -199,6 +202,23 @@ def context_slice(report: DoctorReport, ref: str) -> ContextSlice:
         summary = report.graph
         if summary is None:
             return ContextSlice(ref=ref, kind=kind)
+        if parsed.parts:
+            # doctor://graph/{entity-id} — bounded depth-1 slice of the
+            # flat edge export (spec 057), evidence refs preserved.
+            root = "/".join(parsed.parts)
+            edges = tuple(
+                e for e in report.graph_edges
+                if e.from_id == root or e.to_id == root
+            )[:MAX_GRAPH_EDGES]
+            return ContextSlice(
+                ref=ref, kind=kind,
+                fields=(
+                    ("root", root),
+                    ("edges", json.dumps(
+                        [e.to_dict() for e in edges], sort_keys=True)),
+                ),
+                truncated=len(report.graph_edges) > MAX_GRAPH_EDGES
+                and len(edges) == MAX_GRAPH_EDGES)
         ids = summary.ids[:MAX_GRAPH_EDGES]
         return ContextSlice(
             ref=ref, kind=kind,

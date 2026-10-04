@@ -177,3 +177,125 @@ class TestMeshModel:
         ctx = _ctx(tmp_path, {"kong.yaml": _KONG})
         _, meshes, _ = load_gateway_models(ctx, _files(ctx))
         assert meshes == ()
+
+
+_TRAEFIK = """
+http:
+  routers:
+    api:
+      rule: "PathPrefix(`/api`)"
+      service: api-svc
+    ghost:
+      rule: "PathPrefix(`/ghost`)"
+      service: nope-svc
+  services:
+    api-svc:
+      loadBalancer:
+        servers:
+          - url: "http://api.internal:8080"
+  middlewares:
+    auth:
+      basicAuth: {users: ["a:b"]}
+"""
+
+_NGINX_UNRESOLVED = """
+upstream real_backend {
+    server real.internal:8080;
+}
+server {
+    listen 80;
+    location /ok/ {
+        proxy_pass http://real_backend;
+    }
+    location /ghost/ {
+        proxy_pass http://ghost_backend;
+    }
+}
+"""
+
+_NGINX_COMMENTS = """
+# upstream fake_backend {
+#     server fake.internal:1;
+# }
+# location /fake/ { proxy_pass http://fake_backend; }
+server {
+    listen 80;
+    location /only/ {
+        proxy_pass http://real_backend;
+    }
+}
+upstream real_backend { server real.internal:8080; }
+"""
+
+_NGINX_STRING_FAKE = """
+server {
+    listen 80;
+    location /x/ {
+        set $note "location /fake/ proxy_pass http://f";
+        proxy_pass http://real_backend;
+    }
+}
+upstream real_backend { server real.internal:8080; }
+"""
+
+
+class TestGatewayDepthAdversarial:
+    """spec 056: comments, string fakes, templates, unresolved targets."""
+
+    def test_traefik(self, tmp_path) -> None:
+        ctx = _ctx(tmp_path, {"traefik.yaml": _TRAEFIK})
+        gws, _, unknowns = load_gateway_models(ctx, _files(ctx))
+        assert len(gws) == 1
+        gw = gws[0]
+        assert gw.dialect is GatewayDialect.TRAEFIK
+        paths = sorted(r.path for r in gw.routes)
+        assert paths == ["/api", "/ghost"]
+        # declared service resolves; undeclared -> unresolved + unknown
+        resolved = [r for r in gw.routes if r.upstream]
+        assert any("api-svc" in (r.upstream or "") for r in resolved)
+        assert any("ghost" in u.subject or "nope" in u.subject
+                   for u in unknowns)
+
+    def test_nginx_unresolved_upstream(self, tmp_path) -> None:
+        ctx = _ctx(tmp_path, {"nginx.conf": _NGINX_UNRESOLVED})
+        gws, _, unknowns = load_gateway_models(ctx, _files(ctx))
+        gw = gws[0]
+        ghost = [r for r in gw.routes if "/ghost/" in r.path]
+        assert ghost, "route stays represented even when unresolved"
+        assert ghost[0].service is None
+        assert unknowns, "unresolved target must be an UnknownFact"
+
+    def test_nginx_commented_blocks_ignored(self, tmp_path) -> None:
+        ctx = _ctx(tmp_path, {"nginx.conf": _NGINX_COMMENTS})
+        gws, _, _ = load_gateway_models(ctx, _files(ctx))
+        gw = gws[0]
+        assert all("fake" not in r.path for r in gw.routes)
+        assert all("fake" not in u.name for u in gw.upstreams)
+
+    def test_nginx_string_fake_ignored(self, tmp_path) -> None:
+        ctx = _ctx(tmp_path, {"nginx.conf": _NGINX_STRING_FAKE})
+        gws, _, _ = load_gateway_models(ctx, _files(ctx))
+        gw = gws[0]
+        assert all("fake" not in r.path for r in gw.routes)
+
+    def test_no_name_matched_edges(self, tmp_path) -> None:
+        """A route target matching an upstream *name* is only an edge
+        when the config declares it — name similarity alone never
+        resolves."""
+        conf = """
+server {
+    listen 80;
+    location /a/ {
+        proxy_pass http://declared_backend;
+    }
+}
+upstream other_backend { server o.internal:1; }
+"""
+        ctx = _ctx(tmp_path, {"nginx.conf": conf})
+        gws, _, _ = load_gateway_models(ctx, _files(ctx))
+        assert len(gws) == 1
+        route = next(r for r in gws[0].routes if r.path == "/a/")
+        # declared_backend has no upstream block -> unresolved
+        assert route.service is None
+        assert any(u.name == "other_backend"
+                   for u in gws[0].upstream_targets)

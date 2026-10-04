@@ -8,6 +8,7 @@ from typer.testing import CliRunner
 
 from forge_doctor_api.analyzers.runtime import RequestExecution
 from forge_doctor_api.checks.relapi import run_reliability_checks
+from forge_doctor_api.checks.relapi.engine import run_depth_checks
 from forge_doctor_api.cli import app
 from forge_doctor_api.core.context import ProjectContext
 from forge_doctor_api.reliability import (
@@ -22,8 +23,10 @@ from forge_doctor_api.reliability import (
     load_reliability_model,
 )
 from forge_doctor_api.reliability.model import (
+    ApiReliabilityModel,
     ApiServiceObjective,
     IdempotencySource,
+    TimeoutConfig,
 )
 
 BASE = 1_700_000_000_000_000_000
@@ -546,3 +549,41 @@ def test_reliability_determinism(tmp_path: Path) -> None:
     f1 = [f.description for f in run_reliability_checks(m1)]
     f2 = [f.description for f in run_reliability_checks(m2)]
     assert f1 == f2
+
+
+# -- spec 062: depth checks over evidenced edges ------------------------------
+
+
+def _depth_model() -> ApiReliabilityModel:
+    return ApiReliabilityModel(
+        retry_policies=(
+            RetryPolicy(scope="gw", max_attempts=3),
+            RetryPolicy(scope="svc", max_attempts=2),
+        ),
+        timeouts=(
+            TimeoutConfig(scope="gw", timeout_ms=100.0),
+            TimeoutConfig(scope="svc", timeout_ms=500.0),
+        ))
+
+
+def test_depth_retry_amplification() -> None:
+    findings = run_depth_checks(_depth_model(), (("gw", "svc"),))
+    amp = [f for f in findings if f.id == "APIREL001"]
+    assert amp and "6" in amp[0].description  # 3 * 2 bound
+
+
+def test_depth_timeout_cascade() -> None:
+    findings = run_depth_checks(_depth_model(), (("gw", "svc"),))
+    assert any(f.id == "APIREL002" and "100.0ms < callee timeout 500.0ms"
+               in f.description for f in findings)
+
+
+def test_depth_unknown_callee_timeout() -> None:
+    findings = run_depth_checks(_depth_model(), (("gw", "other"),))
+    f = next((f for f in findings if f.id == "APIREL002"), None)
+    assert f is not None and f.unknowns
+
+
+def test_depth_no_evidence_no_findings() -> None:
+    # no declared edges -> nothing; name similarity impossible
+    assert run_depth_checks(_depth_model(), ()) == ()

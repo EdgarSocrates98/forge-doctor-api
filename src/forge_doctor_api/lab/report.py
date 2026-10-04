@@ -8,7 +8,9 @@ unexpected finding counts as a false positive for its family (§200).
 from __future__ import annotations
 
 import json
+import tracemalloc
 from pathlib import Path
+from time import perf_counter
 
 from forge_doctor_api.core.context import ProjectContext
 from forge_doctor_api.lab.loader import discover_scenarios
@@ -87,11 +89,19 @@ def compare(scenario: LabScenario, obs: LabObservations) -> LabResult:
         forbidden_entity_hits, forbidden_edge_hits,
         missing_clients, missing_breaking,
         missing_runtime_signals, missing_issues, wording,
+        scenario.problems,
     ))
     return LabResult(
         domain=scenario.domain,
         name=scenario.name,
         passed=passed,
+        problems=scenario.problems,
+        sample_size=obs.sample_size,
+        elapsed_ms=obs.elapsed_ms,
+        peak_bytes=obs.peak_bytes,
+        unknowns=obs.unknowns,
+        parse_failures=obs.parse_failures,
+        unsupported=obs.unsupported,
         missing_findings=missing_findings,
         unexpected_findings=unexpected,
         forbidden_hits=forbidden_hits,
@@ -109,11 +119,20 @@ def compare(scenario: LabScenario, obs: LabObservations) -> LabResult:
 
 
 def run_labs(context: ProjectContext) -> LabReport:
-    """Discover + run every scenario under `context`, then score it."""
+    """Discover + run every scenario under `context`, then score it.
+
+    Per-scenario timing/memory are *measurements* of the harness run,
+    recorded on the result — never inputs to matching.
+    """
     scenarios = discover_scenarios(context)
     pairs: list[tuple[LabScenario, LabResult]] = []
     for scenario in scenarios:
+        tracemalloc.start()
+        t0 = perf_counter()
         obs = run_scenario(context, scenario)
+        obs.elapsed_ms = int((perf_counter() - t0) * 1000)
+        _, obs.peak_bytes = tracemalloc.get_traced_memory()
+        tracemalloc.stop()
         pairs.append((scenario, compare(scenario, obs)))
     return LabReport(
         results=tuple(r for _, r in pairs),
@@ -130,7 +149,10 @@ def aggregate_scores(
     def stat(family: str) -> dict[str, int]:
         return stats.setdefault(
             family, {"expected": 0, "hits": 0, "misses": 0,
-                     "false_positives": 0}
+                     "false_positives": 0, "sample_size": 0,
+                     "unknowns": 0, "unsupported": 0,
+                     "parse_failures": 0, "elapsed_ms": 0,
+                     "peak_bytes": 0}
         )
 
     for scenario, result in pairs:
@@ -141,6 +163,15 @@ def aggregate_scores(
             stat(fam)["hits" if hit else "misses"] += 1
         for a in (*result.unexpected_findings, *result.forbidden_hits):
             stat(_family(a))["false_positives"] += 1
+        for entry in scenario.expected.findings:
+            fam = _family(entry.rstrip("*"))
+            s = stat(fam)
+            s["sample_size"] += result.sample_size
+            s["unknowns"] += result.unknowns
+            s["unsupported"] += result.unsupported
+            s["parse_failures"] += result.parse_failures
+            s["elapsed_ms"] += result.elapsed_ms
+            s["peak_bytes"] = max(s["peak_bytes"], result.peak_bytes)
     return tuple(
         FamilyScore(
             family=fam,
@@ -148,6 +179,12 @@ def aggregate_scores(
             hits=s["hits"],
             misses=s["misses"],
             false_positives=s["false_positives"],
+            sample_size=s["sample_size"],
+            unknowns=s["unknowns"],
+            unsupported=s["unsupported"],
+            parse_failures=s["parse_failures"],
+            elapsed_ms=s["elapsed_ms"],
+            peak_bytes=s["peak_bytes"],
         )
         for fam, s in sorted(stats.items())
     )

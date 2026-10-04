@@ -159,3 +159,38 @@ forge-doctor-api lab [TARGET] [--json] [--no-record]
 Runs the Forge Lab corpus (golden + adversarial fixtures), reports
 precision/recall per finding family, and writes a run record to
 `factory/runs/` unless `--no-record`.
+
+## snapshot
+
+```text
+forge-doctor-api snapshot save [TARGET] [--label L]
+forge-doctor-api snapshot list [TARGET]
+forge-doctor-api snapshot diff A B [--target DIR]
+forge-doctor-api snapshot regressions A B [--target DIR]
+```
+
+Temporal intelligence (spec 059): `save` scans TARGET and stores a
+compact report under `.forge-doctor/snapshots/` — the directory is
+created only by an explicit save. Snapshot ids are content hashes
+(deterministic, reorder-invariant); `created_at` is injected.
+`diff` reuses the spec-049 delta context; `regressions` emits
+evidence-backed findings for new breaking changes (APITEMP001), new
+high-severity findings (APITEMP002), removed operations (APITEMP003),
+and newly-unknown required facts (APITEMP004), each carrying
+previous + current snapshot evidence refs.
+
+## knowledge
+
+```text
+forge-doctor-api knowledge list [DIRS...] [--target DIR]
+forge-doctor-api knowledge validate DIR
+```
+
+Pack lifecycle (spec 064): `list` shows every discovered pack manifest
+with lifecycle status (`active`, `skipped-incompatible`,
+`conflict-shadowed`, `rejected`) plus the builtin pack pinned to the
+engine version. Precedence: explicit dirs > project
+`.forge-doctor/knowledge/` > builtin; the first entry in precedence
+order wins a duplicate-id conflict deterministically. `validate`
+strict-parses one `forge-doctor-knowledge.toml` — malformed manifests
+exit 2 listing every error, incompatible ones exit 1.

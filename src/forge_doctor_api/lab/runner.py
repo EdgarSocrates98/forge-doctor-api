@@ -18,7 +18,10 @@ from forge_doctor_api.analyzers.clients.scan import scan_clients
 from forge_doctor_api.analyzers.graphql.parser import load_graphql_project
 from forge_doctor_api.analyzers.grpc.parser import load_grpc_project
 from forge_doctor_api.analyzers.openapi.graph import contract_graph
-from forge_doctor_api.analyzers.openapi.model import OpenApiProjectModel
+from forge_doctor_api.analyzers.openapi.model import (
+    IssueCode,
+    OpenApiProjectModel,
+)
 from forge_doctor_api.analyzers.openapi.parser import load_openapi_project
 from forge_doctor_api.analyzers.routes import available_adapters
 from forge_doctor_api.analyzers.routes.graph import scan_graph
@@ -53,6 +56,11 @@ _DEFAULT_RUN = (
     "graphql", "grpc", "asyncapi", "policy",
 )
 
+_PARSE_FAILURE_CODES = frozenset({
+    IssueCode.MALFORMED, IssueCode.UNREADABLE, IssueCode.DUPLICATE_KEY,
+    IssueCode.INVALID_REF, IssueCode.MISSING_REF_TARGET,
+})
+
 
 @dataclass(kw_only=True)
 class LabObservations:
@@ -65,6 +73,13 @@ class LabObservations:
     breaking: list[str] = field(default_factory=list)
     runtime_signals: list[str] = field(default_factory=list)
     issues: list[str] = field(default_factory=list)
+    # spec-058 measurement fields
+    sample_size: int = 0
+    unknowns: int = 0
+    parse_failures: int = 0
+    unsupported: int = 0
+    elapsed_ms: int = 0
+    peak_bytes: int = 0
 
 
 def _sub_ctx(ctx: ProjectContext, sub: str | None) -> ProjectContext:
@@ -100,12 +115,22 @@ def run_scenario(context: ProjectContext, scenario: LabScenario) -> LabObservati
         if Path(f).name not in ("expected.yaml", "expected.yml")
     ]
     run = set(scenario.run) if scenario.run else set(_DEFAULT_RUN)
-    obs = LabObservations()
+    obs = LabObservations(sample_size=len(files))
 
     openapi: OpenApiProjectModel | None = None
     if run & {"openapi", "security", "diff", "policy"}:
         openapi = load_openapi_project(ctx)
         obs.issues.extend(f"{i.code}:{i.message}" for i in openapi.issues)
+        obs.parse_failures += sum(
+            1 for i in openapi.issues
+            if i.code in _PARSE_FAILURE_CODES)
+        obs.unsupported += sum(
+            1 for i in openapi.issues
+            if i.code is IssueCode.UNSUPPORTED_VERSION)
+        obs.unknowns += sum(
+            1 for i in openapi.issues
+            if i.code in (IssueCode.MISSING_REF_TARGET,
+                          IssueCode.INVALID_REF))
     if "openapi" in run and openapi is not None:
         obs.findings.extend(run_openapi_checks(openapi))
         graph = contract_graph(openapi)
@@ -125,6 +150,7 @@ def run_scenario(context: ProjectContext, scenario: LabScenario) -> LabObservati
         clients = scan_clients(ctx, files)
         obs.clients.extend(clients.clients)
         obs.issues.extend(f"{u.subject}:{u.missing}" for u in clients.unknowns)
+        obs.unknowns += len(clients.unknowns)
 
     security = None
     if "security" in run or "policy" in run:

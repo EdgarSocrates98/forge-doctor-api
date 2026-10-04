@@ -134,6 +134,27 @@ CATALOG: tuple[SecCheckSpec, ...] = (
         description="External API dependency without timeout/auth "
         "evidence - unsafe-consumption configuration risk.",
     ),
+    SecCheckSpec(
+        id="APISEC011",
+        title="Ambiguous auth-coverage chain",
+        severity=Severity.MEDIUM,
+        confidence=Confidence.UNKNOWN,
+        evidence_kind=EvidenceKind.STATIC,
+        finding_class=FindingClass.UNKNOWN,
+        description="Operation security cannot be resolved through the "
+        "global->operation inheritance chain - effective auth is unknown.",
+    ),
+    SecCheckSpec(
+        id="APISEC012",
+        title="Sensitive-named field without protection evidence",
+        severity=Severity.LOW,
+        confidence=Confidence.LOW,
+        evidence_kind=EvidenceKind.STATIC,
+        finding_class=FindingClass.CANDIDATE,
+        description="Schema field named like a sensitive value (documented "
+        "list) with no declared redaction/protection evidence - candidate "
+        "only, never a leak claim.",
+    ),
 )
 
 BY_ID: dict[str, SecCheckSpec] = {c.id: c for c in CATALOG}

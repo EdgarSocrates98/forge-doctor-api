@@ -18,7 +18,7 @@ entries:
   API2:
     fields:
       name: Broken Authentication
-      checks: [APISEC003]
+      checks: [APISEC003, APISEC011]
     provenance:
       source: https://owasp.org/API-Security/editions/2023/en/0xa2
       source_version: "2023"
@@ -27,7 +27,7 @@ entries:
   API3:
     fields:
       name: Broken Object Property Level Authorization
-      checks: [APISEC008]
+      checks: [APISEC008, APISEC012]
     provenance:
       source: https://owasp.org/API-Security/editions/2023/en/0xa3
       source_version: "2023"

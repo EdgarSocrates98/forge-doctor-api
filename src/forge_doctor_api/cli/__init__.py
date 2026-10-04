@@ -76,12 +76,20 @@ reliability_app = typer.Typer(help="Reliability analysis.", no_args_is_help=True
 plugins_app = typer.Typer(
     help="Plugin manifests, registry and conformance.",
     no_args_is_help=True)
+snapshot_app = typer.Typer(
+    help="Temporal snapshots + architectural regressions.",
+    no_args_is_help=True)
+knowledge_app = typer.Typer(
+    help="Knowledge-pack manifests, compat and precedence.",
+    no_args_is_help=True)
 
 app.add_typer(contract_app, name="contract")
 app.add_typer(runtime_app, name="runtime")
 app.add_typer(security_app, name="security")
 app.add_typer(reliability_app, name="reliability")
 app.add_typer(plugins_app, name="plugins")
+app.add_typer(snapshot_app, name="snapshot")
+app.add_typer(knowledge_app, name="knowledge")
 
 
 def _version(value: bool) -> None:
@@ -331,18 +339,27 @@ def lab(
                 ("missing signals", r.missing_runtime_signals),
                 ("missing issues", r.missing_issues),
                 ("wording", r.wording_violations),
+                ("problems", r.problems),
             ):
                 for v in values:
                     _console.print(f"      {label}: {v}")
     if report.families:
-        _console.print("[bold]Per-family precision/recall[/bold]")
-        table = Table("family", "expected", "hits", "misses", "fp", "precision", "recall")
+        _console.print("[bold]Per-family metrics[/bold]")
+        table = Table(
+            "family", "tp", "fp", "fn", "precision", "recall",
+            "unknown", "unsupp", "parse", "ms", "peak-KB", "n", "conf",
+        )
         for f in report.families:
             table.add_row(
-                f.family, str(f.expected), str(f.hits), str(f.misses),
-                str(f.false_positives),
+                f.family, str(f.tp), str(f.fp), str(f.fn),
                 "-" if f.precision is None else f"{f.precision:.2f}",
                 "-" if f.recall is None else f"{f.recall:.2f}",
+                "-" if f.unknown_rate is None else f"{f.unknown_rate:.2f}",
+                "-" if f.unsupported_rate is None
+                else f"{f.unsupported_rate:.2f}",
+                str(f.parse_failures), str(f.elapsed_ms),
+                str(f.peak_bytes // 1024), str(f.sample_size),
+                f.coverage_confidence,
             )
         _console.print(table)
     raise typer.Exit(code=0 if report.failed == 0 else 1)
@@ -1335,6 +1352,137 @@ def plugins_verify(
         table.add_row(c.name, c.status, c.details)
     _console.print(table)
     raise typer.Exit(code=0 if report.passed else 1)
+
+
+# -- snapshot (spec 059) ------------------------------------------------------
+
+
+def _store(target: str) -> Any:
+    from forge_doctor_api.temporal import SNAPSHOT_DIR, SnapshotStore
+    return SnapshotStore(Path(target).resolve() / SNAPSHOT_DIR)
+
+
+@snapshot_app.command("save")
+def snapshot_save(
+    target: Annotated[str, typer.Argument(help="Project directory.")] = ".",
+    label: Annotated[str, typer.Option("--label")] = "",
+) -> None:
+    """Scan the project and store a snapshot under .forge-doctor/."""
+    from forge_doctor_api.core.context import system_clock
+    from forge_doctor_api.scan import scan_project
+    ctx = ProjectContext(root=Path(target).resolve(),
+                         clock=system_clock())
+    snap = _store(target).save(
+        scan_project(ctx), label=label, created_at=ctx.now())
+    _console.print(
+        f"snapshot {snap.id} label={snap.label} rev={snap.hash[:12]}")
+
+
+@snapshot_app.command("list")
+def snapshot_list(
+    target: Annotated[str, typer.Argument()] = ".",
+) -> None:
+    """List stored snapshots (never creates the store)."""
+    table = Table("id", "label", "created_at")
+    for s in _store(target).list():
+        table.add_row(s.id, s.label, s.created_at)
+    _console.print(table)
+
+
+def _pair(target: str, a: str, b: str) -> tuple[Any, Any]:
+    from forge_doctor_api.temporal import SnapshotError
+    store = _store(target)
+    try:
+        return store.report(a), store.report(b)
+    except SnapshotError as exc:
+        _stderr.print(str(exc))
+        raise typer.Exit(code=2) from None
+
+
+@snapshot_app.command("diff")
+def snapshot_diff(
+    a: Annotated[str, typer.Argument(help="Snapshot id/label (older).")],
+    b: Annotated[str, typer.Argument(help="Snapshot id/label (newer).")],
+    target: Annotated[str, typer.Option("--target")] = ".",
+) -> None:
+    """Delta context between two snapshots (spec-049 delta)."""
+    from forge_doctor_api.handoff.delta import compute_delta
+    prev, cur = _pair(target, a, b)
+    delta = compute_delta(prev, cur)
+    _console.print(delta.to_json())
+
+
+@snapshot_app.command("regressions")
+def snapshot_regressions(
+    a: Annotated[str, typer.Argument(help="Snapshot id/label (older).")],
+    b: Annotated[str, typer.Argument(help="Snapshot id/label (newer).")],
+    target: Annotated[str, typer.Option("--target")] = ".",
+) -> None:
+    """Evidence-backed architectural regressions a -> b."""
+    from forge_doctor_api.temporal import architectural_regressions
+    prev, cur = _pair(target, a, b)
+    findings = architectural_regressions(
+        prev, cur,
+        prev_ref=f"doctor://report/{a}", cur_ref=f"doctor://report/{b}")
+    table = Table("id", "severity", "title")
+    for f in findings:
+        table.add_row(f.id, f.severity.value, f.title)
+    _console.print(table)
+    raise typer.Exit(code=1 if findings else 0)
+
+
+# -- knowledge (spec 064) -----------------------------------------------------
+
+
+@knowledge_app.command("list")
+def knowledge_list(
+    dirs: Annotated[list[str], typer.Argument(
+        help="Pack dirs, highest precedence first.")] = [],  # noqa: B006
+    target: Annotated[str, typer.Option(
+        "--target", help="Project dir for .forge-doctor/knowledge.")] = ".",
+) -> None:
+    """List pack manifests with lifecycle status.
+
+    Precedence: explicit dirs > project .forge-doctor/knowledge > builtin.
+    """
+    from forge_doctor_api.knowledge.manifest import (
+        PROJECT_PACK_DIR,
+        list_packs,
+    )
+    ordered = [Path(d).resolve() for d in dirs]
+    project_pack = Path(target).resolve() / PROJECT_PACK_DIR
+    if project_pack.is_dir():
+        ordered.append(project_pack)
+    listings, unknowns = list_packs(tuple(ordered))
+    table = Table("id", "version", "source", "status", "details")
+    for li in listings:
+        m = li.manifest
+        table.add_row(
+            m.id if m else "-", m.version if m else "-",
+            li.source, li.status.value, li.details)
+    _console.print(table)
+    for u in unknowns:
+        _stderr.print(f"unknown: {u.subject} - {u.missing}")
+
+
+@knowledge_app.command("validate")
+def knowledge_validate(
+    directory: Annotated[str, typer.Argument(help="Pack dir or toml file.")],
+) -> None:
+    """Strict-validate one knowledge manifest."""
+    from forge_doctor_api.knowledge.manifest import compatible, load_manifest
+    manifest, errors = load_manifest(Path(directory).resolve())
+    for e in errors:
+        _stderr.print(f"error: {e}")
+    if manifest is None:
+        raise typer.Exit(code=2)
+    ok, reason = compatible(manifest)
+    if not ok:
+        _stderr.print(f"incompatible: {reason}")
+        raise typer.Exit(code=1)
+    _console.print(
+        f"{manifest.id} {manifest.version} compat=ok "
+        f"provides={list(manifest.provides)}")
 
 
 def main() -> None:

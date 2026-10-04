@@ -1,0 +1,7 @@
+# ambiguous-ish routes: overlapping path prefixes must still resolve.
+provenance: {source: express-docs-style-fixture, retrieved: "2026-10"}
+run: [openapi]
+expected_entities:
+  - GET /items
+  - GET /items/{id}
+  - POST /items

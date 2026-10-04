@@ -8,6 +8,7 @@ UnknownFact, not a guess.
 
 from __future__ import annotations
 
+import dataclasses
 import re
 from collections.abc import Callable
 from pathlib import Path
@@ -19,8 +20,12 @@ from forge_doctor_api.analyzers.gateway.model import (
     ConfigEntry,
     GatewayDialect,
     GatewayModel,
+    GatewayPolicy,
     GatewayRoute,
+    GatewayUpstream,
+    MeshEdge,
     MeshVendor,
+    PolicyKind,
     ServiceMeshModel,
 )
 from forge_doctor_api.core.context import ProjectContext
@@ -230,9 +235,13 @@ _DIRECTIVE = re.compile(
     r"proxy_next_upstream|add_header|return|rewrite)\b\s*(?P<rest>.*)")
 
 
+_UPSTREAM_BLOCK = re.compile(r"^\s*upstream\s+(?P<name>\S+)\s*\{")
+
+
 def _parse_nginx(path: str, text: str) -> GatewayModel:
     routes: list[GatewayRoute] = []
     upstreams: list[ConfigEntry] = []
+    upstream_targets: list[GatewayUpstream] = []
     auth: list[ConfigEntry] = []
     rate_limits: list[ConfigEntry] = []
     timeouts: list[ConfigEntry] = []
@@ -240,6 +249,11 @@ def _parse_nginx(path: str, text: str) -> GatewayModel:
     transforms: list[ConfigEntry] = []
     current: str | None = None
     for i, line in enumerate(text.splitlines(), 1):
+        ub = _UPSTREAM_BLOCK.match(line)
+        if ub:
+            upstream_targets.append(GatewayUpstream(
+                name=ub["name"], host=None, location=_loc(path, i)))
+            continue
         m = _LOCATION.match(line)
         if m:
             current = m["loc"]
@@ -270,7 +284,80 @@ def _parse_nginx(path: str, text: str) -> GatewayModel:
         dialect=GatewayDialect.NGINX, source=_loc(path),
         routes=tuple(routes), upstreams=tuple(upstreams), auth=tuple(auth),
         rate_limits=tuple(rate_limits), timeouts=tuple(timeouts),
-        retries=tuple(retries), transformations=tuple(transforms))
+        retries=tuple(retries), transformations=tuple(transforms),
+        upstream_targets=tuple(upstream_targets))
+
+
+# -- Traefik ----------------------------------------------------------------
+
+
+_RULE_PREFIX = re.compile(r"PathPrefix\(`([^`]+)`\)|Host\(`([^`]+)`\)")
+_MW_KIND = {"rateLimit": PolicyKind.RATE_LIMIT,
+            "ratelimit": PolicyKind.RATE_LIMIT,
+            "basicAuth": PolicyKind.AUTH,
+            "forwardAuth": PolicyKind.AUTH,
+            "headers": PolicyKind.CORS}
+
+
+def _parse_traefik(path: str, doc: dict[str, Any]) -> GatewayModel:
+    """Traefik file-provider config: http.routers/services/middlewares."""
+    http = doc.get("http") or {}
+    routers = http.get("routers") or {}
+    services = http.get("services") or {}
+    mws = http.get("middlewares") or {}
+    routes: list[GatewayRoute] = []
+    upstreams: list[GatewayUpstream] = []
+    policies: list[GatewayPolicy] = []
+    unknowns: list[UnknownFact] = []
+    for sname in sorted(services):
+        body = services[sname] or {}
+        lb = body.get("loadBalancer") or {}
+        servers = lb.get("servers") or ()
+        host = None
+        if servers and isinstance(servers, list):
+            url = servers[0].get("url") if isinstance(servers[0], dict) \
+                else None
+            host = str(url) if url else None
+        upstreams.append(GatewayUpstream(
+            name=str(sname), host=host, location=_loc(path, None)))
+    for mwname in sorted(mws):
+        body = mws[mwname] or {}
+        for key, kind in _MW_KIND.items():
+            if key in body and isinstance(body[key], dict):
+                params = tuple(sorted(
+                    (str(k), str(v)) for k, v in body[key].items()
+                    if isinstance(v, (str, int, float, bool))))
+                policies.append(GatewayPolicy(
+                    kind=kind, name=str(mwname), params=params,
+                    location=_loc(path, None)))
+    for rname in sorted(routers):
+        body = routers[rname] or {}
+        rule = str(body.get("rule") or "")
+        m = _RULE_PREFIX.search(rule)
+        path_prefix = next((g for g in (m.groups() if m else ())
+                            if g), None)
+        if path_prefix is None:
+            unknowns.append(UnknownFact(
+                subject=f"router/{rname}",
+                missing="static PathPrefix/Host rule",
+                resolution=f"rule '{rule[:40]}' is not statically "
+                           "resolvable"))
+            continue
+        svc_ref = body.get("service")
+        service = str(svc_ref) if svc_ref in services else None
+        if svc_ref is not None and service is None:
+            unknowns.append(UnknownFact(
+                subject=f"router/{rname}",
+                missing=f"declared service '{svc_ref}'",
+                resolution="route target not declared in "
+                           "http.services"))
+        routes.append(GatewayRoute(
+            path=path_prefix, upstream=str(svc_ref) if svc_ref else None,
+            service=service, location=_loc(path, None)))
+    return GatewayModel(
+        dialect=GatewayDialect.TRAEFIK, source=_loc(path),
+        routes=tuple(routes), upstream_targets=tuple(upstreams),
+        policy_entries=tuple(policies), unknowns=tuple(unknowns))
 
 
 # -- detection + mesh --------------------------------------------------------
@@ -290,6 +377,12 @@ def _detect_yaml_dialect(doc: dict[str, Any]) -> GatewayDialect | None:
                 "x-amazon-apigateway" in str(v) for v in
                 (doc.get("paths") or {}).values())):
         return GatewayDialect.AWS_API_GATEWAY
+    http = doc.get("http")
+    if isinstance(http, dict) and any(
+            k in http for k in ("routers", "services", "middlewares")):
+        return GatewayDialect.TRAEFIK
+    if "entryPoints" in doc and "providers" in doc:
+        return GatewayDialect.TRAEFIK
     return None
 
 
@@ -298,6 +391,53 @@ def _mesh_vendor(text: str) -> MeshVendor:
         if any(m in text for m in markers):
             return vendor
     return MeshVendor.UNKNOWN
+
+
+def _mesh_edges(path: str, text: str) -> tuple[MeshEdge, ...]:
+    """Declared traffic edges from Istio/Linkerd YAML — never inferred."""
+    edges: list[MeshEdge] = []
+    for doc in _yaml_docs(text):
+        kind = str(doc.get("kind") or "")
+        meta = doc.get("metadata") or {}
+        name = str(meta.get("name") or "?")
+        spec = doc.get("spec") or {}
+        if kind == "VirtualService":
+            src = f"VirtualService/{name}"
+            for http in spec.get("http") or ():
+                for route in (http.get("route") or ()):
+                    dest = route.get("destination") or {}
+                    host = dest.get("host")
+                    if host:
+                        edges.append(MeshEdge(
+                            source=src, target=str(host), kind="route",
+                            via="destination.host",
+                            location=_loc(path, None)))
+                    if dest.get("subset"):
+                        edges.append(MeshEdge(
+                            source=src,
+                            target=f"{host}/{dest['subset']}",
+                            kind="subset", via="destination.subset",
+                            location=_loc(path, None)))
+        elif kind == "DestinationRule":
+            src = f"DestinationRule/{name}"
+            host = spec.get("host")
+            if host:
+                for sub in spec.get("subsets") or ():
+                    if isinstance(sub, dict) and sub.get("name"):
+                        edges.append(MeshEdge(
+                            source=src,
+                            target=f"{host}/{sub['name']}",
+                            kind="subset", via="subsets.name",
+                            location=_loc(path, None)))
+        elif kind == "ServiceProfile":
+            src = f"ServiceProfile/{name}"
+            for route in spec.get("routes") or ():
+                if isinstance(route, dict) and route.get("name"):
+                    edges.append(MeshEdge(
+                        source=src, target=str(route["name"]),
+                        kind="profile", via="routes.name",
+                        location=_loc(path, None)))
+    return tuple(edges)
 
 
 def _mesh_entries(path: str, text: str) -> ServiceMeshModel:
@@ -318,9 +458,53 @@ def _mesh_entries(path: str, text: str) -> ServiceMeshModel:
         circuit_breakers=tuple(fields["circuit_breakers"]),
         mtls=tuple(fields["mtls"]),
         traffic_splits=tuple(fields["traffic_splits"]),
+        edges=_mesh_edges(path, text),
         evidence=(Evidence(
             kind=EvidenceKind.CONFIG, source=path,
             summary=f"{vendor} mesh markers detected"),))
+
+
+def _normalize_upstream(raw: str) -> str:
+    """`http://backend:8080/x` → `backend` for upstream-block matching."""
+    host = re.sub(r"^[a-zA-Z][a-zA-Z0-9+.-]*://", "", raw)
+    return re.split(r"[:/]", host, maxsplit=1)[0]
+
+
+def _identity(s: str) -> str:
+    return s
+
+
+def _resolve_routes(model: GatewayModel) -> GatewayModel:
+    """Existence rule: unresolved route targets → service=None + unknown."""
+    normalize: Callable[[str], str] = _identity
+    if model.dialect is GatewayDialect.NGINX:
+        declared = {u.name for u in model.upstream_targets}
+        normalize = _normalize_upstream
+    else:
+        declared = ({u.name for u in model.upstream_targets}
+                    | {e.name for e in model.upstreams})
+    unknowns: list[UnknownFact] = list(model.unknowns)
+    routes: list[GatewayRoute] = []
+    for r in model.routes:
+        if r.service is not None or r.upstream is None:
+            routes.append(r)
+            continue
+        service = normalize(r.upstream)
+        if service not in declared:
+            routes.append(GatewayRoute(
+                path=r.path, upstream=r.upstream, service=None,
+                location=r.location))
+            unknowns.append(UnknownFact(
+                subject=r.path,
+                missing=f"declared upstream '{r.upstream}'",
+                resolution="route target not resolvable to a declared "
+                           "service/upstream"))
+            continue
+        routes.append(GatewayRoute(
+            path=r.path, upstream=r.upstream, service=service,
+            location=r.location))
+    return dataclasses.replace(
+        model, routes=tuple(routes), unknowns=tuple(unknowns))
 
 
 def load_gateway_models(
@@ -364,6 +548,8 @@ def load_gateway_models(
                 gateways.append(_parse_envoy(rel, doc))
             elif dialect is GatewayDialect.AWS_API_GATEWAY:
                 gateways.append(_parse_aws(rel, doc))
+            elif dialect is GatewayDialect.TRAEFIK:
+                gateways.append(_parse_traefik(rel, doc))
             elif "kong" in text[:200].lower() or "envoy" in text[:200].lower():
                 unknowns.append(UnknownFact(
                     subject=rel,
@@ -371,7 +557,14 @@ def load_gateway_models(
                     resolution="supported: kong declarative, envoy, "
                                "aws-api-gateway export, nginx conf"))
             break  # only the first doc decides dialect per file
-    return tuple(gateways), tuple(meshes), tuple(unknowns)
+    resolved: list[GatewayModel] = []
+    for g in gateways:
+        resolved.append(_resolve_routes(g))
+    return (tuple(resolved), tuple(meshes),
+            tuple([*unknowns,
+                   *[u for g in resolved
+                     for u in g.unknowns
+                     if u not in unknowns]]))
 
 
 def gateway_route_map(model: GatewayModel) -> dict[str, str]:

@@ -126,7 +126,8 @@ def _bundle_sha256(bundle: ApiHandoffBundle) -> str:
     """Content hash of the V1 body (V2 fields excluded by construction)."""
     body = bundle.to_dict()
     for k in ("handoff_version", "handoff_id", "analysis_rev",
-              "domain_sha256", "context_refs", "capabilities"):
+              "domain_sha256", "context_refs", "capabilities",
+              "graph_edges"):
         body.pop(k, None)
     canonical = json.dumps(body, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
@@ -164,6 +165,7 @@ def upgrade_bundle(
         domain_sha256=tuple(sorted(domain_hashes)),
         context_refs=refs,
         capabilities=caps,
+        graph_edges=report.graph_edges,
     )
 
 

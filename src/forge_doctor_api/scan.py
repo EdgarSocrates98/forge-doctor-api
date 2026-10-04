@@ -67,10 +67,16 @@ from forge_doctor_api.core.gate import (
     GateFailure,
     evaluate_gate,
 )
-from forge_doctor_api.core.graph import GraphError, ServiceGraph
+from forge_doctor_api.core.graph import (
+    GraphError,
+    ServiceGraph,
+    export_edges,
+)
 from forge_doctor_api.core.models import (
     Finding,
+    ModelError,
     UnknownFact,
+    parse_entity_id,
 )
 from forge_doctor_api.core.plan import AnalyzerId, build_plan
 from forge_doctor_api.core.report import DomainSummary
@@ -238,11 +244,19 @@ def scan_project(
     findings.extend(run_reliability_checks(reliability))
 
     cache = None
+    cache_graph: Any = None
     if plan.enabled(AnalyzerId.CACHE):
         cache = load_cache_model(
             context, inventory.files_in(ArtifactClass.CONFIG),
             openapi=openapi)
         unknowns.extend(cache.unknowns)
+        if openapi.documents:
+            from forge_doctor_api.analyzers.cache.graph import (
+                build_cache_graph,
+            )
+            cache_graph, cache_findings = build_cache_graph(
+                cache, openapi)
+            findings.extend(cache_findings)
 
     # -- infrastructure --------------------------------------------------------
     gateways: tuple[Any, ...] = ()
@@ -253,6 +267,25 @@ def scan_project(
                 ArtifactClass.GATEWAY, ArtifactClass.MESH,
                 ArtifactClass.IAC))
         unknowns.extend(gw_unknowns)
+
+    # spec 062: depth checks over *evidenced* caller->callee edges only
+    # (CALLS relationships + resolved gateway route targets). Name
+    # similarity never creates a hop.
+    from forge_doctor_api.checks.relapi.engine import run_depth_checks
+    chain_edges: list[tuple[str, str]] = []
+    for r in graphs.relationships():
+        if r.kind == "CALLS":
+            try:
+                chain_edges.append((
+                    parse_entity_id(r.source_id)[2],
+                    parse_entity_id(r.target_id)[2]))
+            except ModelError:
+                continue
+    for gw in gateways:
+        for rt in gw.routes:
+            if rt.service:
+                chain_edges.append((gw.dialect.value, rt.service))
+    findings.extend(run_depth_checks(reliability, tuple(chain_edges)))
 
     infra = None
     if plan.enabled(AnalyzerId.IAC):
@@ -351,6 +384,18 @@ def scan_project(
         blast = blast_radius(diff, before_model, clients)
         unknowns.extend(blast.unknowns)
 
+    # -- migration graph (spec 060) ------------------------------------------
+    migration: Any = None
+    migration_path_count = 0
+    if openapi.documents:
+        from forge_doctor_api.migrate.graph import (
+            build_migration_graph,
+            migration_paths,
+        )
+        migration = build_migration_graph(openapi, clients)
+        unknowns.extend(migration.unknowns)
+        migration_path_count = len(migration_paths(migration))
+
     findings_sorted = tuple(sorted(
         findings, key=lambda f: (f.id, f.entity_ids, f.description)))
     unknowns.extend(
@@ -380,10 +425,12 @@ def scan_project(
         routes=_routes_summary(routes),
         clients=_clients_summary(clients),
         graph=_graph_summary(graphs),
+        graph_edges=export_edges(graphs),
         gateway=_gateway_summary(gateways),
         mesh=_mesh_summary(meshes),
         infrastructure=_infra_summary(infra),
-        cache=_cache_summary(cache),
+        cache=_cache_summary(cache, cache_graph),
+        migration=_migration_summary(migration, migration_path_count),
         runtime=_runtime_summary(runtime),
         security=_security_summary(security),
         reliability=_reliability_summary(reliability),
@@ -393,12 +440,12 @@ def scan_project(
         capabilities=capabilities,
         findings=findings_sorted,
         unknowns=tuple(unknowns),
-        operations=tuple(
-            f"{o.method.upper()} {o.path}" for o in openapi.operations),
-        changes=tuple(
+        operations=tuple(sorted(
+            f"{o.method.upper()} {o.path}" for o in openapi.operations)),
+        changes=tuple(sorted(
             f"{c.classification.value}:{c.kind}:{c.subject}"
             for c in diff.changes
-        ) if diff is not None else (),
+        )) if diff is not None else (),
         impact=_impact_summary(blast),
         remediation_candidates=tuple(
             c.target for c in classify_findings(findings_sorted).candidates),
@@ -518,15 +565,35 @@ def _infra_summary(infra: Any) -> DomainSummary | None:
     )
 
 
-def _cache_summary(cache: Any) -> DomainSummary | None:
+def _cache_summary(cache: Any, cache_graph: Any = None) -> DomainSummary | None:
     if cache is None or not (cache.policies or cache.risks):
         return None
+    edge_count = len(cache_graph.edges) if cache_graph is not None else 0
     return DomainSummary(
         counts=(
             ("policies", len(cache.policies)),
             ("risks", len(cache.risks)),
+            ("graph_edges", edge_count),
         ),
+        ids=(tuple(cache_graph.cached_operations)
+             if cache_graph is not None else ()),
         unknowns=len(cache.unknowns),
+    )
+
+
+def _migration_summary(
+    graph: Any, path_count: int,
+) -> DomainSummary | None:
+    if graph is None:
+        return None
+    return DomainSummary(
+        counts=(
+            ("units", len(graph.nodes)),
+            ("edges", len(graph.edges)),
+            ("paths", path_count),
+        ),
+        ids=tuple(n.unit_id for n in graph.nodes),
+        unknowns=len(graph.unknowns),
     )
 
 

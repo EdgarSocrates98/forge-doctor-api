@@ -90,6 +90,25 @@ CATALOG: tuple[RelCheckSpec, ...] = (
         description="No graceful-shutdown/drain configuration evidence - "
         "candidate.",
     ),
+    RelCheckSpec(
+        id="APIREL001",
+        title="Chained retry amplification",
+        severity=Severity.HIGH,
+        confidence=Confidence.LOW,
+        evidence_kind=EvidenceKind.CONFIG,
+        description="An evidenced caller->callee edge where both sides "
+        "declare retries multiplies attempts - candidate with computed "
+        "bound.",
+    ),
+    RelCheckSpec(
+        id="APIREL002",
+        title="Timeout cascade on evidenced chain",
+        severity=Severity.MEDIUM,
+        confidence=Confidence.LOW,
+        evidence_kind=EvidenceKind.CONFIG,
+        description="Caller timeout shorter than the callee timeout on an "
+        "evidenced edge - requests can never succeed within budget.",
+    ),
 )
 
 BY_ID: dict[str, RelCheckSpec] = {c.id: c for c in CATALOG}

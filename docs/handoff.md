@@ -52,3 +52,15 @@ routing record:
 | unknown domains | `unrouted` + `UnknownFact` |
 
 Routing is advisory evidence — the Doctor does not dispatch work.
+
+## Graph slices (spec 057)
+
+`core/graph.py` exports `slice_graph(graph, root_id, *, depth=1,
+direction="both") -> GraphSlice` — a bounded subgraph (nodes, edges,
+boundary ids) plus `export_edges(graph) -> tuple[EdgeExport]` carrying
+`from_id`, `to_id`, `kind`, evidence ids, and confidence on every edge.
+`doctor://graph/{service}` serves a bounded slice through the context
+broker; Handoff V2 bundles embed `graph_edges` so consumers get the
+evidence-preserving topology without the full graph. An empty or
+disconnected root returns an empty slice — absence is data, not a
+fabricated neighborhood.

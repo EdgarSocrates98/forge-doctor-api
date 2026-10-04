@@ -45,3 +45,20 @@ an unassessed dimension must not produce a clean verdict.
 gRPC feasible?"* with `facts`, `constraints`, `capabilities`,
 `tradeoffs`, and `unknowns` — deliberately **no verdict field**. The
 Doctor surfaces evidence; the decision belongs to the human/agent caller.
+
+## Migration graph (spec 060)
+
+`migrate/graph.py` builds a dependency graph over declared evidence:
+
+- `MigrationNode{unit_id, readiness, blockers}` — units are operations
+  (and client call sites); deprecated ops are BLOCKED.
+- `MigrationEdge{from, to, kind, evidence}` — kinds are `schema-dep`
+  (two ops referencing the same `#/components/schemas/...` via resolved
+  `$ref` records under their own pointers), `version-dep` (same path
+  tail under adjacent `/vN/` pins), and `client-impact` (literal
+  method+path call-site hits). Every edge carries evidence; a shared
+  schema *name substring* never creates an edge.
+
+`migration_paths(graph)` emits deterministic ordered candidates.
+Cycles are surfaced as a path with `ordering_known=False` — ordering
+is never silently broken.

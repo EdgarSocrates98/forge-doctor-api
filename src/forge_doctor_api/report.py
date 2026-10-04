@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from forge_doctor_api.checks.compat.engine import ContractDiff
 from forge_doctor_api.core.discovery import ArtifactInventory
 from forge_doctor_api.core.gate import GateFailure
+from forge_doctor_api.core.graph import EdgeExport
 from forge_doctor_api.core.models import Finding, Model, UnknownFact
 from forge_doctor_api.core.plan import AnalysisPlan
 from forge_doctor_api.core.report import DomainSummary
@@ -44,6 +45,7 @@ class DoctorReport(Model):
     routes: DomainSummary | None = None
     clients: DomainSummary | None = None
     graph: DomainSummary | None = None
+    graph_edges: tuple[EdgeExport, ...] = ()
     gateway: DomainSummary | None = None
     mesh: DomainSummary | None = None
     infrastructure: DomainSummary | None = None

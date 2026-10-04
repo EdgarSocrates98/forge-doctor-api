@@ -30,6 +30,13 @@ _OBJECT_ID_RE = re.compile(
     r"^(id|uuid|guid|pk|[a-z0-9_]*_id|[a-z0-9]*Id|[a-z0-9]*Uuid)$"
 )
 _ADMIN_RE = re.compile(r"(^|[/_.-])admin([/_.-]|$)", re.IGNORECASE)
+_SENSITIVE_FIELD_NAMES = frozenset({
+    "password", "passwd", "secret", "token", "access_token",
+    "refresh_token", "api_key", "apikey", "private_key", "ssn",
+    "social_security_number", "credit_card", "card_number", "cvv",
+    "iban", "account_number", "pin",
+})
+
 _URL_PARAM_RE = re.compile(
     r"^(url|uri|endpoint|target|callback|webhook|redirect(_uri|_url)?|"
     r"feed|fetch|image_url|avatar_url|source|dest|destination|link|site)$",
@@ -318,6 +325,110 @@ def run_security_checks(
                         c.evidence[0].source if c.evidence else "(contract)",
                     )
                 )
+
+        # APISEC011 - auth-coverage chain: global <-> op inheritance
+        # (spec 061). An op inheriting global security needs no finding;
+        # an op declaring `security:` whose requirements cannot be
+        # resolved, or an op with no security evidence anywhere, is
+        # UNKNOWN - never PASS, never FAIL.
+        global_reqs = tuple(
+            r for r in openapi.security_requirements
+            if r.owner_pointer == "")
+        declared_schemes = {s.name for s in openapi.security_schemes}
+        for op in openapi.operations:
+            op_reqs = tuple(
+                r for r in openapi.security_requirements
+                if r.owner_pointer == op.pointer)
+            requires, scopes = op_requires_auth(openapi, op)
+            global_schemes = sorted(
+                {s.name for r in global_reqs for s in r.schemes})
+            unresolvable = [
+                s.name for r in op_reqs for s in r.schemes
+                if s.name not in declared_schemes]
+            chain = (
+                f"global_schemes={global_schemes} "
+                f"op_security={op.has_security} "
+                f"op_reqs={len(op_reqs)} scopes={list(scopes)} "
+                f"unresolvable={unresolvable}"
+            )
+            if op.has_security and global_reqs and (
+                    not op_reqs or unresolvable):
+                # declared op-level security that does not resolve to
+                # any requirement - ambiguous override
+                findings.append(_finding(
+                    BY_ID["APISEC011"],
+                    f"{op.method.upper()} {op.path}: declares "
+                    "operation-level security but no requirement "
+                    f"resolves through the chain ({chain})",
+                    op.location.path, op.location.line,
+                    unknowns=(
+                        UnknownFact(
+                            subject=op.identity,
+                            missing="resolvable operation security "
+                            "requirement",
+                            resolution="the op-level security list must "
+                            "name declared schemes, or be [] for "
+                            "anonymous"),
+                    ),
+                ))
+            elif requires is None and not global_reqs:
+                findings.append(_finding(
+                    BY_ID["APISEC011"],
+                    f"{op.method.upper()} {op.path}: no security "
+                    "evidence at any level - effective authentication "
+                    f"is unknown ({chain})",
+                    op.location.path, op.location.line,
+                    unknowns=(
+                        UnknownFact(
+                            subject=op.identity,
+                            missing="global or operation security "
+                            "requirement",
+                            resolution="declare security schemes and "
+                            "requirements, or gateway auth evidence"),
+                    ),
+                ))
+
+        # APISEC012 - sensitive-named schema field, no protection
+        # evidence (spec 061). Name-only + LOW confidence; declared
+        # redaction/protection fields suppress the finding.
+        classified = {c.subject for c in model.classifications}
+        for schema in openapi.schemas:
+            body = schema.content
+            if not isinstance(body, dict):
+                continue
+            props = body.get("properties")
+            if not isinstance(props, dict):
+                continue
+            for fname, fbody in sorted(props.items()):
+                if fname.lower() not in _SENSITIVE_FIELD_NAMES:
+                    continue
+                if not isinstance(fbody, dict):
+                    fbody = {}
+                protected = (
+                    fbody.get("writeOnly") is True
+                    or fbody.get("format") == "password"
+                    or any(str(k).lower().startswith("x-") and
+                           "redact" in str(k).lower()
+                           for k in fbody)
+                    or f"{schema.name}.{fname}" in classified
+                )
+                if protected:
+                    continue
+                findings.append(_finding(
+                    BY_ID["APISEC012"],
+                    f"{schema.name}.{fname}: field name matches the "
+                    "sensitive-name list with no declared protection "
+                    "evidence - candidate",
+                    schema.location.path, schema.location.line,
+                    unknowns=(
+                        UnknownFact(
+                            subject=f"{schema.name}.{fname}",
+                            missing="protection evidence (writeOnly, "
+                            "x-redact, classification)",
+                            resolution="mark the field writeOnly/"
+                            "x-redact/classified, or accept exposure"),
+                    ),
+                ))
 
     # APISEC004 - wildcard CORS
     for cors in model.cors:

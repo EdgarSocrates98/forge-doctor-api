@@ -10,14 +10,19 @@ deferred per §74.
 
 from __future__ import annotations
 
-import re
 from pathlib import Path
 from typing import Any
 
 import yaml
 
+from forge_doctor_api.analyzers.iac.cloudformation import (
+    looks_like_cfn,
+    parse_cfn,
+)
+from forge_doctor_api.analyzers.iac.hcl import parse_hcl
 from forge_doctor_api.analyzers.iac.model import (
     ChainLink,
+    IacAttr,
     IacResource,
     InfraModel,
     K8sKind,
@@ -27,8 +32,6 @@ from forge_doctor_api.core.context import ProjectContext
 from forge_doctor_api.core.models import SourceLocation, UnknownFact
 
 _KNOWN = {k.value: k for k in K8sKind}
-_TF_RESOURCE = re.compile(r'^\s*resource\s+"([^"]+)"\s+"([^"]+)"')
-_CFN_MARKERS = ("AWSTemplateFormatVersion", '"AWS::', "Resources:")
 
 
 def _loc(path: str) -> SourceLocation:
@@ -155,13 +158,17 @@ def load_infra_model(
                 text = context.read_text(rel)
             except (OSError, UnicodeDecodeError):
                 continue
-            for i, line in enumerate(text.splitlines(), 1):
-                m = _TF_RESOURCE.match(line)
-                if m:
-                    iac.append(IacResource(
-                        iac_kind="terraform", type_name=m.group(1),
-                        name=m.group(2),
-                        location=SourceLocation(path=rel, line=i)))
+            blocks, tf_unknowns = parse_hcl(rel, text)
+            unknowns.extend(tf_unknowns)
+            for b in blocks:
+                iac.append(IacResource(
+                    iac_kind="terraform", type_name=b.type_name,
+                    name=b.name, location=b.location,
+                    attrs=tuple(IacAttr(
+                        name=a.name, value=a.value,
+                        location=a.location, dynamic=a.dynamic)
+                        for a in b.attrs),
+                    existence_known=b.existence_known))
             continue
         if name == "Chart.yaml":
             try:
@@ -180,12 +187,17 @@ def load_infra_model(
             text = context.read_text(rel)
         except (OSError, UnicodeDecodeError):
             continue
-        if any(m in text for m in _CFN_MARKERS):
-            iac.append(IacResource(
-                iac_kind="cloudformation", type_name="template",
-                name=name, location=_loc(rel), parsed=False))
-            issues.append(
-                f"{rel}: CloudFormation detection deferred per §74")
+        if looks_like_cfn(text):
+            cfn_resources, cfn_unknowns = parse_cfn(rel, text)
+            unknowns.extend(cfn_unknowns)
+            for r in cfn_resources:
+                iac.append(IacResource(
+                    iac_kind="cloudformation", type_name=r.type_name,
+                    name=r.logical_id, location=r.location,
+                    attrs=tuple(IacAttr(
+                        name=a.name, value=a.value,
+                        location=a.location, dynamic=a.dynamic)
+                        for a in r.attrs)))
             continue
         try:
             docs = list(yaml.safe_load_all(text))

@@ -17,12 +17,14 @@ from enum import StrEnum
 from typing import Any
 
 from forge_doctor_api.core.models import (
+    Confidence,
     Entity,
     EntityKind,
     Model,
     ModelError,
     Relationship,
     RelationshipKind,
+    UnknownFact,
     parse_entity_id,
 )
 
@@ -292,3 +294,94 @@ class ServiceGraph:
 
 def _ok(relationship: Relationship, allowed: set[str] | None) -> bool:
     return allowed is None or relationship.kind in allowed
+
+
+# -- slices + edge export (spec 057) -----------------------------------------
+
+
+@dataclass(frozen=True, kw_only=True)
+class GraphSlice(Model):
+    """A bounded neighborhood of one root entity (spec 057).
+
+    `boundary_ids` are nodes at the depth frontier: their ids appear so
+    callers know the slice was truncated, but their own adjacency is not
+    expanded.
+    """
+
+    root_id: str
+    depth: int
+    direction: Direction
+    nodes: tuple[Entity, ...]
+    edges: tuple[Relationship, ...]
+    boundary_ids: tuple[str, ...] = ()
+    unknowns: tuple[UnknownFact, ...] = ()
+
+
+@dataclass(frozen=True, kw_only=True)
+class EdgeExport(Model):
+    """Flat evidence-carrying edge for handoff/context consumers."""
+
+    from_id: str
+    to_id: str
+    kind: str
+    evidence_ids: tuple[str, ...]
+    confidence: Confidence
+
+
+def slice_graph(
+    graph: ServiceGraph,
+    root_id: str,
+    *,
+    depth: int = 1,
+    direction: Direction = Direction.BOTH,
+) -> GraphSlice:
+    """Bounded BFS slice around `root_id`.
+
+    Every kept edge keeps its evidence. Nodes beyond `depth` are marked
+    in `boundary_ids` without expansion. A missing root yields an empty
+    slice + UnknownFact (never a GraphError — slicing is a query).
+    """
+    if root_id not in graph:
+        return GraphSlice(
+            root_id=root_id, depth=depth, direction=direction,
+            nodes=(), edges=(),
+            unknowns=(UnknownFact(
+                subject=root_id, missing="entity in graph",
+                resolution="slice roots must be known entity ids"),))
+    seen: set[str] = {root_id}
+    frontier = {root_id}
+    kept_edges: dict[tuple[str, str, str], Relationship] = {}
+    boundary: set[str] = set()
+    for _ in range(depth):
+        nxt: set[str] = set()
+        for current in sorted(frontier):
+            for rel in graph.edges(current, direction=direction):
+                other = (rel.target_id if rel.source_id == current
+                         else rel.source_id)
+                kept_edges[rel.key] = rel
+                if other not in seen:
+                    nxt.add(other)
+        if not nxt:
+            break
+        boundary = nxt
+        seen |= nxt
+        frontier = nxt
+    return GraphSlice(
+        root_id=root_id, depth=depth, direction=direction,
+        nodes=tuple(
+            e for e in (graph.get(i) for i in sorted(seen))
+            if e is not None),
+        edges=tuple(kept_edges[k] for k in sorted(kept_edges)),
+        boundary_ids=tuple(sorted(boundary)))
+
+
+def export_edges(graph: ServiceGraph) -> tuple[EdgeExport, ...]:
+    """All relationships as flat exports, sorted, evidence ids attached."""
+    out: list[EdgeExport] = []
+    for rel in graph.relationships():
+        out.append(EdgeExport(
+            from_id=rel.source_id, to_id=rel.target_id, kind=rel.kind,
+            evidence_ids=tuple(
+                f"{e.kind}:{e.source}" for e in rel.evidence),
+            confidence=rel.confidence))
+    return tuple(out)

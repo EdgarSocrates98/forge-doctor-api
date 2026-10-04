@@ -17,6 +17,7 @@ from forge_doctor_api.core.models import (
 from forge_doctor_api.reliability.model import (
     ApiReliabilityModel,
     IdempotencyVerdict,
+    RetryPolicy,
 )
 from forge_doctor_api.reliability.retry import amplification
 from forge_doctor_api.reliability.timeout import (
@@ -227,5 +228,100 @@ def run_reliability_checks(
                 )
             )
 
+    findings.sort(key=lambda f: (f.id, f.description))
+    return tuple(findings)
+
+
+def _retry_for(model: ApiReliabilityModel, caller: str,
+               callee: str | None = None) -> RetryPolicy | None:
+    """Declared retry binding for `caller` (exact or edge scope)."""
+    for p in model.retry_policies:
+        if p.scope == caller:
+            return p
+    if callee is not None:
+        edge = f"{caller}->{callee}"
+        for p in model.retry_policies:
+            if p.scope == edge:
+                return p
+    for p in sorted(model.retry_policies, key=lambda x: x.scope):
+        if p.scope.split("->", 1)[0].strip() == caller:
+            return p
+    return None
+
+
+class _Missing:
+    pass
+
+
+_MISSING = _Missing()
+
+
+def _timeout_for(model: ApiReliabilityModel,
+                 scope: str) -> float | _Missing | None:
+    for t in model.timeouts:
+        if t.scope == scope:
+            return t.timeout_ms
+    return _MISSING
+
+
+def run_depth_checks(
+    model: ApiReliabilityModel,
+    chain_edges: tuple[tuple[str, str], ...],
+) -> tuple[Finding, ...]:
+    """APIREL### depth checks over evidenced caller->callee edges (spec 062).
+
+    `chain_edges` must come from declared config/runtime evidence
+    (gateway routes, CALLS relationships). Name similarity never
+    creates a hop — callers pass only evidenced pairs.
+    """
+    findings: list[Finding] = []
+    for caller, callee in sorted(set(chain_edges)):
+        edge = f"{caller}->{callee}"
+
+        # APIREL001 - retry amplification on the evidenced edge
+        caller_retry = _retry_for(model, caller, callee)
+        callee_retry = _retry_for(model, callee)
+        if caller_retry is not None and callee_retry is not None:
+            ca = caller_retry.max_attempts or 0
+            cb = callee_retry.max_attempts or 0
+            if ca > 1 and cb > 1:
+                findings.append(_finding(
+                    BY_ID["APIREL001"],
+                    f"{edge}: caller retries {ca}x and callee retries "
+                    f"{cb}x - amplification bound {ca * cb} attempts "
+                    "on this edge",
+                    (caller_retry.location.path if caller_retry.location
+                     else "(config)"),
+                ))
+
+        # APIREL002 - timeout cascade on the evidenced edge
+        caller_ms = _timeout_for(model, caller)
+        callee_ms = _timeout_for(model, callee)
+        if isinstance(caller_ms, _Missing):
+            continue
+        if isinstance(callee_ms, _Missing):
+            findings.append(_finding(
+                BY_ID["APIREL002"],
+                f"{edge}: caller timeout {caller_ms}ms declared but "
+                "the callee has no declared timeout - cascade bound "
+                "is unknown",
+                "(config)",
+                unknowns=(
+                    UnknownFact(
+                        subject=edge,
+                        missing="callee timeout declaration",
+                        resolution="declare a timeout at the callee "
+                        "scope to bound the cascade"),
+                ),
+            ))
+        elif caller_ms is not None and callee_ms is not None \
+                and caller_ms < callee_ms:
+            findings.append(_finding(
+                BY_ID["APIREL002"],
+                f"{edge}: caller timeout {caller_ms}ms < callee "
+                f"timeout {callee_ms}ms - requests cannot complete "
+                "within the caller budget",
+                "(config)",
+            ))
     findings.sort(key=lambda f: (f.id, f.description))
     return tuple(findings)

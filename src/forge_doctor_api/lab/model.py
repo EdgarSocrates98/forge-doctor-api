@@ -8,6 +8,7 @@ ground truth. Forbidden expectations bind as strongly as expected ones
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from forge_doctor_api.core.models import Model
 
@@ -47,6 +48,8 @@ class LabScenario(Model):
     hops: tuple[str, ...] = ()  # explicit RELAPI path for the scenario
     today: str | None = None  # deterministic evaluation date for policy
     expected: LabExpectation = LabExpectation()
+    provenance: tuple[tuple[str, str], ...] = ()  # realworld provenance block
+    problems: tuple[str, ...] = ()  # structural validation errors
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -68,7 +71,15 @@ class LabResult(Model):
     missing_runtime_signals: tuple[str, ...] = ()
     missing_issues: tuple[str, ...] = ()
     wording_violations: tuple[str, ...] = ()
+    problems: tuple[str, ...] = ()
     observed_findings: tuple[str, ...] = ()
+    # spec-058 measurement fields (harness metrics, never compared)
+    sample_size: int = 0         # fixture files scanned
+    elapsed_ms: int = 0
+    peak_bytes: int = 0
+    unknowns: int = 0
+    parse_failures: int = 0
+    unsupported: int = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -80,6 +91,25 @@ class FamilyScore(Model):
     hits: int = 0
     misses: int = 0
     false_positives: int = 0
+    # spec-058 aggregates over the scenarios exercising this family
+    sample_size: int = 0
+    unknowns: int = 0
+    unsupported: int = 0
+    parse_failures: int = 0
+    elapsed_ms: int = 0
+    peak_bytes: int = 0
+
+    @property
+    def tp(self) -> int:
+        return self.hits
+
+    @property
+    def fp(self) -> int:
+        return self.false_positives
+
+    @property
+    def fn(self) -> int:
+        return self.misses
 
     @property
     def precision(self) -> float | None:
@@ -90,6 +120,36 @@ class FamilyScore(Model):
     def recall(self) -> float | None:
         total = self.hits + self.misses
         return self.hits / total if total else None
+
+    @property
+    def unknown_rate(self) -> float | None:
+        return (self.unknowns / self.sample_size
+                if self.sample_size else None)
+
+    @property
+    def unsupported_rate(self) -> float | None:
+        return (self.unsupported / self.sample_size
+                if self.sample_size else None)
+
+    @property
+    def coverage_confidence(self) -> str:
+        """Documented heuristic — a band, never a claim.
+
+        <10 expected+observed items -> "low"; >=10 -> "medium".
+        There is no "high": lab coverage is always partial evidence.
+        """
+        return "medium" if self.expected + self.sample_size >= 10 else "low"
+
+    def to_dict(self) -> dict[str, Any]:
+        out = super().to_dict()
+        out.update({
+            "tp": self.tp, "fp": self.fp, "fn": self.fn,
+            "precision": self.precision, "recall": self.recall,
+            "unknown_rate": self.unknown_rate,
+            "unsupported_rate": self.unsupported_rate,
+            "coverage_confidence": self.coverage_confidence,
+        })
+        return out
 
 
 @dataclass(frozen=True, kw_only=True)

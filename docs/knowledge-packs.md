@@ -61,3 +61,28 @@ missing). Gap severity is informational, never a verdict on intent.
 | `UNTRUSTED` | **Described only** — parsed statically for metadata (`describe_untrusted`), never imported or executed. |
 
 This keeps third-party plugin code out of the engine process entirely.
+
+## Pack lifecycle (spec 064)
+
+External packs declare a `forge-doctor-knowledge.toml` manifest:
+
+```toml
+[knowledge]
+id = "acme-rules"           # slug, required
+version = "1.2.0"           # semver, required
+doctor_compat = ">=0.1,<0.3"  # semver range, optional
+provides = ["security"]
+requires = []
+```
+
+`knowledge/manifest.py` parses strictly — malformed manifests produce
+listed errors and never partially load. A stdlib semver-range parser
+(`>=`, `<=`, `>`, `<`, `==`, `!=`, comma-separated) checks the pack
+against the engine version; incompatible packs are skipped, listed in
+`knowledge list` with status `skipped-incompatible`, and recorded as
+an `UnknownFact`.
+
+Precedence: explicit dirs > project `.forge-doctor/knowledge/` >
+builtin. The builtin pack is always listed, pinned to the engine
+version. A duplicate id is a `conflict-shadowed` listing — the first
+entry in precedence order wins deterministically with a warning.

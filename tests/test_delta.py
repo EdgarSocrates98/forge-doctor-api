@@ -85,11 +85,11 @@ def test_finding_add_remove(tmp_path: Path) -> None:
     base = _report(tmp_path, OPENAPI_V1)
     f1 = Finding(
         id="OAS001", title="t", description="d1",
-        severity=Severity.LOW, confidence=base.findings[0].confidence
-        if base.findings else __import__(
+        severity=Severity.LOW, confidence=__import__(
             "forge_doctor_api.core.models", fromlist=["Confidence"]
         ).Confidence.MEDIUM,
         evidence_kind=EvidenceKind.STATIC,
+        evidence=base.findings[0].evidence if base.findings else (),
     )
     cur = replace(base, findings=(*base.findings, f1))
     delta = compute_delta(base, cur)

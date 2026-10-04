@@ -1,0 +1,10 @@
+# ambiguous templated routes: both declared, OAS013 flags the ambiguity.
+provenance: {source: handwritten-duplicate-route-fixture, retrieved: "2026-10"}
+run: [openapi]
+expected_entities:
+  - getA
+  - getAByName
+expected_findings:
+  - OAS010
+  - OAS013   # /a/{id} vs /a/{name} ambiguous templates
+  - OAS020

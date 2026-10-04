@@ -48,6 +48,16 @@ class ChainLink(Model):
 
 
 @dataclass(frozen=True, kw_only=True)
+class IacAttr(Model):
+    """One literal attribute candidate with evidence location."""
+
+    name: str
+    value: str | None          # None + dynamic=True => not a literal
+    location: SourceLocation
+    dynamic: bool = False
+
+
+@dataclass(frozen=True, kw_only=True)
 class IacResource(Model):
     """One declared IaC resource (Terraform `resource`, Helm chart)."""
 
@@ -56,6 +66,8 @@ class IacResource(Model):
     name: str
     location: SourceLocation
     parsed: bool = True          # False => recorded-not-parsed (CFN)
+    attrs: tuple[IacAttr, ...] = ()
+    existence_known: bool = True  # False under dynamic count/for_each
 
 
 @dataclass(frozen=True, kw_only=True)

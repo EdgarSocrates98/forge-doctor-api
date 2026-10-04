@@ -39,3 +39,32 @@ The runner injects a fixed `today` per scenario (temporal checks like
 deprecation windows stay reproducible), runs detection-gated pipelines
 (graphql scenarios only run when graphql files exist), and compares
 finding ids, entities, edges, and unknowns — not prose.
+
+## Real-world corpus (spec 058)
+
+`labs/realworld/` holds ≥15 cases modeled on real repository shapes:
+monorepo multi-service, mixed languages, generated clients, vendored
+code, ambiguous routes, dynamic framework config, duplicate services,
+and partial gateway/IaC config. Every realworld scenario **must**
+declare a `provenance` block (`source`, `retrieved`) in its
+`expected.yaml` — a scenario without one fails with a `problems`
+entry, never silently passes.
+
+## Metrics (spec 058)
+
+Per scenario the harness records: sample size (files scanned), elapsed
+ms, peak bytes, unknown count, parse-failure count, unsupported count.
+These are *measurements* — they never feed pass/fail matching.
+
+Per family (`OAS`, `APISEC`, `RELAPI`, …) the report aggregates
+TP/FP/FN, precision, recall, unknown rate, unsupported rate, parse
+failures, elapsed time, peak memory, sample size, and
+`coverage_confidence` — a documented band, never a claim:
+
+- `low`: fewer than 10 expected+observed items exercised the family
+- `medium`: 10 or more
+
+There is no `high` — lab coverage is always partial evidence. Console
+output prints the full metrics table; `--json` exports the same fields
+(`tp`, `fp`, `fn`, `precision`, `recall`, `unknown_rate`,
+`unsupported_rate`, `coverage_confidence`, plus raw counters).

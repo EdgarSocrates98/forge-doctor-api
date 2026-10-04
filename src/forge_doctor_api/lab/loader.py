@@ -7,12 +7,15 @@ excluded from the fixture surface seen by analyzers.
 
 from __future__ import annotations
 
+import json
+
 import yaml
 
 from forge_doctor_api.core.context import ProjectContext
 from forge_doctor_api.lab.model import LabExpectation, LabScenario
 
-_EXPECTED_NAMES = ("expected.yaml", "expected.yml")
+_EXPECTED_NAMES = ("expected.yaml", "expected.yml", "expectations.json")
+_REALWORLD_PROVENANCE_KEYS = ("source", "retrieved")
 
 
 def _list(raw: object) -> tuple[str, ...]:
@@ -48,13 +51,29 @@ def _scenario(context: ProjectContext, rel: str) -> LabScenario:
     domain, _, name = path.partition("/")
     doc: object = None
     try:
-        doc = yaml.safe_load(context.read_text(rel))
-    except (OSError, UnicodeDecodeError, yaml.YAMLError):
+        text = context.read_text(rel)
+        doc = (json.loads(text) if rel.endswith(".json")
+               else yaml.safe_load(text))
+    except (OSError, UnicodeDecodeError, yaml.YAMLError,
+            json.JSONDecodeError):
         doc = None
+    problems: list[str] = []
     if not isinstance(doc, dict):
+        problems.append("unparseable expectations file")
         return LabScenario(
             domain=domain or "labs", name=name or path, path=path,
-        )
+            problems=tuple(problems))
+    provenance: tuple[tuple[str, str], ...] = ()
+    if domain == "realworld":
+        prov = doc.get("provenance")
+        if not isinstance(prov, dict) or any(
+                k not in prov for k in _REALWORLD_PROVENANCE_KEYS):
+            problems.append(
+                "realworld scenario missing provenance block "
+                f"(requires {_REALWORLD_PROVENANCE_KEYS})")
+        else:
+            provenance = tuple(sorted(
+                (str(k), str(v)) for k, v in prov.items()))
     diff = doc.get("diff")
     diff_old = diff_new = None
     if isinstance(diff, dict):
@@ -70,6 +89,8 @@ def _scenario(context: ProjectContext, rel: str) -> LabScenario:
         hops=_list(doc.get("hops")),
         today=str(doc["today"]) if doc.get("today") else None,
         expected=_expectation(doc),
+        provenance=provenance,
+        problems=tuple(problems),
     )
 
 

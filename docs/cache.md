@@ -63,3 +63,18 @@ but invalid YAML") — coverage gaps are data, not silence.
 Policies sort by `(subject, layer)`; risks sort by `subject`. Same
 inputs → identical `ApiCacheModel`, verified in
 `tests/test_cache.py`.
+
+## Cache graph (spec 063)
+
+`analyzers/cache/graph.py` links mutating operations to cached reads —
+but only where resolved `$ref` evidence shows both reference the same
+declared `#/components/schemas` component. Prefix-only or name-only
+similarity never creates an edge.
+
+- `APICACHE001` stale-window candidate: a cached subject with a
+  declared TTL and an evidenced writer; the literal window math goes
+  into the finding description.
+- `APICACHE002` cross-layer conflict candidate: multiple cache layers
+  declare conflicting `stale_policy` values for one subject.
+
+Every edge and finding carries evidence; output is sorted.

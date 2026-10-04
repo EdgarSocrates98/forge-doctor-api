@@ -23,6 +23,7 @@ class GatewayDialect(StrEnum):
     ENVOY = "envoy"
     AWS_API_GATEWAY = "aws-api-gateway"
     NGINX = "nginx"
+    TRAEFIK = "traefik"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -31,6 +32,44 @@ class GatewayRoute(Model):
 
     path: str
     upstream: str | None
+    location: SourceLocation
+    service: str | None = None  # resolved target; None => unresolved
+
+
+@dataclass(frozen=True, kw_only=True)
+class GatewayUpstream(Model):
+    """A declared upstream/cluster/service target."""
+
+    name: str
+    host: str | None           # literal host/url when declared
+    location: SourceLocation
+
+
+class PolicyKind(StrEnum):
+    RATE_LIMIT = "rate_limit"
+    AUTH = "auth"
+    CORS = "cors"
+    OTHER = "other"
+
+
+@dataclass(frozen=True, kw_only=True)
+class GatewayPolicy(Model):
+    """A declared policy binding with literal params only."""
+
+    kind: PolicyKind
+    name: str
+    params: tuple[tuple[str, str], ...] = ()
+    location: SourceLocation
+
+
+@dataclass(frozen=True, kw_only=True)
+class MeshEdge(Model):
+    """A declared traffic-policy edge — never name-inferred."""
+
+    source: str                # e.g. "VirtualService/reviews"
+    target: str                # declared destination host/subset
+    kind: str                  # "route" | "subset" | "profile"
+    via: str                   # declaring field, e.g. "destination.host"
     location: SourceLocation
 
 
@@ -58,6 +97,8 @@ class GatewayModel(Model):
     timeouts: tuple[ConfigEntry, ...] = ()
     transformations: tuple[ConfigEntry, ...] = ()
     policies: tuple[ConfigEntry, ...] = ()
+    upstream_targets: tuple[GatewayUpstream, ...] = ()
+    policy_entries: tuple[GatewayPolicy, ...] = ()
     unknowns: tuple[UnknownFact, ...] = ()
 
 
@@ -82,5 +123,6 @@ class ServiceMeshModel(Model):
     circuit_breakers: tuple[ConfigEntry, ...] = ()
     mtls: tuple[ConfigEntry, ...] = ()
     traffic_splits: tuple[ConfigEntry, ...] = ()
+    edges: tuple[MeshEdge, ...] = ()
     evidence: tuple[Evidence, ...] = ()
     unknowns: tuple[UnknownFact, ...] = ()

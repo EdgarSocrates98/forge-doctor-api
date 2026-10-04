@@ -46,7 +46,17 @@ _TF = 'resource "aws_api_gateway_rest_api" "pay" {}\n'
 
 _CHART = "name: payments-chart\nversion: 1.0.0\n"
 
-_CFN = 'AWSTemplateFormatVersion: "2010-09-09"\nResources: {}\n'
+_CFN = """\
+AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  ApiLb:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: api-lb
+      Subnets: !Ref SubnetIds
+"""
+
+_CFN_BROKEN = 'AWSTemplateFormatVersion: "2010-09-09"\nResources: [}\n'
 
 
 def _ctx(root: Path, files: dict[str, str]) -> ProjectContext:
@@ -125,17 +135,68 @@ class TestIac:
         assert model.iac[0].iac_kind == "helm"
         assert model.iac[0].name == "payments-chart"
 
-    def test_cloudformation_recorded_not_parsed(self, tmp_path) -> None:
+    def test_cloudformation_parsed(self, tmp_path) -> None:
         ctx = _ctx(tmp_path, {"stack.yaml": _CFN})
         model = load_infra_model(ctx, sorted(ctx.iter_files()))
         iac = model.iac[0]
-        assert iac.iac_kind == "cloudformation" and not iac.parsed
-        assert model.issues
+        assert iac.iac_kind == "cloudformation" and iac.parsed
+        assert iac.type_name == (
+            "AWS::ElasticLoadBalancingV2::LoadBalancer")
+        attrs = {a.name: a for a in iac.attrs}
+        assert attrs["Name"].value == "api-lb"
+        assert attrs["Subnets"].dynamic and attrs["Subnets"].value is None
+        assert any("Subnets" in u.subject for u in model.unknowns)
+
+    def test_cloudformation_malformed_is_unknown_not_crash(
+            self, tmp_path) -> None:
+        ctx = _ctx(tmp_path, {"stack.yaml": _CFN_BROKEN})
+        model = load_infra_model(ctx, sorted(ctx.iter_files()))
+        assert any(u.subject == "stack.yaml" for u in model.unknowns)
 
     def test_deterministic(self, tmp_path) -> None:
         ctx = _ctx(tmp_path, {"k8s.yaml": _K8S, "main.tf": _TF})
         files = sorted(ctx.iter_files())
         assert load_infra_model(ctx, files) == load_infra_model(ctx, files)
+
+
+_TF_ADV = """\
+# resource "aws_lb" "commented" {}
+/* resource "aws_lb" "blocked" {} */
+resource "aws_lb" "main" {
+  name    = "api-lb"
+  subnets = [aws_subnet.a.id, "subnet-1"]
+}
+resource "aws_lambda_function" "fn" {
+  count   = var.on ? 1 : 0
+  handler = "index.h"
+}
+locals {
+  fake = "resource \\"aws_lb\\" \\"instr\\" {}"
+}
+"""
+
+
+class TestIacDepth:
+    def test_hcl_attrs_literal_and_dynamic(self, tmp_path) -> None:
+        ctx = _ctx(tmp_path, {"main.tf": _TF_ADV})
+        model = load_infra_model(ctx, sorted(ctx.iter_files()))
+        lb = next(r for r in model.iac if r.name == "main")
+        attrs = {a.name: a for a in lb.attrs}
+        assert attrs["name"].value == "api-lb"
+        assert attrs["subnets"].value is None and attrs["subnets"].dynamic
+
+    def test_comments_and_strings_never_produce_resources(
+            self, tmp_path) -> None:
+        ctx = _ctx(tmp_path, {"main.tf": _TF_ADV})
+        model = load_infra_model(ctx, sorted(ctx.iter_files()))
+        assert {r.name for r in model.iac} == {"main", "fn"}
+
+    def test_count_dynamic_existence_unknown(self, tmp_path) -> None:
+        ctx = _ctx(tmp_path, {"main.tf": _TF_ADV})
+        model = load_infra_model(ctx, sorted(ctx.iter_files()))
+        fn = next(r for r in model.iac if r.name == "fn")
+        assert not fn.existence_known
+        assert any("existence" in u.missing for u in model.unknowns)
 
 
 class TestGraphLinkage:

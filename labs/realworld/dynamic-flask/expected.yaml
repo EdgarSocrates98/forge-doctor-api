@@ -1,0 +1,6 @@
+# dynamic flask route: variable path -> unknown, never guessed.
+provenance: {source: flask-add_url_rule-fixture, retrieved: "2026-10"}
+run: [openapi]
+expected_findings: []
+forbidden_entities:
+  - /dynamic

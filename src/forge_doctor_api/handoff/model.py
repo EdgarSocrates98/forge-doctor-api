@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from forge_doctor_api.core.graph import EdgeExport
 from forge_doctor_api.core.models import (
     Evidence,
     Finding,
@@ -67,6 +68,7 @@ class ApiHandoffBundle(Model):
     domain_sha256: tuple[tuple[str, str], ...] = ()
     context_refs: tuple[str, ...] = ()
     capabilities: tuple[ForgeCapability, ...] = ()
+    graph_edges: tuple[EdgeExport, ...] = ()
 
 
 @dataclass(frozen=True, kw_only=True)
