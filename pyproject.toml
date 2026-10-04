@@ -28,7 +28,7 @@ forge-doctor-api = "forge_doctor_api.cli:main"
 packages = [{ include = "forge_doctor_api", from = "src" }]
 
 [tool.poetry.group.dev.dependencies]
-pytest = ">=8.0"
+pytest = ">=9.1.1"
 ruff = ">=0.6"
 mypy = ">=2.3.1"
 types-PyYAML = ">=6.0"
