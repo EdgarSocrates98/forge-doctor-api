@@ -1,10 +1,9 @@
-# §99 golden: Node/express service — contract-only (no adapter).
+# §99 golden: Node/express service — contract + spec-052 Express
+# adapter: implementation-side route entities are real evidence.
 run: [openapi]
 expected_entities:
   - getItem
-forbidden_entities:
-  - endpoint:
-  - operation:express
+  - endpoint:GET /items/{id}
 expected_findings: []
 forbidden_findings:
   - OAS*

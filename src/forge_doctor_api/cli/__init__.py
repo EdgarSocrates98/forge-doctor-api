@@ -73,10 +73,15 @@ runtime_app = typer.Typer(help="Analyze exported runtime evidence.", no_args_is_
 security_app = typer.Typer(help="Passive security analysis.", no_args_is_help=True)
 reliability_app = typer.Typer(help="Reliability analysis.", no_args_is_help=True)
 
+plugins_app = typer.Typer(
+    help="Plugin manifests, registry and conformance.",
+    no_args_is_help=True)
+
 app.add_typer(contract_app, name="contract")
 app.add_typer(runtime_app, name="runtime")
 app.add_typer(security_app, name="security")
 app.add_typer(reliability_app, name="reliability")
+app.add_typer(plugins_app, name="plugins")
 
 
 def _version(value: bool) -> None:
@@ -1242,6 +1247,94 @@ def mcp(
     except McpDependencyError as exc:
         _stderr.print(str(exc))
         raise typer.Exit(code=2) from None
+
+
+@plugins_app.command("list")
+def plugins_list(
+    directory: Annotated[str, typer.Option(
+        "--dir", help="Directory scanned for plugin manifests.",
+    )] = "plugins",
+) -> None:
+    """§52 list discovered plugin manifests + rejection reasons."""
+    from forge_doctor_api.plugins.registry import discover_registry
+
+    registry = discover_registry(Path(directory))
+    table = Table("id", "version", "trust", "compat", "capabilities")
+    for m in registry.list():
+        table.add_row(
+            m.plugin_id, m.version, m.trust.value,
+            "yes" if registry.compatible(m) else "no",
+            ",".join(m.capabilities) or "-")
+    _console.print(table)
+    for r in registry.rejections:
+        _stderr.print(f"rejected {r.path}: {r.reason}")
+    for c in registry.conflicts():
+        _stderr.print(f"conflict {c.kind}: {c.detail}")
+
+
+@plugins_app.command("inspect")
+def plugins_inspect(
+    plugin_id: Annotated[str, typer.Argument(help="Plugin id.")],
+    directory: Annotated[str, typer.Option(
+        "--dir", help="Directory scanned for plugin manifests.",
+    )] = "plugins",
+) -> None:
+    """§52 manifest + compat + rejection reasons for one plugin."""
+    from forge_doctor_api.plugins.registry import discover_registry
+
+    registry = discover_registry(Path(directory))
+    manifest = registry.get(plugin_id)
+    if manifest is None:
+        related = [r for r in registry.rejections
+                   if plugin_id in r.path]
+        for r in related:
+            _stderr.print(f"{r.path}: {r.reason}")
+        _stderr.print(f"unknown plugin: {plugin_id}")
+        raise typer.Exit(code=2)
+    _console.print(manifest.to_json())
+
+
+@plugins_app.command("verify")
+def plugins_verify(
+    plugin_id: Annotated[str, typer.Argument(help="Plugin id.")],
+    target: Annotated[str, typer.Argument(
+        help="Project the plugin analyzes during conformance.",
+    )] = ".",
+    directory: Annotated[str, typer.Option(
+        "--dir", help="Directory scanned for plugin manifests.",
+    )] = "plugins",
+) -> None:
+    """§54 compat check + conformance preflight (never imports UNTRUSTED)."""
+    from forge_doctor_api.plugins.conformance import (
+        plugin_run_surface,
+        run_conformance,
+    )
+    from forge_doctor_api.plugins.registry import discover_registry
+
+    registry = discover_registry(Path(directory))
+    manifest = registry.get(plugin_id)
+    if manifest is None:
+        _stderr.print(f"unknown plugin: {plugin_id}")
+        raise typer.Exit(code=2)
+    if not registry.compatible(manifest):
+        _stderr.print(
+            f"incompatible: requires {manifest.doctor_api!r}")
+        raise typer.Exit(code=1)
+    try:
+        module = registry.activate(plugin_id)
+    except Exception as exc:
+        _stderr.print(f"activation refused: {exc}")
+        raise typer.Exit(code=2) from None
+    run = plugin_run_surface(module)
+    if run is None:
+        _stderr.print("plugin exposes no analyze/adapter surface")
+        raise typer.Exit(code=2)
+    report = run_conformance(plugin_id, run, Path(target).resolve())
+    table = Table("check", "status", "details")
+    for c in report.checks:
+        table.add_row(c.name, c.status, c.details)
+    _console.print(table)
+    raise typer.Exit(code=0 if report.passed else 1)
 
 
 def main() -> None:

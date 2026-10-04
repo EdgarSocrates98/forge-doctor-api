@@ -1,11 +1,10 @@
-# §99 golden: Spring service — contract-only; no Spring adapter exists,
-# so implementation entities must NOT appear (honest absence).
+# §99 golden: Spring service — contract + spec-051 Spring adapter:
+# implementation-side route entities are now real evidence.
 run: [openapi]
 expected_entities:
   - getUser
-forbidden_entities:
-  - endpoint:   # no framework routes without an adapter
-  - operation:spring
+  - endpoint:GET /users/{id}
+  - operation:UserController.getUser
 expected_findings: []
 forbidden_findings:
   - OAS*

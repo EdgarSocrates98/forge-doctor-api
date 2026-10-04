@@ -20,7 +20,7 @@ from forge_doctor_api.analyzers.grpc.parser import load_grpc_project
 from forge_doctor_api.analyzers.openapi.graph import contract_graph
 from forge_doctor_api.analyzers.openapi.model import OpenApiProjectModel
 from forge_doctor_api.analyzers.openapi.parser import load_openapi_project
-from forge_doctor_api.analyzers.routes import FastApiAdapter
+from forge_doctor_api.analyzers.routes import available_adapters
 from forge_doctor_api.analyzers.routes.graph import scan_graph
 from forge_doctor_api.analyzers.runtime.loader import load_runtime_project
 from forge_doctor_api.analyzers.version import detect_version_model
@@ -74,12 +74,22 @@ def _sub_ctx(ctx: ProjectContext, sub: str | None) -> ProjectContext:
 
 
 def _route_scans(ctx: ProjectContext) -> tuple[ServiceGraph, ...]:
-    """FastAPI route scans (spec 006 adapter) for expected-entity checks."""
+    """Framework route scans (spec 050 adapters) for entity checks."""
+    files = list(ctx.iter_files())
+    graphs: list[ServiceGraph] = []
     try:
-        scan = FastApiAdapter().scan(ctx, service=ctx.root.name)
+        adapters = available_adapters(ctx, files)
     except (ContextError, OSError, ValueError):
         return ()
-    return (scan_graph(scan),) if scan.routes else ()
+    for adapter in adapters:
+        try:
+            scan = adapter.discover_routes(
+                ctx, service=ctx.root.name, files=files)
+        except (ContextError, OSError, ValueError):
+            continue
+        if scan.routes:
+            graphs.append(scan_graph(scan))
+    return tuple(graphs)
 
 
 def run_scenario(context: ProjectContext, scenario: LabScenario) -> LabObservations:

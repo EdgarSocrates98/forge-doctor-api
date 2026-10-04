@@ -29,7 +29,7 @@ from forge_doctor_api.analyzers.iac.parser import load_infra_model
 from forge_doctor_api.analyzers.openapi.graph import contract_graph
 from forge_doctor_api.analyzers.openapi.model import OpenApiProjectModel
 from forge_doctor_api.analyzers.openapi.parser import load_openapi_project
-from forge_doctor_api.analyzers.routes import FastApiAdapter
+from forge_doctor_api.analyzers.routes import available_adapters
 from forge_doctor_api.analyzers.routes.graph import scan_graph
 from forge_doctor_api.analyzers.routes.model import RouteScan
 from forge_doctor_api.analyzers.runtime.loader import (
@@ -179,18 +179,43 @@ def scan_project(
     # -- source ---------------------------------------------------------------
     routes: RouteScan | None = None
     if plan.enabled(AnalyzerId.ROUTES):
+        source_files = inventory.files_in(ArtifactClass.SOURCE)
         try:
-            routes = FastApiAdapter().scan(
-                context, service, inventory.files_in(ArtifactClass.SOURCE))
+            adapters = available_adapters(context, source_files)
         except Exception:
-            routes = None
+            adapters = ()
+        if not adapters:
             unknowns.append(UnknownFact(
                 subject="routes",
-                missing="framework route scan",
-                resolution="route adapter failed; implementation-side "
-                "evidence is absent",
+                missing="recognized framework in source files",
+                resolution="no builtin adapter detected the framework; "
+                "implementation-side route evidence is absent",
             ))
-        if routes is not None:
+        scans: list[RouteScan] = []
+        for adapter in adapters:
+            try:
+                scans.append(adapter.discover_routes(
+                    context, service, source_files))
+            except Exception:
+                unknowns.append(UnknownFact(
+                    subject=f"routes:{adapter.name}",
+                    missing="framework route scan",
+                    resolution="route adapter failed; partial route "
+                    "evidence may be absent",
+                ))
+        if scans:
+            routes = RouteScan(
+                service=service,
+                routes=tuple(sorted(
+                    {r for s in scans for r in s.routes},
+                    key=lambda r: (r.method, r.path, r.handler))),
+                attributions=tuple(sorted(
+                    {a for s in scans for a in s.attributions},
+                    key=lambda a: a.path)),
+                unknowns=tuple(sorted(
+                    {u for s in scans for u in s.unknowns},
+                    key=lambda u: (u.subject, u.missing))),
+            )
             _merge_graph(graphs, scan_graph(routes))
             unknowns.extend(routes.unknowns)
 

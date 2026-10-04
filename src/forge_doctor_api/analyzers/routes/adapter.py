@@ -1,21 +1,23 @@
-"""`FrameworkAdapter` contract (§192).
+"""`FrameworkAdapter` contract (§38-§41, §192).
 
-Every framework adapter must implement the §192 capabilities:
+Two layers, deliberately separate:
 
-- `attribution gate` — `attribute()`: decides, per file, whether the
-  framework is genuinely in play. Requires multiple strong markers (§101);
-  decorator-shaped text in comments/strings never parses into `ast`, so it
-  cannot attribute.
-- `route discovery` — `scan()`: emits `RouteModel`s for attributed files.
-- `auth discovery` — auth-relevant dependency names land on
-  `RouteModel.auth` (evidence, never inferred policy).
-- `schema discovery` — `RouteModel.request_schema`/`response_schema` when
-  statically resolvable.
-- `source location` — every route/attribution carries `SourceLocation`.
-- `adversarial tests` — each adapter ships §100-style fixtures.
+- `FrameworkAdapter` — the language-neutral §39 protocol every adapter
+  must satisfy: `attribute`, `discover_routes`, `discover_auth`,
+  `discover_schemas`, `discover_dependencies`, `discover_middleware`,
+  `discover_error_handlers`, `discover_validation`,
+  `discover_serialization`, `discover_client_calls`. Each `discover_*`
+  returns `SurfaceResult`; an unanswerable surface returns empty items
+  PLUS an `UnknownFact` — never a fabricated zero.
 
-Adapters never import or execute target code (§1): analysis is `ast`-only,
-and all filesystem access goes through `ProjectContext` (§203).
+- `AstFrameworkAdapter` — the Python `ast` base class carrying the
+  spec-006 machinery (per-file attribution gate, hermetic parse,
+  `parse_files`). Language adapters whose source is not Python (Java,
+  JS/TS) implement `FrameworkAdapter` directly over the
+  comment/string-stripped scanner in `textscan.py`.
+
+Adapters never import or execute target code (§1): analysis is static
+only, and all filesystem access goes through `ProjectContext` (§203).
 """
 
 from __future__ import annotations
@@ -24,11 +26,13 @@ import ast
 from abc import ABC, abstractmethod
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
+from typing import Protocol, runtime_checkable
 
 from forge_doctor_api.analyzers.routes.model import (
     Attribution,
     RouteModel,
     RouteScan,
+    SurfaceResult,
 )
 from forge_doctor_api.core.context import ProjectContext
 from forge_doctor_api.core.models import SourceLocation, UnknownFact
@@ -76,7 +80,104 @@ def module_name(relative: str) -> str:
     return ".".join(parts)
 
 
-class FrameworkAdapter(ABC):
+def unknown_surface(surface: str, framework: str) -> SurfaceResult:
+    """§39 unanswerable surface: empty items + the explicit gap."""
+    return SurfaceResult(
+        surface=surface,
+        unknowns=(
+            UnknownFact(
+                subject=f"{framework} {surface}",
+                missing=f"static {surface} evidence",
+                resolution=(
+                    "the adapter found no extractable evidence for this "
+                    "surface; absence is not a claim of absence"
+                ),
+            ),
+        ),
+    )
+
+
+@runtime_checkable
+class FrameworkAdapter(Protocol):
+    """§39 language-neutral adapter contract (spec 050).
+
+    `detect` is the cheap gate (manifest/import strong markers);
+    `attribute` is the per-file evidence gate. Every `discover_*`
+    returns `SurfaceResult` — sorted items, unknowns when unanswerable.
+    """
+
+    name: str
+    framework: str
+
+    def detect(self, context: ProjectContext, files: Sequence[str]) -> bool:
+        """Strong-marker gate: is this framework genuinely in play?"""
+        ...
+
+    def attribute(
+        self, context: ProjectContext, files: Sequence[str]
+    ) -> tuple[Attribution, ...]:
+        """Per-file framework attributions with evidence."""
+        ...
+
+    def discover_routes(
+        self,
+        context: ProjectContext,
+        service: str,
+        files: Sequence[str] | None = None,
+    ) -> RouteScan:
+        """RouteModels for attributed files."""
+        ...
+
+    def discover_auth(
+        self, context: ProjectContext, files: Sequence[str]
+    ) -> SurfaceResult:
+        """Auth-relevant evidence (decorators, deps, guards)."""
+        ...
+
+    def discover_schemas(
+        self, context: ProjectContext, files: Sequence[str]
+    ) -> SurfaceResult:
+        """Request/response schema candidate names + locations."""
+        ...
+
+    def discover_dependencies(
+        self, context: ProjectContext, files: Sequence[str]
+    ) -> SurfaceResult:
+        """Injected/depended-upon components."""
+        ...
+
+    def discover_middleware(
+        self, context: ProjectContext, files: Sequence[str]
+    ) -> SurfaceResult:
+        """Middleware registrations applying to routes."""
+        ...
+
+    def discover_error_handlers(
+        self, context: ProjectContext, files: Sequence[str]
+    ) -> SurfaceResult:
+        """Exception/error handler registrations."""
+        ...
+
+    def discover_validation(
+        self, context: ProjectContext, files: Sequence[str]
+    ) -> SurfaceResult:
+        """Validation constraints on inputs."""
+        ...
+
+    def discover_serialization(
+        self, context: ProjectContext, files: Sequence[str]
+    ) -> SurfaceResult:
+        """Serialization shaping (response models, encoders)."""
+        ...
+
+    def discover_client_calls(
+        self, context: ProjectContext, files: Sequence[str]
+    ) -> SurfaceResult:
+        """Outbound HTTP client calls inside route code."""
+        ...
+
+
+class AstFrameworkAdapter(ABC):
     """Static, `ast`-only adapter. `framework` is the evidence domain tag."""
 
     name: str
@@ -84,7 +185,7 @@ class FrameworkAdapter(ABC):
     file_pattern: str = "**/*.py"
 
     @abstractmethod
-    def attribute(self, tree: ast.Module, path: str) -> Attribution | None:
+    def attribute_tree(self, tree: ast.Module, path: str) -> Attribution | None:
         """Attribution gate. `None` means this file is not the framework."""
 
     @abstractmethod
@@ -92,6 +193,32 @@ class FrameworkAdapter(ABC):
         self, context: ProjectContext, service: str, paths: Sequence[str] | None = None
     ) -> RouteScan:
         """Full pipeline: attribute each source file, then extract routes."""
+
+    # -- §39 protocol defaults -------------------------------------------------
+
+    def attribute(
+        self, context: ProjectContext, files: Sequence[str]
+    ) -> tuple[Attribution, ...]:
+        """Concrete §39 attribution: the ast gate, per file, sorted."""
+        unknowns: list[UnknownFact] = []
+        attrs = {
+            pf.attribution
+            for pf in self.parse_files(context, files, unknowns)
+        }
+        return tuple(sorted(attrs, key=lambda a: a.path))
+
+    def detect(self, context: ProjectContext, files: Sequence[str]) -> bool:
+        """Python default: any file passing the attribution gate."""
+        return bool(self.attribute(context, files))
+
+    def discover_routes(
+        self,
+        context: ProjectContext,
+        service: str,
+        files: Sequence[str] | None = None,
+    ) -> RouteScan:
+        """§39 alias for `scan`."""
+        return self.scan(context, service, files)
 
     def parse_files(
         self, context: ProjectContext, paths: Sequence[str] | None, unknowns: list[UnknownFact]
@@ -123,7 +250,7 @@ class FrameworkAdapter(ABC):
                     )
                 )
                 continue
-            attribution = self.attribute(tree, relative)
+            attribution = self.attribute_tree(tree, relative)
             if attribution is not None:
                 yield ParsedFile(relative, source, tree, attribution)
 
@@ -131,3 +258,34 @@ class FrameworkAdapter(ABC):
 def route_key(route: RouteModel) -> tuple[str, str, str, int]:
     loc: SourceLocation = route.source_location
     return (route.method, route.path, route.handler, loc.line or 0)
+
+
+def available_adapters(
+    context: ProjectContext,
+    files: Sequence[str],
+) -> tuple[FrameworkAdapter, ...]:
+    """Builtin adapters whose `detect()` matches this project.
+
+    Ordered by adapter name for determinism; an unknown framework
+    simply yields no adapter — the caller records the unknown, the
+    adapter never guesses (§41).
+    """
+    # Local imports keep adapter modules (and their scanners) out of the
+    # base import graph — the registry itself is dependency-free.
+    from forge_doctor_api.analyzers.routes.fastapi import FastApiAdapter
+    from forge_doctor_api.analyzers.routes.javascript import (
+        ExpressAdapter,
+        NestJsAdapter,
+    )
+    from forge_doctor_api.analyzers.routes.spring import SpringBootAdapter
+
+    adapters: list[FrameworkAdapter] = [
+        FastApiAdapter(), ExpressAdapter(), NestJsAdapter(),
+        SpringBootAdapter(),
+    ]
+    return tuple(
+        sorted(
+            (a for a in adapters if a.detect(context, files)),
+            key=lambda a: a.name,
+        )
+    )

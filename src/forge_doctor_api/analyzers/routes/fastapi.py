@@ -16,12 +16,13 @@ from __future__ import annotations
 
 import ast
 import re
-from collections.abc import Iterator, Sequence
+from collections.abc import Callable, Iterator, Sequence
 from dataclasses import dataclass, field
 
 from forge_doctor_api.analyzers.routes.adapter import (
-    FrameworkAdapter,
+    AstFrameworkAdapter,
     module_name,
+    unknown_surface,
 )
 from forge_doctor_api.analyzers.routes.model import (
     Attribution,
@@ -29,6 +30,8 @@ from forge_doctor_api.analyzers.routes.model import (
     RouteModel,
     RouteParam,
     RouteScan,
+    SurfaceItem,
+    SurfaceResult,
 )
 from forge_doctor_api.core.context import ProjectContext
 from forge_doctor_api.core.models import (
@@ -498,13 +501,13 @@ class _FileScan(ast.NodeVisitor):
         return auth, deps, tuple(params)
 
 
-class FastApiAdapter(FrameworkAdapter):
+class FastApiAdapter(AstFrameworkAdapter):
     """FastAPI route discovery. `service` defaults to the project dir name."""
 
     name = "fastapi"
     framework = "fastapi"
 
-    def attribute(self, tree: ast.AST, path: str) -> Attribution | None:
+    def attribute_tree(self, tree: ast.AST, path: str) -> Attribution | None:
         imported = False
         instantiated: ast.AST | None = None
         for node in ast.walk(tree):
@@ -536,6 +539,11 @@ class FastApiAdapter(FrameworkAdapter):
     def scan(
         self, context: ProjectContext, service: str, paths: Sequence[str] | None = None
     ) -> RouteScan:
+        return self._analyze(context, service, paths)[0]
+
+    def _analyze(
+        self, context: ProjectContext, service: str, paths: Sequence[str] | None = None
+    ) -> tuple[RouteScan, list[_Facts]]:
         unknowns: list[UnknownFact] = []
         parsed = list(self.parse_files(context, paths, unknowns))
 
@@ -578,12 +586,152 @@ class FastApiAdapter(FrameworkAdapter):
                         resolution="replace dynamic registration with declarative routing",
                     )
                 )
-        return RouteScan(
-            service=service,
-            routes=tuple(sorted(set(routes), key=self._key)),
-            attributions=tuple(sorted({p.attribution for p in parsed}, key=lambda a: a.path)),
-            unknowns=tuple(sorted(unknowns, key=lambda u: (u.subject, u.missing))),
+        return (
+            RouteScan(
+                service=service,
+                routes=tuple(sorted(set(routes), key=self._key)),
+                attributions=tuple(
+                    sorted({p.attribution for p in parsed}, key=lambda a: a.path)
+                ),
+                unknowns=tuple(
+                    sorted(unknowns, key=lambda u: (u.subject, u.missing))
+                ),
+            ),
+            all_facts,
         )
+
+    # -- §39 surfaces -----------------------------------------------------------
+
+    def _surface(
+        self,
+        surface: str,
+        context: ProjectContext,
+        files: Sequence[str],
+        extract: Callable[[RouteScan, list[_Facts]], list[SurfaceItem]],
+    ) -> SurfaceResult:
+        scan, facts = self._analyze(context, "", files)
+        items = sorted(
+            {(i.label, i.kind, i.location.path, i.location.line or 0): i
+             for i in extract(scan, facts)}.values(),
+            key=lambda i: (i.kind, i.label, i.location.path,
+                           i.location.line or 0))
+        if not items:
+            return unknown_surface(surface, self.framework)
+        return SurfaceResult(surface=surface, items=tuple(items))
+
+    def discover_auth(
+        self, context: ProjectContext, files: Sequence[str]
+    ) -> SurfaceResult:
+        def _ex(scan: RouteScan, _: list[_Facts]) -> list[SurfaceItem]:
+            return [
+                SurfaceItem(
+                    label=name, kind="auth-dependency",
+                    location=r.source_location)
+                for r in scan.routes for name in r.auth
+            ]
+        return self._surface("auth", context, files, _ex)
+
+    def discover_schemas(
+        self, context: ProjectContext, files: Sequence[str]
+    ) -> SurfaceResult:
+        def _ex(scan: RouteScan, _: list[_Facts]) -> list[SurfaceItem]:
+            items = [
+                SurfaceItem(
+                    label=r.request_schema or "", kind="request-schema",
+                    location=r.source_location)
+                for r in scan.routes if r.request_schema
+            ]
+            items += [
+                SurfaceItem(
+                    label=r.response_schema or "", kind="response-schema",
+                    location=r.source_location)
+                for r in scan.routes if r.response_schema
+            ]
+            return items
+        return self._surface("schemas", context, files, _ex)
+
+    def discover_dependencies(
+        self, context: ProjectContext, files: Sequence[str]
+    ) -> SurfaceResult:
+        def _ex(scan: RouteScan, _: list[_Facts]) -> list[SurfaceItem]:
+            items = [
+                SurfaceItem(
+                    label=p.annotation or p.name, kind="dependency",
+                    location=r.source_location)
+                for r in scan.routes for p in r.parameters
+                if p.location_in == "dependency"
+            ]
+            # Depends(...) targets land on RouteModel.middleware —
+            # they are injected dependencies, evidenced by name.
+            items += [
+                SurfaceItem(
+                    label=name, kind="depends-target",
+                    location=r.source_location)
+                for r in scan.routes for name in r.middleware
+            ]
+            return items
+        return self._surface("dependencies", context, files, _ex)
+
+    def discover_middleware(
+        self, context: ProjectContext, files: Sequence[str]
+    ) -> SurfaceResult:
+        def _ex(scan: RouteScan, facts: list[_Facts]) -> list[SurfaceItem]:
+            items = [
+                SurfaceItem(
+                    label=name, kind="route-middleware",
+                    location=r.source_location)
+                for r in scan.routes for name in r.middleware
+            ]
+            for f in facts:
+                items += [
+                    SurfaceItem(
+                        label=name, kind="app-middleware",
+                        location=SourceLocation(path=f.path))
+                    for name in f.app_middleware
+                ]
+            return items
+        return self._surface("middleware", context, files, _ex)
+
+    def discover_error_handlers(
+        self, context: ProjectContext, files: Sequence[str]
+    ) -> SurfaceResult:
+        items = _walk_surface(
+            self, context, files, "error-handlers")
+        if not items:
+            return unknown_surface("error_handlers", self.framework)
+        return SurfaceResult(surface="error_handlers", items=items)
+
+    def discover_validation(
+        self, context: ProjectContext, files: Sequence[str]
+    ) -> SurfaceResult:
+        items = _walk_surface(self, context, files, "validation")
+        if not items:
+            return unknown_surface("validation", self.framework)
+        return SurfaceResult(surface="validation", items=items)
+
+    def discover_serialization(
+        self, context: ProjectContext, files: Sequence[str]
+    ) -> SurfaceResult:
+        def _ex(scan: RouteScan, _: list[_Facts]) -> list[SurfaceItem]:
+            return [
+                SurfaceItem(
+                    label=(
+                        f"{r.response_schema} "
+                        f"({r.response_schema_source.value})"),
+                    kind="response-serialization",
+                    location=r.source_location)
+                for r in scan.routes
+                if r.response_schema and r.response_schema_source
+            ]
+        return self._surface("serialization", context, files, _ex)
+
+    def discover_client_calls(
+        self, context: ProjectContext, files: Sequence[str]
+    ) -> SurfaceResult:
+        items = _walk_surface(self, context, files, "client-calls")
+        if not items:
+            return unknown_surface("client_calls", self.framework)
+        return SurfaceResult(surface="client_calls", items=items)
 
     # -- pass 2 -------------------------------------------------------------
 
@@ -703,3 +851,101 @@ class FastApiAdapter(FrameworkAdapter):
     def _key(route: RouteModel) -> tuple[str, str, str, int]:
         loc = route.source_location
         return (route.method, route.path, route.handler, loc.line or 0)
+
+
+# -- §39 surface walkers (module level; shared by discover_*) ------------------
+
+_HTTP_VERBS = frozenset(
+    {"get", "put", "post", "delete", "patch", "head", "options", "request"})
+_HTTP_CLIENTS = frozenset({"httpx", "requests", "aiohttp", "urllib3"})
+
+
+def _walk_surface(
+    adapter: AstFrameworkAdapter,
+    context: ProjectContext,
+    files: Sequence[str],
+    surface: str,
+) -> tuple[SurfaceItem, ...]:
+    """AST pass over attributed files for one non-route surface.
+
+    - `error-handlers`: `@{app}.exception_handler(X)` decorated functions.
+    - `validation`: route-handler params with a `Query/Path/Body/Field/`
+      `Param` default — binding+constraint evidence.
+    - `client-calls`: `httpx|requests|aiohttp.<verb>(` calls where the
+      module is imported in that file.
+    """
+    unknowns: list[UnknownFact] = []
+    items: list[SurfaceItem] = []
+    for pf in adapter.parse_files(context, files, unknowns):
+        client_mods = _imported_client_roots(pf.tree)
+        for node in ast.walk(pf.tree):
+            if surface == "error-handlers" and isinstance(
+                node, ast.FunctionDef | ast.AsyncFunctionDef
+            ):
+                for dec in node.decorator_list:
+                    call = dec if isinstance(dec, ast.Call) else None
+                    name = _call_name(call.func if call else dec)
+                    if name and name.endswith(".exception_handler"):
+                        exc = (
+                            _unparse(call.args[0])
+                            if call and call.args else "?"
+                        )
+                        items.append(SurfaceItem(
+                            label=f"{exc} -> {node.name}",
+                            kind="error-handler",
+                            location=SourceLocation(
+                                path=pf.path, line=node.lineno)))
+            elif surface == "validation" and isinstance(
+                node, ast.FunctionDef | ast.AsyncFunctionDef
+            ):
+                for arg in node.args.args + node.args.kwonlyargs:
+                    default = _arg_default(node, arg)
+                    if isinstance(default, ast.Call):
+                        default_name = _call_name(default.func) or ""
+                        head = default_name.rsplit(".", 1)[-1]
+                        if head in ("Query", "Path", "Body", "Field",
+                                    "Param", "Cookie", "Header"):
+                            items.append(SurfaceItem(
+                                label=f"{head}({arg.arg})",
+                                kind="bound-param",
+                                location=SourceLocation(
+                                    path=pf.path, line=arg.lineno)))
+            elif surface == "client-calls" and client_mods and isinstance(
+                node, ast.Call
+            ):
+                name = _call_name(node.func) or ""
+                head, _, verb = name.partition(".")
+                if head in client_mods and verb in _HTTP_VERBS:
+                    items.append(SurfaceItem(
+                        label=name, kind="http-client-call",
+                        location=SourceLocation(
+                            path=pf.path, line=node.lineno)))
+    return tuple(sorted(
+        items, key=lambda i: (i.kind, i.label, i.location.path,
+                              i.location.line or 0)))
+
+
+def _imported_client_roots(tree: ast.Module) -> frozenset[str]:
+    roots: set[str] = set()
+    for node in ast.walk(tree):
+        names: list[str] = []
+        if isinstance(node, ast.Import):
+            names = [a.name.split(".")[0] for a in node.names]
+        elif isinstance(node, ast.ImportFrom):
+            names = [(node.module or "").split(".")[0]]
+        roots.update(n for n in names if n in _HTTP_CLIENTS)
+    return frozenset(roots)
+
+
+def _arg_default(
+    fn: ast.FunctionDef | ast.AsyncFunctionDef, arg: ast.arg
+) -> ast.AST | None:
+    if arg in fn.args.args:
+        idx = fn.args.args.index(arg)
+        offset = len(fn.args.args) - len(fn.args.defaults)
+        if idx >= offset:
+            return fn.args.defaults[idx - offset]
+    elif arg in fn.args.kwonlyargs:
+        idx = fn.args.kwonlyargs.index(arg)
+        return fn.args.kw_defaults[idx]
+    return None

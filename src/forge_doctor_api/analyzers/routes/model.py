@@ -91,3 +91,32 @@ class RouteScan(Model):
     routes: tuple[RouteModel, ...] = ()
     attributions: tuple[Attribution, ...] = ()
     unknowns: tuple[UnknownFact, ...] = ()
+
+
+@dataclass(frozen=True, kw_only=True)
+class SurfaceItem(Model):
+    """One extracted fact on a §39 adapter surface.
+
+    `label` is the compact identifier (e.g. `Depends(get_user)`,
+    `@PreAuthorize("hasRole('ADMIN')")`); `kind` tags the sub-surface.
+    Everything carries its `SourceLocation` — never a guess.
+    """
+
+    label: str
+    kind: str
+    location: SourceLocation
+    detail: str = ""
+
+
+@dataclass(frozen=True, kw_only=True)
+class SurfaceResult(Model):
+    """§39 surface extraction result.
+
+    `items` is always sorted. When the adapter cannot answer the
+    surface for a framework/fileset, `items` is empty AND `unknowns`
+    records the gap — absence is data, never a silent zero.
+    """
+
+    surface: str
+    items: tuple[SurfaceItem, ...] = ()
+    unknowns: tuple[UnknownFact, ...] = ()
