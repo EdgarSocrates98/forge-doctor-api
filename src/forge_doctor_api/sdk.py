@@ -41,12 +41,32 @@ class FindingNotFoundError(DoctorError):
 
 @dataclass(frozen=True, kw_only=True)
 class Explanation:
-    """`Doctor.explain` result — finding + evidence + rationale."""
+    """`Doctor.explain` result — finding + evidence + rationale.
+
+    `rule` is the catalog spec the check was registered under
+    (title/severity/confidence/description); `next_evidence` lists the
+    concrete resolutions attached to the finding's unknowns — the
+    evidence that would raise confidence if supplied.
+    """
 
     finding: Finding
     evidence: tuple[str, ...]
     why: str
     unknowns: tuple[UnknownFact, ...]
+    rule: Any = None
+    next_evidence: tuple[str, ...] = ()
+
+    def to_dict(self) -> dict[str, Any]:
+        from forge_doctor_api.core.stats import rule_dict
+
+        return {
+            "finding": self.finding.to_dict(),
+            "evidence": list(self.evidence),
+            "why": self.why,
+            "unknowns": [u.to_dict() for u in self.unknowns],
+            "rule": rule_dict(self.rule) if self.rule is not None else None,
+            "next_evidence": list(self.next_evidence),
+        }
 
 
 class Doctor:
@@ -107,16 +127,24 @@ class Doctor:
 
     def explain(self, finding_id: str) -> Explanation:
         """Finding + evidence + why it fired (typed error when absent)."""
+        from forge_doctor_api.core.stats import describe_check, rule_text
+
         report = self._cached()
         for f in report.findings:
             if f.id == finding_id or (f.entity_ids and (
                 finding_id in f.entity_ids
             )):
+                rule = describe_check(f.id)
                 return Explanation(
                     finding=f,
                     evidence=tuple(e.summary for e in f.evidence),
-                    why=f"{f.id}: {f.title} — {f.description}",
+                    why=(f"{f.id}: {rule.title} — {rule_text(rule)}"
+                         if rule is not None
+                         else f"{f.id}: {f.title} — {f.description}"),
                     unknowns=f.unknowns,
+                    rule=rule,
+                    next_evidence=tuple(
+                        u.resolution for u in f.unknowns if u.resolution),
                 )
         raise FindingNotFoundError(
             f"no finding {finding_id!r} in this report")

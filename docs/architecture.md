@@ -11,19 +11,27 @@ of output.
 ```text
 src/forge_doctor_api/
 ├── core/            Model base, Finding/Evidence/UnknownFact, entity ids,
-│                    ProjectContext (all host I/O), redaction, export
+│                    ProjectContext (all host I/O), redaction, export,
+│                    discovery (one classified walk), evidence_store
+│                    (content-addressed artifacts), plan (AnalysisPlan),
+│                    graph (ServiceGraph + slices/EdgeExport), stats
+│                    (spec-066 counters), cache (spec-065 incremental)
 ├── analyzers/       Input normalization, one subpackage per source kind
 │   ├── openapi/     OpenAPI 3.x YAML/JSON -> OpenApiProjectModel
 │   ├── asyncapi/    AsyncAPI documents -> AsyncApiProjectModel
 │   ├── graphql/     SDL/introspection + client queries -> GraphQLProjectModel
 │   ├── grpc/        .proto files -> GrpcProjectModel
-│   ├── routes/      framework adapters (FastAPI) -> RouteScan
+│   ├── routes/      framework adapters (FastAPI/Flask AST, Spring,
+│   │                Express, NestJS text scanners) -> RouteScan
 │   ├── clients/     client call-site extraction -> ApiClientModel
 │   ├── gateway/     §71-73 declared gateway/mesh config (Kong, Envoy,
-│   │                AWS API Gateway, NGINX) -> GatewayModel, ServiceMeshModel
-│   ├── iac/         §74-76 K8s manifests + Terraform/Helm/CFN -> InfraModel
-│   ├── cache/       §151-153 declared cache policies -> ApiCacheModel
-│   ├── runtime/     OTLP traces + access logs -> TraceModel, executions,
+│   │                AWS API Gateway, NGINX, Traefik) + mesh edges
+│   │                (Istio, Linkerd) -> GatewayModel, ServiceMeshModel
+│   ├── iac/         §74-76 K8s manifests + bounded HCL + CFN -> InfraModel
+│   ├── cache/       §151-153 declared cache policies + cache graph ->
+│   │                ApiCacheModel
+│   ├── runtime/     OTLP traces + access logs -> bounded streaming
+│   │                assembler (ADR-0002) -> TraceModel, executions,
 │   │                RequestHistory, ApiObservabilityModel
 │   └── version/     API versioning model (URI/header/media strategies)
 ├── checks/          Catalogued check suites, one namespace per family
@@ -31,8 +39,9 @@ src/forge_doctor_api/
 │   ├── compat/      semantic diff -> ContractChange + CompatibilityClass
 │   ├── drift/       contract-vs-impl DRIFT### + §147 error contracts
 │   ├── client/      CLIENT### impact findings
-│   ├── apisec/      APISEC001-010 passive security candidates
-│   ├── relapi/      RELAPI### reliability checks
+│   ├── apisec/      APISEC001-012 passive security candidates (incl.
+│   │                unknown-auth semantics)
+│   ├── relapi/      RELAPI### reliability checks (+retry/timeout depth)
 │   ├── perf/        APIPERF### runtime regression checks
 │   ├── observability/  OBSAPI### ingestion/coverage checks
 │   ├── graphql/ grpc/ asyncapi/  per-protocol GQL/GRPC/ASYNC checks
@@ -41,18 +50,30 @@ src/forge_doctor_api/
 ├── policy/          declarative policies, exceptions, ownership precedence
 ├── twin/            ApiDigitalTwin — declared/observed/configured views + drift
 ├── workspace/       multi-repo manifests, cross-repo edges, chains
-├── fleet/           fleet questions, portfolio, complexity, readiness
-├── migrate/         portability classification (REST→gRPC/GraphQL, sync→async)
-├── handoff/         ApiHandoffBundle, DoctorApi surface, routing
-├── knowledge/       versioned YAML packs + capability detection
-├── plugins/         adapter Protocols + TrustClass boundaries
+├── fleet/           fleet questions, portfolio, complexity, readiness,
+│                    ForgeHandoff ingestion (spec 070)
+├── migrate/         portability classification + migration graph
+│                    (spec 060)
+├── temporal.py      snapshot store + architectural regressions (spec 059)
+├── handoff/         ApiHandoffBundle (V1/V2), Forge Protocol types,
+│                    context broker (doctor:// refs), delta contexts,
+│                    MCP server (optional extra, ADR-0003), boundary
+│                    (spec 070 typed The-Forger/API Forge surface)
+├── knowledge/       versioned YAML packs + capability detection +
+│                    pack lifecycle manifests (spec 064)
+├── plugins/         adapter Protocols + TrustClass boundaries +
+│                    manifest validation + offline conformance
 ├── safefix/         spec-022 fix classification (SAFE/REVIEW/MANUAL)
 ├── perf/            baselines, budgets, critical path, experiments,
 │                    capacity/cost signals, FanoutSignal (§59)
-├── lab/             Forge Lab runner + precision/recall reports
+├── lab/             Forge Lab runner + precision/recall + realworld
+│                    corpus metrics (spec 058)
 ├── output/          §175 writers: JSON, JSONL, SARIF 2.1.0, agent compact
-├── scan.py          §177-§178 unified scan + gate evaluation
-├── sdk.py           programmatic entry points
+│                    (v1 contract frozen — docs/output-contract.md)
+├── report.py        DoctorReport — one canonical compact report (spec 039)
+├── scan.py          §177-§178 unified scan + gate evaluation + stats +
+│                    opt-in incremental
+├── sdk.py           Doctor facade — programmatic entry points
 └── cli/             typer commands (thin wrappers over the packages above)
 ```
 
@@ -60,20 +81,48 @@ src/forge_doctor_api/
 
 ```text
 files on disk
-     │  (all access via ProjectContext: iter_files/read_text/resolve)
+     │  (all access via ProjectContext: iter_files/read_text/resolve;
+     │   .forge-doctor/ tool state is never project content)
+     ▼
+discover → EvidenceStore → AnalysisPlan   one classified walk, one
+     │                                    content-addressed inventory,
+     │                                    evidence-driven plan
      ▼
 analyzers/*  ──► typed models (OpenApiProjectModel, ApiSecurityModel, …)
      │           every model is a frozen dataclass; unknowns are data,
-     │           not exceptions
+     │           not exceptions. Under --incremental, heavy loader
+     │           results are reused from .forge-doctor/cache keyed by
+     │           artifact sha + analyzer + tool version + config
      ▼
 checks/*     ──► Finding tuples (id, severity, confidence, evidence,
      │           entity_ids, source_location, remediation, unknowns)
+     │           checks always recompute — never replayed from cache
      ▼
 higher layers ──► diff events, twin drift, episodes, blast radius,
                   fleet answers, migration assessments, handoff bundles
      ▼
-output/* / cli ──► console tables, JSON/JSONL/SARIF/agent exports
+output/* / cli ──► console tables, JSON/JSONL/SARIF/agent exports,
+                   DoctorReport (stats: deterministic counters always,
+                   timing only under --stats-timing)
 ```
+
+## Decisions of record
+
+Accepted architecture decisions live in `docs/adr/`:
+
+- [ADR-0001](adr/ADR-0001-unified-pipeline.md) — unified deterministic
+  pipeline over per-domain CLIs
+- [ADR-0002](adr/ADR-0002-bounded-runtime.md) — `keep_spans=False`
+  default and bounded runtime retention
+- [ADR-0003](adr/ADR-0003-mcp-optional-extra.md) — MCP as an optional
+  extra
+- [ADR-0004](adr/ADR-0004-untrusted-plugins.md) — untrusted plugins are
+  never imported
+- [ADR-0005](adr/ADR-0005-compact-refs.md) — compact refs over payloads
+  in handoff/context
+
+ADRs are immutable once accepted; a changed decision gets a new ADR
+that supersedes the old one.
 
 ## The determinism contract
 
@@ -90,9 +139,9 @@ output/* / cli ──► console tables, JSON/JSONL/SARIF/agent exports
 
 `Finding` requires `evidence` — a tuple of `Evidence(kind, source,
 line?, summary)`. `EvidenceKind` distinguishes `STATIC` (contract/
-source), `CONFIG` (config files), `RUNTIME` (observed traffic),
-`DERIVED` (computed from other evidence), and `HYPOTHETICAL` (what-if
-views, never mixed into observed state).
+source), `CONFIG` (config files), `OBSERVED_METADATA` (exported
+artifacts/inventories), `RUNTIME` (observed traffic), and `DERIVED`
+(computed from other evidence — never stronger than its inputs).
 
 `Confidence` is semantic: `HIGH` multiple strong signals or direct
 evidence; `MEDIUM` single strong signal; `LOW`/`CANDIDATE`-grade static

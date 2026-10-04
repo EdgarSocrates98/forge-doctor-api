@@ -12,6 +12,7 @@ absence is data, never fabricated.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from forge_doctor_api.checks.compat.engine import ContractDiff
 from forge_doctor_api.core.discovery import ArtifactInventory
@@ -38,7 +39,8 @@ class DoctorReport(Model):
     inventory: ArtifactInventory | None = None
     plan: AnalysisPlan | None = None
     analysis_rev: str | None = None  # content hash of this report's inputs
-    analysis_stats: tuple[tuple[str, str], ...] = ()  # spec 066 fills timing
+    analysis_stats: tuple[tuple[str, str], ...] = ()  # legacy slot
+    stats: Any = None  # spec 066 AnalysisStats (duration_ms only under flag)
 
     # domain projections — None when the domain had no evidence
     contracts: DomainSummary | None = None

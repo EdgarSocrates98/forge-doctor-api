@@ -81,11 +81,17 @@ class ProjectContext:
         return path.open("rb")
 
     def iter_files(self, pattern: str = "**/*") -> Iterator[str]:
-        """Yield project-relative file paths matching `pattern`, in sorted order."""
+        """Yield project-relative file paths matching `pattern`, in sorted order.
+
+        The tool's own state dir (`.forge-doctor/` — cache, snapshots,
+        knowledge) is never project content: it is skipped so a scan
+        cannot ingest its own writes.
+        """
         matches = (
             self.relative(path)
             for path in self.root.glob(pattern)
             if path.is_file() and path.resolve().is_relative_to(self.root)
+            and not self.relative(path).startswith(".forge-doctor/")
         )
         yield from sorted(matches)
 

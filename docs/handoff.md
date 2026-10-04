@@ -64,3 +64,19 @@ broker; Handoff V2 bundles embed `graph_edges` so consumers get the
 evidence-preserving topology without the full graph. An empty or
 disconnected root returns an empty slice — absence is data, not a
 fabricated neighborhood.
+
+## The-Forger boundary (spec 070)
+
+`handoff/boundary.py` exposes `DoctorBoundary` — the typed exchange
+point between the Doctor and its consumers:
+
+- `handle(ForgeRequest) -> ForgeHandoff` — deterministic scan →
+  bundle ref + capability/unknown refs
+- `summarize(ForgeHandoff) -> ForgeResult` — status + refs only
+- `capabilities(ForgeRequest) -> ForgeResult` — capability-only view
+
+The boundary never routes, schedules, implements, or calls out —
+no network, subprocess, or target-code execution (AST-enforced by
+`tests/test_boundary.py`). `handoff_to_member_fields` converts a
+handoff into the compact fields fleet aggregation accepts
+(`collect_handoff`). See [forger-boundary.md](forger-boundary.md).

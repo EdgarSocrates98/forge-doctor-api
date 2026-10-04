@@ -41,13 +41,12 @@ from forge_doctor_api.change.model import ChangeEvent
 from forge_doctor_api.checks.apisec import run_security_checks
 from forge_doctor_api.checks.compat import ContractDiff, diff_models, semantic_fingerprint
 from forge_doctor_api.checks.compat.catalog import CompatibilityClass
-from forge_doctor_api.checks.oas.engine import run_openapi_checks
 from forge_doctor_api.checks.perf import run_perf_checks
 from forge_doctor_api.checks.relapi import run_reliability_checks
 from forge_doctor_api.core.context import ProjectContext
 from forge_doctor_api.core.export import export_findings
 from forge_doctor_api.core.graph import GraphError, ServiceGraph
-from forge_doctor_api.core.models import Finding, UnknownFact
+from forge_doctor_api.core.models import UnknownFact
 from forge_doctor_api.diagnose import diagnose as diagnose_episodes
 from forge_doctor_api.perf.baseline import build_baselines
 from forge_doctor_api.reliability import (
@@ -135,6 +134,20 @@ def scan(
     out: Annotated[
         str | None, typer.Option("--out", help="Write the export to a file.")
     ] = None,
+    stats_timing: Annotated[
+        bool,
+        typer.Option(
+            "--stats-timing",
+            help="Record per-analyzer wall time in report.stats "
+            "(non-canonical; excluded from deterministic hashing)."),
+    ] = False,
+    incremental: Annotated[
+        bool,
+        typer.Option(
+            "--incremental",
+            help="Reuse cached analyzer models under "
+            ".forge-doctor/cache/ (findings always recompute)."),
+    ] = False,
 ) -> None:
     """§177 full scan: every deterministic pipeline + optional §178 gate."""
     from forge_doctor_api.output.writers import (
@@ -167,7 +180,9 @@ def scan(
     before = ProjectContext(root=Path(baseline).resolve()) if baseline else None
     extra_policy = (
         ProjectContext(root=Path(policy).resolve()) if policy else None)
-    report = scan_project(ctx, before=before, extra_policy=extra_policy)
+    report = scan_project(ctx, before=before, extra_policy=extra_policy,
+                          stats_timing=stats_timing,
+                          incremental=incremental)
     try:
         failures = evaluate_gate(report.findings, report.diff,
                                  frozenset(categories))
@@ -1172,40 +1187,22 @@ def diagnose(
             _console.print(f"  {u.subject}: {u.missing}")
 
 
-def _all_findings(
-    ctx: ProjectContext,
-    openapi: OpenApiProjectModel,
-    executions: tuple[RequestExecution, ...],
-) -> tuple[Finding, ...]:
-    """Every check engine feasible on `ctx` — explain needs the finding corpus."""
-    findings: list[Finding] = []
-    findings.extend(run_openapi_checks(openapi))
-    files = list(ctx.iter_files())
-    sec = load_security_model(ctx, files, openapi=openapi)
-    findings.extend(run_security_checks(sec, openapi=openapi))
-    rel = load_reliability_model(ctx, files)
-    findings.extend(run_reliability_checks(rel))
-    if executions:
-        findings.extend(run_perf_checks(executions))
-    return tuple(findings)
-
-
 @app.command()
 def explain(
     target: Annotated[str, typer.Argument(help="Directory the finding came from.")],
     finding: Annotated[str, typer.Argument(help="Finding id or subject token to explain.")],
     json_out: Annotated[bool, typer.Option("--json", help="JSON output.")] = False,
 ) -> None:
-    """§166 render the evidence chain + classification reasoning for a finding."""
+    """§166 render the evidence chain + rule rationale for a finding."""
+    from forge_doctor_api.core.stats import describe_check, rule_text
+    from forge_doctor_api.scan import scan_project
+
     path = Path(target).resolve()
     if not path.is_dir():
         _stderr.print(f"cannot read path: {target}")
         raise typer.Exit(code=2)
     ctx = ProjectContext.from_root(path)
-    openapi = load_openapi_project(ctx)
-    loaded = _load_executions(target)
-    executions = loaded[0] if loaded else ()
-    findings = _all_findings(ctx, openapi, executions)
+    findings = scan_project(ctx).findings
     token = finding.lower()
     matches = [
         f for f in findings
@@ -1221,11 +1218,14 @@ def explain(
             _console.print(f"  {f.id}  {Text(f.description).plain[:80]}")
         raise typer.Exit(code=2)
     f = matches[0]
+    rule = describe_check(f.id)
     if json_out:
         typer.echo(json.dumps(f.to_dict(), indent=2, sort_keys=True))
         return
     _console.print(f"{f.id}  [{f.severity.value}] [{f.confidence.value}]")
     _console.print(Text(f.description).plain)
+    if rule is not None:
+        _console.print(f"rule: {rule.title} — {Text(rule_text(rule)).plain}")
     _console.print(f"evidence kind: {f.evidence_kind.value}")
     for ev in f.evidence:
         loc = f"{ev.source}:{ev.line}" if ev.line else ev.source
@@ -1234,6 +1234,11 @@ def explain(
         _console.print(f"source: {f.source_location.path}:{f.source_location.line or ''}")
     for u in f.unknowns:
         _console.print(f"UNKNOWN: {u.subject} — {u.missing} ({u.resolution})")
+    next_evidence = [u.resolution for u in f.unknowns if u.resolution]
+    if next_evidence:
+        _console.print("next evidence:")
+        for suggestion in next_evidence:
+            _console.print(f"  - {suggestion}")
     if f.remediation:
         _console.print(f"remediation: {Text(f.remediation).plain}")
 

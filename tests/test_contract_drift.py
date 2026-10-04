@@ -475,8 +475,8 @@ def test_contract_graph_edges(tmp_path: Path) -> None:
     op_id = "operation:openapi:operation_id:createPet"
     assert "api:openapi:api.yaml" in ids
     assert op_id in ids
-    assert "schema:openapi:Pet" in ids
+    assert "schema:openapi:api.yaml#Pet" in ids
     edges = {(r.kind, r.source_id, r.target_id) for r in graph.relationships()}
     assert ("EXPOSES", "api:openapi:api.yaml", op_id) in edges
-    assert ("ACCEPTS", op_id, "schema:openapi:Pet") in edges
-    assert ("RETURNS", op_id, "schema:openapi:Pet") in edges
+    assert ("ACCEPTS", op_id, "schema:openapi:api.yaml#Pet") in edges
+    assert ("RETURNS", op_id, "schema:openapi:api.yaml#Pet") in edges

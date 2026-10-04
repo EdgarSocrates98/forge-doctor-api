@@ -51,11 +51,17 @@ def contract_graph(model: OpenApiProjectModel) -> ServiceGraph:
     graph = ServiceGraph()
     responses = {(r.location.path, r.pointer): r for r in model.responses}
     bodies = {(b.location.path, b.pointer): b for b in model.request_bodies}
-    declared_names = {s.name for s in model.schemas}
+    # Schema entity ids are document-qualified (`{doc}#{name}`): two
+    # documents may declare a `User` each — unqualified ids collide and
+    # name-only edges would bind an operation to the wrong document's
+    # declaration. $refs inside a document resolve document-locally.
+    declared = {(s.location.path, s.name) for s in model.schemas}
     for schema in model.schemas:
         graph.add_entity(
             Entity(
-                id=entity_id(EntityKind.SCHEMA, "openapi", schema.name),
+                id=entity_id(
+                    EntityKind.SCHEMA, "openapi",
+                    f"{schema.location.path}#{schema.name}"),
                 kind=EntityKind.SCHEMA,
                 name=schema.name,
                 attributes={"document": schema.location.path},
@@ -96,7 +102,7 @@ def contract_graph(model: OpenApiProjectModel) -> ServiceGraph:
         if body is not None:
             for shape in body.schema_shapes:
                 match = _REF_SHAPE.match(shape)
-                if match and match["name"] in declared_names:
+                if match and (op.location.path, match["name"]) in declared:
                     accepts.add(match["name"])
         for pointer in op.response_pointers:
             response = responses.get((op.location.path, pointer))
@@ -104,7 +110,7 @@ def contract_graph(model: OpenApiProjectModel) -> ServiceGraph:
                 continue
             for shape in response.schema_shapes:
                 match = _REF_SHAPE.match(shape)
-                if match and match["name"] in declared_names:
+                if match and (op.location.path, match["name"]) in declared:
                     returns.add(match["name"])
         return tuple(sorted(accepts)), tuple(sorted(returns))
 
@@ -132,7 +138,8 @@ def contract_graph(model: OpenApiProjectModel) -> ServiceGraph:
             edge(
                 RelationshipKind.ACCEPTS,
                 operation_id,
-                entity_id(EntityKind.SCHEMA, "openapi", name),
+                entity_id(EntityKind.SCHEMA, "openapi",
+                          f"{op.location.path}#{name}"),
                 op.location,
                 f"{op.method} {op.path} accepts {name}",
             )
@@ -140,7 +147,8 @@ def contract_graph(model: OpenApiProjectModel) -> ServiceGraph:
             edge(
                 RelationshipKind.RETURNS,
                 operation_id,
-                entity_id(EntityKind.SCHEMA, "openapi", name),
+                entity_id(EntityKind.SCHEMA, "openapi",
+                          f"{op.location.path}#{name}"),
                 op.location,
                 f"{op.method} {op.path} returns {name}",
             )

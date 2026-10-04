@@ -50,6 +50,11 @@ class Snapshot(Model):
     hash: str                  # report body sha256
 
 
+# Fields that exist only under opt-in measurement flags
+# (--stats-timing) — they never enter the canonical hash.
+_NONCANONICAL_KEYS = frozenset({"duration_ms", "allocated_bytes"})
+
+
 def _canon(value: Any) -> Any:
     """Deep-sort arrays so the hash is reorder-invariant.
 
@@ -59,7 +64,8 @@ def _canon(value: Any) -> Any:
     ordered equivalent report.
     """
     if isinstance(value, dict):
-        return {k: _canon(v) for k, v in sorted(value.items())}
+        return {k: _canon(v) for k, v in sorted(value.items())
+                if k not in _NONCANONICAL_KEYS}
     if isinstance(value, list):
         canon = [_canon(v) for v in value]
         try:

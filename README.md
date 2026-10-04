@@ -127,8 +127,12 @@ assessments, and compact handoff bundles for agentic tools.
 - [docs/infrastructure.md](docs/infrastructure.md) — gateway/mesh declared config + Kubernetes/IaC evidence
 - [docs/cache.md](docs/cache.md) — declared cache policies, layers, invalidation risk
 - [docs/lab.md](docs/lab.md) — Forge Lab corpus, ground truth, precision/recall
+- [docs/output-contract.md](docs/output-contract.md) — v1 export schemas (json/jsonl/sarif/agent/report) + evolution rules
+- [docs/forger-boundary.md](docs/forger-boundary.md) — Doctor ↔ API Forge ↔ The Forger typed boundary
+- [docs/release-policy.md](docs/release-policy.md) — versioning, public surfaces, release checklist, SBOM
 - [docs/release-v0.1.md](docs/release-v0.1.md) — quality gate, packaging, hermetic proofs
 - [docs/roadmap.md](docs/roadmap.md) — shipped coverage vs planned waves
+- [docs/adr/](docs/adr/) — architecture decision records
 - [docs/development.md](docs/development.md) — repo layout, test/lint/typecheck, adding a check
 
 ## Repository layout

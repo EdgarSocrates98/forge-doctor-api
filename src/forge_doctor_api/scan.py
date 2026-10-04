@@ -15,7 +15,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import tracemalloc
 from datetime import date
+from time import perf_counter
 from typing import Any
 
 from forge_doctor_api.analyzers.asyncapi.parser import load_asyncapi_project
@@ -25,6 +27,7 @@ from forge_doctor_api.analyzers.clients.scan import scan_clients
 from forge_doctor_api.analyzers.gateway.parser import load_gateway_models
 from forge_doctor_api.analyzers.graphql.parser import load_graphql_project
 from forge_doctor_api.analyzers.grpc.parser import load_grpc_project
+from forge_doctor_api.analyzers.iac.model import InfraModel
 from forge_doctor_api.analyzers.iac.parser import load_infra_model
 from forge_doctor_api.analyzers.openapi.graph import contract_graph
 from forge_doctor_api.analyzers.openapi.model import OpenApiProjectModel
@@ -50,6 +53,7 @@ from forge_doctor_api.checks.observability.engine import (
 )
 from forge_doctor_api.checks.perf.engine import run_perf_checks
 from forge_doctor_api.checks.relapi.engine import run_reliability_checks
+from forge_doctor_api.core.cache import AnalysisCache
 from forge_doctor_api.core.context import ProjectContext
 from forge_doctor_api.core.discovery import (
     MARKER_ASYNCAPI,
@@ -74,12 +78,14 @@ from forge_doctor_api.core.graph import (
 )
 from forge_doctor_api.core.models import (
     Finding,
+    Model,
     ModelError,
     UnknownFact,
     parse_entity_id,
 )
 from forge_doctor_api.core.plan import AnalyzerId, build_plan
 from forge_doctor_api.core.report import DomainSummary
+from forge_doctor_api.core.stats import AnalysisStats, AnalyzerStat
 from forge_doctor_api.knowledge import knowledge_versions
 from forge_doctor_api.knowledge.capability import (
     DetectedCapability,
@@ -142,6 +148,8 @@ def scan_project(
     extra_policy: ProjectContext | None = None,
     today: date | None = None,
     keep_spans: bool = False,
+    stats_timing: bool = False,
+    incremental: bool = False,
 ) -> DoctorReport:
     """Run the unified deterministic pipeline; attach the diff when given."""
     inventory = discover(context)
@@ -156,35 +164,102 @@ def scan_project(
     unknowns: list[UnknownFact] = []
     graphs = ServiceGraph()
 
+    # spec 066: per-analyzer {ran, artifacts, findings, unknowns};
+    # duration_ms only under stats_timing (off the canonical surface).
+    stats: list[AnalyzerStat] = []
+
+    def _mark() -> tuple[int, int, float | None, int | None]:
+        traced = stats_timing and tracemalloc.is_tracing()
+        return (len(findings), len(unknowns),
+                perf_counter() if stats_timing else None,
+                tracemalloc.get_traced_memory()[0] if traced else None)
+
+    def _rec(name: str, ran: bool, artifacts: int,
+             mark: tuple[int, int, float | None, int | None]) -> None:
+        f0, u0, t0, m0 = mark
+        stats.append(AnalyzerStat(
+            analyzer=name, ran=ran, artifacts=artifacts,
+            findings=len(findings) - f0,
+            unknowns=len(unknowns) - u0,
+            duration_ms=((perf_counter() - t0) * 1000)
+            if t0 is not None else None,
+            allocated_bytes=(tracemalloc.get_traced_memory()[0] - m0)
+            if m0 is not None else None))
+
+    # spec 065: opt-in analyzer-level model cache. Never stores
+    # findings/unknowns — checks always recompute over the models.
+    analysis_cache: AnalysisCache | None = (
+        AnalysisCache(context.root, tool_version=_tool_version())
+        if incremental else None)
+
+    def _shas(files: list[str]) -> list[str]:
+        return [s for f in files if (s := store.hash_of(f)) is not None]
+
+    def _cached_load(
+        name: str,
+        files: list[str],
+        config: str,
+        load: Any,
+        model_cls: type[Model],
+    ) -> Any:
+        if analysis_cache is None:
+            return load()
+        shas = _shas(files)
+        hit = analysis_cache.get(name, shas, config)
+        if hit is not None:
+            try:
+                return model_cls.from_dict(hit)
+            except ModelError:
+                pass  # corrupt/stale entry → full analysis
+        model = load()
+        analysis_cache.put(name, shas, config, model.to_dict())
+        return model
+
     # -- contracts -----------------------------------------------------------
-    openapi = load_openapi_project(
-        context, _files_marked(inventory, MARKER_OPENAPI, MARKER_SWAGGER))
+    openapi_files = _files_marked(
+        inventory, MARKER_OPENAPI, MARKER_SWAGGER)
+    m = _mark()
+    openapi: OpenApiProjectModel = _cached_load(
+        AnalyzerId.OPENAPI.value, openapi_files, "",
+        lambda: load_openapi_project(context, openapi_files),
+        OpenApiProjectModel)
     if openapi.documents:
         findings.extend(run_openapi_checks(openapi))
     _merge_graph(graphs, contract_graph(openapi))
+    _rec(AnalyzerId.OPENAPI.value, bool(openapi.documents),
+         len(openapi_files), m)
 
     graphql = None
     if plan.enabled(AnalyzerId.GRAPHQL):
-        graphql = load_graphql_project(
-            context, _files_marked(inventory, MARKER_GRAPHQL))
+        gql_files = _files_marked(inventory, MARKER_GRAPHQL)
+        m = _mark()
+        graphql = load_graphql_project(context, gql_files)
         if graphql.documents:
             findings.extend(run_graphql_checks(graphql))
+        _rec(AnalyzerId.GRAPHQL.value, bool(graphql.documents),
+             len(gql_files), m)
     grpc = None
     if plan.enabled(AnalyzerId.GRPC):
-        grpc = load_grpc_project(
-            context, _files_marked(inventory, MARKER_PROTO))
+        grpc_files = _files_marked(inventory, MARKER_PROTO)
+        m = _mark()
+        grpc = load_grpc_project(context, grpc_files)
         if grpc.files:
             findings.extend(run_grpc_checks(grpc))
+        _rec(AnalyzerId.GRPC.value, bool(grpc.files), len(grpc_files), m)
     asyncapi = None
     if plan.enabled(AnalyzerId.ASYNCAPI):
-        asyncapi = load_asyncapi_project(
-            context, _files_marked(inventory, MARKER_ASYNCAPI))
+        async_files = _files_marked(inventory, MARKER_ASYNCAPI)
+        m = _mark()
+        asyncapi = load_asyncapi_project(context, async_files)
         if asyncapi.documents:
             findings.extend(run_async_checks(asyncapi))
+        _rec(AnalyzerId.ASYNCAPI.value, bool(asyncapi.documents),
+             len(async_files), m)
 
     # -- source ---------------------------------------------------------------
     routes: RouteScan | None = None
     if plan.enabled(AnalyzerId.ROUTES):
+        m = _mark()
         source_files = inventory.files_in(ArtifactClass.SOURCE)
         try:
             adapters = available_adapters(context, source_files)
@@ -224,31 +299,41 @@ def scan_project(
             )
             _merge_graph(graphs, scan_graph(routes))
             unknowns.extend(routes.unknowns)
+        _rec(AnalyzerId.ROUTES.value, bool(routes and routes.routes),
+             len(source_files), m)
 
     clients = None
     if plan.enabled(AnalyzerId.CLIENTS):
-        clients = scan_clients(
-            context, inventory.files_in(ArtifactClass.CLIENT))
+        client_files = inventory.files_in(ArtifactClass.CLIENT)
+        m = _mark()
+        clients = scan_clients(context, client_files)
         unknowns.extend(clients.unknowns)
         _merge_graph(graphs, client_graph(clients))
+        _rec(AnalyzerId.CLIENTS.value, bool(clients.clients),
+             len(client_files), m)
 
     # -- config/config-plane models -------------------------------------------
     sec_files = inventory.files_in(
         ArtifactClass.SOURCE, ArtifactClass.CONFIG)
+    m = _mark()
     security = load_security_model(
         context, sec_files, openapi=openapi, routes=routes)
     findings.extend(run_security_checks(security, openapi))
+    _rec(AnalyzerId.SECURITY.value, True, len(sec_files), m)
 
-    reliability = load_reliability_model(context, inventory.files_in(
-        ArtifactClass.CONFIG, ArtifactClass.IAC))
+    rel_files = inventory.files_in(
+        ArtifactClass.CONFIG, ArtifactClass.IAC)
+    m = _mark()
+    reliability = load_reliability_model(context, rel_files)
     findings.extend(run_reliability_checks(reliability))
+    _rec(AnalyzerId.RELIABILITY.value, True, len(rel_files), m)
 
     cache = None
     cache_graph: Any = None
     if plan.enabled(AnalyzerId.CACHE):
-        cache = load_cache_model(
-            context, inventory.files_in(ArtifactClass.CONFIG),
-            openapi=openapi)
+        cache_files = inventory.files_in(ArtifactClass.CONFIG)
+        m = _mark()
+        cache = load_cache_model(context, cache_files, openapi=openapi)
         unknowns.extend(cache.unknowns)
         if openapi.documents:
             from forge_doctor_api.analyzers.cache.graph import (
@@ -257,16 +342,22 @@ def scan_project(
             cache_graph, cache_findings = build_cache_graph(
                 cache, openapi)
             findings.extend(cache_findings)
+        _rec(AnalyzerId.CACHE.value, bool(cache.policies),
+             len(cache_files), m)
 
     # -- infrastructure --------------------------------------------------------
     gateways: tuple[Any, ...] = ()
     meshes: tuple[Any, ...] = ()
     if plan.enabled(AnalyzerId.GATEWAY):
+        gw_files = inventory.files_in(
+            ArtifactClass.GATEWAY, ArtifactClass.MESH,
+            ArtifactClass.IAC)
+        m = _mark()
         gateways, meshes, gw_unknowns = load_gateway_models(
-            context, inventory.files_in(
-                ArtifactClass.GATEWAY, ArtifactClass.MESH,
-                ArtifactClass.IAC))
+            context, gw_files)
         unknowns.extend(gw_unknowns)
+        _rec(AnalyzerId.GATEWAY.value, bool(gateways or meshes),
+             len(gw_files), m)
 
     # spec 062: depth checks over *evidenced* caller->callee edges only
     # (CALLS relationships + resolved gateway route targets). Name
@@ -289,19 +380,34 @@ def scan_project(
 
     infra = None
     if plan.enabled(AnalyzerId.IAC):
-        infra = load_infra_model(
-            context, inventory.files_in(ArtifactClass.IAC))
+        iac_files = inventory.files_in(ArtifactClass.IAC)
+        m = _mark()
+        infra = _cached_load(
+            AnalyzerId.IAC.value, iac_files, "",
+            lambda: load_infra_model(context, iac_files),
+            InfraModel)
         unknowns.extend(infra.unknowns)
+        _rec(AnalyzerId.IAC.value, bool(
+            infra.iac or infra.kubernetes or infra.chains),
+            len(iac_files), m)
 
     # -- runtime ---------------------------------------------------------------
     runtime: RuntimeProject | None = None
     if plan.enabled(AnalyzerId.RUNTIME):
-        runtime = load_runtime_project(
-            context, inventory.files_in(ArtifactClass.RUNTIME),
-            keep_spans=keep_spans)
+        rt_files = inventory.files_in(ArtifactClass.RUNTIME)
+        m = _mark()
+        runtime = _cached_load(
+            AnalyzerId.RUNTIME.value, rt_files,
+            f"keep_spans={keep_spans}",
+            lambda: load_runtime_project(
+                context, rt_files, keep_spans=keep_spans),
+            RuntimeProject)
         findings.extend(run_observability_checks(runtime.observability))
         findings.extend(run_perf_checks(runtime.executions))
         unknowns.extend(runtime.unknowns)
+        _rec(AnalyzerId.RUNTIME.value, bool(
+            runtime.traces or runtime.executions),
+            len(rt_files), m)
 
     # -- correlation ------------------------------------------------------------
     drift = None
@@ -327,6 +433,7 @@ def scan_project(
     if twin is not None:
         unknowns.extend(twin.unknowns)
 
+    m = _mark()
     capabilities: tuple[DetectedCapability, ...] = ()
     if plan.enabled(AnalyzerId.VERSION) or openapi.documents:
         cap_report = detect_capabilities(
@@ -339,10 +446,12 @@ def scan_project(
         )
         capabilities = cap_report.capabilities
         unknowns.extend(cap_report.unknowns)
+    _rec(AnalyzerId.VERSION.value, bool(capabilities), 0, m)
 
     # -- policies ----------------------------------------------------------------
-    policy_set = load_policies(context, inventory.files_in(
-        ArtifactClass.POLICY))
+    m = _mark()
+    pol_files = inventory.files_in(ArtifactClass.POLICY)
+    policy_set = load_policies(context, pol_files)
     if extra_policy is not None:
         extra = load_policies(extra_policy, list(extra_policy.iter_files()))
         from forge_doctor_api.policy.model import PolicySet
@@ -362,14 +471,19 @@ def scan_project(
                         ownership=ownership),
             today or date.min,
         ))
+    _rec(AnalyzerId.POLICY.value, bool(
+        policy_set.policies or policy_set.exceptions
+        or policy_set.issues), len(pol_files), m)
 
     # -- fan-out signals (§59) -----------------------------------------------------
     fanout: tuple[FanoutSignal, ...] = ()
+    m = _mark()
     if routes is not None and clients is not None:
         fanout = fanout_signals(
             routes, clients,
             runtime.executions if runtime else ())
         unknowns.extend(u for s in fanout for u in s.unknowns)
+    _rec("fanout", bool(fanout), 0, m)
 
     # -- diff + impact --------------------------------------------------------------
     diff: ContractDiff | None = None
@@ -387,6 +501,7 @@ def scan_project(
     # -- migration graph (spec 060) ------------------------------------------
     migration: Any = None
     migration_path_count = 0
+    m = _mark()
     if openapi.documents:
         from forge_doctor_api.migrate.graph import (
             build_migration_graph,
@@ -395,6 +510,7 @@ def scan_project(
         migration = build_migration_graph(openapi, clients)
         unknowns.extend(migration.unknowns)
         migration_path_count = len(migration_paths(migration))
+    _rec("migration", migration is not None, 0, m)
 
     findings_sorted = tuple(sorted(
         findings, key=lambda f: (f.id, f.entity_ids, f.description)))
@@ -414,6 +530,11 @@ def scan_project(
         ).encode()
     ).hexdigest()
 
+    analysis_stats = AnalysisStats(
+        analyzers=tuple(stats),
+        total_findings=len(findings_sorted),
+        total_unknowns=len(unknowns))
+
     return DoctorReport(
         tool_version=_tool_version(),
         knowledge_versions=tuple(sorted(knowledge_versions().items())),
@@ -421,6 +542,7 @@ def scan_project(
         inventory=inventory,
         plan=plan,
         analysis_rev=analysis_rev,
+        stats=analysis_stats,
         contracts=_contracts_summary(openapi),
         routes=_routes_summary(routes),
         clients=_clients_summary(clients),

@@ -15,6 +15,7 @@ forge-doctor-api --version   print version and exit
 ```text
 forge-doctor-api scan TARGET [--fail-on CATS] [--baseline PATH]
                         [--policy PATH] [--format FMT] [--out FILE]
+                        [--incremental] [--stats-timing]
 ```
 
 Runs every pipeline: OpenAPI/AsyncAPI/GraphQL/gRPC parsing and checks,
@@ -26,8 +27,15 @@ policies, and (with `--baseline`) the semantic contract diff.
 | `--fail-on` | Comma-separated gate categories: `breaking`, `security`, `policy`. |
 | `--baseline` | Old contract file/dir — required when `breaking` is enabled. |
 | `--policy` | Extra policy file/dir merged into evaluation. |
-| `--format` | `console` (default), `json`, `jsonl`, `sarif`, `agent`. |
+| `--format` | `console` (default), `json`, `jsonl`, `sarif`, `agent`, `report` (full DoctorReport). |
 | `--out` | Write export to a file instead of stdout. |
+| `--incremental` | Reuse analyzer-level models from `.forge-doctor/cache/` keyed by artifact sha256 + analyzer + tool version + config. Findings always recompute; output is byte-identical to a cold scan. |
+| `--stats-timing` | Record per-analyzer `duration_ms`/`allocated_bytes` in `report.stats` — opt-in, excluded from the canonical hash. |
+
+`report.stats` always carries deterministic per-analyzer counters
+(`ran`, `artifacts`, `findings`, `unknowns`) plus totals — no flag
+needed. The cache dir is created only by `--incremental`; a plain
+scan never writes `.forge-doctor/`.
 
 Gate semantics: `breaking` fails on any `BREAKING` diff change;
 `security` fails only on HIGH-confidence `APISEC###` findings; `policy`
@@ -61,10 +69,14 @@ granularity — never file-level). `--pr` adds the six-counter PR summary;
 ## contract
 
 ```text
-forge-doctor-api contract diff OLD NEW     contract-level diff
-forge-doctor-api contract compat OLD NEW   compatibility classification only
-forge-doctor-api contract inspect          (placeholder — exit 3)
+forge-doctor-api contract diff OLD NEW           contract-level diff
+forge-doctor-api contract compatibility OLD NEW  compatibility classification only
+forge-doctor-api contract inspect TARGET         inventory of parsed contract documents
 ```
+
+`inspect` prints document metadata only (title, version, operation
+counts, source paths) — never schema bodies. Exit `2` when TARGET
+contains no inspectable contract.
 
 ## fingerprint
 
@@ -194,3 +206,27 @@ engine version. Precedence: explicit dirs > project
 order wins a duplicate-id conflict deterministically. `validate`
 strict-parses one `forge-doctor-knowledge.toml` — malformed manifests
 exit 2 listing every error, incompatible ones exit 1.
+
+## plugins
+
+```text
+forge-doctor-api plugins list [DIR]
+forge-doctor-api plugins inspect MANIFEST
+forge-doctor-api plugins verify DIR
+```
+
+Plugin lifecycle (specs 053–054): `list` shows discovered plugin
+manifests with status; `inspect` prints one manifest's declared
+surface; `verify` runs the offline conformance harness — untrusted
+plugin code is never imported (see
+[ADR-0004](adr/ADR-0004-untrusted-plugins.md)).
+
+## mcp
+
+```text
+forge-doctor-api mcp [TARGET] [--transport stdio]
+```
+
+Serves the Doctor over MCP (requires the `mcp` extra — see
+[docs/mcp.md](mcp.md)). Every `doctor.*` tool is a projection over the
+SDK facade; `doctor://` resources resolve through the context broker.

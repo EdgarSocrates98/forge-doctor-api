@@ -10,6 +10,7 @@ import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from forge_doctor_api.analyzers.openapi.model import (
     OpenApiOperation,
@@ -120,6 +121,27 @@ def collect_all(
         for m in workspace.members
         if m.present
     }
+
+
+def collect_handoff(member: WorkspaceMember, handoff: Any) -> MemberData:
+    """Spec 070: ingest a `ForgeHandoff` as a member's fleet record.
+
+    Only compact report-equivalent fields are kept — style hints from
+    detected capabilities, plus nothing else. Every model field the
+    handoff cannot evidence stays ``None`` so downstream aggregation
+    reports it as unknown rather than fabricated.
+    """
+    from forge_doctor_api.handoff.boundary import (
+        handoff_to_member_fields,
+    )
+    fields = handoff_to_member_fields(handoff)
+    styles: tuple[str, ...] = fields["styles"]
+    if member.role is MemberRole.GATEWAY:
+        styles = tuple(sorted(set(styles) | {"gateway"}))
+    return MemberData(
+        member=member,
+        styles=styles,
+    )
 
 
 def operations(data: MemberData) -> list[OpenApiOperation]:
