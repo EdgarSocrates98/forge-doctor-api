@@ -22,9 +22,6 @@ from forge_doctor_api.analyzers.openapi.model import OpenApiProjectModel
 from forge_doctor_api.analyzers.openapi.parser import load_openapi_project
 from forge_doctor_api.analyzers.routes import FastApiAdapter
 from forge_doctor_api.analyzers.routes.graph import scan_graph
-from forge_doctor_api.analyzers.runtime.execution import (
-    executions_from_traces,
-)
 from forge_doctor_api.analyzers.runtime.loader import load_runtime_project
 from forge_doctor_api.analyzers.version import detect_version_model
 from forge_doctor_api.checks.apisec.engine import run_security_checks
@@ -134,11 +131,10 @@ def run_scenario(context: ProjectContext, scenario: LabScenario) -> LabObservati
         )
 
     if "runtime" in run:
-        traces, observability, _ = load_runtime_project(ctx, files, keep_spans=True)
-        obs.findings.extend(run_observability_checks(observability))
-        executions, _ = executions_from_traces(traces)
-        obs.findings.extend(run_perf_checks(executions))
-        obs.runtime_signals.extend(sorted(observability.signals))
+        rt = load_runtime_project(ctx, files, keep_spans=True)
+        obs.findings.extend(run_observability_checks(rt.observability))
+        obs.findings.extend(run_perf_checks(rt.executions))
+        obs.runtime_signals.extend(sorted(rt.observability.signals))
 
     if "graphql" in run:
         gql = load_graphql_project(ctx, files)

@@ -9,10 +9,15 @@ span records.
 from __future__ import annotations
 
 from collections import defaultdict
+from dataclasses import dataclass
 from typing import BinaryIO
 
 from forge_doctor_api.analyzers.runtime.accesslog import AccessLogAdapter
 from forge_doctor_api.analyzers.runtime.adapter import RuntimeArtifactAdapter
+from forge_doctor_api.analyzers.runtime.execution import (
+    RequestExecution,
+    executions_for_trace,
+)
 from forge_doctor_api.analyzers.runtime.model import (
     ApiObservabilityModel,
     RequestSummary,
@@ -22,7 +27,7 @@ from forge_doctor_api.analyzers.runtime.model import (
 )
 from forge_doctor_api.analyzers.runtime.otlp import OtlpJsonAdapter
 from forge_doctor_api.core.context import ProjectContext
-from forge_doctor_api.core.models import UnknownFact
+from forge_doctor_api.core.models import Model, UnknownFact
 
 ADAPTERS = (OtlpJsonAdapter(), AccessLogAdapter())
 
@@ -58,16 +63,36 @@ def build_traces(
     spans: list[Span], *, keep_spans: bool = False
 ) -> tuple[TraceModel, ...]:
     """Group spans by trace_id -> §31 TraceModel with honest critical path."""
+    traces, _executions, _unknowns = analyze_spans(
+        spans, keep_spans=keep_spans)
+    return traces
+
+
+def analyze_spans(
+    spans: list[Span], *, keep_spans: bool = False
+) -> tuple[tuple[TraceModel, ...], tuple[RequestExecution, ...],
+           tuple[UnknownFact, ...]]:
+    """Traces + executions + execution-unknowns from one span pass.
+
+    Executions are emitted while each trace's spans are in hand, so
+    downstream checks work identically with `keep_spans` on or off —
+    only `TraceModel.spans` retention differs.
+    """
     by_trace: dict[str, list[Span]] = defaultdict(list)
     for s in spans:
         by_trace[s.trace_id or "(none)"].append(s)
 
     traces: list[TraceModel] = []
+    executions: list[RequestExecution] = []
+    exec_unknowns: list[UnknownFact] = []
     for trace_id in sorted(by_trace):
         ts = sorted(
             by_trace[trace_id],
             key=lambda s: (s.evidence[0].line or 0 if s.evidence else 0, s.operation),
         )
+        exs, u = executions_for_trace(trace_id, ts)
+        executions.extend(exs)
+        exec_unknowns.extend(u)
         roots = [s for s in ts if not s.parent_id]
         ids = {s.span_id for s in ts}
         incomplete = any(s.parent_id and s.parent_id not in ids for s in ts)
@@ -102,7 +127,16 @@ def build_traces(
                 unknowns=tuple(unknowns),
             )
         )
-    return tuple(traces)
+    executions.sort(
+        key=lambda e: (
+            e.start_unix_nano or 0,
+            e.request_id or "",
+            e.trace_id or "",
+            e.service or "",
+            e.operation,
+        )
+    )
+    return tuple(traces), tuple(executions), tuple(exec_unknowns)
 
 
 def _critical_path(root: Span, spans: list[Span]) -> tuple[str, ...]:
@@ -177,13 +211,28 @@ def build_observability(
     )
 
 
+@dataclass(frozen=True, kw_only=True)
+class RuntimeProject(Model):
+    """Runtime analysis result: traces + observability + executions.
+
+    `executions` are always populated when span evidence exists —
+    `keep_spans` controls only `TraceModel.spans` retention, never
+    whether checks can run.
+    """
+
+    traces: tuple[TraceModel, ...]
+    observability: ApiObservabilityModel
+    executions: tuple[RequestExecution, ...] = ()
+    unknowns: tuple[UnknownFact, ...] = ()
+
+
 def load_runtime_project(
     context: ProjectContext,
     files: list[str],
     *,
     keep_spans: bool = False,
-) -> tuple[tuple[TraceModel, ...], ApiObservabilityModel, tuple[UnknownFact, ...]]:
-    """Detect + stream all artifacts -> traces + observability model."""
+) -> RuntimeProject:
+    """Detect + stream all artifacts -> traces + observability + executions."""
     all_spans: list[Span] = []
     all_summaries: list[RequestSummary] = []
     unknowns: list[UnknownFact] = []
@@ -204,8 +253,15 @@ def load_runtime_project(
             for summary in adapter.iter_summaries(fh, path):
                 all_summaries.append(summary)
 
-    traces = build_traces(all_spans, keep_spans=keep_spans)
+    traces, executions, exec_unknowns = analyze_spans(
+        all_spans, keep_spans=keep_spans)
     for t in traces:
         unknowns.extend(t.unknowns)
+    unknowns.extend(exec_unknowns)
     obs = build_observability(all_spans, all_summaries)
-    return traces, obs, tuple(unknowns)
+    return RuntimeProject(
+        traces=traces,
+        observability=obs,
+        executions=executions,
+        unknowns=tuple(unknowns),
+    )

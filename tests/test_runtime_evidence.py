@@ -68,9 +68,10 @@ def _load(root: Path, files: dict[str, str], keep_spans: bool = True):
         t = root / name
         t.parent.mkdir(parents=True, exist_ok=True)
         t.write_text(text, encoding="utf-8")
-    return load_runtime_project(
+    rt = load_runtime_project(
         ProjectContext.from_root(root), list(files), keep_spans=keep_spans
     )
+    return rt.traces, rt.observability, rt.unknowns
 
 
 def _ids(findings) -> list[str]:

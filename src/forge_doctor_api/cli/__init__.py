@@ -23,7 +23,6 @@ from forge_doctor_api.analyzers.routes.graph import scan_graph
 from forge_doctor_api.analyzers.runtime.execution import (
     RequestExecution,
     executions_from_summaries,
-    executions_from_traces,
 )
 from forge_doctor_api.analyzers.runtime.loader import (
     detect_adapter,
@@ -116,7 +115,9 @@ def scan(
     ] = None,
     fmt: Annotated[
         str,
-        typer.Option("--format", help="console | json | jsonl | sarif | agent."),
+        typer.Option(
+            "--format",
+            help="console | json | jsonl | sarif | agent | report (full DoctorReport)."),
     ] = "console",
     out: Annotated[
         str | None, typer.Option("--out", help="Write the export to a file.")
@@ -130,7 +131,6 @@ def scan(
     )
     from forge_doctor_api.scan import (
         GateCategory,
-        ScanReport,
         _GateConfigError,
         evaluate_gate,
         export_scan,
@@ -161,12 +161,13 @@ def scan(
     except _GateConfigError as exc:
         _stderr.print(str(exc))
         raise typer.Exit(code=2) from None
-    report = ScanReport(
-        findings=report.findings, diff=report.diff,
-        gate_failures=failures, unknowns=report.unknowns)
+    import dataclasses
+    report = dataclasses.replace(report, gate_failures=failures)
 
     if fmt == "console":
         _print_scan_console(report)
+    elif fmt == "report":
+        _emit_text(report.to_json(), out)
     elif fmt == "json":
         payload = export_scan(report)
         payload["findings"] = [f.to_dict() for f in report.findings]
@@ -180,7 +181,7 @@ def scan(
         _emit_text(write_agent(report.findings, report.unknowns), out)
     else:
         _stderr.print(f"unknown format: {fmt} "
-                      "(expected console|json|jsonl|sarif|agent)")
+                      "(expected console|json|jsonl|sarif|agent|report)")
         raise typer.Exit(code=2)
 
     if failures:
@@ -784,10 +785,9 @@ def _load_executions(
         return None
     context = ProjectContext.from_root(path)
     files = list(context.iter_files())
-    traces, _obs, unknowns = load_runtime_project(
-        context, files, keep_spans=True
-    )
-    executions = list(executions_from_traces(traces)[0])
+    rt = load_runtime_project(context, files, keep_spans=True)
+    unknowns = rt.unknowns
+    executions = list(rt.executions)
     summaries = _summaries(context, files)
     e2, u2 = executions_from_summaries(summaries)
     executions.extend(e2)

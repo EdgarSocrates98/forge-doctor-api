@@ -167,6 +167,112 @@ def _downstream_call(s: Span, caller: str | None) -> DownstreamCall:
     )
 
 
+def executions_for_trace(
+    trace_id: str, spans: list[Span]
+) -> tuple[list[RequestExecution], list[UnknownFact]]:
+    """One trace's spans -> executions (server/root spans) + unknowns.
+
+    Shared by `executions_from_traces` (kept-span callers) and the
+    streaming loader path, which emits executions while spans are still
+    in hand so `keep_spans=False` never starves downstream checks.
+    """
+    if not spans:
+        return [], []
+    unknowns: list[UnknownFact] = []
+    executions: list[RequestExecution] = []
+    by_id: dict[str, Span] = {}
+    dup_ids: set[str] = set()
+    for s in spans:
+        if not s.span_id:
+            continue
+        if s.span_id in by_id:
+            dup_ids.add(s.span_id)
+        else:
+            by_id[s.span_id] = s
+    if dup_ids:
+        unknowns.append(
+            UnknownFact(
+                subject=f"trace {trace_id}",
+                missing="unique span ids",
+                resolution=f"span id(s) {sorted(dup_ids)} appear more "
+                "than once; parent attribution used the first",
+            )
+        )
+    servers = [s for s in spans if s.kind is SpanKind.SERVER]
+    roots = (
+        servers
+        if servers
+        else [s for s in spans if not s.parent_id][:1]
+    )
+    # Identity-keyed: span ids can collide across merged exports.
+    exec_index: dict[int, int] = {}
+    exec_span_ids: set[str] = set()
+    pairs: list[tuple[Span, RequestExecution]] = []
+
+    for s in roots:
+        pairs.append(
+            (
+                s,
+                RequestExecution(
+                    request_id=_first(s.attributes, _REQUEST_ID_KEYS),
+                    trace_id=s.trace_id,
+                    service=s.service,
+                    operation=s.operation,
+                    method=_first(s.attributes, _METHOD_KEYS),
+                    route=s.attributes.get("http.route") or s.operation,
+                    start_unix_nano=s.start_unix_nano,
+                    duration_ms=s.duration_ms,
+                    status=_span_status(s),
+                    request_bytes=_int_attr(s, _REQ_BYTES_KEYS),
+                    response_bytes=_int_attr(s, _RESP_BYTES_KEYS),
+                    retries=_observed_retries(s.attributes),
+                    cache_status=_first(s.attributes, _CACHE_KEYS),
+                    timed_out=_timed_out(s),
+                    evidence=s.evidence,
+                ),
+            )
+        )
+        exec_index[id(s)] = len(pairs) - 1
+        if s.span_id:
+            exec_span_ids.add(s.span_id)
+
+    calls_by_exec: dict[int, list[DownstreamCall]] = {}
+    for s in spans:
+        if s.kind not in (SpanKind.CLIENT, SpanKind.PRODUCER):
+            continue
+        owner_span = _nearest_exec(s, by_id, exec_span_ids)
+        owner = (
+            exec_index.get(id(owner_span)) if owner_span is not None else None
+        )
+        if owner is None and pairs:
+            owner = 0
+            unknowns.append(
+                UnknownFact(
+                    subject=f"span {s.span_id or '?'}",
+                    missing="a parent chain to a server span",
+                    resolution="call attributed to the trace root "
+                    "execution; parent tree is incomplete",
+                )
+            )
+        if owner is not None:
+            caller = by_id.get(s.parent_id or "")
+            calls_by_exec.setdefault(owner, []).append(
+                _downstream_call(
+                    s, caller.service if caller else None
+                )
+            )
+
+    for idx, (_span_obj, ex) in enumerate(pairs):
+        calls = tuple(
+            sorted(
+                calls_by_exec.get(idx, ()),
+                key=lambda c: (c.operation, c.callee or ""),
+            )
+        )
+        executions.append(_with_calls(ex, calls))
+    return executions, unknowns
+
+
 def executions_from_traces(
     traces: tuple[TraceModel, ...],
 ) -> tuple[tuple[RequestExecution, ...], tuple[UnknownFact, ...]]:
@@ -183,96 +289,9 @@ def executions_from_traces(
         spans = list(trace.spans)
         if not spans:
             continue
-        by_id: dict[str, Span] = {}
-        dup_ids: set[str] = set()
-        for s in spans:
-            if not s.span_id:
-                continue
-            if s.span_id in by_id:
-                dup_ids.add(s.span_id)
-            else:
-                by_id[s.span_id] = s
-        if dup_ids:
-            unknowns.append(
-                UnknownFact(
-                    subject=f"trace {trace.trace_id}",
-                    missing="unique span ids",
-                    resolution=f"span id(s) {sorted(dup_ids)} appear more "
-                    "than once; parent attribution used the first",
-                )
-            )
-        servers = [s for s in spans if s.kind is SpanKind.SERVER]
-        roots = (
-            servers
-            if servers
-            else [s for s in spans if not s.parent_id][:1]
-        )
-        # Identity-keyed: span ids can collide across merged exports.
-        exec_index: dict[int, int] = {}
-        exec_span_ids: set[str] = set()
-        pairs: list[tuple[Span, RequestExecution]] = []
-
-        for s in roots:
-            pairs.append(
-                (
-                    s,
-                    RequestExecution(
-                        request_id=_first(s.attributes, _REQUEST_ID_KEYS),
-                        trace_id=s.trace_id,
-                        service=s.service,
-                        operation=s.operation,
-                        method=_first(s.attributes, _METHOD_KEYS),
-                        route=s.attributes.get("http.route") or s.operation,
-                        start_unix_nano=s.start_unix_nano,
-                        duration_ms=s.duration_ms,
-                        status=_span_status(s),
-                        request_bytes=_int_attr(s, _REQ_BYTES_KEYS),
-                        response_bytes=_int_attr(s, _RESP_BYTES_KEYS),
-                        retries=_observed_retries(s.attributes),
-                        cache_status=_first(s.attributes, _CACHE_KEYS),
-                        timed_out=_timed_out(s),
-                        evidence=s.evidence,
-                    ),
-                )
-            )
-            exec_index[id(s)] = len(pairs) - 1
-            if s.span_id:
-                exec_span_ids.add(s.span_id)
-
-        calls_by_exec: dict[int, list[DownstreamCall]] = {}
-        for s in spans:
-            if s.kind not in (SpanKind.CLIENT, SpanKind.PRODUCER):
-                continue
-            owner_span = _nearest_exec(s, by_id, exec_span_ids)
-            owner = (
-                exec_index.get(id(owner_span)) if owner_span is not None else None
-            )
-            if owner is None and pairs:
-                owner = 0
-                unknowns.append(
-                    UnknownFact(
-                        subject=f"span {s.span_id or '?'}",
-                        missing="a parent chain to a server span",
-                        resolution="call attributed to the trace root "
-                        "execution; parent tree is incomplete",
-                    )
-                )
-            if owner is not None:
-                caller = by_id.get(s.parent_id or "")
-                calls_by_exec.setdefault(owner, []).append(
-                    _downstream_call(
-                        s, caller.service if caller else None
-                    )
-                )
-
-        for idx, (_span_obj, ex) in enumerate(pairs):
-            calls = tuple(
-                sorted(
-                    calls_by_exec.get(idx, ()),
-                    key=lambda c: (c.operation, c.callee or ""),
-                )
-            )
-            executions.append(_with_calls(ex, calls))
+        exs, unknown = executions_for_trace(trace.trace_id, spans)
+        executions.extend(exs)
+        unknowns.extend(unknown)
 
     executions.sort(
         key=lambda e: (

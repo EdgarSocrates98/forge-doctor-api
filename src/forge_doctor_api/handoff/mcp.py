@@ -16,15 +16,9 @@ from forge_doctor_api.analyzers.openapi.model import (
     OperationSource,
 )
 from forge_doctor_api.analyzers.openapi.parser import load_openapi_project
-from forge_doctor_api.analyzers.runtime.execution import (
-    executions_from_traces,
-)
 from forge_doctor_api.analyzers.runtime.loader import (
+    RuntimeProject,
     load_runtime_project,
-)
-from forge_doctor_api.analyzers.runtime.model import (
-    ApiObservabilityModel,
-    TraceModel,
 )
 from forge_doctor_api.change.blast import blast_radius
 from forge_doctor_api.checks.client.engine import ImpactReport, client_impact
@@ -32,7 +26,6 @@ from forge_doctor_api.checks.compat.catalog import CompatibilityClass
 from forge_doctor_api.checks.compat.engine import ContractDiff, diff_models
 from forge_doctor_api.checks.perf.engine import run_perf_checks
 from forge_doctor_api.core.context import ProjectContext
-from forge_doctor_api.core.models import UnknownFact
 from forge_doctor_api.reliability import load_reliability_model
 from forge_doctor_api.reliability.model import ApiReliabilityModel
 from forge_doctor_api.security.model import ApiSecurityModel
@@ -91,17 +84,11 @@ class DoctorApi:
             self._cache["clients"] = scan_clients(self._ctx, self._files())
         return cast(ApiClientModel, self._cache["clients"])
 
-    def _runtime(
-        self,
-    ) -> tuple[tuple[TraceModel, ...], ApiObservabilityModel,
-               tuple[UnknownFact, ...]]:
+    def _runtime(self) -> RuntimeProject:
         if "runtime" not in self._cache:
             self._cache["runtime"] = load_runtime_project(
                 self._ctx, self._files(), keep_spans=True)
-        return cast(
-            tuple[tuple[TraceModel, ...], ApiObservabilityModel,
-                  tuple[UnknownFact, ...]],
-            self._cache["runtime"])
+        return cast(RuntimeProject, self._cache["runtime"])
 
     def _diff(self) -> ContractDiff | None:
         old = self._before_openapi()
@@ -210,23 +197,22 @@ class DoctorApi:
         return blast_radius(diff, old, self._clients()).to_dict()
 
     def get_runtime_baseline(self) -> dict[str, Any]:
-        _, observability, unknowns = self._runtime()
-        data = observability.to_dict()
+        rt = self._runtime()
+        data = rt.observability.to_dict()
         data["unknowns"] = [
             {"subject": u.subject, "missing": u.missing}
-            for u in unknowns
+            for u in rt.unknowns
         ]
         return data
 
     def get_regressions(self) -> dict[str, Any]:
-        traces, _, rt_unknowns = self._runtime()
-        executions, exec_unknowns = executions_from_traces(traces)
-        findings = run_perf_checks(executions)
+        rt = self._runtime()
+        findings = run_perf_checks(rt.executions)
         return {
             "findings": [f.to_dict() for f in findings],
             "unknowns": [
                 {"subject": u.subject, "missing": u.missing}
-                for u in (*rt_unknowns, *exec_unknowns)
+                for u in rt.unknowns
             ],
         }
 

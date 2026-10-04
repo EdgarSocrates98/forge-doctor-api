@@ -85,24 +85,22 @@ def test_streaming_ingestion_scale(tmp_path: Path, count: int) -> None:
     """§181 — span streams normalize; raw span retention is opt-in."""
     (tmp_path / "traces.json").write_text(_otlp(count), encoding="utf-8")
     ctx = ProjectContext.from_root(tmp_path)
-    # default mode drops raw spans after parsing
-    dropped, _obs, _ = load_runtime_project(
-        ctx, ["traces.json"], keep_spans=False)
-    assert sum(len(t.spans) for t in dropped) == 0
+    # default mode drops raw spans but still yields executions
+    dropped = load_runtime_project(ctx, ["traces.json"], keep_spans=False)
+    assert sum(len(t.spans) for t in dropped.traces) == 0
+    assert len(dropped.executions) == count
     # kept spans normalize to executions at scale
-    traces, _obs2, _ = load_runtime_project(
-        ctx, ["traces.json"], keep_spans=True)
-    executions, _ = executions_from_traces(traces)
-    assert len(executions) == count
+    rt = load_runtime_project(ctx, ["traces.json"], keep_spans=True)
+    assert len(rt.executions) == count
 
 
 def test_compact_history_storage(tmp_path: Path) -> None:
     """§87 — RequestHistory keeps summary executions, never span payloads."""
     from forge_doctor_api.analyzers.runtime.history import RequestHistory
     (tmp_path / "traces.json").write_text(_otlp(500), encoding="utf-8")
-    traces, _obs, _ = load_runtime_project(
+    rt = load_runtime_project(
         ProjectContext.from_root(tmp_path), ["traces.json"], keep_spans=True)
-    executions, _ = executions_from_traces(traces)
+    executions, _ = executions_from_traces(rt.traces)
     history = RequestHistory()
     history.add_all(executions)
     blob = json.dumps([e.to_dict() for e in executions])
