@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 
 import typer
 from rich.console import Console
@@ -61,8 +61,6 @@ from forge_doctor_api.scan import ScanReport
 from forge_doctor_api.security import load_security_model
 from forge_doctor_api.security.model import SensitiveBusinessFlow
 
-NOT_IMPLEMENTED_EXIT_CODE = 3
-
 _stderr = Console(stderr=True, highlight=False)
 
 app = typer.Typer(
@@ -80,11 +78,6 @@ app.add_typer(contract_app, name="contract")
 app.add_typer(runtime_app, name="runtime")
 app.add_typer(security_app, name="security")
 app.add_typer(reliability_app, name="reliability")
-
-
-def _not_implemented(command: str) -> None:
-    _stderr.print(f"forge-doctor-api {command}: not implemented")
-    raise typer.Exit(code=NOT_IMPLEMENTED_EXIT_CODE)
 
 
 def _version(value: bool) -> None:
@@ -350,9 +343,93 @@ def lab(
 
 
 @contract_app.command("inspect")
-def contract_inspect() -> None:
-    """Inspect an API contract."""
-    _not_implemented("contract inspect")
+def contract_inspect(
+    target: Annotated[str, typer.Argument(help="Contract file or directory.")],
+    json_out: Annotated[bool, typer.Option("--json", help="JSON output.")] = False,
+) -> None:
+    """Inspect an API contract: documents, operations, schemas, servers, refs.
+
+    Metadata surface only — never emits schema bodies or payloads.
+    """
+    model, name = _load_model(target)
+    if model is None or not model.documents:
+        _stderr.print(f"cannot read contract input: {target}")
+        raise typer.Exit(code=2)
+    schemas = sorted({s.name for s in model.schemas})
+    servers = sorted({s.url for s in model.servers})
+    schemes = sorted({s.name for s in model.security_schemes})
+    payload: dict[str, Any] = {
+        "target": name,
+        "documents": [
+            {
+                "path": d.location.path,
+                "format": d.format,
+                "status": d.status.value,
+                "openapi_version": d.openapi_version,
+                "version_family": d.version_family,
+                "title": d.title,
+                "api_version": d.api_version,
+            }
+            for d in model.documents
+        ],
+        "operations": [
+            {
+                "method": op.method,
+                "path": op.path,
+                "operation_id": op.operation_id,
+                "deprecated": op.deprecated,
+            }
+            for op in model.operations
+        ],
+        "schemas": schemas,
+        "servers": servers,
+        "security_schemes": schemes,
+        "unresolved_external_refs": [
+            {"ref": r.ref, "path": r.location.path, "reason": r.reason.value}
+            for r in model.unresolved_external_refs
+        ],
+        "issues": [
+            {"code": i.code.value, "message": i.message, "path": i.location.path}
+            for i in model.issues
+        ],
+        "summary": {
+            "documents": len(model.documents),
+            "operations": len(model.operations),
+            "schemas": len(model.schemas),
+            "unresolved_external_refs": len(model.unresolved_external_refs),
+            "issues": len(model.issues),
+        },
+    }
+    if json_out:
+        typer.echo(json.dumps(payload, indent=2, sort_keys=True))
+        return
+    for d in model.documents:
+        _console.print(
+            f"{d.location.path}  [{d.format}]  {d.status.value}  "
+            f"openapi={d.openapi_version or 'unknown'}  "
+            f"{d.title or 'untitled'} {d.api_version or ''}".rstrip()
+        )
+    _console.print(f"operations: {len(model.operations)}")
+    table = Table("method", "path", "operation_id", "deprecated")
+    for op in model.operations:
+        table.add_row(
+            op.method, op.path, op.operation_id or "-",
+            "yes" if op.deprecated else "",
+        )
+    _console.print(table)
+    if schemas:
+        _console.print(f"schemas ({len(schemas)}): " + ", ".join(schemas))
+    if servers:
+        _console.print("servers: " + ", ".join(servers))
+    if schemes:
+        _console.print("security schemes: " + ", ".join(schemes))
+    for ref in model.unresolved_external_refs:
+        _console.print(
+            f"[yellow]unresolved ref[/yellow] {ref.ref} "
+            f"({ref.location.path}) — {ref.reason.value}")
+    for issue in model.issues:
+        _console.print(f"[yellow]issue[/yellow] {issue.code.value}: "
+                       f"{issue.message} ({issue.location.path})")
 
 
 _console = Console(highlight=False)
