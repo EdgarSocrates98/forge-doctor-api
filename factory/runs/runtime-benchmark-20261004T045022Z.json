@@ -1,0 +1,41 @@
+{
+  "tool": "forge-doctor-api",
+  "kind": "runtime-streaming",
+  "env": {
+    "python": "3.14.6",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "cpu_count": 6,
+    "ram_bytes": null,
+    "tool_version": "0.1.0"
+  },
+  "results": [
+    {
+      "spans": 10000,
+      "mb_in": 1.84,
+      "wall_s": 5.789,
+      "cpu_s": 4.062,
+      "peak_mb": 10.4,
+      "peak_mb_per_1k_spans": 1.04,
+      "spans_per_s": 1727,
+      "mb_per_s": 0.32,
+      "traces": 1000,
+      "trace_completion_rate": 1.0,
+      "executions": 10000,
+      "unknown_rate": 0.0
+    },
+    {
+      "spans": 100000,
+      "mb_in": 18.48,
+      "wall_s": 65.286,
+      "cpu_s": 41.875,
+      "peak_mb": 103.67,
+      "peak_mb_per_1k_spans": 1.037,
+      "spans_per_s": 1532,
+      "mb_per_s": 0.28,
+      "traces": 10000,
+      "trace_completion_rate": 1.0,
+      "executions": 100000,
+      "unknown_rate": 0.0
+    }
+  ]
+}

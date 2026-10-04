@@ -26,6 +26,10 @@ from forge_doctor_api.analyzers.runtime.model import (
     TraceModel,
 )
 from forge_doctor_api.analyzers.runtime.otlp import OtlpJsonAdapter
+from forge_doctor_api.analyzers.runtime.stream import (
+    ObservabilityAccumulator,
+    TraceAssembler,
+)
 from forge_doctor_api.core.context import ProjectContext
 from forge_doctor_api.core.models import Model, UnknownFact
 
@@ -231,11 +235,22 @@ def load_runtime_project(
     files: list[str],
     *,
     keep_spans: bool = False,
+    window: int = 10_000,
+    max_spans_per_trace: int | None = None,
 ) -> RuntimeProject:
-    """Detect + stream all artifacts -> traces + observability + executions."""
-    all_spans: list[Span] = []
-    all_summaries: list[RequestSummary] = []
-    unknowns: list[UnknownFact] = []
+    """Detect + stream all artifacts -> traces + observability + executions.
+
+    §19-§21: spans/summaries are consumed as iterators into a bounded
+    `TraceAssembler` — memory is bound by `window` open traces plus the
+    compact result models, never by the raw dataset. `keep_spans`
+    retains per-trace spans up to `max_spans_per_trace` (None = all).
+    """
+    assembler = TraceAssembler(
+        window=window,
+        keep_spans=keep_spans,
+        max_spans_per_trace=max_spans_per_trace,
+    )
+    acc = ObservabilityAccumulator()
 
     for path in sorted(files):
         fh = _stream(context, path)
@@ -248,20 +263,21 @@ def load_runtime_project(
                 continue
             fh.seek(0)
             for span in adapter.iter_spans(fh, path):
-                all_spans.append(span)
+                acc.add_span(span)
+                assembler.add(span)
             fh.seek(0)
             for summary in adapter.iter_summaries(fh, path):
-                all_summaries.append(summary)
+                acc.add_summary(summary)
 
-    traces, executions, exec_unknowns = analyze_spans(
-        all_spans, keep_spans=keep_spans)
+    traces, executions, unknowns = assembler.finish()
+    acc.note_orphans(assembler.orphan_spans)
+    all_unknowns: list[UnknownFact] = []
     for t in traces:
-        unknowns.extend(t.unknowns)
-    unknowns.extend(exec_unknowns)
-    obs = build_observability(all_spans, all_summaries)
+        all_unknowns.extend(t.unknowns)
+    all_unknowns.extend(unknowns)
     return RuntimeProject(
         traces=traces,
-        observability=obs,
+        observability=acc.build(),
         executions=executions,
-        unknowns=tuple(unknowns),
+        unknowns=tuple(all_unknowns),
     )

@@ -20,9 +20,6 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 
 from forge_doctor_api.analyzers.openapi.parser import load_openapi_project
-from forge_doctor_api.analyzers.runtime.execution import (
-    executions_from_traces,
-)
 from forge_doctor_api.analyzers.runtime.loader import load_runtime_project
 from forge_doctor_api.core.context import ProjectContext
 
@@ -101,9 +98,9 @@ def main() -> None:
             ctx = ProjectContext.from_root(root)
 
             def _run() -> int:
-                traces, _o, _u = load_runtime_project(
+                rt = load_runtime_project(
                     ctx, ["traces.json"], keep_spans=True)
-                return len(executions_from_traces(traces)[0])
+                return len(rt.executions)
 
             n, secs, mb = _measure(_run)
             results.append({

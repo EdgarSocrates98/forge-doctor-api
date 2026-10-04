@@ -10,7 +10,7 @@ baseline.
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 
 from forge_doctor_api.analyzers.runtime.execution import RequestExecution
@@ -69,7 +69,7 @@ def _finding(
 
 
 def _split(
-    executions: tuple[RequestExecution, ...],
+    executions: Iterable[RequestExecution],
 ) -> dict[tuple[str | None, str], _Windows]:
     """Latest populated window vs all earlier windows, per op key."""
     by_key: dict[tuple[str | None, str], dict[str, list[RequestExecution]]] = (
@@ -128,7 +128,7 @@ def _rates(
 
 
 def run_perf_checks(
-    executions: tuple[RequestExecution, ...],
+    executions: Iterable[RequestExecution],
 ) -> tuple[Finding, ...]:
     findings: list[Finding] = []
     windows = _split(executions)

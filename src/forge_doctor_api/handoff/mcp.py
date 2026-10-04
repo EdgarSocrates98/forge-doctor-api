@@ -87,7 +87,7 @@ class DoctorApi:
     def _runtime(self) -> RuntimeProject:
         if "runtime" not in self._cache:
             self._cache["runtime"] = load_runtime_project(
-                self._ctx, self._files(), keep_spans=True)
+                self._ctx, self._files(), keep_spans=False)
         return cast(RuntimeProject, self._cache["runtime"])
 
     def _diff(self) -> ContractDiff | None:

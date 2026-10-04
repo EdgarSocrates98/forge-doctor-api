@@ -131,7 +131,7 @@ def run_scenario(context: ProjectContext, scenario: LabScenario) -> LabObservati
         )
 
     if "runtime" in run:
-        rt = load_runtime_project(ctx, files, keep_spans=True)
+        rt = load_runtime_project(ctx, files, keep_spans=False)
         obs.findings.extend(run_observability_checks(rt.observability))
         obs.findings.extend(run_perf_checks(rt.executions))
         obs.runtime_signals.extend(sorted(rt.observability.signals))

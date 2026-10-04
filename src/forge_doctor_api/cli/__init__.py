@@ -785,7 +785,7 @@ def _load_executions(
         return None
     context = ProjectContext.from_root(path)
     files = list(context.iter_files())
-    rt = load_runtime_project(context, files, keep_spans=True)
+    rt = load_runtime_project(context, files, keep_spans=False)
     unknowns = rt.unknowns
     executions = list(rt.executions)
     summaries = _summaries(context, files)
