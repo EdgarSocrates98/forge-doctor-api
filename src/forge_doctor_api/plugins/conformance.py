@@ -5,7 +5,7 @@ check is honest about its boundary: these are structural/behavioral
 detectors, not proofs — a malicious plugin could in principle pass by
 detecting the harness, which the docs state openly.
 
-The six checks (spec 054):
+The seven checks (specs 054 + 084):
 
 - determinism: two runs over the same tree serialize byte-identical;
 - offline: the run completes with sockets hard-blocked;
@@ -16,6 +16,10 @@ The six checks (spec 054):
 - output-compat: results round-trip through `to_dict`/`to_json`;
 - unknown-semantics: UnknownFacts are real `UnknownFact` objects with
   subject+missing+resolution populated.
+- output-schema (spec 084): the serialized result survives
+  `plugins/validation.py` — known severities/kinds, canonical entity
+  ids, evidence on every finding, paths inside the analyzed root,
+  known schema versions, and the serialized byte budget.
 """
 
 from __future__ import annotations
@@ -187,6 +191,18 @@ def run_conformance(
         status="pass" if not bad else "fail",
         details="unknowns are typed UnknownFacts" if not bad
         else f"malformed unknowns: {bad[:3]}"))
+
+    # output schema (spec 084) --------------------------------------------------
+    from forge_doctor_api.plugins.validation import (
+        validate_plugin_output,
+    )
+    violations = validate_plugin_output(r1, project_root)
+    checks.append(CheckResult(
+        name="output-schema",
+        status="pass" if not violations else "fail",
+        details="output satisfies the contract" if not violations
+        else "; ".join(f"{v.rule}@{v.path or '-'}"
+                       for v in violations[:5])))
 
     return ConformanceReport(plugin=name, checks=tuple(checks))
 

@@ -47,6 +47,10 @@ paths:
 _FORBIDDEN_IMPORT_ROOTS = {
     "socket", "urllib", "http", "requests", "httpx",
     "subprocess", "shutil", "ctypes", "pickle", "os",
+    # spec 084: sibling-product / orchestration packages — the Doctor
+    # boundary is one-directional and never imports them.
+    "forge_doctor_data", "forger", "the_forger", "api_forge",
+    "api_forge_studio", "orchestrator",
 }
 # Bare-name calls banned everywhere — dynamic execution surfaces.
 _FORBIDDEN_NAME_CALLS = {
