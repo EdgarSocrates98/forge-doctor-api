@@ -45,7 +45,7 @@
   ],
   "contract_version": "forge-contracts/1",
   "forge_protocol_version": 2,
-  "lab_scenario_count": 53,
+  "lab_scenario_count": 54,
   "mcp_tool_count": 17,
   "mcp_tools": [
     "doctor.explain",
@@ -70,8 +70,8 @@
     "graphql",
     "mcp"
   ],
-  "oss_negative_count": 7,
-  "oss_slice_count": 16,
+  "oss_negative_count": 14,
+  "oss_slice_count": 31,
   "python_classified": [
     "3.11",
     "3.12",

@@ -1,0 +1,6 @@
+source_repo: https://github.com/kubernetes/website
+upstream_path: content/en/examples/service/networking/ingress-wildcard-host.yaml
+upstream_ref: 1c7aa9955e884879397ed15de88605f05eb61d1f
+license: CC-BY-4.0
+sha256: f94baf782d671e73aa5a1081cdc639c1831916d263795b59fe5d01703ca234fe
+extracted_at_note: verbatim excerpt fetched at the pinned upstream ref

@@ -99,3 +99,14 @@ There is no `high` — lab coverage is always partial evidence. Console
 output prints the full metrics table; `--json` exports the same fields
 (`tp`, `fp`, `fn`, `precision`, `recall`, `unknown_rate`,
 `unsupported_rate`, `coverage_confidence`, plus raw counters).
+
+## Per-domain metrics (spec 085)
+
+Alongside the family table the report aggregates the same
+hit/miss/false-positive accounting per **domain** (`openapi`, `realworld`,
+`workspace`, …) — each `labs/<domain>/` directory rolls up into one
+`domains` entry with `scenarios`, `tp`/`fp`/`fn`, `precision`, `recall`,
+unknowns, parse failures, elapsed ms and peak bytes. Console output
+prints a `Per-domain metrics` table; `--json` carries the same array.
+Domains whose scenarios declare no expected findings report `null`
+precision/recall rather than inventing a score.

@@ -391,6 +391,21 @@ def lab(
                 f.coverage_confidence,
             )
         _console.print(table)
+    if report.domains:
+        _console.print("[bold]Per-domain metrics[/bold]")
+        table = Table(
+            "domain", "scenarios", "tp", "fp", "fn",
+            "precision", "recall", "unknowns", "parse", "ms",
+        )
+        for d in report.domains:
+            table.add_row(
+                d.domain, str(d.scenarios), str(d.tp), str(d.fp),
+                str(d.fn),
+                "-" if d.precision is None else f"{d.precision:.2f}",
+                "-" if d.recall is None else f"{d.recall:.2f}",
+                str(d.unknowns), str(d.parse_failures), str(d.elapsed_ms),
+            )
+        _console.print(table)
     raise typer.Exit(code=0 if report.failed == 0 else 1)
 
 

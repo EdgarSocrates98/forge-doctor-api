@@ -300,7 +300,7 @@ def test_corpus_is_deterministic() -> None:
 def _without_measurements(data: dict) -> dict:
     """Timing/memory are harness measurements, not decision output —
     they vary legitimately across runs (spec 058)."""
-    for key in ("results", "families"):
+    for key in ("results", "families", "domains"):
         for entry in data.get(key, []):
             entry["elapsed_ms"] = 0
             entry["peak_bytes"] = 0
@@ -497,3 +497,28 @@ def test_oss_result_carries_corpus_origin_into_run_record() -> None:
         [r["name"] for r in record["results"]].index("oai-petstore")][
         "provenance"])
     assert origin["sha256"].startswith("cefa")
+
+
+def test_per_domain_scores_reported() -> None:
+    """Spec 085: the lab report aggregates precision/recall per domain
+    alongside the existing per-family scores — JSON + model."""
+    report = run_labs(ProjectContext.from_root(REPO_LABS))
+    domains = {d.domain: d for d in report.domains}
+    assert "workspace" in domains, "multi-repo workspace scenario missing"
+    assert "openapi" in domains
+    for d in report.domains:
+        assert d.scenarios >= 1
+        assert d.expected == d.hits + d.misses
+    as_dict = report.to_dict()
+    assert as_dict["domains"], "domains key missing from lab JSON"
+    ws = domains["workspace"]
+    assert ws.hits == 2 and ws.misses == 0
+
+
+def test_workspace_scenario_proves_cross_tree_link() -> None:
+    """Spec 085: service/client/gateway trees — client call sites are
+    recorded and the unresolved template URL is an honest unknown."""
+    report = run_labs(ProjectContext.from_root(REPO_LABS))
+    ws = next(r for r in report.results if r.domain == "workspace")
+    assert ws.passed
+    assert ws.unknowns >= 1

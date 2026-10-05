@@ -1,0 +1,7 @@
+origin: 'authored adversarial case derived from spring-petclinic/owner-controller
+  (Apache-2.0 @ cf392920cdbe9cd07689f1f4b603271940bac957): mapping paths composed
+  via constants and property placeholders instead of literals'
+domain: spring
+sha256: 292e12ca686c0826037bf5c642a488a4f66f08b70fa9df8ffe7b502d2a7e5d67
+extracted_at_note: authored adversarial slice; provenance documents the real upstream
+  it imitates

@@ -165,6 +165,56 @@ class FamilyScore(Model):
 
 
 @dataclass(frozen=True, kw_only=True)
+class DomainScore(Model):
+    """§085 per-domain precision/recall — same accounting as
+    `FamilyScore` but grouped by scenario domain instead of check-id
+    family, so the report shows coverage by surface (openapi, kong,
+    spring, ...) rather than by rule namespace."""
+
+    domain: str
+    scenarios: int = 0
+    expected: int = 0
+    hits: int = 0
+    misses: int = 0
+    false_positives: int = 0
+    unknowns: int = 0
+    unsupported: int = 0
+    parse_failures: int = 0
+    elapsed_ms: int = 0
+    peak_bytes: int = 0
+
+    @property
+    def tp(self) -> int:
+        return self.hits
+
+    @property
+    def fp(self) -> int:
+        return self.false_positives
+
+    @property
+    def fn(self) -> int:
+        return self.misses
+
+    @property
+    def precision(self) -> float | None:
+        total = self.hits + self.false_positives
+        return self.hits / total if total else None
+
+    @property
+    def recall(self) -> float | None:
+        total = self.hits + self.misses
+        return self.hits / total if total else None
+
+    def to_dict(self) -> dict[str, Any]:
+        out = super().to_dict()
+        out.update({
+            "tp": self.tp, "fp": self.fp, "fn": self.fn,
+            "precision": self.precision, "recall": self.recall,
+        })
+        return out
+
+
+@dataclass(frozen=True, kw_only=True)
 class LabReport(Model):
     """§200 full lab pass: per-scenario results + per-family scores.
 
@@ -175,6 +225,7 @@ class LabReport(Model):
 
     results: tuple[LabResult, ...] = ()
     families: tuple[FamilyScore, ...] = ()
+    domains: tuple[DomainScore, ...] = ()
     extras_present: tuple[str, ...] = ()
     extras_absent: tuple[str, ...] = ()
 

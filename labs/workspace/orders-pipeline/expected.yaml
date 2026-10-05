@@ -1,0 +1,24 @@
+# spec 085: multi-repository workspace — a service contract, a client
+# call tree, and a gateway config in three separate sub-trees. The
+# template-literal client URL is honestly an unknown (literal URL
+# missing); no cross-repo link is fabricated.
+run: [openapi, clients, gateway]
+expected_findings:
+  - OAS010   # operations carry no security requirement
+  - OAS020   # no tags/domain ownership evidence
+forbidden_findings:
+  - ASYNC*
+  - GRPC*
+  - GQL*
+  - CLIENTIMP*
+expected_entities:
+  - api:Orders Service
+  - operation_id:getOrder
+  - operation_id:listOrders
+  - schema:Order
+expected_edges:
+  - EXPOSES
+expected_clients:
+  - client
+expected_issues:
+  - literal URL for the client call

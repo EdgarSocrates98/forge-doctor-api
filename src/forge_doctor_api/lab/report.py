@@ -21,6 +21,7 @@ from forge_doctor_api.lab.capabilities import (
 )
 from forge_doctor_api.lab.loader import discover_scenarios
 from forge_doctor_api.lab.model import (
+    DomainScore,
     FamilyScore,
     LabReport,
     LabResult,
@@ -161,6 +162,7 @@ def run_labs(context: ProjectContext) -> LabReport:
     return LabReport(
         results=tuple(r for _, r in pairs),
         families=aggregate_scores(pairs),
+        domains=aggregate_domain_scores(pairs),
         extras_present=extras_present(),
         extras_absent=extras_absent(),
     )
@@ -215,6 +217,58 @@ def aggregate_scores(
             peak_bytes=s["peak_bytes"],
         )
         for fam, s in sorted(stats.items())
+    )
+
+
+def aggregate_domain_scores(
+    pairs: list[tuple[LabScenario, LabResult]],
+) -> tuple[DomainScore, ...]:
+    """§085 per-domain precision/recall over the same observation set as
+    `aggregate_scores` — hits/misses/false-positives bucketed by the
+    scenario's domain so coverage is reported by surface, not only by
+    rule family. Skipped scenarios contribute no evidence."""
+    stats: dict[str, dict[str, int]] = {}
+
+    def stat(domain: str) -> dict[str, int]:
+        return stats.setdefault(
+            domain, {"scenarios": 0, "expected": 0, "hits": 0,
+                     "misses": 0, "false_positives": 0,
+                     "unknowns": 0, "unsupported": 0,
+                     "parse_failures": 0, "elapsed_ms": 0,
+                     "peak_bytes": 0}
+        )
+
+    for scenario, result in pairs:
+        if result.skipped:
+            continue
+        s = stat(scenario.domain)
+        s["scenarios"] += 1
+        s["unknowns"] += result.unknowns
+        s["unsupported"] += result.unsupported
+        s["parse_failures"] += result.parse_failures
+        s["elapsed_ms"] += result.elapsed_ms
+        s["peak_bytes"] = max(s["peak_bytes"], result.peak_bytes)
+        for entry in scenario.expected.findings:
+            s["expected"] += 1
+            hit = any(_matches(entry, a) for a in result.observed_findings)
+            s["hits" if hit else "misses"] += 1
+        s["false_positives"] += (
+            len(result.unexpected_findings) + len(result.forbidden_hits))
+    return tuple(
+        DomainScore(
+            domain=domain,
+            scenarios=s["scenarios"],
+            expected=s["expected"],
+            hits=s["hits"],
+            misses=s["misses"],
+            false_positives=s["false_positives"],
+            unknowns=s["unknowns"],
+            unsupported=s["unsupported"],
+            parse_failures=s["parse_failures"],
+            elapsed_ms=s["elapsed_ms"],
+            peak_bytes=s["peak_bytes"],
+        )
+        for domain, s in sorted(stats.items())
     )
 
 
