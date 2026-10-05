@@ -1,0 +1,15 @@
+{
+  "agent": "claude",
+  "command": [
+    "claude",
+    "-p",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\072-cli-contract-stability.implement.claude.md)"
+  ],
+  "created_at": "2026-10-05T02:54:02+00:00",
+  "id": "072-cli-contract-stability",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\072-cli-contract-stability.implement.claude.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\072-cli-contract-stability.md",
+  "spec_sha256": "de4bdb06d61435f51e4ad4b027971db89f3adc29765cf84a92261c398f3e44b4",
+  "status": "planned",
+  "title": "CLI/docs contract stabilization \u2014 inventory, stability levels, golden help"
+}
