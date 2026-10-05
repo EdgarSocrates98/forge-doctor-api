@@ -1,0 +1,101 @@
+{
+  "baseline_version": 1,
+  "cli_command_count": 28,
+  "cli_commands": [
+    "blast-radius",
+    "contract compatibility",
+    "contract diff",
+    "contract inspect",
+    "diagnose",
+    "diff",
+    "explain",
+    "fingerprint",
+    "graph",
+    "inventory",
+    "knowledge list",
+    "knowledge validate",
+    "lab",
+    "mcp",
+    "plugins inspect",
+    "plugins list",
+    "plugins verify",
+    "reliability inspect",
+    "reliability path",
+    "runtime baseline",
+    "runtime regressions",
+    "runtime requests",
+    "scan",
+    "security inspect",
+    "snapshot diff",
+    "snapshot list",
+    "snapshot regressions",
+    "snapshot save"
+  ],
+  "contract_schema_ids": [
+    "capability",
+    "diagnostic-manifest",
+    "entity",
+    "evidence",
+    "finding",
+    "handoff",
+    "migration-plan",
+    "relationship",
+    "remediation-plan",
+    "unknown-fact"
+  ],
+  "contract_version": "forge-contracts/1",
+  "forge_protocol_version": 2,
+  "lab_scenario_count": 53,
+  "mcp_tool_count": 17,
+  "mcp_tools": [
+    "doctor.explain",
+    "doctor.get_api",
+    "doctor.get_blast_radius",
+    "doctor.get_breaking_changes",
+    "doctor.get_capabilities",
+    "doctor.get_clients",
+    "doctor.get_contract",
+    "doctor.get_findings",
+    "doctor.get_graph",
+    "doctor.get_handoff",
+    "doctor.get_operation",
+    "doctor.get_reliability",
+    "doctor.get_runtime",
+    "doctor.get_security",
+    "doctor.get_service",
+    "doctor.get_unknowns",
+    "doctor.scan"
+  ],
+  "optional_extras": [
+    "graphql",
+    "mcp"
+  ],
+  "oss_negative_count": 7,
+  "oss_slice_count": 16,
+  "python_classified": [
+    "3.11",
+    "3.12",
+    "3.13"
+  ],
+  "python_requires": ">=3.11",
+  "runtime_dependencies": [
+    "pyyaml",
+    "rich",
+    "typer"
+  ],
+  "sbom_dependency_count": 5,
+  "scale_check_scales": {
+    "endpoints": [
+      1000
+    ],
+    "spans": [
+      10000
+    ]
+  },
+  "scale_headroom": {
+    "peak_mb": 2.5,
+    "seconds": 4.0
+  },
+  "test_file_count": 74,
+  "version": "0.1.0"
+}

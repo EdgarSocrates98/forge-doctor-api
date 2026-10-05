@@ -1,5 +1,13 @@
 # Release policy
 
+## Stability classes
+
+Every public surface carries a stability class defined in
+[rc-policy.md](rc-policy.md); the named inventory lives in
+[public-surface.md](public-surface.md) and the machine-readable
+baseline in [rc-baseline.json](rc-baseline.json)
+(`python factory/rc_baseline.py --check`).
+
 ## Versioning
 
 - The package follows SemVer-shaped `MAJOR.MINOR.PATCH` (PEP 440).
