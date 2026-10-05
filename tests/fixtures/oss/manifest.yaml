@@ -1,0 +1,127 @@
+slices:
+- name: asyncapi/slack-rtm
+  file: slice.yaml
+  domain: asyncapi
+  expected_findings:
+  - ASYNC002
+  - ASYNC008
+  sha256: 714f0635858eef8ed5e54262c073aea93309a087291da959f8932158ca9efa83
+- name: asyncapi/social-media-comments
+  file: slice.yaml
+  domain: asyncapi
+  expected_findings:
+  - ASYNC001
+  - ASYNC002
+  - ASYNC007
+  - ASYNC008
+  sha256: 77fa6907335b5d98186e05f041adc8d2c205e2ea043ecc86af5a886c7d22c412
+- name: asyncapi/streetlights-kafka
+  file: slice.yaml
+  domain: asyncapi
+  expected_findings:
+  - ASYNC002
+  - ASYNC007
+  - ASYNC008
+  sha256: 916c6d5a3c16ce9d2837f24ffc27509044de4fe8c2685de50917438b0d5b2076
+- name: googleapis/annotations
+  file: slice.proto
+  domain: grpc
+  expected_findings: []
+  sha256: e79ea741cb605a65e78ca322174764a4af9fde1962c1631e12b84c4934ba9a6c
+- name: googleapis/code
+  file: slice.proto
+  domain: grpc
+  expected_findings: []
+  sha256: 83a63185b83cf7332196fc5ead0ec91b93ac207fbe91b3d5bc3d72f461b0bb31
+- name: googleapis/http
+  file: slice.proto
+  domain: grpc
+  expected_findings: []
+  sha256: ead99129aa15dd5f6233942030c72eec33bc0d7b1c7c260dc143293ef66c5b78
+- name: oai-learn/api-with-examples
+  file: slice.yaml
+  domain: openapi
+  expected_findings:
+  - APISEC011
+  - OAS009
+  - OAS010
+  - OAS020
+  sha256: 2b8d39097f8d0800b3d9b94f784348ea6d046a82c2b78e83b737874c938e63b9
+- name: oai-learn/callback-example
+  file: slice.yaml
+  domain: openapi
+  expected_findings:
+  - APISEC011
+  - OAS004
+  - OAS010
+  - OAS020
+  sha256: c9695b830c457df0b2f7e62f91b270be5628f239947926e279ccca895b950c0f
+- name: oai-learn/link-example
+  file: slice.yaml
+  domain: openapi
+  expected_findings:
+  - APISEC006
+  - APISEC011
+  - OAS010
+  - OAS020
+  sha256: 92b502f64d80d67e2a8e634e5b82e9b7ae1f1e8fb5b754cc1c2cad1102447206
+- name: oai-learn/non-oauth-scopes
+  file: slice.yaml
+  domain: openapi
+  expected_findings:
+  - OAS004
+  - OAS005
+  - OAS020
+  sha256: f51b1e1e8abda7bfc790f6e9fbddf36c24353576d3bf7cd2e33e0670e965b177
+- name: oai-learn/petstore
+  file: slice.yaml
+  domain: openapi
+  expected_findings:
+  - APISEC001
+  - APISEC011
+  - OAS010
+  - OAS018
+  sha256: cefaafa05eee75b1888762dea08a295f245e9f3e4bdb8777f4bdfed09e335339
+- name: oai-learn/petstore-expanded
+  file: slice.yaml
+  domain: openapi
+  expected_findings:
+  - APISEC001
+  - APISEC011
+  - OAS010
+  - OAS018
+  - OAS020
+  sha256: abc68d08c674c8f0415aaeeb87c4203d5dd7257cdb79ac7ccb0446d1c5b9a7c2
+- name: oai-learn/uspto
+  file: slice.yaml
+  domain: openapi
+  expected_findings:
+  - APISEC011
+  - OAS010
+  sha256: 29d32d0a0710b0acac434807e018ebd9cc192ad604fefdcf51422833b5963642
+- name: oai-learn/webhook-example
+  file: slice.yaml
+  domain: openapi
+  expected_findings:
+  - APISEC011
+  - OAS010
+  sha256: 1bf9c928e1d42d5ffd3d793dbc6b569bd47a97a4679ee5c85cd78091136ab2a4
+- name: spacexland/schema
+  file: slice.graphql
+  domain: graphql
+  expected_findings:
+  - GQL006
+  - GQL007
+  - GQL009
+  - GQL010
+  sha256: 2da61b885d23b03b4073497a9a15b1fc90b0510b28e8b5e9ee7ed8006a4dacde
+- name: swagger-api/petstore
+  file: slice.yaml
+  domain: openapi
+  expected_findings:
+  - APISEC001
+  - APISEC006
+  - APISEC011
+  - APISEC012
+  - OAS010
+  sha256: e1a2480ffa440e44b981db5b038374214c532ffc92026fd51fb957c88bfbdd88

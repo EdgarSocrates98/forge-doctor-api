@@ -1,0 +1,4 @@
+origin: "googleapis/googleapis google/api/annotations.proto @ 03a91044136a014466d4293eb1fe91f2b02075d2, Apache-2.0"
+domain: "grpc"
+sha256: "5f35faca825ccc280a93ffba940d4a4e50eecbd21995eff3e81099f7fd899d9a"
+extracted_at_note: "first 600 bytes + appended unterminated message/string"

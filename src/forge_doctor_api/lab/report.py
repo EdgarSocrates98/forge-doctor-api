@@ -121,6 +121,7 @@ def compare(scenario: LabScenario, obs: LabObservations) -> LabResult:
         missing_issues=missing_issues,
         wording_violations=wording,
         observed_findings=tuple(actual_ids),
+        provenance=scenario.provenance,
     )
 
 
@@ -147,6 +148,7 @@ def run_labs(context: ProjectContext) -> LabReport:
                 skipped=True,
                 skip_reason="missing extras: " + ", ".join(missing),
                 problems=scenario.problems,
+                provenance=scenario.provenance,
             )))
             continue
         tracemalloc.start()

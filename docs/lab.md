@@ -72,6 +72,15 @@ declare a `provenance` block (`source`, `retrieved`) in its
 `expected.yaml` — a scenario without one fails with a `problems`
 entry, never silently passes.
 
+`labs/oss/` holds scenarios whose fixture is a *verbatim vendored
+upstream artifact* (see `docs/corpus.md` for the full corpus). The
+provenance bar is stricter: `source`, `upstream_ref`, `license`, and
+`sha256` of the vendored bytes are all required, and the scenario
+fails as a problem entry if any is missing. Every result — pass,
+fail, or skip — echoes its `provenance` into the run record, so a
+run JSON proves which upstream artifact each corpus scenario
+exercised.
+
 ## Metrics (spec 058)
 
 Per scenario the harness records: sample size (files scanned), elapsed

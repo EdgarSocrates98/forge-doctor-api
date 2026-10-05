@@ -466,3 +466,34 @@ def test_minimal_profile_still_counts_scenarios(
     assert report.skipped >= 1
     assert report.passed + report.failed + report.skipped == len(
         report.results)
+
+
+def test_oss_scenarios_require_strong_provenance(tmp_path: Path) -> None:
+    """Spec 077: `oss` scenarios must name source, pinned ref, license,
+    and the vendored bytes' sha256 — weaker blocks are problems."""
+    case = tmp_path / "oss" / "weak"
+    case.mkdir(parents=True)
+    (case / "readme.md").write_text("# no API markers\n")
+    (case / "expected.yaml").write_text(
+        "provenance: {source: somewhere, retrieved: today}\n"
+        "expected_findings: []\n")
+    report = run_labs(ProjectContext.from_root(tmp_path))
+    result = next(r for r in report.results if r.domain == "oss")
+    assert not result.passed
+    assert any("provenance" in p for p in result.problems)
+
+
+def test_oss_result_carries_corpus_origin_into_run_record() -> None:
+    """Spec 077: the run record lists the corpus origin per scenario —
+    provenance lands on every result, pass or fail."""
+    report = run_labs(ProjectContext.from_root(REPO_LABS))
+    oss = [r for r in report.results if r.domain == "oss"]
+    assert oss, "labs/oss corpus missing"
+    for r in oss:
+        prov = dict(r.provenance)
+        assert {"source", "upstream_ref", "license", "sha256"} <= set(prov)
+    record = report.to_dict()
+    origin = dict(record["results"][
+        [r["name"] for r in record["results"]].index("oai-petstore")][
+        "provenance"])
+    assert origin["sha256"].startswith("cefa")

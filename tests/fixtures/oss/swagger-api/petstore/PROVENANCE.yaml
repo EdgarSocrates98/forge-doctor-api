@@ -1,0 +1,6 @@
+source_repo: "https://github.com/swagger-api/swagger-petstore"
+upstream_path: "src/main/resources/openapi.yaml"
+upstream_ref: "d57941e8fe959e508796b27469b1e8bba73392dc"
+license: "Apache-2.0"
+sha256: "e1a2480ffa440e44b981db5b038374214c532ffc92026fd51fb957c88bfbdd88"
+extracted_at_note: "verbatim excerpt fetched at the pinned upstream ref"

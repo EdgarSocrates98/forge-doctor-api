@@ -15,7 +15,13 @@ from forge_doctor_api.core.context import ProjectContext
 from forge_doctor_api.lab.model import LabExpectation, LabScenario
 
 _EXPECTED_NAMES = ("expected.yaml", "expected.yml", "expectations.json")
-_REALWORLD_PROVENANCE_KEYS = ("source", "retrieved")
+# Domains whose scenarios must declare where their fixture material came
+# from. `oss` is stricter: provenance is only real with a pinned upstream
+# ref, a license tag, and the vendored bytes' sha256.
+_PROVENANCE_KEYS = {
+    "realworld": ("source", "retrieved"),
+    "oss": ("source", "upstream_ref", "license", "sha256"),
+}
 
 
 def _list(raw: object) -> tuple[str, ...]:
@@ -64,13 +70,13 @@ def _scenario(context: ProjectContext, rel: str) -> LabScenario:
             domain=domain or "labs", name=name or path, path=path,
             problems=tuple(problems))
     provenance: tuple[tuple[str, str], ...] = ()
-    if domain == "realworld":
+    required = _PROVENANCE_KEYS.get(domain)
+    if required is not None:
         prov = doc.get("provenance")
-        if not isinstance(prov, dict) or any(
-                k not in prov for k in _REALWORLD_PROVENANCE_KEYS):
+        if not isinstance(prov, dict) or any(k not in prov for k in required):
             problems.append(
-                "realworld scenario missing provenance block "
-                f"(requires {_REALWORLD_PROVENANCE_KEYS})")
+                f"{domain} scenario missing provenance block "
+                f"(requires {required})")
         else:
             provenance = tuple(sorted(
                 (str(k), str(v)) for k, v in prov.items()))

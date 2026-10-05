@@ -82,6 +82,9 @@ class LabResult(Model):
     wording_violations: tuple[str, ...] = ()
     problems: tuple[str, ...] = ()
     observed_findings: tuple[str, ...] = ()
+    # corpus origin echoed from the scenario — run records carry it so an
+    # oss/realworld result proves which upstream artifact it exercised
+    provenance: tuple[tuple[str, str], ...] = ()
     # spec-058 measurement fields (harness metrics, never compared)
     sample_size: int = 0         # fixture files scanned
     elapsed_ms: int = 0

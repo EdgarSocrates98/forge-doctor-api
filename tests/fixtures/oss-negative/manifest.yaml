@@ -1,0 +1,52 @@
+cases:
+- name: annotations-truncated
+  file: slice.proto
+  domain: grpc
+  expect_status: MALFORMED
+  expected_findings: []
+  sha256: 5f35faca825ccc280a93ffba940d4a4e50eecbd21995eff3e81099f7fd899d9a
+- name: api-with-examples-truncated-json
+  file: slice.json
+  domain: openapi
+  expect_status: MALFORMED
+  expected_findings:
+  - OAS001
+  sha256: ff24fefcb84594666342de1455b00a542b4ee81f125ee4b88b5a9701e9f7427c
+- name: asyncapi-unsupported-version
+  file: slice.yaml
+  domain: asyncapi
+  expect_status: UNSUPPORTED_VERSION
+  expected_findings: []
+  sha256: 179163d7d0e44ad23583923aa434ce2dfd86d76680daf425541d7638f8eb09ca
+- name: graphql-federation-sdl
+  file: slice.graphql
+  domain: graphql
+  expect_status: MALFORMED
+  expected_findings:
+  - GQL010
+  sha256: fd743c5f0e5865a4ee1cee043247bf8d2104a3f00da5020e0eca918d7d3d7fee
+- name: openapi-as-graphql
+  file: slice.graphql
+  domain: graphql
+  expect_status: MALFORMED
+  expected_findings:
+  - GQL010
+  sha256: cefaafa05eee75b1888762dea08a295f245e9f3e4bdb8777f4bdfed09e335339
+- name: petstore-truncated
+  file: slice.yaml
+  domain: openapi
+  expect_status: PARSED
+  expected_findings:
+  - APISEC011
+  - OAS002
+  - OAS005
+  - OAS008
+  - OAS010
+  sha256: 212e8460a2717b295635ca31d3337253971de235dd01a844e14739cc2e01cd73
+- name: swagger-2-petstore
+  file: slice.yaml
+  domain: openapi
+  expect_status: UNSUPPORTED_VERSION
+  expected_findings:
+  - OAS001
+  sha256: 9fdb0fc3767861fcd86811901165a930c2c3102edbbcc20e4efb13064bfc44c7

@@ -1,0 +1,14 @@
+# Real upstream artifact, vendored byte-identical from
+# tests/fixtures/oss/oai-learn/petstore/slice.yaml — the sha256 below is
+# the vendored bytes' hash and matches the corpus manifest record.
+provenance:
+  source: "https://github.com/OAI/learn.openapis.org"
+  upstream_ref: "bbb743ed3b7c5ed76b6e6ba9b302af38f3956c44"
+  license: "CC-BY-4.0"
+  sha256: "cefaafa05eee75b1888762dea08a295f245e9f3e4bdb8777f4bdfed09e335339"
+run: [openapi, security]
+expected_findings:
+  - APISEC001
+  - APISEC011
+  - OAS010
+  - OAS018
