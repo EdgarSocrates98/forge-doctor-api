@@ -1,0 +1,12 @@
+# NestJS depth: constructor injection (CatsService), exception filter
+# (@Catch + @UseFilters) are positive; no @UseGuards or class-validator
+# idioms — auth and validation must surface as explicit unknowns.
+run: [frameworks]
+expected_entities:
+  - "capability:nestjs:injected-provider:CatsService"
+  - "capability:nestjs:exception-filter:@Catch"
+  - "capability:nestjs:filter:@UseFilters"
+  - "capability:nestjs:request-schema-type:CreateCatDto"
+expected_issues:
+  - "nestjs auth:static auth evidence"
+  - "nestjs validation:static validation evidence"

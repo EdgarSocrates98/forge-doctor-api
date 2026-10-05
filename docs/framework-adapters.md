@@ -12,7 +12,8 @@ Adapters implement the §39 `FrameworkAdapter` protocol
 | `discover_auth` / `discover_schemas` / `discover_dependencies` / `discover_middleware` / `discover_error_handlers` / `discover_validation` / `discover_serialization` / `discover_client_calls` | `SurfaceResult` — sorted `SurfaceItem`s, or empty + `UnknownFact` |
 
 An empty surface always carries an UnknownFact — absence of evidence
-is explicit, never a fabricated zero.
+is explicit, never a fabricated zero. Per-framework idiom coverage is
+in `docs/frameworks.md`.
 
 ## Built-in adapters
 

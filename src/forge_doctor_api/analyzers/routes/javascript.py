@@ -22,8 +22,9 @@ from __future__ import annotations
 
 import json
 import re
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, field
+from typing import ClassVar
 
 from forge_doctor_api.analyzers.routes.adapter import (
     FrameworkAdapter,
@@ -171,6 +172,60 @@ def _norm_js(path: str) -> str:
     """JS route path -> canonical template (`:id` segments -> `{id}`)."""
     out = re.sub(r":([A-Za-z_]\w*)", r"{\1}", _norm(path))
     return out.rstrip("/") or "/"
+
+
+_EXPRESS_AUTH_MODULES = frozenset({
+    "passport", "express-jwt", "express-session", "jsonwebtoken",
+    "@auth0/express-openid-connect", "basic-auth", "cookie-session"})
+_EXPRESS_VALIDATOR_MODULES = frozenset(
+    {"express-validator", "zod", "joi", "yup", "ajv"})
+_EXPRESS_AUTH_CALLS = re.compile(
+    r"\b(passport\.authenticate|expressjwt|jwt\.(?:verify|sign))\s*\(")
+_ERR_FIRST_PARAMS = re.compile(
+    r"\(\s*(?:err|error)\b[^)]*,\s*[^,)]+,\s*[^,)]+,\s*[^,)]+\s*\)")
+
+# Well-known call heads per validator module — a match is only evidence
+# when the file actually imports the module (aliased `body(` in a file
+# without express-validator proves nothing).
+_VALIDATOR_CALL_HEADS = {
+    "express-validator": (
+        "body", "query", "param", "check", "checkSchema",
+        "matchedData", "validationResult", "oneOf"),
+    "zod": ("z.object", "z.string", "z.number", "z.enum",
+            "z.array", "z.union"),
+    "joi": ("Joi.object", "Joi.string", "Joi.number"),
+    "yup": ("yup.object", "yup.string", "yup.number"),
+    "ajv": (),
+}
+
+
+def _top_level_args(call: _Call, safe: str) -> tuple[str, ...]:
+    """Raw top-level argument spans of a call (string interiors blanked)."""
+    inner = safe[call.open_paren + 1:call.end - 1]
+    args: list[str] = []
+    depth = 0
+    start = 0
+    for k, ch in enumerate(inner):
+        if ch in "([{":
+            depth += 1
+        elif ch in ")]}":
+            depth -= 1
+        elif ch == "," and depth == 0:
+            args.append(inner[start:k].strip())
+            start = k + 1
+    args.append(inner[start:].strip())
+    return tuple(a for a in args if a)
+
+
+def _call_arg_names(call: _Call, safe: str) -> tuple[str, ...]:
+    """Top-level identifier/dotted-name arguments of a call.
+
+    A name is kept only when the whole arg is a bare identifier or
+    dotted path — expressions are not evidence of a wired collaborator.
+    """
+    return tuple(
+        n for n in _top_level_args(call, safe)
+        if re.fullmatch(r"[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*", n))
 
 
 def _package_deps(context: ProjectContext, files: Sequence[str]) -> set[str]:
@@ -380,6 +435,78 @@ class NestJsAdapter(_JsBase):
                         "@Controller",
                         line=line_of(jf.stripped.text, marker.start)),)))
         return tuple(attrs)
+
+    _CTOR_RE = re.compile(r"\bconstructor\s*\(")
+    _CTOR_PARAM_RE = re.compile(
+        r"(?:private|public|protected)\s+(?:readonly\s+)?"
+        r"[A-Za-z_$][\w$]*\s*(?::\s*([A-Z][\w.<>\[\]]*))?")
+    _PARAM_SCHEMA_DECS = frozenset({"Body", "Query", "Param"})
+
+    def discover_dependencies(
+        self, context: ProjectContext, files: Sequence[str]
+    ) -> SurfaceResult:
+        """NestJS DI: constructor `private readonly x: Type` params are
+        provider-injection evidence — plus @Inject/@Injectable markers."""
+        items = list(self._surface_items(context, files, {
+            "Inject": "injection", "Injectable": "provider"}))
+        for jf in self._parsed(context, files):
+            if not self._file_relevant(jf):
+                continue
+            for m in self._CTOR_RE.finditer(jf.stripped.safe):
+                end = _balanced(jf.stripped.safe, m.end() - 1)
+                params = jf.stripped.text[m.end():end - 1]
+                for pm in self._CTOR_PARAM_RE.finditer(params):
+                    typ = pm.group(1) or "?"
+                    items.append(SurfaceItem(
+                        label=typ, kind="injected-provider",
+                        location=_loc(
+                            jf.path, jf.stripped.text,
+                            m.end() + pm.start())))
+        if not items:
+            return unknown_surface("dependencies", self.framework)
+        return SurfaceResult(surface="dependencies", items=tuple(
+            sorted(set(items), key=lambda i: (
+                i.kind, i.label, i.location.path,
+                i.location.line or 0))))
+
+    def discover_schemas(
+        self, context: ProjectContext, files: Sequence[str]
+    ) -> SurfaceResult:
+        """`@Body() dto: CreateCatDto` — the DTO type is the request
+        schema; the bare decorator marker is kept for untyped params."""
+        items: list[SurfaceItem] = []
+        for jf in self._parsed(context, files):
+            if not self._file_relevant(jf):
+                continue
+            for dec in jf.decorators:
+                if dec.name not in self._PARAM_SCHEMA_DECS:
+                    continue
+                items.append(SurfaceItem(
+                    label=f"@{dec.name}()",
+                    kind=("request-schema" if dec.name == "Body"
+                          else "bound-param"),
+                    location=_loc(jf.path, jf.stripped.text, dec.start)))
+                # the decorator sits inside the method's parens — find
+                # that method and pull the param's declared type.
+                for call in jf.calls:
+                    if not (call.open_paren < dec.start < call.end):
+                        continue
+                    params = jf.stripped.text[
+                        call.open_paren + 1:call.end - 1]
+                    for pm in re.finditer(
+                            r"@\w+\s*(?:\([^)]*\))?\s*"
+                            r"[A-Za-z_$][\w$]*\s*:\s*"
+                            r"([A-Z][\w.<>\[\]]*)", params):
+                        items.append(SurfaceItem(
+                            label=pm.group(1), kind="request-schema-type",
+                            location=_loc(
+                                jf.path, jf.stripped.text, dec.start)))
+        if not items:
+            return unknown_surface("schemas", self.framework)
+        return SurfaceResult(surface="schemas", items=tuple(
+            sorted(set(items), key=lambda i: (
+                i.kind, i.label, i.location.path,
+                i.location.line or 0))))
 
     def discover_routes(
         self,
@@ -620,17 +747,21 @@ class ExpressAdapter(_JsBase):
                 recv, _, meth = call.name.rpartition(".")
                 if meth != "use" or recv not in receivers:
                     continue
-                args = jf.stripped.safe[
-                    call.open_paren + 1:call.end - 1]
-                idents = [
-                    i for i in re.findall(
-                        r"\b([A-Za-z_$][\w$.]*)\b", args)
-                    if i not in receivers]
                 loc = _loc(jf.path, jf.stripped.text, call.start)
-                for ident in idents:
-                    items.append(SurfaceItem(
-                        label=ident, kind="middleware-candidate",
-                        location=loc))
+                for arg in _top_level_args(call, jf.stripped.safe):
+                    # bare ident -> named middleware; `ident(...)` ->
+                    # middleware factory call; anything else (arrow
+                    # bodies, expressions) is not a registration.
+                    ident = re.fullmatch(
+                        r"([A-Za-z_$][\w$.]*)", arg)
+                    factory = re.fullmatch(
+                        r"([A-Za-z_$][\w$.]*)\s*\(.*", arg, re.DOTALL)
+                    label = (ident.group(1) if ident else
+                             f"{factory.group(1)}()" if factory else "")
+                    if label and label.split("(")[0] not in receivers:
+                        items.append(SurfaceItem(
+                            label=label, kind="middleware-candidate",
+                            location=loc))
         if not items:
             return unknown_surface("middleware", self.framework)
         return SurfaceResult(surface="middleware", items=tuple(
@@ -666,3 +797,181 @@ class ExpressAdapter(_JsBase):
         if re.fullmatch(r"[A-Za-z_$][\w$.]*", last):
             return last
         return f"anonymous@{loc.line or 0}"
+
+    # -- Express idiom surfaces (no decorators — call-shape evidence) ----
+
+    _AUTH_CALL_REQUIRES_IMPORT: ClassVar[dict[str, str]] = {
+        "passport.authenticate": "passport",
+        "expressjwt": "express-jwt",
+        "jwt.verify": "jsonwebtoken",
+        "jwt.sign": "jsonwebtoken",
+        "requiresAuth": "@auth0/express-openid-connect",
+        "cookieSession": "cookie-session",
+    }
+
+    def _express_files(
+        self, context: ProjectContext, files: Sequence[str],
+        extra_modules: frozenset[str] = frozenset(),
+    ) -> Iterator[_JsFile]:
+        """Relevant = express-relevant, or imports one of the idiom
+        modules (a middleware/validator file may not import express)."""
+        for jf in self._parsed(context, files):
+            if self._file_relevant(jf) or any(
+                    imp in extra_modules for _, imp in jf.imports):
+                yield jf
+
+    def discover_auth(
+        self, context: ProjectContext, files: Sequence[str]
+    ) -> SurfaceResult:
+        """Express auth: imported auth modules + their known calls —
+        `passport.authenticate('jwt')`, `expressjwt({...})`, `jwt.verify`.
+        A call only counts when the file imports the backing module."""
+        items: list[SurfaceItem] = []
+        for jf in self._express_files(
+                context, files, _EXPRESS_AUTH_MODULES):
+            auth_mods = {imp for _, imp in jf.imports
+                         if imp in _EXPRESS_AUTH_MODULES}
+            for pos, imp in jf.imports:
+                if imp in auth_mods:
+                    items.append(SurfaceItem(
+                        label=imp, kind="auth-module",
+                        location=_loc(
+                            jf.path, jf.stripped.text, pos)))
+            for call in jf.calls:
+                need = self._AUTH_CALL_REQUIRES_IMPORT.get(call.name)
+                if need and need in auth_mods:
+                    items.append(SurfaceItem(
+                        label=f"{call.name}()", kind="auth-middleware",
+                        location=_loc(
+                            jf.path, jf.stripped.text, call.start)))
+        if not items:
+            return unknown_surface("auth", self.framework)
+        return SurfaceResult(surface="auth", items=tuple(sorted(
+            set(items), key=lambda i: (
+                i.kind, i.label, i.location.path,
+                i.location.line or 0))))
+
+    def discover_validation(
+        self, context: ProjectContext, files: Sequence[str]
+    ) -> SurfaceResult:
+        """Express validation: express-validator/zod/joi/yup imports +
+        their call heads; `.validate`/`.parse`/`.safeParse` gated on the
+        matching module being imported."""
+        items: list[SurfaceItem] = []
+        for jf in self._express_files(
+                context, files, _EXPRESS_VALIDATOR_MODULES):
+            mods = {imp for _, imp in jf.imports
+                    if imp in _EXPRESS_VALIDATOR_MODULES}
+            if not mods:
+                continue
+            for pos, imp in jf.imports:
+                if imp in mods:
+                    items.append(SurfaceItem(
+                        label=imp, kind="validation-module",
+                        location=_loc(
+                            jf.path, jf.stripped.text, pos)))
+            heads = {h for m in mods
+                     for h in _VALIDATOR_CALL_HEADS.get(m, ())}
+            for call in jf.calls:
+                if call.name in heads:
+                    items.append(SurfaceItem(
+                        label=f"{call.name}()", kind="validation-call",
+                        location=_loc(
+                            jf.path, jf.stripped.text, call.start)))
+            tail_heads: set[str] = set()
+            if "joi" in mods:
+                tail_heads.add("validate")
+            if "zod" in mods:
+                tail_heads.update({"parse", "safeParse"})
+            for call in jf.calls:
+                _, _, tail = call.name.rpartition(".")
+                if "." in call.name and tail in tail_heads:
+                    items.append(SurfaceItem(
+                        label=f"{call.name}()", kind="validation-call",
+                        location=_loc(
+                            jf.path, jf.stripped.text, call.start)))
+        if not items:
+            return unknown_surface("validation", self.framework)
+        return SurfaceResult(surface="validation", items=tuple(
+            sorted(set(items), key=lambda i: (
+                i.kind, i.label, i.location.path,
+                i.location.line or 0))))
+
+    def discover_error_handlers(
+        self, context: ProjectContext, files: Sequence[str]
+    ) -> SurfaceResult:
+        """Express error contract = err-first 4-arg middleware —
+        `(err, req, res, next)` declarations, and registrations where a
+        declared handler is passed to `.use()`/route calls."""
+        items: list[SurfaceItem] = []
+        for jf in self._parsed(context, files):
+            if not self._file_relevant(jf):
+                continue
+            err_fns: dict[str, int] = {}
+            for start, name, _end, params in jf.methods:
+                parts = [p.strip() for p in params.split(",")]
+                if len(parts) >= 4 and re.fullmatch(
+                        r"err\w*|error", parts[0] or ""):
+                    err_fns[name] = start
+                    items.append(SurfaceItem(
+                        label=f"{name}({parts[0]},...)", kind="error-middleware",
+                        location=_loc(jf.path, jf.stripped.text, start)))
+            for call in jf.calls:
+                _, _, meth = call.name.rpartition(".")
+                if meth not in _EXPRESS_METHODS.keys() | {"use"}:
+                    continue
+                for arg in _call_arg_names(call, jf.stripped.safe):
+                    if arg in err_fns:
+                        items.append(SurfaceItem(
+                            label=arg, kind="error-middleware-registration",
+                            location=_loc(
+                                jf.path, jf.stripped.text, call.start)))
+            safe = jf.stripped.safe
+            for m in _ERR_FIRST_PARAMS.finditer(safe):
+                if safe[m.end():].lstrip().startswith("=>"):
+                    items.append(SurfaceItem(
+                        label="(err, ...) =>", kind="inline-error-middleware",
+                        location=_loc(jf.path, jf.stripped.text, m.start())))
+        if not items:
+            return unknown_surface("error_handlers", self.framework)
+        return SurfaceResult(surface="error_handlers", items=tuple(
+            sorted(set(items), key=lambda i: (
+                i.kind, i.label, i.location.path,
+                i.location.line or 0))))
+
+    def discover_dependencies(
+        self, context: ProjectContext, files: Sequence[str]
+    ) -> SurfaceResult:
+        """Express has no DI container — its registry idiom is
+        `app.set(name, x)`/`x.locals.<name>` writes and
+        `req.app.get(name)`/`req.app.locals` reads."""
+        items: list[SurfaceItem] = []
+        for jf in self._parsed(context, files):
+            if not self._file_relevant(jf):
+                continue
+            receivers = self._receivers(jf)
+            for call in jf.calls:
+                recv, _, meth = call.name.rpartition(".")
+                if meth == "set" and recv in receivers:
+                    lit = call.literals[0][2] if call.literals else "?"
+                    items.append(SurfaceItem(
+                        label=f'{call.name}("{lit}")', kind="app-registry",
+                        location=_loc(
+                            jf.path, jf.stripped.text, call.start)))
+                if call.name == "req.app.get":
+                    lit = call.literals[0][2] if call.literals else "?"
+                    items.append(SurfaceItem(
+                        label=f'req.app.get("{lit}")', kind="registry-read",
+                        location=_loc(
+                            jf.path, jf.stripped.text, call.start)))
+            for m in re.finditer(
+                    r"\b\w+\.locals\.([A-Za-z_$][\w$]*)", jf.stripped.safe):
+                items.append(SurfaceItem(
+                    label=f"locals.{m.group(1)}", kind="app-registry",
+                    location=_loc(jf.path, jf.stripped.text, m.start())))
+        if not items:
+            return unknown_surface("dependencies", self.framework)
+        return SurfaceResult(surface="dependencies", items=tuple(
+            sorted(set(items), key=lambda i: (
+                i.kind, i.label, i.location.path,
+                i.location.line or 0))))

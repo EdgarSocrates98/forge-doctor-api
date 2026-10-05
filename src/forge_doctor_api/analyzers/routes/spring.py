@@ -441,14 +441,34 @@ class SpringBootAdapter(FrameworkAdapter):
             "RolesAllowed": "auth-roles",
         })
 
+    _REQUEST_BODY_TYPE_RE = re.compile(
+        r"@RequestBody(?:\s*\([^)]*\))?\s+"
+        r"(?:(?:@\w+\s*(?:\([^)]*\))?|final)\s+)*"
+        r"([A-Za-z_][\w.<>\[\],?]*)\s+[A-Za-z_]\w*\s*(?=[,)]|$)")
+
     def discover_schemas(
         self, context: ProjectContext, files: Sequence[str]
     ) -> SurfaceResult:
-        items = self._surface_items(context, files, {
-            "RequestBody": "request-schema"})
+        """`@RequestBody PetDto body` — the declared parameter type *is*
+        the request schema, with the annotation marker alongside."""
+        items = list(self._surface_items(context, files, {
+            "RequestBody": "request-schema"}))
+        for jf in self._parsed(context, files):
+            if _SPRING_IMPORT not in jf.stripped.safe:
+                continue
+            for _start, _end, _name, params, params_pos in jf.methods:
+                for m in self._REQUEST_BODY_TYPE_RE.finditer(params):
+                    items.append(SurfaceItem(
+                        label=m.group(1), kind="request-schema-type",
+                        location=_loc(
+                            jf.path, jf.stripped.text,
+                            params_pos + m.start(1))))
         if not items:
             return unknown_surface("schemas", self.framework)
-        return SurfaceResult(surface="schemas", items=items)
+        return SurfaceResult(surface="schemas", items=tuple(
+            sorted(set(items), key=lambda i: (
+                i.kind, i.label, i.location.path,
+                i.location.line or 0))))
 
     def discover_dependencies(
         self, context: ProjectContext, files: Sequence[str]

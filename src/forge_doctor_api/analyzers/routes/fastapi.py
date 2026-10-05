@@ -910,6 +910,26 @@ def _walk_surface(
                                 kind="bound-param",
                                 location=SourceLocation(
                                     path=pf.path, line=arg.lineno)))
+            elif surface == "error-handlers" and isinstance(
+                node, ast.Raise
+            ):
+                raised = node.exc
+                rcall = raised if isinstance(raised, ast.Call) else None
+                raise_head = _call_name(rcall.func) if rcall else (
+                    _call_name(raised) if raised is not None else None)
+                if raise_head and raise_head.endswith("HTTPException"):
+                    status = ""
+                    if rcall:
+                        status = next(
+                            (_unparse(kw.value) for kw in rcall.keywords
+                             if kw.arg == "status_code"),
+                            _unparse(rcall.args[0]) if rcall.args else "")
+                    items.append(SurfaceItem(
+                        label=(f"raise HTTPException({status})" if status
+                               else "raise HTTPException"),
+                        kind="http-error",
+                        location=SourceLocation(
+                            path=pf.path, line=node.lineno)))
             elif surface == "client-calls" and client_mods and isinstance(
                 node, ast.Call
             ):

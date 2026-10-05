@@ -184,6 +184,20 @@ def run_scenario(context: ProjectContext, scenario: LabScenario) -> LabObservati
         async_model = load_asyncapi_project(ctx)
         if async_model.documents:
             obs.findings.extend(run_async_checks(async_model))
+    if "frameworks" in run:
+        for adapter in available_adapters(ctx, files):
+            surfaces = (
+                adapter.discover_auth, adapter.discover_dependencies,
+                adapter.discover_error_handlers, adapter.discover_schemas,
+                adapter.discover_validation)
+            for surface in surfaces:
+                res = surface(ctx, files)
+                obs.entities.extend(
+                    f"capability:{adapter.framework}:{i.kind}:{i.label}"
+                    for i in res.items)
+                obs.issues.extend(
+                    f"{u.subject}:{u.missing}" for u in res.unknowns)
+                obs.unknowns += len(res.unknowns)
 
     if "policy" in run:
         policy_set = load_policies(ctx, files)
