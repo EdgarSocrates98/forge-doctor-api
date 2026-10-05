@@ -18,12 +18,12 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     # Requires Dependency graph + GitHub Advanced Security on private repos.
-    # Continue-on-error keeps the signal when the capability is enabled
-    # without hard-failing every PR on repos that cannot run it.
-    continue-on-error: true
+    # The step is advisory: it runs where the capability exists and
+    # annotates the run, without blocking PRs where it cannot.
     steps:
       - uses: actions/checkout@v7
       - uses: actions/dependency-review-action@v4
+        continue-on-error: true
 
   quality:
     runs-on: ubuntu-latest
