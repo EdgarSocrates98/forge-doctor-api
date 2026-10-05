@@ -1,0 +1,15 @@
+{
+  "agent": "codex",
+  "command": [
+    "codex",
+    "exec",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\091-post-rc-discipline.implement.codex.md)"
+  ],
+  "created_at": "2026-10-05T21:58:35+00:00",
+  "id": "091-post-rc-discipline",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\091-post-rc-discipline.implement.codex.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\091-post-rc-discipline.md",
+  "spec_sha256": "084480f437fe495d3108c6f8e20c03fd9ce94c14b4803867fe0626f2aa6932fd",
+  "status": "planned",
+  "title": "Post-RC discipline \u2014 RC rules doc, run record, final report"
+}

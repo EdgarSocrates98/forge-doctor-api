@@ -28,6 +28,9 @@ forge-doctor-api lab         # corpus precision/recall (expected: all pass)
 - Version is `0.2.0` — do not bump without an owner-documented
   rationale in `docs/versioning.md`, do not publish, do not commit to
   a 1.0 API.
+- RC window: `docs/rc-discipline.md` binds what may and may not
+  change — public-surface/contract/dependency changes are forbidden
+  without a recorded exception.
 
 ## Loop Factory
 
