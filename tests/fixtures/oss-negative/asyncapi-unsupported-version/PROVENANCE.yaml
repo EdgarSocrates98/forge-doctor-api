@@ -1,4 +1,4 @@
 origin: "asyncapi/streetlights-kafka (asyncapi/spec @ 1dd65fd2c1ed13f06365c1e870c61cdc82d8a981, Apache-2.0)"
 domain: "asyncapi"
-sha256: "179163d7d0e44ad23583923aa434ce2dfd86d76680daf425541d7638f8eb09ca"
+sha256: "23f9670fac33242477baf848577c5e40445b7513e4bb8921965ac8267c2291f8"
 extracted_at_note: "verbatim slice with the asyncapi version field set to 9.9.9"

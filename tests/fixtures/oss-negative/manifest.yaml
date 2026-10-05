@@ -17,7 +17,7 @@ cases:
   domain: asyncapi
   expect_status: UNSUPPORTED_VERSION
   expected_findings: []
-  sha256: 179163d7d0e44ad23583923aa434ce2dfd86d76680daf425541d7638f8eb09ca
+  sha256: 23f9670fac33242477baf848577c5e40445b7513e4bb8921965ac8267c2291f8
 - name: graphql-federation-sdl
   file: slice.graphql
   domain: graphql

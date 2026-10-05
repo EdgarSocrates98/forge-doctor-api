@@ -51,6 +51,13 @@ def _slice_dir(name: str, base: Path = OSS) -> Path:
     return base / name
 
 
+def _canonical_bytes(path: Path) -> bytes:
+    """Slice bytes with LF line endings — provenance hashes pin the
+    canonical LF form so the check survives platform checkout EOL
+    (`core.autocrlf=input` gives Windows checkouts CRLF on disk)."""
+    return path.read_bytes().replace(b"\r\n", b"\n")
+
+
 def test_manifest_sorted_and_complete() -> None:
     entries = _manifest()
     assert [e["name"] for e in entries] == sorted(
@@ -72,7 +79,7 @@ def test_slice_provenance_hash_and_license(entry: dict) -> None:
         assert key in prov, f"{entry['name']}: missing {key}"
     assert prov["license"] in LICENSE_ALLOWLIST
     digest = hashlib.sha256(
-        (d / entry["file"]).read_bytes()).hexdigest()
+        _canonical_bytes(d / entry["file"])).hexdigest()
     assert digest == prov["sha256"] == entry["sha256"], (
         f"{entry['name']}: slice bytes do not match provenance hash")
 
@@ -134,5 +141,5 @@ def test_negative_case_provenance_hash(case: dict) -> None:
     d = _slice_dir(case["name"], OSS_NEG)
     prov = yaml.safe_load((d / "PROVENANCE.yaml").read_text("utf-8"))
     digest = hashlib.sha256(
-        (d / case["file"]).read_bytes()).hexdigest()
+        _canonical_bytes(d / case["file"])).hexdigest()
     assert digest == prov["sha256"] == case["sha256"]

@@ -14,6 +14,7 @@ STATIC evidence; nothing is inferred.
 from __future__ import annotations
 
 import re
+from collections import Counter
 
 from forge_doctor_api.analyzers.openapi.model import (
     OpenApiOperation,
@@ -114,10 +115,25 @@ def contract_graph(model: OpenApiProjectModel) -> ServiceGraph:
                     returns.add(match["name"])
         return tuple(sorted(accepts)), tuple(sorted(returns))
 
-    for op in model.operations:
-        if op.source is not OperationSource.PATH:
-            continue
-        operation_id = entity_id(EntityKind.OPERATION, "openapi", op.identity)
+    # Multiple documents may declare the same operation identity (a
+    # monorepo can host two APIs that both define `addPet`). The identity
+    # alone cannot be the graph key there — scope it by the declaring
+    # document path, and by method+path when one document repeats it.
+    path_ops = [op for op in model.operations
+                if op.source is OperationSource.PATH]
+    ident_counts = Counter(op.identity for op in path_ops)
+    doc_counts = Counter((op.identity, op.location.path) for op in path_ops)
+
+    def op_key(op: OpenApiOperation) -> str:
+        if ident_counts[op.identity] == 1:
+            return op.identity
+        key = f"{op.identity}@{op.location.path}"
+        if doc_counts[(op.identity, op.location.path)] > 1:
+            key = f"{key}|{op.method} {op.path}"
+        return key
+
+    for op in path_ops:
+        operation_id = entity_id(EntityKind.OPERATION, "openapi", op_key(op))
         graph.add_entity(
             Entity(
                 id=operation_id,

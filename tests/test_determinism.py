@@ -217,3 +217,57 @@ def test_scan_is_deterministic_across_processes(tmp_path: Path) -> None:
     gc.collect()
     run_b = _outputs(tmp_path)
     assert run_a == run_b
+
+
+_DUP_A = """\
+openapi: "3.0.3"
+info: {title: Pets A, version: "1.0"}
+paths:
+  /pets:
+    post:
+      operationId: addPet
+      responses:
+        "201": {description: ok}
+"""
+
+_DUP_B = """\
+openapi: "3.0.3"
+info: {title: Pets B, version: "1.0"}
+paths:
+  /pet:
+    post:
+      operationId: addPet
+      responses:
+        "201": {description: ok}
+"""
+
+
+def test_duplicate_operationid_across_documents(tmp_path: Path) -> None:
+    """Two documents may legitimately declare the same operationId (a
+    monorepo can host two petstores) — the contract graph scopes the
+    colliding entity ids by document path instead of raising."""
+    (tmp_path / "a").mkdir()
+    (tmp_path / "b").mkdir()
+    (tmp_path / "a/openapi.yaml").write_text(_DUP_A)
+    (tmp_path / "b/openapi.yaml").write_text(_DUP_B)
+    ctx = ProjectContext.from_root(tmp_path)
+    model = load_openapi_project(ctx)
+    graph = contract_graph(model)
+    op_ids = sorted(
+        e.id for e in graph.entities() if e.kind == "operation")
+    assert op_ids == [
+        "operation:openapi:operation_id:addPet@a/openapi.yaml",
+        "operation:openapi:operation_id:addPet@b/openapi.yaml",
+    ]
+
+
+def test_unique_operationid_keeps_bare_identity(tmp_path: Path) -> None:
+    """Single-declared operationIds keep the bare `operation_id:<id>`
+    entity id — no doc suffix appears where no collision exists."""
+    (tmp_path / "openapi.yaml").write_text(_API)
+    ctx = ProjectContext.from_root(tmp_path)
+    graph = contract_graph(load_openapi_project(ctx))
+    op_ids = sorted(
+        e.id for e in graph.entities() if e.kind == "operation")
+    assert "operation:openapi:operation_id:listOrders" in op_ids
+    assert all("@" not in i for i in op_ids)
