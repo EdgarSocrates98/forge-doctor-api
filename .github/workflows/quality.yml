@@ -96,3 +96,6 @@ jobs:
           assert not failed, f'full install failures: {failed}'
           print('full install: zero skipped, zero failed')
           "
+      - name: Scale budget gate
+        if: matrix.profile == 'full' && matrix.python-version == '3.12'
+        run: python factory/benchmarks/scale_benchmark.py --check

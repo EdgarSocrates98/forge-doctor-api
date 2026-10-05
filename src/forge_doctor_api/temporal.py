@@ -33,6 +33,11 @@ from forge_doctor_api.core.models import (
 from forge_doctor_api.report import DoctorReport
 
 SNAPSHOT_DIR = ".forge-doctor/snapshots"
+# spec 076 — on-disk envelope version. Older files without the key
+# are format 1 and load unchanged (additive report fields decode via
+# model defaults). A file written by a newer format is rejected with
+# an explicit reason — never silently misread.
+SNAPSHOT_FORMAT = 1
 
 
 class SnapshotError(Exception):
@@ -102,7 +107,8 @@ class SnapshotStore:
             report_ref=f"doctor://report/{body[:16]}", hash=body)
         self._root.mkdir(parents=True, exist_ok=True)
         self._path(snap.id).write_text(
-            json.dumps({"snapshot": snap.to_dict(),
+            json.dumps({"snapshot_format": SNAPSHOT_FORMAT,
+                        "snapshot": snap.to_dict(),
                         "report": report.to_dict()},
                        sort_keys=True), encoding="utf-8")
         return snap
@@ -133,6 +139,15 @@ class SnapshotStore:
                 path.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError) as e:
             raise SnapshotError(f"corrupt snapshot {snap_id!r}") from e
+        fmt = data.get("snapshot_format", 1)
+        if not isinstance(fmt, int) or fmt < 1:
+            raise SnapshotError(
+                f"snapshot {snap_id!r}: invalid snapshot_format {fmt!r}")
+        if fmt > SNAPSHOT_FORMAT:
+            raise SnapshotError(
+                f"snapshot {snap_id!r}: snapshot_format {fmt} written by "
+                f"a newer format (this version supports "
+                f"<= {SNAPSHOT_FORMAT})")
         return data
 
     def snapshot(self, snap_id: str) -> Snapshot:

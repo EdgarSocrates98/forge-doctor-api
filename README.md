@@ -119,6 +119,7 @@ assessments, and compact handoff bundles for agentic tools.
 - [docs/output-formats.md](docs/output-formats.md) — console/JSON/JSONL/SARIF/agent + CI gate
 - [docs/checks.md](docs/checks.md) — finding model, namespaces, confidence semantics
 - [docs/runtime-evidence.md](docs/runtime-evidence.md) — trace/log ingestion, history, perf & SLOs
+- [docs/runtime-scale.md](docs/runtime-scale.md) — streaming bounds, memory curve, perf budget gate, snapshot formats
 - [docs/policies.md](docs/policies.md) — policy files, inheritance, exceptions, ownership
 - [docs/workspace-fleet.md](docs/workspace-fleet.md) — multi-repo manifests + inventory
 - [docs/knowledge-packs.md](docs/knowledge-packs.md) — versioned knowledge data + plugin SDK
