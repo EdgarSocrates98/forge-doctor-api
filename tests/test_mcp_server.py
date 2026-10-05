@@ -82,7 +82,9 @@ def test_explain_tool_error_is_typed(server) -> None:
         server.call_tool("doctor.explain", {"finding_id": "NOPE-9"}))
     text = result[0][0].text if isinstance(result, tuple) else (
         result.content[0].text)
-    assert "no finding" in json.loads(text)["error"]
+    error = json.loads(text)["error"]
+    assert error["code"] == "DOMAIN_ERROR"
+    assert "no finding" in error["message"]
 
 
 def test_service_resource(server) -> None:

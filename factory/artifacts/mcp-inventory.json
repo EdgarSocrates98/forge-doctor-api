@@ -1,0 +1,237 @@
+{
+  "inventory_version": 1,
+  "resource_templates": [
+    "doctor://finding/{ref}",
+    "doctor://handoff/{hid}",
+    "doctor://operation/{op}",
+    "doctor://service/{sid}"
+  ],
+  "resources": [
+    "doctor://graph",
+    "doctor://service",
+    "doctor://unknowns"
+  ],
+  "schemas_verified": true,
+  "tools": [
+    {
+      "description": "finding + evidence + why it fired",
+      "input_schema": {
+        "properties": {
+          "finding_id": {
+            "title": "Finding Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "finding_id"
+        ],
+        "title": "doctor_explainArguments",
+        "type": "object"
+      },
+      "input_schema_sha256": "ee0ec7d7864bcb8c2659817d0a1519f9deba126e2cb6342ebff66187dbe694ed",
+      "name": "doctor.explain",
+      "stability": "stable",
+      "version": 1
+    },
+    {
+      "description": "contract surface: methods + paths, never payloads",
+      "input_schema": {
+        "properties": {},
+        "title": "doctor_get_apiArguments",
+        "type": "object"
+      },
+      "input_schema_sha256": "a4e0bac23c51fa9ed96137a5fa123e0d479d1b4d3007da7c775c4d5333b84fff",
+      "name": "doctor.get_api",
+      "stability": "stable",
+      "version": 1
+    },
+    {
+      "description": "blast radius over non-non-breaking changes",
+      "input_schema": {
+        "properties": {},
+        "title": "doctor_get_blast_radiusArguments",
+        "type": "object"
+      },
+      "input_schema_sha256": "1278e4344af5d6b4868d84182b009d268af3b678a456839d4362f54d71c3f5fe",
+      "name": "doctor.get_blast_radius",
+      "stability": "stable",
+      "version": 1
+    },
+    {
+      "description": "breaking contract changes (needs --before surface)",
+      "input_schema": {
+        "properties": {},
+        "title": "doctor_get_breaking_changesArguments",
+        "type": "object"
+      },
+      "input_schema_sha256": "d05cb10106acc7fbb51c20235df88c60837060a9ba49ced7c96def442bacdaa4",
+      "name": "doctor.get_breaking_changes",
+      "stability": "stable",
+      "version": 1
+    },
+    {
+      "description": "detected capabilities",
+      "input_schema": {
+        "properties": {},
+        "title": "doctor_get_capabilitiesArguments",
+        "type": "object"
+      },
+      "input_schema_sha256": "2cff7b833344a367a9bb35738f228085eb0c8d138d7adf55e728b6f6d49c6a9e",
+      "name": "doctor.get_capabilities",
+      "stability": "stable",
+      "version": 1
+    },
+    {
+      "description": "outbound client call surface",
+      "input_schema": {
+        "properties": {},
+        "title": "doctor_get_clientsArguments",
+        "type": "object"
+      },
+      "input_schema_sha256": "5616398574009ed643d598dcac2d88ec8ad55ad7051faba5471589e6011b52fa",
+      "name": "doctor.get_clients",
+      "stability": "stable",
+      "version": 1
+    },
+    {
+      "description": "contract metadata (doc identity + versions)",
+      "input_schema": {
+        "properties": {},
+        "title": "doctor_get_contractArguments",
+        "type": "object"
+      },
+      "input_schema_sha256": "e00153f8d7e5869e119c5b9dadcedec2de2b39169f3ee3e190b97c8e876f334f",
+      "name": "doctor.get_contract",
+      "stability": "stable",
+      "version": 1
+    },
+    {
+      "description": "all scan findings",
+      "input_schema": {
+        "properties": {},
+        "title": "doctor_get_findingsArguments",
+        "type": "object"
+      },
+      "input_schema_sha256": "de93124149eda18c99a5a4ee54ca4d49f4e2fb186731b79a063dc0351b7eb789",
+      "name": "doctor.get_findings",
+      "stability": "stable",
+      "version": 1
+    },
+    {
+      "description": "graph DomainSummary or null",
+      "input_schema": {
+        "properties": {},
+        "title": "doctor_get_graphArguments",
+        "type": "object"
+      },
+      "input_schema_sha256": "6fbf2905553a5d9fe63e7f68f3d4040a7146c011d0dd9546ab14f1a2c3247225",
+      "name": "doctor.get_graph",
+      "stability": "stable",
+      "version": 1
+    },
+    {
+      "description": "V2 ApiHandoffBundle",
+      "input_schema": {
+        "properties": {},
+        "title": "doctor_get_handoffArguments",
+        "type": "object"
+      },
+      "input_schema_sha256": "ba5002ce10a8b3c1e4851319367f00e8c28b7b471665984b0ab8d7a8a82fe9aa",
+      "name": "doctor.get_handoff",
+      "stability": "stable",
+      "version": 1
+    },
+    {
+      "description": "one operation by id/identity",
+      "input_schema": {
+        "properties": {
+          "operation_id": {
+            "title": "Operation Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "operation_id"
+        ],
+        "title": "doctor_get_operationArguments",
+        "type": "object"
+      },
+      "input_schema_sha256": "702b23923cddf9ca8598a357b826043af379453d627c1fbbcd24779fd47f281c",
+      "name": "doctor.get_operation",
+      "stability": "stable",
+      "version": 1
+    },
+    {
+      "description": "reliability model status",
+      "input_schema": {
+        "properties": {},
+        "title": "doctor_get_reliabilityArguments",
+        "type": "object"
+      },
+      "input_schema_sha256": "2f032c620453b4d6b20e313cb24da91f483d222de28ccebbe06ad3baeec17447",
+      "name": "doctor.get_reliability",
+      "stability": "stable",
+      "version": 1
+    },
+    {
+      "description": "runtime DomainSummary (None without runtime evidence)",
+      "input_schema": {
+        "properties": {},
+        "title": "doctor_get_runtimeArguments",
+        "type": "object"
+      },
+      "input_schema_sha256": "6d27a8f146ad934a5fe170f4afc4583671f30b8da6d7a9b1d6b2c3a2a4f18cad",
+      "name": "doctor.get_runtime",
+      "stability": "stable",
+      "version": 1
+    },
+    {
+      "description": "security model findings surface",
+      "input_schema": {
+        "properties": {},
+        "title": "doctor_get_securityArguments",
+        "type": "object"
+      },
+      "input_schema_sha256": "fa37b062e04d4232ea258ed6d2c01f81de023a2a6323b4b2a46556266741b1a4",
+      "name": "doctor.get_security",
+      "stability": "stable",
+      "version": 1
+    },
+    {
+      "description": "service-level summary: titles, versions, operation counts",
+      "input_schema": {
+        "properties": {},
+        "title": "doctor_get_serviceArguments",
+        "type": "object"
+      },
+      "input_schema_sha256": "3f3a2c2f9a2f246e48369ddf1cd3abeb6efd862c93f5c11d9b28d33a41cc9cfe",
+      "name": "doctor.get_service",
+      "stability": "stable",
+      "version": 1
+    },
+    {
+      "description": "explicit unknowns across models",
+      "input_schema": {
+        "properties": {},
+        "title": "doctor_get_unknownsArguments",
+        "type": "object"
+      },
+      "input_schema_sha256": "d187fce8f0d6d8399104141bc2ebbf386b041560fd4bc2fbe76fb1d0d8d5f48b",
+      "name": "doctor.get_unknowns",
+      "stability": "stable",
+      "version": 1
+    },
+    {
+      "description": "run the unified deterministic scan",
+      "input_schema": {
+        "properties": {},
+        "title": "doctor_scanArguments",
+        "type": "object"
+      },
+      "input_schema_sha256": "6234f19ccedef3f3b51807db16f6fe1a400eeb87e59469dc3c75c5f699f58ec6",
+      "name": "doctor.scan",
+      "stability": "stable",
+      "version": 1
+    }
+  ]
+}

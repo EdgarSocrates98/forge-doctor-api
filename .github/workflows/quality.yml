@@ -66,6 +66,9 @@ jobs:
           WHEEL=$(ls dist/*.whl)
           /tmp/wheelsmoke/bin/pip install "${WHEEL}${{ matrix.extras }}"
           /tmp/wheelsmoke/bin/forge-doctor-api --version
+      - name: Wheel MCP smoke
+        if: matrix.profile == 'full'
+        run: python factory/mcp_smoke.py --exe /tmp/wheelsmoke/bin/forge-doctor-api
       - name: CLI smoke
         run: |
           forge-doctor-api scan labs/golden/fastapi-service --format agent
@@ -109,3 +112,4 @@ jobs:
           python factory/sbom.py --check
           python factory/sha256sums.py
           python factory/sha256sums.py --verify
+          python factory/mcp_inventory.py --check
