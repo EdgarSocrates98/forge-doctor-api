@@ -28,11 +28,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from forge_doctor_api.core.context import ProjectContext
+from forge_doctor_api.core.models import UnknownFact
 from forge_doctor_api.handoff.bundle import assemble_bundle_v2, build_handoff
 from forge_doctor_api.handoff.context import mint
+from forge_doctor_api.handoff.model import ApiHandoffBundle
 from forge_doctor_api.handoff.protocol import (
     ForgeHandoff,
     ForgeRef,
@@ -41,10 +43,14 @@ from forge_doctor_api.handoff.protocol import (
     build_result,
 )
 
+if TYPE_CHECKING:
+    from forge_doctor_api.report import DoctorReport
+
 
 @dataclass(frozen=True, kw_only=True)
 class DoctorBoundary:
-    """Typed adapter: `ForgeRequest` in, `ForgeHandoff`/`ForgeResult` out.
+    """Typed adapter: `ForgeRequest` in, `ApiHandoffBundle`/
+    `ForgeHandoff`/`ForgeResult` out.
 
     Construct with the ProjectContext of the target repo and an
     optional injected clock — the boundary never reaches for wall
@@ -54,13 +60,17 @@ class DoctorBoundary:
     context: ProjectContext
     clock: date | None = None
 
-    def handle(self, request: ForgeRequest) -> ForgeHandoff:
-        """Run the deterministic pipeline and emit a typed handoff.
+    def _run(
+        self,
+        request: ForgeRequest,
+        *,
+        baseline: DoctorReport | None = None,
+    ) -> tuple[DoctorReport, ApiHandoffBundle]:
+        """Scan once; assemble -> delta-wire -> bound. The single
+        pipeline every outbound shape shares."""
+        from dataclasses import replace
 
-        The request's `target` is informational only — the boundary
-        was constructed over a `ProjectContext`; it never resolves,
-        fetches, or re-roots anything.
-        """
+        from forge_doctor_api.handoff.delta import compute_delta
         from forge_doctor_api.scan import scan_project
 
         report = scan_project(self.context, today=self.clock)
@@ -70,7 +80,74 @@ class DoctorBoundary:
             findings=report.findings,
             unknowns=report.unknowns,
         )
+        if request.delta is not None:
+            if baseline is not None:
+                bundle = replace(bundle, delta=compute_delta(
+                    baseline, report,
+                    baseline_ref=request.delta.baseline_ref,
+                    changed_files=request.delta.changed_files))
+            else:
+                bundle = replace(bundle, unknowns=(
+                    *bundle.unknowns,
+                    UnknownFact(
+                        subject="delta",
+                        missing="baseline unresolved: "
+                                f"{request.delta.baseline_ref!r}",
+                        resolution="resolve the baseline_ref via the "
+                                   "snapshot store and pass the report "
+                                   "as handle(baseline=...)")))
+        return report, bundle.bounded()
+
+    def handle(
+        self,
+        request: ForgeRequest,
+        *,
+        baseline: DoctorReport | None = None,
+    ) -> ApiHandoffBundle:
+        """Run the deterministic pipeline and emit a bounded bundle.
+
+        The request's `target` is informational only — the boundary
+        was constructed over a `ProjectContext`; it never resolves,
+        fetches, or re-roots anything. `baseline` is the previously
+        resolved report when `request.delta` asks for an incremental
+        handoff; without one, the request degrades to an explicit
+        unknown — never a fabricated delta.
+        """
+        return self._run(request, baseline=baseline)[1]
+
+    def envelope(
+        self,
+        request: ForgeRequest,
+        *,
+        baseline: DoctorReport | None = None,
+    ) -> ForgeHandoff:
+        """Typed `ForgeHandoff` envelope over the bounded bundle."""
+        report, bundle = self._run(request, baseline=baseline)
         return build_handoff(report, bundle)
+
+    def endpoint_dict(
+        self,
+        request: ForgeRequest,
+        *,
+        baseline: DoctorReport | None = None,
+    ) -> dict[str, Any]:
+        """DoctorEndpoint shape for The Forger's conceptual consumption.
+
+        `{request, handoff, capabilities, manifest}` — the request
+        echoed, the bounded handoff envelope, detected capabilities,
+        and a `forge-contracts/1` diagnostic-manifest. One scan, four
+        projections; consumers never see internals.
+        """
+        from forge_doctor_api.contracts.adapters import report_manifest
+
+        report, bundle = self._run(request, baseline=baseline)
+        return {
+            "request": request.to_dict(),
+            "handoff": build_handoff(report, bundle).to_dict(),
+            "capabilities": [
+                c.to_dict() for c in bundle.capabilities],
+            "manifest": report_manifest(report).to_dict(),
+        }
 
     def summarize(self, handoff: ForgeHandoff) -> ForgeResult:
         """Compact result view over an emitted handoff — status only.
@@ -92,12 +169,12 @@ class DoctorBoundary:
         )
 
     def capabilities(self, request: ForgeRequest) -> ForgeResult:
-        """Capability-only result for `requested_capabilities` queries."""
+        """Capability-only result for `capabilities` queries."""
         from forge_doctor_api.scan import scan_project
 
         report = scan_project(self.context, today=self.clock)
         detected = {c.capability.value for c in report.capabilities}
-        requested = set(request.requested_capabilities)
+        requested = set(request.capabilities)
         missing = sorted(requested - detected)
         status = "ok" if not missing else "partial"
         summary = (

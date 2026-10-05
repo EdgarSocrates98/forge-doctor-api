@@ -8,13 +8,14 @@ api-forge         = agentic engineering (consumer)
 the-forger        = orchestration/routing (consumer)
 ```
 
-`forge_doctor_api.handoff.protocol` — `PROTOCOL_VERSION = 1`.
+`forge_doctor_api.handoff.protocol` — `PROTOCOL_VERSION = 2`.
 
 ## Models
 
 | Model | Fields | Role |
 |---|---|---|
-| `ForgeRequest` | request_id, target, requested_capabilities, clock | consumer → Doctor |
+| `ForgeRequest` | request_id, target, capabilities, context_refs, delta?, clock | consumer → Doctor |
+| `RequestDelta` | baseline_ref, changed_files | incremental-analysis descriptor |
 | `ForgeHandoff` | handoff_id, bundle_ref, analysis_rev, refs, capabilities, unknowns | Doctor → consumer |
 | `ForgeRef` | ref_id, kind, entity?, sha256?, summary | typed reference |
 | `ForgeCapability` | name, status, unknowns | observed capability |
@@ -26,7 +27,10 @@ the-forger        = orchestration/routing (consumer)
 
 - **Strict parse** — `*.parse(dict)` rejects unknown fields unless they
   use the `x-*` extension namespace; `ProtocolError` on violations.
-- **Version check** — `protocol_version` must equal 1.
+- **Version check** — `protocol_version` must be 1 or 2; emission is
+  always 2. V1 `ForgeRequest` payloads keep parsing:
+  `requested_capabilities` is honored as the v1 alias of
+  `capabilities` (setting both is a conflict error).
 - **Deterministic builders** — `build_request`, `build_handoff`,
   `build_receipt`, `build_result`; clocks are injected, never wall time.
 - **Unknowns are typed refs** — `ForgeHandoff.unknowns` carries

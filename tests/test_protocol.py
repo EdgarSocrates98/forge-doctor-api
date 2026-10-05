@@ -14,6 +14,7 @@ from forge_doctor_api.handoff.protocol import (
     ForgeResult,
     ForgeRoute,
     ProtocolError,
+    RequestDelta,
     build_receipt,
     build_request,
     build_result,
@@ -26,7 +27,7 @@ def test_request_round_trip() -> None:
         "svc", request_id="r1",
         capabilities=("b", "a"), clock="2026-01-01")
     assert req.protocol_version == PROTOCOL_VERSION
-    assert req.requested_capabilities == ("a", "b")  # sorted
+    assert req.capabilities == ("a", "b")  # sorted
     text = req.to_json()
     back = ForgeRequest.parse(req.to_dict())
     assert back == req
@@ -34,6 +35,42 @@ def test_request_round_trip() -> None:
     assert text == build_request(
         "svc", request_id="r1",
         capabilities=("a", "b"), clock="2026-01-01").to_json()
+
+
+def test_request_slim_shape() -> None:
+    req = build_request(
+        "svc", request_id="r2",
+        capabilities=("OPENAPI_32",),
+        context_refs=("doctor://handoff/h1", "doctor://service"),
+        delta=RequestDelta(
+            baseline_ref="doctor://handoff/h1",
+            changed_files=("api.yaml",)))
+    data = req.to_dict()
+    assert data["capabilities"] == ["OPENAPI_32"]
+    assert data["context_refs"] == [
+        "doctor://handoff/h1", "doctor://service"]
+    assert data["delta"]["baseline_ref"] == "doctor://handoff/h1"
+    back = ForgeRequest.parse(data)
+    assert back == req
+    assert back.delta is not None
+    assert back.delta.baseline_ref == "doctor://handoff/h1"
+
+
+def test_request_v1_alias_compat() -> None:
+    """v1 payloads: `requested_capabilities` parses into `capabilities`."""
+    req = ForgeRequest.parse({
+        "protocol_version": 1,
+        "request_id": "r1", "target": "svc",
+        "requested_capabilities": ["MTLS", "OPENAPI_32"]})
+    assert req.capabilities == ("MTLS", "OPENAPI_32")
+    assert req.context_refs == ()
+    assert req.delta is None
+    # both spellings in one payload is a conflict, not a merge
+    with pytest.raises(ProtocolError):
+        ForgeRequest.parse({
+            "target": "svc",
+            "capabilities": ["A"],
+            "requested_capabilities": ["B"]})
 
 
 def test_parse_rejects_unknown_fields() -> None:

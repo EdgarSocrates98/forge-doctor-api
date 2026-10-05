@@ -40,27 +40,94 @@ offline test suite:
 ## Typed integration
 
 ```text
-ForgeRequest ──▶ DoctorBoundary.handle() ──▶ ForgeHandoff
-        │                                        │
+ForgeRequest ──▶ DoctorBoundary.handle() ──▶ ApiHandoffBundle (bounded)
+        │      DoctorBoundary.envelope() ──▶ ForgeHandoff
+        │      DoctorBoundary.endpoint_dict() ──▶ DoctorEndpoint dict
+        │
         └── DoctorBoundary.summarize() ──▶ ForgeResult
         └── DoctorBoundary.capabilities() ──▶ ForgeResult
                                               │
                                    consumer ──▶ ForgeReceipt
 ```
 
-- `ForgeRequest` enters; `ForgeHandoff` (bundle ref + capability and
-  unknown refs) and `ForgeResult` (status + refs only) leave.
-- `DoctorBoundary` (`handoff/boundary.py`) accepts a `ProjectContext`
-  + injected clock. The request's `target` is informational — the
-  boundary never re-roots, fetches, or resolves anything external.
+### Slim ForgeRequest (protocol v2)
+
+| Field | Type | Meaning |
+|---|---|---|
+| `request_id` | str | consumer-supplied identity |
+| `target` | str | informational only — never re-roots the scan |
+| `capabilities` | str[] | capability query (detected vs not-evidenced) |
+| `context_refs` | str[] | `doctor://` refs the consumer already holds |
+| `delta` | RequestDelta? | incremental handoff descriptor |
+| `clock` | str? | injected logical clock — never wall time |
+
+`RequestDelta` = `{baseline_ref, changed_files}` — names the prior
+analysis to diff against; it never carries report payloads. The
+caller resolves `baseline_ref` via the snapshot store and passes the
+report as `handle(baseline=...)`; an unresolved baseline degrades to
+an explicit `delta` unknown, never a fabricated delta.
+
+`build_request()` emits v2. Parsing accepts protocol versions 1 and
+2: v1 `requested_capabilities` maps onto `capabilities` (both keys
+together are a conflict error).
+
+### Bounded handoff
+
+`ApiHandoffBundle.bounded()` caps every carried section by
+`HANDOFF_BUDGET` (e.g. findings ≤ 512, operations ≤ 2048, graph edges
+≤ 2048). Truncation is deterministic — sections are sorted by a
+stable key first, then cut — and every truncation appends an
+`UnknownFact(subject="handoff:<section>", missing="budget_exceeded:
+…")`. Nothing is dropped silently; on V2 bundles the content hash is
+recomputed so `handoff_id` stays truthful.
+
+### DeltaContext
+
+`bundle.delta` carries the computed `DeltaContext` —
+`analysis_rev_prev`/`analysis_rev_cur`, added/removed/changed sets
+per family, plus `baseline_ref`, `changed_files`, and a derived
+`protocol_diff` (capability/domain transitions) so a consumer can
+answer "did the shape change?" without diffing the lists.
+
+### DoctorEndpoint
+
+`boundary.endpoint_dict(request)` returns The Forger's conceptual
+consumption shape, one scan projected four ways:
+
+```text
+{request, handoff, capabilities, manifest}
+```
+
+- `request` — the echoed request dict
+- `handoff` — the typed `ForgeHandoff` over the bounded bundle
+- `capabilities` — detected capability entries
+- `manifest` — a `forge-contracts/1` `diagnostic-manifest`
+  ([forge-protocol.md](forge-protocol.md) wire contract)
+
 - `handoff_to_member_fields` feeds a handoff into fleet aggregation,
   keeping only compact report-equivalent fields — unevidenced model
   fields stay absent and surface downstream as explicit unknowns.
 
-## Boundary module purity
+## Boundary purity (package-wide)
+
+`tests/test_boundary.py` enforces the boundary rules at the AST
+level across **all of `src/forge_doctor_api/`**:
+
+- import roots banned everywhere: `socket`, `urllib`, `http`,
+  `requests`, `httpx`, `subprocess`, `shutil`, `ctypes`, `pickle`,
+  `os`
+- bare-name call bans: `exec`, `eval`, `compile`, `__import__`,
+  `system`, `popen`, `fork`, `spawn*`, `execv*`
+- attribute bans: `os.system`-class, `pickle.load*`, `ctypes.*`
+  loaders, `importlib.import_module`
+- `importlib` is allowlisted only for enumerated safe uses:
+  `core/stats.py` (own-package catalog lazy-load),
+  `knowledge/loader.py` (package resources), `lab/capabilities.py`
+  (`find_spec` detection only), `plugins/registry.py` (entry-points
+  metadata), `plugins/trust.py` (trust-gated plugin import)
+- `handoff/boundary.py` itself is stricter still — no `getattr`, no
+  `importlib` text at all
 
 `handoff/boundary.py` imports only context, handoff and protocol
-modules plus `scan_project` (deferred). The purity test parses its
-AST and rejects: `socket`, `urllib`, `http`, `requests`, `httpx`,
-`subprocess`, `importlib` dynamic imports, `exec`/`eval`, and
-`os.system`-class calls.
+modules plus `scan_project` (deferred) — it never routes, schedules,
+retries, implements, or calls out.

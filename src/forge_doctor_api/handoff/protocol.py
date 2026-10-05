@@ -7,6 +7,11 @@ namespace), and versioned (`PROTOCOL_VERSION = 1`).
 
 Serialization uses the `Model.to_dict()` machinery; `parse_*` returns
 typed objects or raises `ProtocolError` — never silently coerces.
+
+Protocol v2 (spec 075): `ForgeRequest` is slimmed to
+`capabilities`/`context_refs`/`delta`; v1 payloads keep parsing —
+`requested_capabilities` is honored as the v1 alias. Emission is
+always v2.
 """
 
 from __future__ import annotations
@@ -17,7 +22,8 @@ from typing import Any, Self
 
 from forge_doctor_api.core.models import Model
 
-PROTOCOL_VERSION = 1
+PROTOCOL_VERSION = 2
+_SUPPORTED_VERSIONS = (1, 2)
 
 
 class ProtocolError(ValueError):
@@ -41,10 +47,10 @@ def _req(data: dict[str, Any], key: str, model: str) -> Any:
 
 def _version_check(data: dict[str, Any], model: str) -> None:
     version = data.get("protocol_version", PROTOCOL_VERSION)
-    if version != PROTOCOL_VERSION:
+    if version not in _SUPPORTED_VERSIONS:
         raise ProtocolError(
             f"{model}: protocol_version {version!r} unsupported "
-            f"(expected {PROTOCOL_VERSION})")
+            f"(expected one of {_SUPPORTED_VERSIONS})")
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -91,28 +97,71 @@ class ForgeCapability(Model):
 
 
 @dataclass(frozen=True, kw_only=True)
+class RequestDelta(Model):
+    """§26 v2 incremental-analysis descriptor on a `ForgeRequest`.
+
+    `baseline_ref` names the prior analysis to diff against (a
+    `doctor://handoff/...` or snapshot reference); `changed_files`
+    hints the changed surface. The boundary resolves the baseline —
+    the request never carries report payloads.
+    """
+
+    baseline_ref: str = ""
+    changed_files: tuple[str, ...] = ()
+
+    @classmethod
+    def parse(cls, data: dict[str, Any]) -> Self:
+        _reject_unknown(data, {"baseline_ref", "changed_files"},
+                        "RequestDelta")
+        return cls(
+            baseline_ref=str(_req(data, "baseline_ref", "RequestDelta")),
+            changed_files=tuple(sorted(
+                str(f) for f in data.get("changed_files", ()))),
+        )
+
+
+@dataclass(frozen=True, kw_only=True)
 class ForgeRequest(Model):
-    """§26 consumer -> Doctor request envelope."""
+    """§26 consumer -> Doctor request envelope (v2 slim shape).
+
+    Carries identity, target, capability query, resolvable context
+    refs and an optional delta descriptor — nothing else. v1
+    `requested_capabilities` payloads are honored via alias.
+    """
 
     protocol_version: int = PROTOCOL_VERSION
     request_id: str = ""
     target: str = ""
-    requested_capabilities: tuple[str, ...] = ()
+    capabilities: tuple[str, ...] = ()
+    context_refs: tuple[str, ...] = ()
+    delta: RequestDelta | None = None
     clock: str | None = None  # injected logical clock, never wall time
 
     @classmethod
     def parse(cls, data: dict[str, Any]) -> Self:
         _reject_unknown(data, {
-            "protocol_version", "request_id", "target",
-            "requested_capabilities", "clock"}, "ForgeRequest")
+            "protocol_version", "request_id", "target", "capabilities",
+            "requested_capabilities", "context_refs", "delta", "clock"},
+            "ForgeRequest")
         _version_check(data, "ForgeRequest")
+        caps = tuple(str(c) for c in data.get("capabilities", ()))
+        legacy = tuple(
+            str(c) for c in data.get("requested_capabilities", ()))
+        if caps and legacy:
+            raise ProtocolError(
+                "ForgeRequest: 'capabilities' and v1 alias "
+                "'requested_capabilities' must not both be set")
+        delta_raw = data.get("delta")
         return cls(
             protocol_version=int(
                 data.get("protocol_version", PROTOCOL_VERSION)),
             request_id=str(data.get("request_id", "")),
             target=str(_req(data, "target", "ForgeRequest")),
-            requested_capabilities=tuple(
-                str(c) for c in data.get("requested_capabilities", ())),
+            capabilities=caps or legacy,
+            context_refs=tuple(
+                str(r) for r in data.get("context_refs", ())),
+            delta=RequestDelta.parse(delta_raw)
+                  if delta_raw is not None else None,
             clock=data.get("clock"),
         )
 
@@ -246,13 +295,17 @@ def build_request(
     *,
     request_id: str = "",
     capabilities: tuple[str, ...] = (),
+    context_refs: tuple[str, ...] = (),
+    delta: RequestDelta | None = None,
     clock: str | None = None,
 ) -> ForgeRequest:
     """Deterministic request builder — caller supplies identity/clock."""
     return ForgeRequest(
         request_id=request_id,
         target=target,
-        requested_capabilities=tuple(sorted(capabilities)),
+        capabilities=tuple(sorted(capabilities)),
+        context_refs=tuple(sorted(context_refs)),
+        delta=delta,
         clock=clock,
     )
 

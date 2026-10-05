@@ -11,11 +11,19 @@ Identity rules (deterministic, reorder-proof):
 - unknown: keyed by (subject, missing).
 - graph entity: keyed by service id (DomainSummary projection).
 - capability: keyed by name.
+
+Spec 075 makes the delta first-class on the wire: `baseline_ref`
+names the prior analysis the delta was computed against,
+`changed_files` records the caller-supplied changed-surface hint,
+and `protocol_diff` summarizes protocol-surface transitions
+(capabilities and domains gained/lost) for consumers that only need
+to know whether the *shape* of the service changed.
 """
 
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Iterable
 from dataclasses import dataclass
 
 from forge_doctor_api.core.models import Finding, Model
@@ -51,6 +59,10 @@ class DeltaContext(Model):
     domains_removed: tuple[str, ...] = ()
     capabilities_added: tuple[str, ...] = ()
     capabilities_removed: tuple[str, ...] = ()
+    # --- spec 075 first-class wire fields --------------------------------
+    baseline_ref: str | None = None
+    changed_files: tuple[str, ...] = ()
+    protocol_diff: tuple[str, ...] = ()
 
     @property
     def empty(self) -> bool:
@@ -83,9 +95,24 @@ def _unknown_key(u: object) -> str:
 def compute_delta(
     prev: DoctorReport | None,
     cur: DoctorReport,
+    *,
+    baseline_ref: str | None = None,
+    changed_files: Iterable[str] = (),
 ) -> DeltaContext:
-    """prev -> cur delta. `prev=None` yields the flagged initial delta."""
+    """prev -> cur delta. `prev=None` yields the flagged initial delta.
+
+    `baseline_ref` records the reference the delta was computed
+    against; `changed_files` is the caller-supplied changed-surface
+    hint carried verbatim (sorted). `protocol_diff` derives the
+    protocol-surface transitions — capabilities and domains
+    gained/lost — so a consumer can answer "did the shape change?"
+    without diffing the full lists.
+    """
+    files = tuple(sorted(str(f) for f in changed_files))
     if prev is None:
+        caps = {c.capability.value for c in cur.capabilities}
+        domains = {n for n in _DELTA_DOMAIN_FIELDS
+                   if getattr(cur, n, None) is not None}
         return DeltaContext(
             initial=True,
             analysis_rev_cur=cur.analysis_rev,
@@ -96,11 +123,13 @@ def compute_delta(
                                else ())),
             graph_entities_added=cur.graph.ids if cur.graph else (),
             unknowns_added=tuple(_unknown_key(u) for u in cur.unknowns),
-            domains_added=tuple(
-                n for n in _DELTA_DOMAIN_FIELDS
-                if getattr(cur, n, None) is not None),
-            capabilities_added=tuple(
-                c.capability.value for c in cur.capabilities),
+            domains_added=tuple(sorted(domains)),
+            capabilities_added=tuple(sorted(caps)),
+            baseline_ref=baseline_ref,
+            changed_files=files,
+            protocol_diff=tuple(sorted(
+                [f"+capability:{n}" for n in caps]
+                + [f"+domain:{n}" for n in domains])),
         )
 
     prev_f = {_finding_key(f): f for f in prev.findings}
@@ -135,6 +164,12 @@ def compute_delta(
     prev_caps = {c.capability.value for c in prev.capabilities}
     cur_caps = {c.capability.value for c in cur.capabilities}
 
+    transitions = (
+        [f"+capability:{n}" for n in sorted(cur_caps - prev_caps)]
+        + [f"-capability:{n}" for n in sorted(prev_caps - cur_caps)]
+        + [f"+domain:{n}" for n in sorted(cur_domains - prev_domains)]
+        + [f"-domain:{n}" for n in sorted(prev_domains - cur_domains)])
+
     return DeltaContext(
         analysis_rev_prev=prev.analysis_rev,
         analysis_rev_cur=cur.analysis_rev,
@@ -156,4 +191,7 @@ def compute_delta(
         domains_removed=tuple(sorted(prev_domains - cur_domains)),
         capabilities_added=tuple(sorted(cur_caps - prev_caps)),
         capabilities_removed=tuple(sorted(prev_caps - cur_caps)),
+        baseline_ref=baseline_ref,
+        changed_files=files,
+        protocol_diff=tuple(transitions),
     )

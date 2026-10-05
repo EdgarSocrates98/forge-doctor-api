@@ -65,13 +65,23 @@ evidence-preserving topology without the full graph. An empty or
 disconnected root returns an empty slice — absence is data, not a
 fabricated neighborhood.
 
-## The-Forger boundary (spec 070)
+## The-Forger boundary (spec 070/075)
 
 `handoff/boundary.py` exposes `DoctorBoundary` — the typed exchange
 point between the Doctor and its consumers:
 
-- `handle(ForgeRequest) -> ForgeHandoff` — deterministic scan →
-  bundle ref + capability/unknown refs
+- `handle(ForgeRequest, baseline=None) -> ApiHandoffBundle` —
+  deterministic scan → bounded V2 bundle (size provably capped by
+  `HANDOFF_BUDGET`; truncations recorded as `budget_exceeded`
+  unknowns). Pass `baseline` when `request.delta` asks for an
+  incremental handoff — an unresolved baseline becomes an explicit
+  unknown, never a fabricated delta.
+- `envelope(ForgeRequest, baseline=None) -> ForgeHandoff` — the typed
+  envelope over the bounded bundle (ref + capability/unknown refs)
+- `endpoint_dict(ForgeRequest, baseline=None) -> dict` —
+  DoctorEndpoint shape `{request, handoff, capabilities, manifest}`
+  for The Forger's conceptual consumption; `manifest` is a
+  `forge-contracts/1` diagnostic-manifest
 - `summarize(ForgeHandoff) -> ForgeResult` — status + refs only
 - `capabilities(ForgeRequest) -> ForgeResult` — capability-only view
 
