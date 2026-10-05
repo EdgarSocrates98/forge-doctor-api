@@ -1,0 +1,87 @@
+{
+  "bomFormat": "CycloneDX",
+  "components": [
+    {
+      "bom-ref": "pkg:pypi/typer@0.12",
+      "name": "typer",
+      "purl": "pkg:pypi/typer@0.12",
+      "scope": "required",
+      "type": "library",
+      "version": ">=0.12"
+    },
+    {
+      "bom-ref": "pkg:pypi/rich@15.0.0",
+      "name": "rich",
+      "purl": "pkg:pypi/rich@15.0.0",
+      "scope": "required",
+      "type": "library",
+      "version": ">=15.0.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/pyyaml@6.0",
+      "name": "pyyaml",
+      "purl": "pkg:pypi/pyyaml@6.0",
+      "scope": "required",
+      "type": "library",
+      "version": ">=6.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/graphql-core@3.2",
+      "name": "graphql-core",
+      "properties": [
+        {
+          "name": "optional-extra",
+          "value": "graphql"
+        }
+      ],
+      "purl": "pkg:pypi/graphql-core@3.2",
+      "scope": "optional",
+      "type": "library",
+      "version": ">=3.2,<4"
+    },
+    {
+      "bom-ref": "pkg:pypi/mcp@2.0",
+      "name": "mcp",
+      "properties": [
+        {
+          "name": "optional-extra",
+          "value": "mcp"
+        }
+      ],
+      "purl": "pkg:pypi/mcp@2.0",
+      "scope": "optional",
+      "type": "library",
+      "version": ">=2.0,<3"
+    }
+  ],
+  "dependencies": [
+    {
+      "dependsOn": [
+        "pkg:pypi/typer@0.12",
+        "pkg:pypi/rich@15.0.0",
+        "pkg:pypi/pyyaml@6.0",
+        "pkg:pypi/graphql-core@3.2",
+        "pkg:pypi/mcp@2.0"
+      ],
+      "ref": "pkg:pypi/forge-doctor-api@0.1.0"
+    }
+  ],
+  "metadata": {
+    "component": {
+      "bom-ref": "pkg:pypi/forge-doctor-api@0.1.0",
+      "description": "Deterministic, offline-first, evidence-first API architecture intelligence engine.",
+      "licenses": [],
+      "name": "forge-doctor-api",
+      "type": "application",
+      "version": "0.1.0"
+    },
+    "tools": [
+      {
+        "name": "factory/sbom.py",
+        "vendor": "forge-doctor-api"
+      }
+    ]
+  },
+  "specVersion": "1.5",
+  "version": 1
+}

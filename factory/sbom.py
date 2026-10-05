@@ -99,17 +99,42 @@ def build_sbom(pyproject: Path | None = None) -> dict[str, object]:
     }
 
 
+def _render(sbom: dict[str, object]) -> str:
+    return json.dumps(sbom, indent=2, sort_keys=True) + "\n"
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--out", type=Path,
                         default=ROOT / "dist" / "sbom.cdx.json")
+    parser.add_argument(
+        "--check", type=Path, nargs="?", metavar="COMMITTED",
+        const=ROOT / "factory" / "artifacts" / "sbom.cdx.json",
+        help="regenerate the SBOM and diff against the committed "
+             "artifact; exits non-zero on drift (default "
+             "factory/artifacts/sbom.cdx.json)")
     args = parser.parse_args()
-    sbom = build_sbom()
+    rendered = _render(build_sbom())
+    if args.check is not None:
+        committed = args.check
+        if not committed.exists():
+            print(f"sbom --check: missing committed artifact "
+                  f"{committed}; run `python factory/sbom.py "
+                  f"--out {committed}` to record it",
+                  file=sys.stderr)
+            return 1
+        if committed.read_text(encoding="utf-8") != rendered:
+            print(f"sbom --check: drift — pyproject declarations no "
+                  f"longer match {committed}; regenerate with "
+                  f"`python factory/sbom.py --out {committed}`",
+                  file=sys.stderr)
+            return 1
+        print(f"sbom --check: {committed} matches pyproject")
+        return 0
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    args.out.write_text(
-        json.dumps(sbom, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8")
-    print(f"sbom: {args.out} ({len(sbom['components'])} components)")
+    args.out.write_text(rendered, encoding="utf-8")
+    print(f"sbom: {args.out} "
+          f"({len(build_sbom()['components'])} components)")
     return 0
 
 

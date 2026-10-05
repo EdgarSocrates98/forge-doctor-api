@@ -99,3 +99,9 @@ jobs:
       - name: Scale budget gate
         if: matrix.profile == 'full' && matrix.python-version == '3.12'
         run: python factory/benchmarks/scale_benchmark.py --check
+      - name: Release artifact gates
+        if: matrix.profile == 'full' && matrix.python-version == '3.12'
+        run: |
+          python factory/sbom.py --check
+          python factory/sha256sums.py
+          python factory/sha256sums.py --verify

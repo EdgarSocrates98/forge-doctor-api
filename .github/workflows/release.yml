@@ -27,8 +27,9 @@ jobs:
       - name: Generate SBOM (CycloneDX 1.5)
         run: python factory/sbom.py --out dist/sbom.cdx.json
       - name: SHA-256 sums
-        working-directory: dist
-        run: sha256sum * > SHA256SUMS
+        run: |
+          python factory/sha256sums.py
+          python factory/sha256sums.py --verify
       - name: Attest build provenance
         uses: actions/attest-build-provenance@v4
         with:
