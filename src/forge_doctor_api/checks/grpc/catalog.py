@@ -90,6 +90,26 @@ CATALOG: tuple[GrpcCheckSpec, ...] = (
         description="Retry and/or hedging policies amplify calls without "
         "deadline evidence — candidate.",
     ),
+    # spec 087 — diff-mapped kinds; surface via grpc_breaking_changes
+    # through _CHECK_KINDS in checks/grpc/engine.py
+    GrpcCheckSpec(
+        id="GRPC008",
+        title="Enum value renumbered",
+        severity=Severity.HIGH,
+        confidence=Confidence.HIGH,
+        evidence_kind=EvidenceKind.STATIC,
+        description="An enum value kept its name but changed number — "
+        "wire payloads silently rebind to a different meaning.",
+    ),
+    GrpcCheckSpec(
+        id="GRPC009",
+        title="Oneof member changed",
+        severity=Severity.HIGH,
+        confidence=Confidence.HIGH,
+        evidence_kind=EvidenceKind.STATIC,
+        description="A field entered or left a oneof, or a oneof member "
+        "was added/removed — variants decoders may match exhaustively.",
+    ),
 )
 
 BY_ID: dict[str, GrpcCheckSpec] = {c.id: c for c in CATALOG}

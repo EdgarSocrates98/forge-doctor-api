@@ -78,22 +78,58 @@ def scan_python_source(path: str, source: str) -> tuple[list[ClientCallSite], li
 
     aliases: dict[str, str] = {}
     alias_methods: dict[str, str] = {}
+    # spec 087 — generated-client surfaces: gRPC stubs (`*_pb2_grpc`/
+    # `*_grpc` imports + `Stub(channel)` bindings + `stub.Rpc(...)`) and
+    # generated OpenAPI clients (`openapi_client`/`*_api` imports +
+    # `*Api(...)` bindings + `api.operation(...)`).
+    stub_classes: dict[str, str] = {}   # bound name -> module
+    api_classes: dict[str, str] = {}    # bound name -> module
+    grpc_modules: dict[str, str] = {}   # alias -> *_pb2_grpc module
+    gen_modules: dict[str, str] = {}    # alias -> generated client module
+
+    def _is_grpc_mod(mod: str) -> bool:
+        return mod.endswith(("_pb2_grpc", "_grpc")) or "_pb2_grpc" in mod
+
+    def _is_gen_mod(mod: str) -> bool:
+        parts = mod.split(".")
+        return "openapi_client" in parts or any(
+            p.endswith("_api") for p in parts)
+
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
+                bound = alias.asname or alias.name
                 if alias.name in ("requests", "httpx"):
-                    aliases[alias.asname or alias.name] = alias.name
-        elif isinstance(node, ast.ImportFrom) and node.module in ("requests", "httpx"):
-            for alias in node.names:
-                if alias.name in _CLIENT_CTOR:
-                    aliases.setdefault(f"__ctor__.{alias.asname or alias.name}", node.module)
-                elif alias.name in _HTTP_METHODS:
+                    aliases[bound] = alias.name
+                elif _is_grpc_mod(alias.name):
+                    grpc_modules[bound] = alias.name
+                elif _is_gen_mod(alias.name):
+                    gen_modules[bound] = alias.name
+        elif isinstance(node, ast.ImportFrom) and node.module:
+            if node.module in ("requests", "httpx"):
+                for alias in node.names:
+                    if alias.name in _CLIENT_CTOR:
+                        aliases.setdefault(f"__ctor__.{alias.asname or alias.name}", node.module)
+                    elif alias.name in _HTTP_METHODS:
+                        bound = alias.asname or alias.name
+                        aliases[bound] = node.module
+                        alias_methods[bound] = alias.name.upper()
+            elif _is_grpc_mod(node.module):
+                for alias in node.names:
+                    if alias.name.endswith("Stub"):
+                        stub_classes[alias.asname or alias.name] = node.module
+            elif _is_gen_mod(node.module):
+                for alias in node.names:
                     bound = alias.asname or alias.name
-                    aliases[bound] = node.module
-                    alias_methods[bound] = alias.name.upper()
+                    if alias.name.endswith(("Api", "API")):
+                        api_classes[bound] = node.module
+                    else:
+                        gen_modules[bound] = node.module
 
     # session/client variable bindings: `c = httpx.Client(...)`, `c = Client()`
     client_vars: dict[str, str] = {}
+    stub_vars: dict[str, str] = {}   # var -> stub module (gRPC)
+    api_vars: dict[str, str] = {}    # var -> client module (generated OpenAPI)
     response_vars: dict[str, ast.expr] = {}
     data_vars: set[str] = set()
     for node in ast.walk(tree):
@@ -102,6 +138,30 @@ def scan_python_source(path: str, source: str) -> tuple[list[ClientCallSite], li
         if target is None or not isinstance(value, ast.Call):
             continue
         func = value.func
+        # gRPC stub ctor: `s = GreeterStub(channel)` / `s = x_pb2_grpc.GreeterStub(ch)`
+        if isinstance(func, ast.Name) and func.id in stub_classes:
+            stub_vars[target] = stub_classes[func.id]
+            continue
+        if (
+            isinstance(func, ast.Attribute)
+            and func.attr.endswith("Stub")
+            and isinstance(func.value, ast.Name)
+            and func.value.id in grpc_modules
+        ):
+            stub_vars[target] = grpc_modules[func.value.id]
+            continue
+        # generated OpenAPI client ctor: `api = PetApi(...)` / `api = pet_api.PetApi()`
+        if isinstance(func, ast.Name) and func.id in api_classes:
+            api_vars[target] = api_classes[func.id]
+            continue
+        if (
+            isinstance(func, ast.Attribute)
+            and func.attr.endswith(("Api", "API"))
+            and isinstance(func.value, ast.Name)
+            and func.value.id in gen_modules
+        ):
+            api_vars[target] = gen_modules[func.value.id]
+            continue
         # client constructor bindings
         ctor_lib: str | None = None
         if isinstance(func, ast.Attribute) and func.attr in _CLIENT_CTOR:
@@ -130,6 +190,30 @@ def scan_python_source(path: str, source: str) -> tuple[list[ClientCallSite], li
         if not isinstance(node, ast.Call):
             continue
         func = node.func
+        # gRPC stub / generated-client calls carry an operation name,
+        # never a literal URL — emit before the HTTP branch.
+        if isinstance(func, ast.Attribute) and isinstance(func.value, ast.Name):
+            receiver = func.value.id
+            if receiver in stub_vars:
+                sites.append(ClientCallSite(
+                    client=client_name_for(path),
+                    language=ClientLanguage.PYTHON,
+                    library="grpc-stub",
+                    method=None, url=None, path=None,
+                    operation=func.attr,
+                    location=_loc(path, node),
+                ))
+                continue
+            if receiver in api_vars:
+                sites.append(ClientCallSite(
+                    client=client_name_for(path),
+                    language=ClientLanguage.PYTHON,
+                    library="openapi-generated",
+                    method=None, url=None, path=None,
+                    operation=func.attr,
+                    location=_loc(path, node),
+                ))
+                continue
         library: str | None = None
         method: str | None = None
         url_node: ast.expr | None = None

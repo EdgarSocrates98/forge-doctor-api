@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
+from forge_doctor_api.analyzers.clients.graphql_doc import (
+    scan_graphql_document,
+)
+from forge_doctor_api.analyzers.clients.java import scan_java_source
 from forge_doctor_api.analyzers.clients.javascript import scan_javascript_source
 from forge_doctor_api.analyzers.clients.model import ApiClientModel, ClientCallSite
 from forge_doctor_api.analyzers.clients.python import scan_python_source
@@ -13,6 +17,8 @@ from forge_doctor_api.core.models import UnknownFact
 
 _PY = (".py",)
 _JS = (".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs")
+_JAVA = (".java",)
+_GQL = (".graphql", ".gql")
 
 
 def scan_clients(
@@ -33,6 +39,10 @@ def scan_clients(
             extractor = scan_python_source
         elif lower.endswith(_JS):
             extractor = scan_javascript_source
+        elif lower.endswith(_JAVA):
+            extractor = scan_java_source
+        elif lower.endswith(_GQL):
+            extractor = scan_graphql_document
         else:
             continue
         try:

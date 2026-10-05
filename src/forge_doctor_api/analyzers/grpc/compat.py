@@ -135,6 +135,27 @@ def diff_proto_models(
                     location=old_enums[name].location,
                 )
             )
+        # spec 087 — renumbering: same value name, different wire number
+        shared = set(old_enums[name].values) & set(new_enums[name].values)
+        for v in sorted(shared):
+            o_num, n_num = (
+                old_enums[name].values[v], new_enums[name].values[v])
+            if o_num != n_num:
+                changes.append(
+                    ContractChange(
+                        kind="GRPC008",
+                        classification=CompatibilityClass.BREAKING,
+                        side=ChangeSide.RESPONSE,
+                        subject=_subject("proto_enum", name),
+                        path=f"enum:{name}.{v}",
+                        detail=(
+                            f"enum value renumbered: {name}.{v} "
+                            f"{o_num} -> {n_num}"),
+                        before=str(o_num),
+                        after=str(n_num),
+                        location=new_enums[name].location,
+                    )
+                )
     return tuple(changes)
 
 
@@ -189,6 +210,48 @@ def _diff_message(
                     before=f"{of.name}:{of.type}",
                     after=f"{nf.name}:{nf.type}",
                     location=nf.location,
+                )
+            )
+
+    # oneof membership: a field entering/leaving a oneof changes
+    # exclusivity semantics even when number+type are stable
+    for fname in sorted(set(old_by_name) & set(new_by_name)):
+        of, nf = old_by_name[fname], new_by_name[fname]
+        if (of.oneof or None) != (nf.oneof or None):
+            changes.append(
+                ContractChange(
+                    kind="GRPC009",
+                    classification=CompatibilityClass.BREAKING,
+                    side=ChangeSide.RESPONSE,
+                    subject=_subject("proto_message", name),
+                    path=f"field:{name}.{fname}",
+                    detail=(
+                        f"oneof membership changed: {name}.{fname} "
+                        f"{of.oneof or '(none)'} -> {nf.oneof or '(none)'}"),
+                    before=of.oneof,
+                    after=nf.oneof,
+                    location=nf.location,
+                )
+            )
+    # oneof member added to a surviving oneof — decoders matching
+    # variants exhaustively may not handle the new member
+    for oneof in sorted(set(old.oneofs) & set(new.oneofs)):
+        old_members = {f.name for f in old.fields if f.oneof == oneof}
+        new_members = {f.name for f in new.fields if f.oneof == oneof}
+        for fname in sorted(new_members - old_members):
+            changes.append(
+                ContractChange(
+                    kind="GRPC009",
+                    classification=CompatibilityClass.POTENTIALLY_BREAKING,
+                    side=ChangeSide.RESPONSE,
+                    subject=_subject("proto_message", name),
+                    path=f"oneof:{name}.{oneof}.{fname}",
+                    detail=(
+                        f"oneof member added: {oneof} gains {fname}; "
+                        "exhaustive decoders may not handle it"),
+                    before=None,
+                    after=fname,
+                    location=new.location,
                 )
             )
 

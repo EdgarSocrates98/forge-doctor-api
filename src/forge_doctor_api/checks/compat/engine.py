@@ -228,6 +228,8 @@ class _SchemaDiff:
         self._types(old, new, path)
         self._enums(old, new, path)
         self._required(old, new, path)
+        self._nullable(old, new, path)
+        self._discriminator(old, new, path)
         self._properties(old, new, path, depth)
         self._items(old, new, path, depth)
         self._additional(old, new, path, depth)
@@ -306,6 +308,81 @@ class _SchemaDiff:
                 CompatibilityClass.BREAKING,
                 f"{path}.{name}",
                 f"{path}.{name}: request field became required",
+            )
+
+    def _nullable(self, old: dict[str, Any], new: dict[str, Any], path: str) -> None:
+        """OAS `nullable` flip. Request side: losing nullability rejects
+        clients still sending null (BREAKING); gaining it widens input —
+        no emit, same posture as type widening. Response side mirrors the
+        type-narrow/widen rules."""
+        o_raw, n_raw = old.get("nullable"), new.get("nullable")
+        if o_raw is None and n_raw is None:
+            return
+        # absent `nullable` means false per OAS 3.0 — key removal flips too
+        o = bool(o_raw) if o_raw is not None else False
+        n = bool(n_raw) if n_raw is not None else False
+        if o == n:
+            return
+        if self.side is ChangeSide.REQUEST:
+            if o and not n:
+                self.emit(
+                    "type_changed_request", CompatibilityClass.BREAKING,
+                    path,
+                    f"{path}: nullable removed on a request field; "
+                    "clients sending null now fail",
+                    "nullable", "non-null",
+                )
+            return
+        if o and not n:
+            self.emit(
+                "type_changed_response", CompatibilityClass.BREAKING,
+                path,
+                f"{path}: response field can no longer be null",
+                "nullable", "non-null",
+            )
+        else:
+            self.emit(
+                "response_type_widened", CompatibilityClass.POTENTIALLY_BREAKING,
+                path,
+                f"{path}: response field may now be null; strictly-typed "
+                "clients may not handle it",
+                "non-null", "nullable",
+            )
+
+    def _discriminator(self, old: dict[str, Any], new: dict[str, Any], path: str) -> None:
+        """Polymorphic dispatch key: any discriminator change reroutes
+        deserialization — BREAKING on both sides."""
+        o, n = old.get("discriminator"), new.get("discriminator")
+        if o == n or (o is None and n is None):
+            return
+        if o is None or n is None:
+            self.emit(
+                f"type_changed_{self.side.value}",
+                CompatibilityClass.BREAKING,
+                path,
+                f"{path}: discriminator {'removed' if n is None else 'added'}; "
+                "polymorphic dispatch changed",
+            )
+            return
+        o_name = o.get("propertyName") if isinstance(o, dict) else None
+        n_name = n.get("propertyName") if isinstance(n, dict) else None
+        o_map = o.get("mapping") if isinstance(o, dict) else None
+        n_map = n.get("mapping") if isinstance(n, dict) else None
+        if o_name != n_name:
+            self.emit(
+                f"type_changed_{self.side.value}",
+                CompatibilityClass.BREAKING,
+                f"{path}.discriminator",
+                f"{path}: discriminator propertyName {o_name!r} -> {n_name!r}",
+                str(o_name), str(n_name),
+            )
+        elif o_map != n_map:
+            self.emit(
+                f"type_changed_{self.side.value}",
+                CompatibilityClass.POTENTIALLY_BREAKING,
+                f"{path}.discriminator",
+                f"{path}: discriminator mapping changed {o_map!r} -> {n_map!r}",
+                str(o_map)[:60], str(n_map)[:60],
             )
 
     def _properties(

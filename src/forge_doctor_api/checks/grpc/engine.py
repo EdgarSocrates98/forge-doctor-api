@@ -172,7 +172,7 @@ def run_grpc_checks(model: GrpcProjectModel) -> tuple[Finding, ...]:
     return tuple(findings)
 
 
-_CHECK_KINDS = {"GRPC003", "GRPC004", "GRPC006"}
+_CHECK_KINDS = {"GRPC003", "GRPC004", "GRPC006", "GRPC008", "GRPC009"}
 
 
 def grpc_breaking_changes(

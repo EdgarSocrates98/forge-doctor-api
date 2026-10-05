@@ -16,6 +16,9 @@ from __future__ import annotations
 
 import re
 
+from forge_doctor_api.analyzers.clients.graphql_doc import (
+    scan_javascript_graphql,
+)
 from forge_doctor_api.analyzers.clients.model import (
     ClientCallSite,
     ClientLanguage,
@@ -155,6 +158,10 @@ def scan_javascript_source(
     text = _strip_comments(source)
     sites: list[ClientCallSite] = []
     unknowns: list[UnknownFact] = []
+    # spec 087 — `gql`...`` tagged templates are client documents
+    gql_sites, gql_unknowns = scan_javascript_graphql(path, text)
+    sites.extend(gql_sites)
+    unknowns.extend(gql_unknowns)
     for match in _CALL.finditer(text):
         open_paren = text.index("(", match.start())
         start, end = _args_span(text, open_paren)

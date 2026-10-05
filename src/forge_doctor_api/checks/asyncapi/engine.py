@@ -11,6 +11,7 @@ from __future__ import annotations
 import re
 from collections import defaultdict
 
+from forge_doctor_api.analyzers.asyncapi.compat import diff_asyncapi_models
 from forge_doctor_api.analyzers.asyncapi.model import (
     AsyncAction,
     AsyncApiChannel,
@@ -20,9 +21,14 @@ from forge_doctor_api.analyzers.asyncapi.model import (
 )
 from forge_doctor_api.checks.asyncapi.catalog import BY_ID, AsyncCheckSpec
 from forge_doctor_api.checks.compat import ContractChange, diff_schema_content
-from forge_doctor_api.checks.compat.catalog import ChangeSide
+from forge_doctor_api.checks.compat.catalog import (
+    ChangeSide,
+    CompatibilityClass,
+)
 from forge_doctor_api.core.models import (
+    Confidence,
     Evidence,
+    EvidenceKind,
     Finding,
     SourceLocation,
     UnknownFact,
@@ -328,3 +334,41 @@ def run_async_checks(model: AsyncApiProjectModel) -> tuple[Finding, ...]:
             ),
         )
     )
+
+
+def asyncapi_breaking_changes(
+    old: AsyncApiProjectModel, new: AsyncApiProjectModel
+) -> tuple[Finding, ...]:
+    """Version diff -> ASYNC009-017 findings via unified compat classes.
+
+    Mirrors `graphql_breaking_changes`/`grpc_breaking_changes`: change
+    kinds emitted by `diff_asyncapi_models` are the catalog ids."""
+    findings: list[Finding] = []
+    for change in diff_asyncapi_models(old, new):
+        spec = BY_ID[change.kind]
+        confidence = (
+            Confidence.UNKNOWN
+            if change.classification is CompatibilityClass.UNKNOWN
+            else spec.confidence
+        )
+        findings.append(
+            Finding(
+                id=spec.id,
+                title=spec.title,
+                description=change.detail,
+                severity=spec.severity,
+                confidence=confidence,
+                evidence_kind=spec.evidence_kind,
+                evidence=(
+                    Evidence(
+                        kind=EvidenceKind.STATIC,
+                        source=change.location.path if change.location else "(doc)",
+                        summary=change.detail,
+                        line=change.location.line if change.location else None,
+                    ),
+                ),
+                entity_ids=(change.subject,),
+                source_location=change.location,
+            )
+        )
+    return tuple(findings)

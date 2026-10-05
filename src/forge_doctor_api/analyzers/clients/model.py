@@ -17,6 +17,8 @@ from forge_doctor_api.core.models import Model, SourceLocation, UnknownFact
 class ClientLanguage(StrEnum):
     PYTHON = "python"
     JAVASCRIPT = "javascript"
+    JAVA = "java"
+    GRAPHQL = "graphql"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -27,6 +29,9 @@ class ClientCallSite(Model):
     - `library`: `requests` | `httpx` | `fetch` | `axios`.
     - `method`/`url`: literal evidence; `None` when dynamic (§101).
     - `path`: path portion derived from `url` when it parses.
+    - `operation`: invoked operation identity for non-HTTP call sites —
+      generated OpenAPI client method name (operationId), gRPC stub
+      method, GraphQL operation name. `None` when not statically known.
     - `response_fields`: field names statically read off the response —
       the evidence that upgrades a change to confirmed impact (§183).
     """
@@ -37,6 +42,7 @@ class ClientCallSite(Model):
     method: str | None
     url: str | None
     path: str | None
+    operation: str | None = None
     response_fields: tuple[str, ...] = ()
     location: SourceLocation
 

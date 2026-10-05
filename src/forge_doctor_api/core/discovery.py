@@ -83,8 +83,10 @@ _SOURCE_SUFFIXES: dict[str, str] = {
     ".cs": "csharp",
 }
 _JS_SUFFIXES = {".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs"}
-# Client scanners cover python + javascript-family source only.
-_CLIENT_SUFFIXES = _JS_SUFFIXES | {".py"}
+# spec 087 — client scanners also cover Java (Feign) and executable
+# .graphql documents; both may hold other classes too, so extractors
+# stay evidence-gated and emit nothing without client markers.
+_CLIENT_SUFFIXES = _JS_SUFFIXES | {".py", ".java", ".graphql", ".gql"}
 
 _DOC_SUFFIXES = {".md", ".rst", ".adoc"}
 

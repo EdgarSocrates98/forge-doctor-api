@@ -118,6 +118,7 @@ assessments, and compact handoff bundles for agentic tools.
 - [docs/cli.md](docs/cli.md) — every command, option, and exit code
 - [docs/output-formats.md](docs/output-formats.md) — console/JSON/JSONL/SARIF/agent + CI gate
 - [docs/checks.md](docs/checks.md) — finding model, namespaces, confidence semantics
+- [docs/compatibility.md](docs/compatibility.md) — cross-protocol diff taxonomy, decision tables, client-impact coverage
 - [docs/runtime-evidence.md](docs/runtime-evidence.md) — trace/log ingestion, history, perf & SLOs
 - [docs/runtime-scale.md](docs/runtime-scale.md) — streaming bounds, memory curve, perf budget gate, snapshot formats
 - [docs/policies.md](docs/policies.md) — policy files, inheritance, exceptions, ownership

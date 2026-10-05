@@ -1,5 +1,6 @@
 """AsyncAPI semantic model (§20)."""
 
+from forge_doctor_api.analyzers.asyncapi.compat import diff_asyncapi_models
 from forge_doctor_api.analyzers.asyncapi.graph import async_graph
 from forge_doctor_api.analyzers.asyncapi.model import (
     ASYNCAPI_MODEL_SCHEMA_VERSION,
@@ -33,5 +34,6 @@ __all__ = [
     "AsyncDocumentStatus",
     "AsyncIssueCode",
     "async_graph",
+    "diff_asyncapi_models",
     "load_asyncapi_project",
 ]

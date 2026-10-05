@@ -115,6 +115,36 @@ CATALOG: tuple[GqlCheckSpec, ...] = (
         description="Config evidence enables introspection, or no "
         "introspection policy evidence exists - candidate.",
     ),
+    # spec 087 — diff-mapped kinds; both surface through
+    # graphql_breaking_changes via diff_graphql_schemas
+    GqlCheckSpec(
+        id="GQL011",
+        title="Union member removed",
+        severity=Severity.HIGH,
+        confidence=Confidence.HIGH,
+        evidence_kind=EvidenceKind.STATIC,
+        description="A member type was removed from a union; clients "
+        "matching the member exhaustively break on the missing case.",
+    ),
+    GqlCheckSpec(
+        id="GQL012",
+        title="Directive set changed",
+        severity=Severity.MEDIUM,
+        confidence=Confidence.MEDIUM,
+        evidence_kind=EvidenceKind.STATIC,
+        description="A type or field gained/lost directives; semantics "
+        "may shift without structural proof — POTENTIALLY breaking.",
+    ),
+    GqlCheckSpec(
+        id="GQL013",
+        title="Union member added",
+        severity=Severity.MEDIUM,
+        confidence=Confidence.MEDIUM,
+        evidence_kind=EvidenceKind.STATIC,
+        description="A union now admits a new member type; clients "
+        "matching members exhaustively may not handle the new case — "
+        "POTENTIALLY breaking.",
+    ),
 )
 
 BY_ID: dict[str, GqlCheckSpec] = {c.id: c for c in CATALOG}

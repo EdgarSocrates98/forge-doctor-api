@@ -51,12 +51,64 @@ def diff_graphql_schemas(
                 )
             continue
 
+        if ot.kind is GraphQLTypeKind.UNION and nt.kind is ot.kind:
+            for member in sorted(set(ot.union_members) - set(nt.union_members)):
+                changes.append(
+                    ContractChange(
+                        kind="GQL011",
+                        classification=CompatibilityClass.BREAKING,
+                        side=ChangeSide.RESPONSE,
+                        subject=_subject("union", name),
+                        path=f"union:{name}.{member}",
+                        detail=f"union member removed: {name} no longer "
+                        f"admits {member}",
+                        before=member,
+                        after=None,
+                        location=ot.location,
+                    )
+                )
+            for member in sorted(set(nt.union_members) - set(ot.union_members)):
+                changes.append(
+                    ContractChange(
+                        kind="GQL013",
+                        classification=CompatibilityClass.POTENTIALLY_BREAKING,
+                        side=ChangeSide.RESPONSE,
+                        subject=_subject("union", name),
+                        path=f"union:{name}.{member}",
+                        detail=f"union member added: {name} now admits "
+                        f"{member}; exhaustive clients may not handle it",
+                        before=None,
+                        after=member,
+                        location=nt.location,
+                    )
+                )
+            continue
+
         if ot.kind not in {
             GraphQLTypeKind.OBJECT,
             GraphQLTypeKind.INTERFACE,
             GraphQLTypeKind.INPUT_OBJECT,
         } or nt.kind is not ot.kind:
             continue
+
+        # type-level directive drift — semantics may shift even when the
+        # field shape is unchanged (e.g. losing @deprecated or an auth
+        # directive). Evidence-carrying POTENTIALLY, never silent.
+        if ot.directives != nt.directives:
+            changes.append(
+                ContractChange(
+                    kind="GQL012",
+                    classification=CompatibilityClass.POTENTIALLY_BREAKING,
+                    side=ChangeSide.META,
+                    subject=_subject("graphql_type", name),
+                    path=f"type:{name}",
+                    detail=f"directives changed on {name}: "
+                    f"{sorted(ot.directives)} -> {sorted(nt.directives)}",
+                    before=",".join(sorted(ot.directives)),
+                    after=",".join(sorted(nt.directives)),
+                    location=nt.location,
+                )
+            )
 
         old_fields = {f.name: f for f in ot.fields}
         new_fields = {f.name: f for f in nt.fields}
@@ -97,6 +149,21 @@ def diff_graphql_schemas(
                         ),
                         before="nullable",
                         after="non-null",
+                        location=nf.location,
+                    )
+                )
+            if of.directives != nf.directives:
+                changes.append(
+                    ContractChange(
+                        kind="GQL012",
+                        classification=CompatibilityClass.POTENTIALLY_BREAKING,
+                        side=side,
+                        subject=_subject("graphql_type", name),
+                        path=f"field:{name}.{fname}",
+                        detail=f"directives changed on {name}.{fname}: "
+                        f"{sorted(of.directives)} -> {sorted(nf.directives)}",
+                        before=",".join(sorted(of.directives)),
+                        after=",".join(sorted(nf.directives)),
                         location=nf.location,
                     )
                 )
