@@ -31,6 +31,32 @@ def help_text(*argv: str) -> str:
     return _ANSI_RE.sub("", result.output)
 
 
+_DECORATIVE_RE = re.compile(r"^[\s─═━═╌╍┄┅┈┉\-_=~*#|+.·:<>]*$")
+_EDGE_GLYPHS = "│┃| "
+_WS_RUN_RE = re.compile(r"\s{2,}")
+
+
+def normalized_help(*argv: str) -> str:
+    """`help_text` canonicalized to content: ANSI stripped, decoration-
+    only lines dropped, edge glyphs and intra-line column padding
+    collapsed — snapshots pin the contract, not the renderer's layout."""
+    lines: list[str] = []
+    blank = False
+    for raw in help_text(*argv).splitlines():
+        line = raw.rstrip()
+        if _DECORATIVE_RE.match(line):
+            if lines and not blank:
+                lines.append("")
+            blank = True
+            continue
+        line = _WS_RUN_RE.sub(" ", line.strip(_EDGE_GLYPHS))
+        lines.append(line)
+        blank = False
+    while lines and lines[-1] == "":
+        lines.pop()
+    return "\n".join(lines) + "\n"
+
+
 def assert_option(command: str, *argv: str, option: str) -> str:
     """Assert `option` is present in `command argv --help` output."""
     text = help_text(command, *argv)

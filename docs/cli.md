@@ -5,12 +5,22 @@ Entry point: `forge-doctor-api` (console script →
 Global exit codes: `0` success · `1` gate failure · `2` usage error ·
 `3` not implemented (reserved for placeholders).
 
+Each command carries a **stability level** (enforced by
+`cli/catalog.py` + `tests/test_cli_contract.py` — docs and binary
+cannot drift silently):
+
+- **stable** — public contract; changes require deprecation handling.
+- **experimental** — shipped and tested, but the surface may evolve.
+
 ```text
 forge-doctor-api --help      list commands
 forge-doctor-api --version   print version and exit
 ```
 
 ## scan
+
+**Stability:** stable
+
 
 ```text
 forge-doctor-api scan TARGET [--fail-on CATS] [--baseline PATH]
@@ -45,6 +55,9 @@ without a baseline).
 
 ## inventory
 
+**Stability:** stable
+
+
 ```text
 forge-doctor-api inventory TARGET [--json]
 ```
@@ -58,6 +71,9 @@ UNKNOWN answers, not silence.
 
 ## diff
 
+**Stability:** stable
+
+
 ```text
 forge-doctor-api diff OLD NEW [--semantic] [--json] [--pr] [--clients DIR]
 ```
@@ -68,17 +84,25 @@ granularity — never file-level). `--pr` adds the six-counter PR summary;
 
 ## contract
 
+**Stability:** stable
+
+
 ```text
-forge-doctor-api contract diff OLD NEW           contract-level diff
-forge-doctor-api contract compatibility OLD NEW  compatibility classification only
-forge-doctor-api contract inspect TARGET         inventory of parsed contract documents
+forge-doctor-api contract diff OLD NEW [--semantic] [--json]
+forge-doctor-api contract compatibility OLD NEW [--json]
+forge-doctor-api contract inspect TARGET [--json]
 ```
 
 `inspect` prints document metadata only (title, version, operation
 counts, source paths) — never schema bodies. Exit `2` when TARGET
-contains no inspectable contract.
+contains no inspectable contract. `diff --semantic` emits the typed
+`ChangeEvent` stream alongside the diff; `--json` is machine-readable
+output on every subcommand.
 
 ## fingerprint
+
+**Stability:** stable
+
 
 ```text
 forge-doctor-api fingerprint FILE|DIR
@@ -88,6 +112,9 @@ Prints the semantic fingerprint — stable across formatting, ordering,
 and comment changes (§180). Used by `BackwardCompatibilityBaseline`.
 
 ## graph
+
+**Stability:** stable
+
 
 ```text
 forge-doctor-api graph TARGET [--json]
@@ -99,6 +126,9 @@ call sites in one `ServiceGraph`. Console prints entity/edge counts;
 
 ## blast-radius
 
+**Stability:** stable
+
+
 ```text
 forge-doctor-api blast-radius OLD NEW [--clients DIR] [--json]
 ```
@@ -109,16 +139,22 @@ unresolvable subjects yield `UnknownFact`s.
 
 ## runtime
 
+**Stability:** stable
+
+
 ```text
-forge-doctor-api runtime requests DIR    normalized per-request executions
-forge-doctor-api runtime baseline DIR    per-endpoint performance baselines
-forge-doctor-api runtime regressions DIR baseline vs observed regressions
+forge-doctor-api runtime requests DIR [--json]    normalized per-request executions
+forge-doctor-api runtime baseline DIR [--json]    per-endpoint performance baselines
+forge-doctor-api runtime regressions DIR [--json] baseline vs observed regressions
 ```
 
 DIR contains runtime artifacts (OTLP JSON, access logs). See
 [runtime-evidence.md](runtime-evidence.md).
 
 ## security inspect
+
+**Stability:** stable
+
 
 ```text
 forge-doctor-api security inspect DIR [--json]
@@ -131,9 +167,12 @@ sensitive-field exposure, deprecated-but-reachable ops.
 
 ## reliability
 
+**Stability:** stable
+
+
 ```text
 forge-doctor-api reliability inspect DIR [--json]
-forge-doctor-api reliability path DIR --hop NAME [--retry SCOPE=N] [--timeout SCOPE=D]
+forge-doctor-api reliability path DIR --hop NAME [--policy SCOPE=N] [--timeout SCOPE=D] [--json]
 ```
 
 `inspect` lists timeouts, retries, idempotency, rate limits, health,
@@ -141,6 +180,9 @@ SLOs from config evidence. `path` walks a declared call chain and shows
 the effective timeout/retry per hop — including retry amplification.
 
 ## diagnose
+
+**Stability:** stable
+
 
 ```text
 forge-doctor-api diagnose TARGET [--before DIR] [--json]
@@ -154,6 +196,9 @@ never "confirmed".
 
 ## explain
 
+**Stability:** stable
+
+
 ```text
 forge-doctor-api explain DIR FINDING [--json]
 ```
@@ -164,6 +209,9 @@ disambiguation list.
 
 ## lab
 
+**Stability:** stable
+
+
 ```text
 forge-doctor-api lab [TARGET] [--json] [--no-record]
 ```
@@ -173,6 +221,9 @@ precision/recall per finding family, and writes a run record to
 `factory/runs/` unless `--no-record`.
 
 ## snapshot
+
+**Stability:** experimental
+
 
 ```text
 forge-doctor-api snapshot save [TARGET] [--label L]
@@ -193,6 +244,9 @@ previous + current snapshot evidence refs.
 
 ## knowledge
 
+**Stability:** experimental
+
+
 ```text
 forge-doctor-api knowledge list [DIRS...] [--target DIR]
 forge-doctor-api knowledge validate DIR
@@ -209,6 +263,9 @@ exit 2 listing every error, incompatible ones exit 1.
 
 ## plugins
 
+**Stability:** experimental
+
+
 ```text
 forge-doctor-api plugins list [DIR]
 forge-doctor-api plugins inspect MANIFEST
@@ -222,6 +279,9 @@ plugin code is never imported (see
 [ADR-0004](adr/ADR-0004-untrusted-plugins.md)).
 
 ## mcp
+
+**Stability:** experimental
+
 
 ```text
 forge-doctor-api mcp [TARGET] [--transport stdio]
