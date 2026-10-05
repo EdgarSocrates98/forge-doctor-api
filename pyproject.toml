@@ -58,7 +58,9 @@ mypy_path = "src"
 packages = ["forge_doctor_api"]
 
 [[tool.mypy.overrides]]
-module = ["mcp", "mcp.*"]
+# Optional extras are absent under a minimal install — mypy must still
+# pass there (TYPE_CHECKING imports resolve as missing by design).
+module = ["mcp", "mcp.*", "graphql", "graphql.*"]
 follow_imports = "skip"
 ignore_missing_imports = true
 
