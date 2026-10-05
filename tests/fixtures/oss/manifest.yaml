@@ -55,6 +55,7 @@ slices:
   - OAS004
   - OAS010
   - OAS020
+  - RELAPI008
   sha256: c9695b830c457df0b2f7e62f91b270be5628f239947926e279ccca895b950c0f
 - name: oai-learn/link-example
   file: slice.yaml
@@ -64,11 +65,13 @@ slices:
   - APISEC011
   - OAS010
   - OAS020
+  - RELAPI008
   sha256: 92b502f64d80d67e2a8e634e5b82e9b7ae1f1e8fb5b754cc1c2cad1102447206
 - name: oai-learn/non-oauth-scopes
   file: slice.yaml
   domain: openapi
   expected_findings:
+  - APISEC013
   - OAS004
   - OAS005
   - OAS020
@@ -81,6 +84,7 @@ slices:
   - APISEC011
   - OAS010
   - OAS018
+  - RELAPI008
   sha256: cefaafa05eee75b1888762dea08a295f245e9f3e4bdb8777f4bdfed09e335339
 - name: oai-learn/petstore-expanded
   file: slice.yaml
@@ -91,6 +95,7 @@ slices:
   - OAS010
   - OAS018
   - OAS020
+  - RELAPI008
   sha256: abc68d08c674c8f0415aaeeb87c4203d5dd7257cdb79ac7ccb0446d1c5b9a7c2
 - name: oai-learn/uspto
   file: slice.yaml
@@ -98,6 +103,7 @@ slices:
   expected_findings:
   - APISEC011
   - OAS010
+  - RELAPI008
   sha256: 29d32d0a0710b0acac434807e018ebd9cc192ad604fefdcf51422833b5963642
 - name: oai-learn/webhook-example
   file: slice.yaml
@@ -105,6 +111,7 @@ slices:
   expected_findings:
   - APISEC011
   - OAS010
+  - RELAPI008
   sha256: 1bf9c928e1d42d5ffd3d793dbc6b569bd47a97a4679ee5c85cd78091136ab2a4
 - name: spacexland/schema
   file: slice.graphql
@@ -123,5 +130,7 @@ slices:
   - APISEC006
   - APISEC011
   - APISEC012
+  - APISEC013
   - OAS010
+  - RELAPI008
   sha256: e1a2480ffa440e44b981db5b038374214c532ffc92026fd51fb957c88bfbdd88

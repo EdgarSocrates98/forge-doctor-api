@@ -34,6 +34,7 @@ from forge_doctor_api.core.models import (
 )
 from forge_doctor_api.security.model import (
     ApiSecurityModel,
+    AuthChainLink,
     AuthDrift,
     AuthenticationScheme,
     AuthorizationPolicy,
@@ -755,16 +756,22 @@ def _match_route(op: OpenApiOperation, routes: tuple[RouteModel, ...]) -> RouteM
     return None
 
 
-def auth_drift(
+def _op_planes(
     model: OpenApiProjectModel,
     routes: RouteScan | None,
     gateway_policies: tuple[AuthorizationPolicy, ...],
-) -> tuple[AuthDrift, ...]:
-    """§53 compare contract vs impl vs gateway auth evidence per op."""
-    if routes is None and not gateway_policies:
-        return ()
-    out: list[AuthDrift] = []
+) -> tuple[tuple[OpenApiOperation, bool | None, bool | None,
+                 bool | None, tuple[str, ...]], ...]:
+    """Per-op (contract_secured, impl_secured, gateway_secured, schemes).
+
+    Shared plane resolution for `auth_drift` + `auth_chain` — scheme
+    names come from resolved requirements (op-level first, then global),
+    never from name guessing.
+    """
     impl_routes = routes.routes if routes else ()
+    global_reqs = tuple(
+        r for r in model.security_requirements if r.owner_pointer == "")
+    out = []
     for op in model.operations:
         req, _ = op_requires_auth(model, op)
         route = _match_route(op, impl_routes)
@@ -779,6 +786,29 @@ def auth_drift(
                 for p in gateway_policies)
             if gateway_policies else None
         )
+        if op.has_security:
+            effective = tuple(
+                r for r in model.security_requirements
+                if r.owner_pointer == op.pointer)
+        else:
+            effective = global_reqs
+        schemes = tuple(sorted(
+            {s.name for r in effective for s in r.schemes}))
+        out.append((op, req, impl_sec, gw_sec, schemes))
+    return tuple(out)
+
+
+def auth_drift(
+    model: OpenApiProjectModel,
+    routes: RouteScan | None,
+    gateway_policies: tuple[AuthorizationPolicy, ...],
+) -> tuple[AuthDrift, ...]:
+    """§53 compare contract vs impl vs gateway auth evidence per op."""
+    if routes is None and not gateway_policies:
+        return ()
+    out: list[AuthDrift] = []
+    for op, req, impl_sec, gw_sec, _schemes in _op_planes(
+            model, routes, gateway_policies):
         planes = [req, impl_sec, gw_sec]
         known = [p for p in planes if p is not None]
         if len(known) < 2 or all(p == known[0] for p in known):
@@ -801,6 +831,46 @@ def auth_drift(
             )
         )
     return tuple(sorted(out, key=lambda d: d.operation))
+
+
+def auth_chain(
+    model: OpenApiProjectModel,
+    routes: RouteScan | None,
+    gateway_policies: tuple[AuthorizationPolicy, ...],
+) -> tuple[AuthChainLink, ...]:
+    """§51-53 chain records: declared scheme -> enforcement plane.
+
+    A record exists for every op with at least one evidenced plane —
+    complete when a declared scheme lands on implementation or gateway
+    enforcement; a break when declared auth finds no enforcement, or
+    enforcement exists without a contract declaration.
+    """
+    links: list[AuthChainLink] = []
+    for op, req, impl_sec, gw_sec, schemes in _op_planes(
+            model, routes, gateway_policies):
+        declared = req is True
+        enforced = impl_sec is True or gw_sec is True
+        if req is None and impl_sec is None and gw_sec is None:
+            continue
+        point = ("implementation" if impl_sec else
+                 "gateway" if gw_sec else
+                 "contract-only" if declared else "none")
+        if declared and enforced:
+            complete: bool | None = True
+        elif declared != enforced:
+            complete = False
+        else:
+            complete = None
+        links.append(AuthChainLink(
+            operation=op.identity, scope=op.identity,
+            scheme_declared=", ".join(schemes) if schemes else None,
+            enforcement_point=point, chain_complete=complete,
+            evidence_refs=_ev(
+                EvidenceKind.STATIC, op.location.path,
+                f"auth chain on {op.identity}: declared="
+                f"{schemes or None} enforced={point}",
+                op.location.line)))
+    return tuple(sorted(links, key=lambda x: (x.operation, x.scope)))
 
 
 # ---------- entry point ----------
@@ -839,6 +909,7 @@ def load_security_model(
     classifications: list[DataClassification] = []
     pagination: list[PaginationModel] = []
     drift: tuple[AuthDrift, ...] = ()
+    chain: tuple[AuthChainLink, ...] = ()
 
     if openapi is not None:
         auth_schemes.extend(contract_schemes(openapi))
@@ -854,6 +925,7 @@ def load_security_model(
     authz.extend(gw)
     if openapi is not None:
         drift = auth_drift(openapi, routes, gw)
+        chain = auth_chain(openapi, routes, gw)
 
     cors = tuple(sorted(out["cors"], key=lambda c: (c.scope, c.location.path
                                                   if c.location else "")))
@@ -863,6 +935,7 @@ def load_security_model(
         authorization=tuple(sorted(authz,
                                    key=lambda p: (p.operation, p.plane))),
         auth_drift=drift,
+        auth_chain=chain,
         rate_limits=tuple(sorted(out["rl"], key=lambda r: r.scope)),
         cors=cors,
         tls=tuple(sorted(out["tls"], key=lambda t: t.scope)),

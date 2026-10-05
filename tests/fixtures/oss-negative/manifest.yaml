@@ -42,6 +42,7 @@ cases:
   - OAS005
   - OAS008
   - OAS010
+  - RELAPI008
   sha256: 212e8460a2717b295635ca31d3337253971de235dd01a844e14739cc2e01cd73
 - name: swagger-2-petstore
   file: slice.yaml

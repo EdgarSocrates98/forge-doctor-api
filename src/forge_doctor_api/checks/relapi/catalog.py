@@ -91,6 +91,16 @@ CATALOG: tuple[RelCheckSpec, ...] = (
         "candidate.",
     ),
     RelCheckSpec(
+        id="RELAPI008",
+        title="Mutation operation without declared idempotency evidence",
+        severity=Severity.LOW,
+        confidence=Confidence.LOW,
+        evidence_kind=EvidenceKind.CONFIG,
+        description="A mutating operation has no declared idempotency "
+        "key or contract metadata - safe replay cannot be evidenced. "
+        "HTTP verbs alone never decide; only declared sources count.",
+    ),
+    RelCheckSpec(
         id="APIREL001",
         title="Chained retry amplification",
         severity=Severity.HIGH,

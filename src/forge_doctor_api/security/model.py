@@ -84,6 +84,28 @@ class AuthDrift(Model):
 
 
 @dataclass(frozen=True, kw_only=True)
+class AuthChainLink(Model):
+    """§51-53 per-operation auth chain record.
+
+    `scheme_declared`: contract scheme names resolved for the op
+    (sorted, comma-joined) — None when no contract requirement lands.
+    `enforcement_point`: which plane evidences enforcement —
+    `"implementation"`, `"gateway"`, `"contract-only"` (declared but
+    no enforcement plane answers), or `"none"`.
+    `chain_complete`: True when a declared scheme reaches an
+    enforcement plane; False = a chain break (declared-but-unenforced,
+    or enforced-but-undeclared); None = evidence insufficient.
+    """
+
+    operation: str
+    scope: str
+    scheme_declared: str | None = None
+    enforcement_point: str = "none"
+    chain_complete: bool | None = None
+    evidence_refs: tuple[Evidence, ...] = ()
+
+
+@dataclass(frozen=True, kw_only=True)
 class RateLimitPolicy(Model):
     """§54 declared rate-limit policy."""
 
@@ -218,6 +240,7 @@ class ApiSecurityModel(Model):
     auth_schemes: tuple[AuthenticationScheme, ...] = ()
     authorization: tuple[AuthorizationPolicy, ...] = ()
     auth_drift: tuple[AuthDrift, ...] = ()
+    auth_chain: tuple[AuthChainLink, ...] = ()
     rate_limits: tuple[RateLimitPolicy, ...] = ()
     cors: tuple[CorsPolicy, ...] = ()
     tls: tuple[TlsEvidence, ...] = ()

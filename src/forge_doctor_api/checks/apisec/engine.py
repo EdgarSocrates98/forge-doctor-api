@@ -430,6 +430,45 @@ def run_security_checks(
                     ),
                 ))
 
+    # APISEC013 - auth chain break (spec 079): a chain record is
+    # complete when declared contract security lands on an enforcement
+    # plane; chain_complete=False covers both directions of a break.
+    for link in model.auth_chain:
+        if link.chain_complete is not False:
+            continue
+        src = link.evidence_refs[0] if link.evidence_refs else None
+        if link.scheme_declared is not None:
+            desc = (
+                f"{link.operation}: contract declares security "
+                f"({link.scheme_declared}) but the enforcement planes "
+                "show none - declared-but-unenforced auth chain break"
+            )
+            missing = "implementation/gateway enforcement evidence for " \
+                "the declared scheme"
+        else:
+            desc = (
+                f"{link.operation}: "
+                f"{link.enforcement_point} enforcement evidence with no "
+                "contract security declaration - enforced-but-undeclared "
+                "auth chain break"
+            )
+            missing = "contract security requirement matching the " \
+                "observed enforcement"
+        findings.append(_finding(
+            BY_ID["APISEC013"], desc,
+            src.source if src else "(contract)",
+            src.line if src else None,
+            unknowns=(
+                UnknownFact(
+                    subject=link.operation,
+                    missing=missing,
+                    resolution="join contract scheme, applied scope, and "
+                    "enforcement point by declared identifiers, or "
+                    "declare the operation anonymous",
+                ),
+            ),
+        ))
+
     # APISEC004 - wildcard CORS
     for cors in model.cors:
         if cors.wildcard:

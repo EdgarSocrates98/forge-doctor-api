@@ -16,6 +16,7 @@ from __future__ import annotations
 import hashlib
 import json
 import tracemalloc
+from dataclasses import replace
 from datetime import date
 from time import perf_counter
 from typing import Any
@@ -97,6 +98,7 @@ from forge_doctor_api.policy.loader import load_policies
 from forge_doctor_api.policy.ownership import resolve_ownership
 from forge_doctor_api.policy.rules import RuleContext
 from forge_doctor_api.reliability import load_reliability_model
+from forge_doctor_api.reliability.config import gateway_edge_policies
 from forge_doctor_api.report import DoctorReport
 from forge_doctor_api.safefix.classify import classify_findings
 from forge_doctor_api.security import load_security_model
@@ -324,8 +326,11 @@ def scan_project(
     rel_files = inventory.files_in(
         ArtifactClass.CONFIG, ArtifactClass.IAC)
     m = _mark()
-    reliability = load_reliability_model(context, rel_files)
-    findings.extend(run_reliability_checks(reliability))
+    reliability = load_reliability_model(
+        context, rel_files, openapi=openapi)
+    findings.extend(run_reliability_checks(
+        reliability,
+        operations=openapi.operations if openapi is not None else None))
     _rec(AnalyzerId.RELIABILITY.value, True, len(rel_files), m)
 
     cache = None
@@ -376,6 +381,20 @@ def scan_project(
         for rt in gw.routes:
             if rt.service:
                 chain_edges.append((gw.dialect.value, rt.service))
+    # spec 079: declared gateway/mesh retry+timeout evidence becomes
+    # edge-scoped policies (`dialect->subject`) for the depth checks.
+    if gateways or meshes:
+        extra_retries, extra_timeouts = gateway_edge_policies(
+            gateways, meshes)
+        if extra_retries or extra_timeouts:
+            reliability = replace(
+                reliability,
+                retry_policies=tuple(sorted(
+                    (*reliability.retry_policies, *extra_retries),
+                    key=lambda r: r.scope)),
+                timeouts=tuple(sorted(
+                    (*reliability.timeouts, *extra_timeouts),
+                    key=lambda t: t.scope)))
     findings.extend(run_depth_checks(reliability, tuple(chain_edges)))
 
     infra = None

@@ -1,0 +1,8 @@
+# looks-like-config but is inert: retries: 99, timeout: 1ms
+# max_attempts: 100
+service:
+  description: "we retry 5 times then timeout after 30s"
+  notes: "idempotency: key_header: X-Idem"
+  banner: |
+    retries: {attempts: 9}
+    timeout: 1ms

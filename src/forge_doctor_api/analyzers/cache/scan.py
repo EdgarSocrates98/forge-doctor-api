@@ -119,7 +119,24 @@ def load_cache_model(
     """Declared cache policies + §153 invalidation-risk candidates."""
     policies, unknowns = _config_policies(context, files)
     if openapi is not None:
-        policies.extend(_openapi_policies(openapi))
+        header_policies = _openapi_policies(openapi)
+        policies.extend(header_policies)
+        # A declared Cache-Control header name is presence evidence only
+        # - ttl/key/invalidation/stale_policy are contract-invisible, so
+        # each header-only policy carries an explicit unknown (§152).
+        seen: set[str] = set()
+        for pol in header_policies:
+            if pol.subject in seen:
+                continue
+            seen.add(pol.subject)
+            unknowns.append(UnknownFact(
+                subject=pol.subject,
+                missing="declared cache fields (ttl, key, invalidation, "
+                "stale_policy)",
+                resolution="Cache-Control header declared on the "
+                "response, but header names carry no values - declare "
+                "the policy fields in config or x- extensions to make "
+                "cache semantics checkable"))
 
     risks: list[InvalidationRisk] = []
     if openapi is not None:
@@ -145,4 +162,6 @@ def load_cache_model(
         policies=tuple(sorted(
             policies, key=lambda p: (p.subject, p.layer.value))),
         risks=tuple(sorted(risks, key=lambda r: r.subject)),
-        unknowns=tuple(unknowns))
+        unknowns=tuple(sorted(
+            {u.subject: u for u in unknowns}.values(),
+            key=lambda u: (u.subject, u.missing))))

@@ -1,0 +1,15 @@
+{
+  "agent": "claude",
+  "command": [
+    "claude",
+    "-p",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\079-security-reliability-precision.implement.claude.md)"
+  ],
+  "created_at": "2026-10-05T09:48:43+00:00",
+  "id": "079-security-reliability-precision",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\079-security-reliability-precision.implement.claude.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\079-security-reliability-precision.md",
+  "spec_sha256": "9a4ccc598a3bd0da1ea9396422f318a6e721516dfcbef2ee8af7ea8165d6db77",
+  "status": "planned",
+  "title": "Security/reliability precision \u2014 auth chain, retry topology, timeout, idempotency"
+}

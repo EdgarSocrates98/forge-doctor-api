@@ -33,6 +33,7 @@ paths:
       tags: [users]
       security:
         - apiKey: []
+      x-idempotency-key: Idempotency-Key
       responses:
         '201':
           description: created

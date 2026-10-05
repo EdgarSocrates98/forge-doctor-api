@@ -100,7 +100,7 @@ From the client call-site scan + contract diff: `CLIENT001` confirmed
 impact · `CLIENT002` in blast radius · `CLIENT003` unresolvable call
 site (explicit UnknownFact).
 
-## Passive security — APISEC001–010
+## Passive security — APISEC001–013
 
 OWASP-API-Top-10-shaped candidates over config + contract evidence:
 `APISEC001` object-id route without authz evidence · `APISEC002` admin
@@ -109,19 +109,25 @@ op without authz · `APISEC003` unauthenticated sensitive op ·
 `APISEC006` unrestricted expensive op · `APISEC007` unsafe outbound-URL
 param (SSRF candidate) · `APISEC008` sensitive property in response ·
 `APISEC009` deprecated still reachable · `APISEC010` unsafe third-party
-dependency.
+dependency · `APISEC011` unresolvable auth-coverage chain (unknown) ·
+`APISEC012` sensitive-named field without protection evidence ·
+`APISEC013` auth chain break across contract/impl/gateway planes.
 
 Passive candidates default to `Confidence.LOW` — the `security` gate
 category only fires on `HIGH` confidence, so candidates alone never
 fail a build.
 
-## Reliability — RELAPI001–007
+## Reliability — RELAPI001–008, APIREL001–002
 
 `RELAPI001` retry amplification · `RELAPI002` retried op without
 idempotency evidence · `RELAPI003` impossible timeout budget (downstream
 timeout ≥ upstream) · `RELAPI004` deadline propagation gap ·
 `RELAPI005` no circuit-breaker evidence · `RELAPI006` no health-check
-evidence · `RELAPI007` no graceful-shutdown evidence.
+evidence · `RELAPI007` no graceful-shutdown evidence · `RELAPI008`
+mutating operation without declared idempotency evidence.
+`APIREL001` chained retry amplification on an evidenced edge (computed
+bound, per-hop files) · `APIREL002` timeout cascade on an evidenced
+edge.
 
 ## Performance — APIPERF001–008
 

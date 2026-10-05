@@ -150,6 +150,45 @@ def build_cache_graph(
                 ),
             ))
 
+    # APICACHE003 - writer-reader conflict on a shared declared key:
+    # two policies bind the same `key` while their subjects split
+    # across an evidenced mutating op and an evidenced read op
+    # (spec 079). Only declared keys + declared subjects join.
+    by_key: dict[str, list[CachePolicy]] = {}
+    for pol in model.policies:
+        if pol.key:
+            by_key.setdefault(pol.key, []).append(pol)
+
+    def _op_names(op: OpenApiOperation) -> set[str]:
+        return {op.identity, op.path, f"{op.method.upper()} {op.path}",
+                *({op.operation_id} if op.operation_id else ())}
+
+    write_names = {n for wop in writers.values() for n in _op_names(wop)}
+    read_names = {n for rop in reads.values() for n in _op_names(rop)}
+    for key, pols in sorted(by_key.items()):
+        if len(pols) < 2:
+            continue
+        hits_w = sorted({p.subject for p in pols
+                         if p.subject in write_names})
+        hits_r = sorted({p.subject for p in pols
+                         if p.subject in read_names})
+        if not hits_w or not hits_r:
+            continue
+        findings.append(Finding(
+            id="APICACHE003",
+            title="Shared cache key across writer/reader subjects",
+            description=(
+                f"declared key '{key}' spans writer {hits_w} and "
+                f"reader {hits_r} - writer-reader invalidation "
+                "conflict candidate"),
+            severity=Severity.MEDIUM, confidence=Confidence.LOW,
+            evidence_kind=EvidenceKind.CONFIG,
+            evidence=tuple(
+                _ev(p.location.path,
+                    f"key='{key}' on {p.subject} ({p.layer.value})")
+                for p in pols),
+        ))
+
     # cross-layer conflict candidates
     by_subject: dict[str, list[CachePolicy]] = {}
     for pol in model.policies:

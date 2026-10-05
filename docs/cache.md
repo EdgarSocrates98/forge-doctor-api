@@ -76,5 +76,14 @@ similarity never creates an edge.
   into the finding description.
 - `APICACHE002` cross-layer conflict candidate: multiple cache layers
   declare conflicting `stale_policy` values for one subject.
+- `APICACHE003` writer-reader conflict candidate: two policies share a
+  declared `key` whose subjects split across an evidenced mutating op
+  and an evidenced read op (spec 079).
+
+A `Cache-Control` header declared on a response is *presence* evidence
+only — the header value is contract-invisible, so the resulting
+client-layer policy keeps `ttl`/`key`/`invalidation`/`stale_policy` at
+`None` and records an explicit `UnknownFact` listing the missing
+fields. Nothing is derived from the header name alone.
 
 Every edge and finding carries evidence; output is sorted.

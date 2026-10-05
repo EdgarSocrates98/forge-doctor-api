@@ -1,0 +1,13 @@
+# spec 079: createCharge (POST, no idempotency evidence) ->
+# RELAPI008 candidate; createRefund carries `x-idempotency-key`
+# so it is capability evidence, not a finding.
+run: [openapi, reliability]
+expected_findings:
+  - RELAPI008   # createCharge only - the bound op is silent
+expected_description_contains:
+  - "POST /charges"
+forbidden_description_contains:
+  - refunds
+  - confirmed
+forbidden_findings:
+  - RELAPI001   # no retry policies declared - amplification must stay quiet

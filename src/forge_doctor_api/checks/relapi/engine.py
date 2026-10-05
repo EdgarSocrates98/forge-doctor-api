@@ -7,6 +7,7 @@ assumed default (§41, §102).
 
 from __future__ import annotations
 
+from forge_doctor_api.analyzers.openapi.model import OpenApiOperation
 from forge_doctor_api.checks.relapi.catalog import BY_ID, RelCheckSpec
 from forge_doctor_api.core.models import (
     Evidence,
@@ -51,16 +52,36 @@ def _finding(
     )
 
 
+_WRITE_METHODS = frozenset({"post", "put", "patch", "delete"})
+
+
+def _idem_binds(subject: str, op: OpenApiOperation) -> bool:
+    """Declared-identifier join: idempotency subject -> operation.
+
+    Only a declared `operationId`, the path template, `METHOD path`,
+    or the full operation identity may bind - no name similarity.
+    """
+    return subject in {
+        op.operation_id,
+        op.path,
+        f"{op.method.upper()} {op.path}",
+        op.identity,
+    }
+
+
 def run_reliability_checks(
     model: ApiReliabilityModel,
     hops: tuple[str, ...] | None = None,
+    operations: tuple[OpenApiOperation, ...] | None = None,
 ) -> tuple[Finding, ...]:
     """RELAPI findings over declared reliability evidence.
 
     `hops` names an explicit path for amplification/budget evaluation
     (e.g. `("gateway", "payments-service")`); without one, amplification
     multiplies all declared policies as a conservative bound and notes
-    the hop set is config-derived.
+    the hop set is config-derived. `operations` enables the mutation /
+    idempotency coverage check (RELAPI008) - binding is by declared
+    identifiers only (operationId, path, METHOD path, identity).
     """
     findings: list[Finding] = []
 
@@ -90,8 +111,70 @@ def run_reliability_checks(
             )
         )
 
-    # RELAPI002: retried scopes lacking any idempotency verdict
+    # RELAPI008: mutation ops lacking declared idempotency evidence
+    # (spec 079). Idempotent verdicts are capability evidence; any other
+    # binding or no binding is a candidate finding with the gap named.
+    if operations:
+        for op in sorted(operations, key=lambda o: o.identity):
+            if op.method.lower() not in _WRITE_METHODS:
+                continue
+            bound = next(
+                (i for i in model.idempotency
+                 if _idem_binds(i.subject, op)),
+                None,
+            )
+            if bound is not None and \
+                    bound.verdict is IdempotencyVerdict.IDEMPOTENT:
+                continue
+            if bound is not None:
+                desc = (
+                    f"{op.method.upper()} {op.path}: idempotency "
+                    f"evidence bound to '{bound.subject}' resolves to "
+                    f"{bound.verdict.value.lower()} - safe replay not "
+                    "evidenced"
+                )
+                unknowns = bound.unknowns or (
+                    UnknownFact(
+                        subject=op.identity,
+                        missing="positive idempotency verdict",
+                        resolution="the bound evidence asserts "
+                        "non-idempotent semantics or stays unknown - "
+                        "declare an idempotency key to clear it",
+                    ),
+                )
+            else:
+                desc = (
+                    f"{op.method.upper()} {op.path}: mutating operation "
+                    "with no declared idempotency-key or contract "
+                    "metadata - safe replay cannot be evidenced"
+                )
+                unknowns = (
+                    UnknownFact(
+                        subject=op.identity,
+                        missing="idempotency evidence (idempotency key, "
+                        "contract metadata, db uniqueness)",
+                        resolution="declare idempotency_key/x-idempotent "
+                        "for the operation, or accept retry-unsafety",
+                    ),
+                )
+            findings.append(
+                _finding(
+                    BY_ID["RELAPI008"], desc, op.location.path,
+                    unknowns=unknowns,
+                    remediation="declare an Idempotency-Key header or "
+                    "contract idempotency metadata for the mutating "
+                    "operation",
+                )
+            )
+
+    # RELAPI002: retried scopes lacking any idempotency verdict. A scope
+    # declared by multiple files emits once - the gap is on the scope,
+    # not the declaration site.
+    seen_retry_scopes: set[str] = set()
     for policy in model.retry_policies:
+        if policy.scope in seen_retry_scopes:
+            continue
+        seen_retry_scopes.add(policy.scope)
         idem = next(
             (i for i in model.idempotency if i.subject == policy.scope),
             None,
@@ -285,17 +368,25 @@ def run_depth_checks(
             ca = caller_retry.max_attempts or 0
             cb = callee_retry.max_attempts or 0
             if ca > 1 and cb > 1:
+                ca_loc = (caller_retry.location.path
+                          if caller_retry.location else "(config)")
+                cb_loc = (callee_retry.location.path
+                          if callee_retry.location else "(config)")
                 findings.append(_finding(
                     BY_ID["APIREL001"],
-                    f"{edge}: caller retries {ca}x and callee retries "
-                    f"{cb}x - amplification bound {ca * cb} attempts "
-                    "on this edge",
+                    f"{edge}: caller retries {ca}x ({ca_loc}) x "
+                    f"callee retries {cb}x ({cb_loc}) - amplification "
+                    f"bound {ca * cb} attempts on this edge",
                     (caller_retry.location.path if caller_retry.location
                      else "(config)"),
                 ))
 
-        # APIREL002 - timeout cascade on the evidenced edge
+        # APIREL002 - timeout cascade on the evidenced edge. An
+        # edge-scoped timeout (`caller->callee`) is caller-budget
+        # evidence for this edge (spec 079).
         caller_ms = _timeout_for(model, caller)
+        if isinstance(caller_ms, _Missing):
+            caller_ms = _timeout_for(model, edge)
         callee_ms = _timeout_for(model, callee)
         if isinstance(caller_ms, _Missing):
             continue

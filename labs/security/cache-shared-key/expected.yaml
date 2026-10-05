@@ -1,0 +1,14 @@
+# spec 079: two declared cache policies share `pets-key` across an
+# evidenced writer (createPet) and reader (listPets) - writer-reader
+# conflict candidate on the shared declared key.
+run: [openapi, cache]
+expected_findings:
+  - APICACHE003
+expected_description_contains:
+  - pets-key
+  - createPet
+  - listPets
+forbidden_description_contains:
+  - confirmed
+expected_issues:
+  - "operation_id:listPets:declared cache fields"   # header-only policies name their unknowns

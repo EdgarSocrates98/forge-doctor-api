@@ -18,7 +18,7 @@ entries:
   API2:
     fields:
       name: Broken Authentication
-      checks: [APISEC003, APISEC011]
+      checks: [APISEC003, APISEC011, APISEC013]
     provenance:
       source: https://owasp.org/API-Security/editions/2023/en/0xa2
       source_version: "2023"

@@ -48,9 +48,11 @@ _LB_MAP = {
     "ring_hash": LoadBalancingKind.WEIGHTED,
     "maglev": LoadBalancingKind.WEIGHTED,
 }
-_RETRY_KEYS = ("retry_policy", "retryPolicy", "retry")
-_TIMEOUT_KEYS = ("per_try_timeout", "timeout", "upstream_rq_timeout",
-                 "request_timeout", "deadline")
+_RETRY_KEYS = ("retry_policy", "retryPolicy", "retry", "retries",
+               "attempts")
+_TIMEOUT_KEYS = ("per_try_timeout", "perTryTimeout", "timeout",
+                 "connect_timeout", "connectTimeout",
+                 "upstream_rq_timeout", "request_timeout", "deadline")
 _CB_KEYS = ("circuit_breakers", "circuitBreakers", "outlier_detection",
             "circuitbreaker")
 _HEALTH_KEYS = ("health_checks", "healthChecks", "health_check",
@@ -99,7 +101,7 @@ def _nearest_name(node: Any, trail: tuple[str, ...]) -> str | None:
             if isinstance(v, str) and v:
                 return v
     for k in reversed(trail):
-        if k not in _RETRY_KEYS + _TIMEOUT_KEYS + _CB_KEYS:
+        if k not in _RETRY_KEYS + _TIMEOUT_KEYS + _CB_KEYS + _IDEM_KEYS:
             return k
     return None
 
@@ -110,10 +112,17 @@ def _walk(
     trail: tuple[str, ...],
     out: dict[str, list[Any]],
     text: str,
+    parent_name: str | None = None,
+    structural: bool = False,
 ) -> None:
     if not isinstance(node, dict):
         return
     low_keys = {str(k).lower(): k for k in node}
+    node_name = next(
+        (str(node[k]) for k in _NAME_KEYS
+         if isinstance(node.get(k), str) and node.get(k)),
+        None,
+    )
 
     def get(*names: str) -> Any:
         for n in names:
@@ -121,16 +130,24 @@ def _walk(
                 return node[low_keys[n.lower()]]
         return None
 
-    retry = get("retry_policy", "retryPolicy")
+    consumed: Any = None
+    retry = get("retry_policy", "retryPolicy", "retries")
     if isinstance(retry, dict):
         attempts = _num(
             retry.get("num_retries")
             or retry.get("numRetries")
             or retry.get("maxAttempts")
             or retry.get("max_attempts")
+            or retry.get("attempts")
         )
-        statuses = retry.get("retry_on") or retry.get("retryable_statuses")
-        scope = _nearest_name(node, trail) or Path(path).stem
+        statuses = (
+            retry.get("retry_on") or retry.get("retryOn")
+            or retry.get("retryable_statuses")
+        )
+        scope = str(
+            retry.get("scope") or retry.get("name")
+            or _nearest_name(node, ()) or parent_name
+            or _nearest_name(node, trail) or Path(path).stem)
         out["retries"].append(
             RetryPolicy(
                 scope=str(scope),
@@ -148,9 +165,15 @@ def _walk(
                              f"retry policy at {scope}"),
             )
         )
+        consumed = retry
+    # scalar attempts keys - suppressed inside a `retries:`/`retry:`
+    # body already consumed by the dict branch above (no double count);
+    # a `retries:` *list* of policy records is not a body, so its items
+    # still reach this branch.
     attempts = _num(get("num_retries", "numRetries", "maxAttempts",
-                        "max_attempts"))
-    if attempts is not None and not isinstance(retry, dict):
+                        "max_attempts", "retries"))
+    if (attempts is not None and not isinstance(retry, dict)
+            and not structural):
         scope = _nearest_name(node, trail) or Path(path).stem
         out["retries"].append(
             RetryPolicy(
@@ -168,7 +191,15 @@ def _walk(
         raw = get(tk)
         ms = _ms(raw)
         if ms is not None:
-            scope = _nearest_name(node, trail) or Path(path).stem
+            # Inside a structural block (a consumed `retries:`/`retry:`
+            # body or an idempotency block) the declared name lives on
+            # the parent node - e.g. Istio `retries: {attempts,
+            # perTryTimeout}` under a named route.
+            scope = str(
+                _nearest_name(node, ())
+                or (parent_name if structural else None)
+                or _nearest_name(node, trail)
+                or Path(path).stem)
             out["timeouts"].append(
                 TimeoutConfig(
                     scope=str(scope),
@@ -294,7 +325,10 @@ def _walk(
                 )
             )
         subject = str(
-            _nearest_name(node, trail) or Path(path).stem
+            _nearest_name(node, ())
+            or (parent_name if in_idem_block else None)
+            or _nearest_name(node, trail)
+            or Path(path).stem
         )
         out["idem"].append(
             aggregate_idempotency(subject, tuple(sources))
@@ -354,11 +388,17 @@ def _walk(
                         )
             continue
         if isinstance(val, dict):
-            _walk(val, path, ktrail, out, text)
+            _walk(val, path, ktrail, out, text,
+                  parent_name=node_name or parent_name,
+                  structural=(structural or val is consumed
+                              or ktrail[-1] in _IDEM_KEYS))
         elif isinstance(val, list):
             for item in val:
                 if isinstance(item, dict):
-                    _walk(item, path, ktrail, out, text)
+                    _walk(item, path, ktrail, out, text,
+                          parent_name=node_name or parent_name,
+                          structural=(structural
+                                      or ktrail[-1] in _IDEM_KEYS))
 
 
 def _num(value: Any) -> int | None:
@@ -372,9 +412,15 @@ def _num(value: Any) -> int | None:
 
 
 def load_reliability_model(
-    context: ProjectContext, files: list[str]
+    context: ProjectContext, files: list[str],
+    *, openapi: Any = None,
 ) -> ApiReliabilityModel:
-    """Extract declared reliability evidence from config artifacts."""
+    """Extract declared reliability evidence from config artifacts.
+
+    `openapi` contributes operation-level `x-idempotent` /
+    `x-idempotency` / `x-idempotency-key` extension evidence, bound to
+    the operation's declared identifiers (operationId or identity).
+    """
     out: dict[str, list[Any]] = {
         "retries": [],
         "timeouts": [],
@@ -469,6 +515,47 @@ def load_reliability_model(
                 )
             )
 
+    # OpenAPI x-idempotency extensions become contract-metadata or
+    # idempotency-key sources bound to the operation identity (§42).
+    if openapi is not None:
+        op_by_pointer = {o.pointer: o for o in openapi.operations}
+        by_subject: dict[str, list[IdempotencySource]] = {}
+        for ext in openapi.extensions:
+            op = op_by_pointer.get(ext.owner_pointer)
+            if op is None:
+                continue
+            name = ext.name.lower().replace("_", "-")
+            subject = op.operation_id or op.identity
+            ev = _ev(ext.location.path, ext.location.line,
+                     f"{ext.name} on {subject}")
+            if name in {"x-idempotent", "xidempotent"} or (
+                    name in {"x-idempotency", "x-idempotency-key"}
+                    and isinstance(ext.value, bool)):
+                by_subject.setdefault(subject, []).append(
+                    IdempotencySource(
+                        kind="contract_metadata",
+                        detail=f"{ext.name}={ext.value}",
+                        supports=(ext.value
+                                  if isinstance(ext.value, bool) else None),
+                        evidence=ev))
+            elif name in {"x-idempotency-key", "x-idempotency"}:
+                by_subject.setdefault(subject, []).append(
+                    IdempotencySource(
+                        kind="idempotency_key",
+                        detail=(str(ext.value)
+                                if isinstance(ext.value, str)
+                                else "present"),
+                        supports=True, evidence=ev))
+        existing = {i.subject: i for i in out["idem"]}
+        for subject, sources in sorted(by_subject.items()):
+            prev = existing.get(subject)
+            merged = tuple(sources) + (prev.sources if prev else ())
+            agg = aggregate_idempotency(subject, merged)
+            if prev is not None:
+                out["idem"][out["idem"].index(prev)] = agg
+            else:
+                out["idem"].append(agg)
+
     retries = tuple(sorted(out["retries"], key=lambda r: r.scope))
     timeouts = tuple(sorted(out["timeouts"], key=lambda t: t.scope))
     cbs = tuple(sorted(out["cbs"], key=lambda c: c.scope))
@@ -496,4 +583,66 @@ def load_reliability_model(
                 f"{len(timeouts)} timeouts, {len(cbs)} circuit breakers",
             ),
         ),
+    )
+
+
+def _detail_int(detail: str) -> int | None:
+    """`retries=5` -> 5; anything non-numeric stays None."""
+    value = detail.rsplit("=", 1)[-1].strip()
+    return int(value) if value.isdigit() else None
+
+
+def _detail_ms(detail: str) -> float | None:
+    """`timeout=2s` -> 2000.0; absent units are read as ms."""
+    return _ms(detail.rsplit("=", 1)[-1].strip())
+
+
+def gateway_edge_policies(
+    gateways: tuple[Any, ...],
+    meshes: tuple[Any, ...],
+) -> tuple[tuple[RetryPolicy, ...], tuple[TimeoutConfig, ...]]:
+    """Gateway/mesh retry+timeout declarations -> edge-scoped evidence.
+
+    A gateway retry declared on calls to upstream X is caller-side
+    evidence on the `dialect->X` edge; scopes are built from declared
+    identifiers only (dialect/vendor value + the entry's declared
+    subject name) - never route-name similarity.
+    """
+    retries: list[RetryPolicy] = []
+    timeouts: list[TimeoutConfig] = []
+    for gw in gateways:
+        prefix = gw.dialect.value
+        for e in gw.retries:
+            retries.append(RetryPolicy(
+                scope=f"{prefix}->{e.name}",
+                max_attempts=_detail_int(e.detail),
+                location=e.location,
+                evidence=_ev(e.location.path, e.location.line,
+                             f"gateway retry ({e.detail}) on {e.name}")))
+        for e in gw.timeouts:
+            timeouts.append(TimeoutConfig(
+                scope=f"{prefix}->{e.name}",
+                timeout_ms=_detail_ms(e.detail),
+                location=e.location,
+                evidence=_ev(e.location.path, e.location.line,
+                             f"gateway timeout ({e.detail}) on {e.name}")))
+    for mesh in meshes:
+        prefix = mesh.vendor.value
+        for e in mesh.retries:
+            retries.append(RetryPolicy(
+                scope=f"{prefix}->{e.name}",
+                max_attempts=_detail_int(e.detail),
+                location=e.location,
+                evidence=_ev(e.location.path, e.location.line,
+                             f"mesh retry ({e.detail}) on {e.name}")))
+        for e in mesh.timeouts:
+            timeouts.append(TimeoutConfig(
+                scope=f"{prefix}->{e.name}",
+                timeout_ms=_detail_ms(e.detail),
+                location=e.location,
+                evidence=_ev(e.location.path, e.location.line,
+                             f"mesh timeout ({e.detail}) on {e.name}")))
+    return (
+        tuple(sorted(retries, key=lambda r: r.scope)),
+        tuple(sorted(timeouts, key=lambda t: t.scope)),
     )

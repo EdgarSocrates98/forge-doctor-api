@@ -155,6 +155,18 @@ CATALOG: tuple[SecCheckSpec, ...] = (
         "list) with no declared redaction/protection evidence - candidate "
         "only, never a leak claim.",
     ),
+    SecCheckSpec(
+        id="APISEC013",
+        title="Authentication chain break across evidence planes",
+        severity=Severity.MEDIUM,
+        confidence=Confidence.LOW,
+        evidence_kind=EvidenceKind.STATIC,
+        finding_class=FindingClass.CANDIDATE,
+        description="Contract declares security that has no implementation "
+        "or gateway enforcement evidence, or enforcement exists without "
+        "a contract declaration - auth chain break candidate (never "
+        "resolved by name guessing).",
+    ),
 )
 
 BY_ID: dict[str, SecCheckSpec] = {c.id: c for c in CATALOG}
