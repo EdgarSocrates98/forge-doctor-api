@@ -347,6 +347,7 @@ def scan_project(
             cache_graph, cache_findings = build_cache_graph(
                 cache, openapi)
             findings.extend(cache_findings)
+            unknowns.extend(cache_graph.unknowns)
         _rec(AnalyzerId.CACHE.value, bool(cache.policies),
              len(cache_files), m)
 

@@ -31,7 +31,29 @@ policies binding the operation path). The join produces an
 | `APISEC013` | contract declares a scheme but no enforcement plane answers (declared-but-unenforced), or enforcement exists without a contract declaration (enforced-but-undeclared) |
 
 Ambiguous joins stay `UNKNOWN`; schemes are joined by declared name,
-operations by declared identity — never by name similarity.
+operations by declared identity — never by name similarity. A
+`security:` requirement naming an *undeclared* scheme resolves to no
+enforcement claim — the declaration is ambiguous (`APISEC011`), never a
+fabricated `APISEC013` break.
+
+**Authorization coverage (APISEC001, APISEC002).** An op is treated as
+covered when any of these hold:
+
+- contract evidence — `x-roles`/`x-scopes`/`x-claims`/security
+  requirement scopes bound to the operation;
+- gateway evidence — a policy whose declared `prefix`/`path`/name
+  scope equals or prefix-contains the normalized operation path
+  (`*` covers all);
+- implementation evidence — middleware or `dependencies=[...]` names
+  carrying explicit authorization intent (`role`, `permission`,
+  `authoriz*`, `rbac`, `guard`, `acl`, `owner`, `scope`), recorded on
+  `AuthorizationPolicy.via` so the mechanism name stays visible and no
+  role is fabricated.
+
+Authentication-only middleware (`*AuthMiddleware`, `Security(...)`
+deps) is authN evidence — it lands on `route.auth`/`impl_schemes`, not
+in `authz_ops`. `APISEC001`/`APISEC002` findings still carry the
+object-level unknown when fired.
 
 ## Retry topology & amplification (RELAPI001, RELAPI002, APIREL001)
 
@@ -52,6 +74,11 @@ covered.
   (app.yaml) -> 9 attempts`).
 - `RELAPI002` flags every retried scope whose idempotency verdict is
   not `IDEMPOTENT`; a scope declared in multiple files reports once.
+- Retry counts inside documentation or sample content are never
+  policies: the config walkers skip `example`/`examples`/`description`/
+  `comment`/`notes`/`properties`/`schema`/`items`/`components`/`value`/
+  `content`/`requestBody`/`responses`/`parameters`/`headers`/`default`/
+  `enum` subtrees (OpenAPI example blocks, schema properties, prose).
 
 ## Timeout budgets (RELAPI003, RELAPI004, APIREL002)
 
@@ -107,6 +134,16 @@ config keys, or a declared `Cache-Control` response header.
 - `APICACHE003` — two policies share a declared `key` whose subjects
   split across an evidenced writer operation and an evidenced read
   operation (joined by `operationId`/path/`METHOD path`/identity).
+  A shared key *string* is not a shared key space: the join is
+  suppressed — with a `CacheGraph.unknowns` record — when declared
+  `vary` sets diverge between policies, when a declared `vary` axis is
+  authz-bearing (`Authorization`/`Cookie`/`Proxy-Authorization`,
+  i.e. per-principal partitioning), or when declared `scope`
+  (`private`/`public`/…) diverges.
+- Config policies also record `vary` (list or comma string),
+  `scope`/`private`/`public`, and `stale_if_error`/`staleIfError`/
+  `stale-if-error` (folded into `stale_policy` as
+  `stale-if-error:<value>`).
 
 ## Gateway & mesh dialects
 
@@ -128,6 +165,56 @@ edges for `APIREL001`/`APIREL002`.
 | `reliability/idempotency-gap` | POST without evidence → RELAPI008; `x-idempotency-key` op → silent |
 | `reliability/gateway-edge-join` | Kong retries+timeout → `kong->svc` edge policies → APIREL001 |
 | `adversarial/config-comments` | comments/string literals resembling config → no policies, no findings |
+
+## Incident intelligence (§60-§62, §165)
+
+`diagnose()` episodes carry `symptom`, `candidates`, `observed`
+signals, `affected_services` (downstream impact), evidence refs, and
+`unknowns`. A `CandidateCause` is never emitted with an empty evidence
+path and no explanation — candidates lacking evidence carry an explicit
+`UnknownFact` (`missing: evidence path for this candidate cause`).
+Tiers are `DERIVED` (change + runtime agree on a hop), `RUNTIME`
+(observed signal, no matching change), `STATIC` (change only), and
+`UNKNOWN` — worded as candidates, never verdicts.
+
+## SLO budgets (§46-§47)
+
+`error_budget()` consumes only evidenced request-status signals — it
+computes `error_rate`/`availability`-style objectives (`error`,
+`availab*`, `success`, `failure` metrics) from counted windowed
+executions. Any other metric (latency percentiles, freshness,
+throughput) has no declared signal to consume → `sufficient=False`
+with an `UnknownFact`; no interpolation, no fabricated number. Fewer
+than `MIN_SAMPLES` (8) requests in the objective window likewise yields
+`sufficient=False` + unknowns.
+
+## Adversarial coverage matrix (spec 088)
+
+| Adversarial case | Expected | Guard |
+| --- | --- | --- |
+| `{id}` path param + global authz middleware | no APISEC001; impl `via` policy exists | `impl_authz` records authz-intent middleware; engine joins `via` policies |
+| `/admin/*` op + gateway role prefix | no APISEC002; policy entity exists | `prefix`/`path` scope keys + path-prefix join |
+| `*` in comment/description only | no APISEC004; real CORS policy still loads | YAML parser drops comments; `wildcard` reads parsed origins only |
+| `retries: N` in `examples:`/`properties:` | no RetryPolicy for the subtree | `_NON_EVIDENCE_KEYS` descent skip |
+| `security: [{ghost: []}]` undeclared scheme | APISEC011 ambiguous; NO APISEC013 | unresolvable declarations → `req=None` (unknown), never a break |
+| retry product over a missing layer | `complete=False`, `potential_attempts=None`, missing hops named | `amplification()` per-hop policy binding |
+| caller budget < callee budget | `IMPOSSIBLE`/`AT_RISK` verdict | `evaluate_timeout_budget` parallel/sequential bounds |
+| PUT/DELETE verb only | RELAPI008 fires; no IDEMPOTENT record | `aggregate_idempotency` never infers from verbs |
+| shared `key` + divergent `vary`/authz axis/scope | no APICACHE003; `CacheGraph.unknowns` records the partition | declared-vary/scope guards |
+| runtime-only candidate cause without span evidence | candidate carries `UnknownFact` | diagnose evidence-path guarantee |
+| latency/freshness SLO or < 8 samples | `sufficient=False` + unknowns | metric gate + `MIN_SAMPLES` |
+
+## Honest boundaries
+
+| Surface | Can claim | Cannot claim |
+| --- | --- | --- |
+| auth chain | declared scheme ↔ enforcement plane join | that enforcement is *correct* — runtime auth behavior is out of scope |
+| retry amplification | exact product when every hop declares `max_attempts` | partial products — missing hops stay `UNKNOWN` |
+| timeout budget | IMPOSSIBLE/AT_RISK/FEASIBLE on declared budgets | feasibility when a downstream timeout is undeclared |
+| idempotency | verdict from asserting sources only | verb-based inference; binding by name similarity |
+| cache | conflicts on identical declared key+variant space | conflicts when `vary`/scope partition the space |
+| diagnose | ranked candidates with evidence-or-unknown | verdicts; causes without a traceable path |
+| SLO | consumed budget from request counts | budgets for non-error metrics or thin windows |
 
 ## Limits
 

@@ -68,6 +68,10 @@ class AuthorizationPolicy(Model):
     claims: tuple[str, ...] = ()
     ownership_check: bool | None = None
     plane: str = "contract"
+    # mechanism name when evidence is an applied mechanism (middleware /
+    # dependency) rather than declared roles/scopes — evidence only,
+    # never a fabricated role name.
+    via: str | None = None
     evidence: tuple[Evidence, ...] = ()
 
 

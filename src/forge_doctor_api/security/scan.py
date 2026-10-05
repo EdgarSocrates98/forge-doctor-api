@@ -88,7 +88,18 @@ _EXT_API_KEYS = ("external_apis", "externalApis", "external_api",
                  "third_party_apis", "upstream_services", "outbound")
 _FLOW_KEYS = ("sensitive_flows", "business_flows", "protected_flows")
 
-_NAME_KEYS = ("scope", "name", "service", "route", "cluster", "operation")
+_NAME_KEYS = ("scope", "name", "service", "route", "cluster", "operation",
+              "prefix", "path")
+# Keys whose subtrees carry documentation/sample/schema content, never
+# live policy: OpenAPI `examples`/`properties`, narrative fields. The
+# walker must not descend into them (spec 088 adversarial negatives).
+_NON_EVIDENCE_KEYS = frozenset({
+    "example", "examples", "description", "documentation", "docs",
+    "comment", "comments", "note", "notes", "summary", "default",
+    "properties", "schema", "schemas", "items", "definitions",
+    "components", "value", "content", "requestbody", "responses",
+    "parameters", "headers", "allof", "anyof", "oneof", "enum",
+})
 
 _PY_CORS_RE = re.compile(r"CORSMiddleware\b")
 _PY_ALLOW_ORIGINS = re.compile(r"allow_origins\s*=\s*(\[[^\]]*\]|\*|\"[^\"]*\")")
@@ -419,8 +430,18 @@ def contract_pagination(
 # ---------- implementation plane ----------
 
 
+_MW_AUTHZ_RE = re.compile(
+    r"(?i)(rbac|permiss|authoriz|role|guard|acl|owner|scope)")
+
+
 def impl_authz(routes: RouteScan) -> tuple[AuthorizationPolicy, ...]:
-    """`Security(...)` names are auth evidence, never policy."""
+    """`Security(...)` names are auth evidence, never policy.
+
+    Middleware/dependency names with explicit authorization intent
+    (`Depends(require_role)`, `AuthorizationMiddleware`, …) ARE authz
+    evidence — recorded via `via` so the mechanism name is visible and
+    no role is fabricated.
+    """
     out = [
         AuthorizationPolicy(
             operation=f"{r.method.upper()} {r.path}",
@@ -438,6 +459,21 @@ def impl_authz(routes: RouteScan) -> tuple[AuthorizationPolicy, ...]:
         for r in routes.routes
         if r.auth
     ]
+    for r in routes.routes:
+        for mw in r.middleware:
+            name = mw.split("(", 1)[0].strip()
+            if not _MW_AUTHZ_RE.search(name):
+                continue
+            out.append(AuthorizationPolicy(
+                operation=f"{r.method.upper()} {r.path}",
+                via=name,
+                plane="implementation",
+                evidence=_ev(
+                    EvidenceKind.STATIC, r.source_location.path,
+                    f"authz middleware {name} applies to {r.path}",
+                    r.source_location.line,
+                ),
+            ))
     return tuple(sorted(out, key=lambda p: p.operation))
 
 
@@ -564,7 +600,10 @@ def _walk_config(node: Any, path: str, trail: tuple[str, ...],
             continue
         body = gw if isinstance(gw, dict) else {}
         blow = {str(k).lower(): k for k in body}
-        gw_scope = _nearest(gw, trail) if isinstance(gw, dict) else None
+        # The authz block's own name keys win; otherwise the enclosing
+        # node names the scope (e.g. `{prefix: /admin, authorization: ...}`)
+        # — the structural trail key (`routes`) is never a policy scope.
+        gw_scope = _nearest(gw, ()) if isinstance(gw, dict) else None
         out["gw"].append(
             AuthorizationPolicy(
                 operation=str(gw_scope or _nearest(node, trail)
@@ -693,6 +732,8 @@ def _walk_config(node: Any, path: str, trail: tuple[str, ...],
         break
 
     for key, val in node.items():
+        if str(key).lower() in _NON_EVIDENCE_KEYS:
+            continue
         ktrail = (*trail, str(key))
         if isinstance(val, dict):
             _walk_config(val, path, ktrail, text, out)
@@ -771,6 +812,7 @@ def _op_planes(
     impl_routes = routes.routes if routes else ()
     global_reqs = tuple(
         r for r in model.security_requirements if r.owner_pointer == "")
+    declared_schemes = {s.name for s in model.security_schemes}
     out = []
     for op in model.operations:
         req, _ = op_requires_auth(model, op)
@@ -794,6 +836,12 @@ def _op_planes(
             effective = global_reqs
         schemes = tuple(sorted(
             {s.name for r in effective for s in r.schemes}))
+        # A declaration that names no declared scheme is ambiguous, not
+        # proven: `security: [{ghost: []}]` must never fabricate a
+        # declared-but-unenforced chain break — it is UNKNOWN.
+        if (req is True and declared_schemes and schemes
+                and not set(schemes) & declared_schemes):
+            req = None
         out.append((op, req, impl_sec, gw_sec, schemes))
     return tuple(out)
 

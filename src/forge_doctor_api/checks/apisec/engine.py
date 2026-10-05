@@ -152,6 +152,37 @@ def run_security_checks(
             a.operation for a in model.authorization
             if a.roles or a.scopes or a.claims
         }
+        # impl-plane policies recorded through an applied mechanism
+        # (authz middleware/dependency) bind by `METHOD path` names.
+        impl_via_ops = {
+            a.operation for a in model.authorization
+            if a.plane == "implementation" and a.via
+        }
+        # gateway policies scope by declared path/prefix — the same
+        # join `_op_planes` uses: `*`, exact, or prefix containment.
+        gw_authz = [
+            a for a in model.authorization
+            if a.plane == "gateway"
+            and (a.roles or a.scopes or a.claims or a.via)
+        ]
+
+        def _authz_covered(op: OpenApiOperation) -> bool:
+            if op.identity in authz_ops:
+                return True
+            op_names = {
+                op.path,
+                f"{op.method.upper()} {op.path}",
+                normalize_route_path(op.path),
+            }
+            if op_names & impl_via_ops:
+                return True
+            norm = normalize_route_path(op.path)
+            return any(
+                a.operation == "*"
+                or norm in normalize_route_path(a.operation)
+                or normalize_route_path(a.operation) in norm
+                for a in gw_authz
+            )
         pag_by_op = {p.operation: p for p in model.pagination}
         resp_components: set[str] = set()
         for r in openapi.responses:
@@ -167,7 +198,7 @@ def run_security_checks(
             # APISEC001 - object-id path param + no object-level authz
             id_params = _path_id_params(openapi, op)
             if id_params and op.identity not in ownership_ops \
-                    and op.identity not in authz_ops:
+                    and not _authz_covered(op):
                 findings.append(
                     _finding(
                         BY_ID["APISEC001"],
@@ -195,7 +226,7 @@ def run_security_checks(
             # APISEC002 - admin-marked op without explicit authz
             if (_ADMIN_RE.search(op.path) or (
                 op.operation_id and _ADMIN_RE.search(op.operation_id)
-            )) and op.identity not in authz_ops:
+            )) and not _authz_covered(op):
                     findings.append(
                         _finding(
                             BY_ID["APISEC002"],

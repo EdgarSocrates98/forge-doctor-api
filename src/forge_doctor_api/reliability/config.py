@@ -63,6 +63,17 @@ _SLO_KEYS = ("slo", "slos", "objectives", "serviceObjectives")
 _NAME_KEYS = ("scope", "subject", "name", "cluster", "cluster_name",
               "route", "route_config", "virtual_host", "service")
 _IDEM_KEYS = ("idempotency", "idempotent", "x_idempotent", "xIdempotent")
+# Keys whose subtrees carry documentation/sample/schema content, never
+# declared policy (OpenAPI `examples`, schema `properties`, narrative
+# fields). The walker must not descend into them — a `retries: 5`
+# inside an example is not a retry policy (spec 088).
+_NON_EVIDENCE_KEYS = frozenset({
+    "example", "examples", "description", "documentation", "docs",
+    "comment", "comments", "note", "notes", "summary", "default",
+    "properties", "schema", "schemas", "items", "definitions",
+    "components", "value", "content", "requestbody", "responses",
+    "parameters", "headers", "allof", "anyof", "oneof", "enum",
+})
 
 
 def _ms(value: Any) -> float | None:
@@ -350,6 +361,8 @@ def _walk(
             break
 
     for key, val in node.items():
+        if str(key).lower() in _NON_EVIDENCE_KEYS:
+            continue
         ktrail = (*trail, str(key))
         if str(key) in _SLO_KEYS:
             items = val if isinstance(val, list) else [val]

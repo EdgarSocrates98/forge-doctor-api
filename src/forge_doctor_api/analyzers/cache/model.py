@@ -39,6 +39,11 @@ class CachePolicy(Model):
     key: str | None = None
     invalidation: str | None = None
     stale_policy: str | None = None
+    # declared Vary axes — variant-partitioned keys are not shared keys
+    vary: tuple[str, ...] = ()
+    # declared visibility scope (private/public/shared) — divergent
+    # scopes can never share a cache entry
+    scope: str | None = None
     location: SourceLocation
 
 

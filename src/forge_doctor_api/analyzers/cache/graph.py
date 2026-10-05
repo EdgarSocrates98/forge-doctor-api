@@ -27,6 +27,7 @@ from forge_doctor_api.core.models import (
     Finding,
     Model,
     Severity,
+    UnknownFact,
 )
 
 _WRITE_METHODS = {"post", "put", "patch", "delete"}
@@ -53,6 +54,9 @@ class CacheGraph(Model):
     cached_operations: tuple[str, ...]
     mutating_operations: tuple[str, ...]
     edges: tuple[CacheEdge, ...]
+    # joins suppressed because declared evidence partitions the key
+    # space — recorded, never silent
+    unknowns: tuple[UnknownFact, ...] = ()
 
 
 _SCHEMA_REF = "#/components/schemas/"
@@ -165,6 +169,11 @@ def build_cache_graph(
 
     write_names = {n for wop in writers.values() for n in _op_names(wop)}
     read_names = {n for rop in reads.values() for n in _op_names(rop)}
+    # A shared `key` string is only a shared key when the variant space
+    # matches: divergent `Vary` sets, authz-bearing axes, or divergent
+    # private/public scopes partition entries — no conflict claim.
+    _AUTHZ_VARY = {"authorization", "cookie", "proxy-authorization"}
+    partitioned: list[UnknownFact] = []
     for key, pols in sorted(by_key.items()):
         if len(pols) < 2:
             continue
@@ -173,6 +182,32 @@ def build_cache_graph(
         hits_r = sorted({p.subject for p in pols
                          if p.subject in read_names})
         if not hits_w or not hits_r:
+            continue
+        vary_sets = {tuple(sorted(v.lower() for v in p.vary))
+                     for p in pols if p.vary}
+        union_vary = {v.lower() for p in pols for v in p.vary}
+        scopes = {p.scope.lower() for p in pols if p.scope}
+        if len(vary_sets) > 1:
+            partitioned.append(UnknownFact(
+                subject=f"cache key '{key}'",
+                missing="shared variant space across writer/reader "
+                "policies",
+                resolution="declared Vary sets differ — entries are "
+                "variant-partitioned, not shared"))
+            continue
+        if union_vary & _AUTHZ_VARY:
+            partitioned.append(UnknownFact(
+                subject=f"cache key '{key}'",
+                missing="cross-principal sharing evidence",
+                resolution="an authz-bearing Vary axis partitions "
+                "entries per principal — sharing is per-principal"))
+            continue
+        if len(scopes) > 1:
+            partitioned.append(UnknownFact(
+                subject=f"cache key '{key}'",
+                missing="shared visibility scope across policies",
+                resolution="private/public scope divergence means the "
+                "declared key cannot name a shared entry"))
             continue
         findings.append(Finding(
             id="APICACHE003",
@@ -215,5 +250,7 @@ def build_cache_graph(
         cached_operations=tuple(sorted(cached)),
         mutating_operations=tuple(sorted(writers)),
         edges=tuple(sorted(
-            edges, key=lambda e: (e.from_id, e.to_id, e.kind.value))))
+            edges, key=lambda e: (e.from_id, e.to_id, e.kind.value))),
+        unknowns=tuple(sorted(
+            partitioned, key=lambda u: (u.subject, u.missing))))
     return graph, tuple(findings)

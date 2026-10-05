@@ -27,6 +27,30 @@ def error_budget(
     The budget uses the objective's declared window when present,
     else all windows.
     """
+    # Only error-rate/availability objectives reduce to request counts.
+    # A latency/freshness/other metric has no declared signal to consume
+    # here — never interpolate an error budget for it (§47, spec 088).
+    _ERROR_METRICS = ("error", "availab", "success", "failure")
+    if not any(k in objective.metric.lower() for k in _ERROR_METRICS):
+        return ErrorBudget(
+            objective=objective.name,
+            window=objective.window or "(all)",
+            total=0,
+            consumed=0.0,
+            remaining=0.0,
+            sufficient=False,
+            unknowns=(
+                UnknownFact(
+                    subject=objective.name,
+                    missing=f"computable signal for metric "
+                    f"'{objective.metric}'",
+                    resolution="error budgets consume request status "
+                    "only; latency-percentile or freshness objectives "
+                    "need a declared threshold signal, never an "
+                    "interpolated error budget",
+                ),
+            ),
+        )
     scoped = [
         e
         for e in executions

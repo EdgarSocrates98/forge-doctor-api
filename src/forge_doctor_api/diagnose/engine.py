@@ -240,7 +240,19 @@ def _candidates(
     return tuple(
         CandidateCause(
             subject=c.subject, kind=c.kind, tier=c.tier, rank=i + 1,
-            rationale=c.rationale, evidence=c.evidence, unknowns=c.unknowns,
+            rationale=c.rationale, evidence=c.evidence,
+            unknowns=c.unknowns or (
+                ()
+                if c.evidence
+                else (
+                    UnknownFact(
+                        subject=c.subject,
+                        missing="evidence path for this candidate cause",
+                        resolution="record span/config evidence so the "
+                        "candidate can be traced to its source",
+                    ),
+                )
+            ),
         )
         for i, c in enumerate(causes)
     )

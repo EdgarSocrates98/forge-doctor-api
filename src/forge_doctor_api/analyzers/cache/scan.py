@@ -85,6 +85,30 @@ def _config_policies(
                         layer = CacheLayer.CDN
                     elif key in ("cache", "caching"):
                         layer = CacheLayer.SERVICE
+                vary_raw = body.get("vary") or body.get("vary_headers")
+                vary = (
+                    tuple(str(v) for v in vary_raw)
+                    if isinstance(vary_raw, (list, tuple))
+                    else (tuple(s.strip() for s in str(vary_raw).split(",")
+                                if s.strip()) if vary_raw else ())
+                )
+                cscope = body.get("scope") or body.get("visibility")
+                if cscope is None:
+                    if body.get("private") is True:
+                        cscope = "private"
+                    elif body.get("public") is True:
+                        cscope = "public"
+                stale = (
+                    str(body["stale_policy"]) if body.get("stale_policy")
+                    else None
+                )
+                sie = (
+                    body.get("stale_if_error", body.get("staleIfError",
+                             body.get("stale-if-error")))
+                )
+                if sie is not None:
+                    stale = f"stale-if-error:{sie}" if stale is None \
+                        else f"{stale};stale-if-error:{sie}"
                 policies.append(CachePolicy(
                     subject=str(scope),
                     layer=layer,
@@ -93,8 +117,9 @@ def _config_policies(
                     key=(str(body["key"]) if body.get("key") else None),
                     invalidation=(str(body["invalidation"])
                                   if body.get("invalidation") else None),
-                    stale_policy=(str(body["stale_policy"])
-                                  if body.get("stale_policy") else None),
+                    stale_policy=stale,
+                    vary=vary,
+                    scope=(str(cscope) if cscope is not None else None),
                     location=SourceLocation(path=rel)))
     return policies, unknowns
 
