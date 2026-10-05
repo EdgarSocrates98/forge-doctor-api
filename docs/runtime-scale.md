@@ -36,25 +36,64 @@ RSS measurement uses stdlib `tracemalloc` only — no `psutil`/
 
 ## Perf budget gate
 
-`factory/benchmarks/scale_benchmark.py` records wall time + peak heap
-for contract parsing and OTLP ingestion into
-`factory/runs/scale-benchmark.json` (committed baseline).
+`factory/benchmarks/scale_benchmark.py` records the full spec-086
+metric set into `factory/runs/scale-benchmark.json` (committed
+baseline): per scale — `wall_seconds`, `peak_bytes`, plus executions,
+completed/incomplete traces, evictions, late spans and tombstone
+overflow for the span scenarios; snapshot file bytes, load time and
+diff time for the snapshot suite.
 
 ```bash
 python factory/benchmarks/scale_benchmark.py --check          # gate
 python factory/benchmarks/scale_benchmark.py --write-baseline # refresh
 ```
 
-`--check` re-measures a fast subset (`CHECK_SCALES`: 1k endpoints,
-10k spans — ~10s on CI) and fails when any metric exceeds
-`baseline * HEADROOM`. Headroom is per-metric in the file header:
-`seconds` 4.0x (shared-CI timing variance), `peak_mb` 2.5x. The gate
-catches pathological blow-ups, not minor regressions — per-scenario
-precision lives in the lab suite.
+`--check` re-measures the check tier (`CHECK_SCALES`: 5k endpoints,
+50k grouped spans, 50k churn spans) and fails when a gated metric
+exceeds `baseline * HEADROOM`. Headroom is per-metric in the file
+header: `wall_seconds` 4.0x (shared-CI timing variance), `peak_bytes`
+2.5x. The gate catches pathological blow-ups, not minor regressions —
+per-scenario precision lives in the lab suite.
 
 **Baseline refresh policy:** the committed baseline is regenerated
 only via `--write-baseline` in a deliberate commit — never inside
 `--check`, never opportunistically when hardware drifts.
+
+## Measured envelope
+
+Two tiers, both measured — nothing in the baseline is asserted
+without a recorded run:
+
+| Tier | Contents | Where |
+| --- | --- | --- |
+| check | 5,000 endpoints · 50,000 grouped spans · 50,000 churn spans | CI `--check` gate |
+| recorded | + 100/1k/10k endpoints · 10k/50k/100k spans both shapes · 10k-endpoint snapshot write/load/diff | `--write-baseline` record |
+
+Span scenarios measure both sides of the assembly bound:
+
+- **`spans`** — grouped input (25 spans/trace) keeps the trace count
+  under `window`; assertions require zero evictions and every
+  generated trace completed.
+- **`spans_churn`** — one trace_id per span exceeds `window` past
+  10k; assertions require exactly `count - window` evictions,
+  `late_spans` hitting still-tombstoned ids, and tombstone overflow
+  equal to `evictions - tombstone_limit`. Nothing is assumed: each
+  run aborts if the assembled inventory differs from the generated
+  ground truth.
+
+The snapshot suite writes a full `scan_project` report (10k
+endpoints + 10k spans), records the file bytes, reloads it, and runs
+`architectural_regressions` against the live report — a self-diff
+must be empty and the bounded runtime summary must round-trip
+unchanged. It runs at the recorded tier only, so CI stays fast;
+`docs/release-evidence.md` carries the committed numbers.
+
+Edge cases past the bound are pinned by
+`tests/test_runtime_stream.py`: late spans after close, duplicate
+span ids (incl. the self-parent cycle that once hung
+`_critical_path`), out-of-order arrival, missing parents, eviction
+under the bound, and tombstone-limit accounting — each with
+observable expected output.
 
 ## Temporal snapshots
 

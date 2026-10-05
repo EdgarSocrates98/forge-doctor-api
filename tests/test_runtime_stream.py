@@ -159,6 +159,83 @@ def test_memory_bound_scales_with_window_not_dataset() -> None:
     assert alpha < 1.0, f"peak scaled ~N^{alpha:.2f} (must be sublinear)"
 
 
+def test_child_before_parent_arrival_still_completes() -> None:
+    """Out-of-order within a trace: the bucket holds spans until flush,
+    so a child arriving before its parent still forms one complete
+    tree with a critical path."""
+    asm = TraceAssembler(window=4)
+    asm.add(_span("t", "s2", parent="s1", kind=SpanKind.CLIENT, line=1))
+    asm.add(_span("t", "s3", parent="s2", kind=SpanKind.CLIENT, line=2))
+    asm.add(_span("t", "s1", line=3))  # root arrives last
+    traces, execs, _unknowns = asm.finish()
+    assert len(traces) == 1
+    assert traces[0].incomplete is False
+    assert traces[0].critical_path == ("op", "op", "op")
+    assert len(execs) == 1
+
+
+def test_missing_parent_marks_trace_incomplete() -> None:
+    """A span parented outside its trace is malformed: the trace is
+    emitted incomplete with an unknown, never silently repaired."""
+    asm = TraceAssembler(window=4)
+    asm.add(_span("t", "s1"))
+    asm.add(_span("t", "s2", parent="ghost", kind=SpanKind.CLIENT))
+    traces, _execs, _unknowns = asm.finish()
+    assert traces[0].incomplete is True
+    assert traces[0].critical_path == ()
+    assert any("complete span tree" in u.missing
+               for u in traces[0].unknowns)
+    assert asm.orphan_spans == 1
+
+
+def test_duplicate_span_ids_are_reported() -> None:
+    """Two spans sharing a span_id: an explicit unknown records the
+    collision; a dup that parents to itself is malformed and marks the
+    trace incomplete instead of hanging the critical-path walk."""
+    asm = TraceAssembler(window=4)
+    asm.add(_span("t", "s1"))
+    asm.add(_span("t", "s1", kind=SpanKind.CLIENT, parent="s1"))
+    traces, execs, unknowns = asm.finish()
+    assert traces[0].span_count == 2  # both observed, none dropped
+    assert any("unique span ids" in u.missing for u in unknowns)
+    assert traces[0].incomplete is True  # self-parented dup = broken tree
+    assert len(execs) == 1
+
+
+def test_id_collision_with_two_roots_is_incomplete() -> None:
+    """Dup span ids where both are parentless yield two roots — the
+    trace is incomplete rather than silently picking one as root."""
+    asm = TraceAssembler(window=4)
+    asm.add(_span("t", "s1"))
+    asm.add(_span("t", "s1", kind=SpanKind.CLIENT, parent=None))
+    traces, execs, unknowns = asm.finish()
+    assert traces[0].span_count == 2
+    assert traces[0].incomplete is True
+    assert any("unique span ids" in u.missing for u in unknowns)
+    assert len(execs) == 1
+
+
+def test_tombstone_overflow_is_accounted() -> None:
+    """Evictions beyond tombstone_limit are counted + reported. A late
+    span for a still-tombstoned id is counted and not reassembled; a
+    span for a forgotten id honestly starts a fresh trace."""
+    asm = TraceAssembler(window=1, tombstone_limit=2)
+    asm.add(_span("t1", "s1"))
+    asm.add(_span("t2", "s2"))  # evicts t1 -> tombstone {t1}
+    asm.add(_span("t3", "s3"))  # evicts t2 -> tombstone {t1, t2}
+    asm.add(_span("t4", "s4"))  # evicts t3 -> tombstone {t2, t3}, t1 out
+    asm.add(_span("t3", "s5"))  # t3 tombstoned -> late, counted
+    asm.add(_span("t1", "s6"))  # t1 forgotten -> new trace
+    traces, _execs, unknowns = asm.finish()
+    assert any("tombstone capacity for 2" in u.missing for u in unknowns)
+    assert any("1 span(s)" in u.missing and "evicted" in u.missing
+               for u in unknowns)
+    t3s = [t for t in traces if t.trace_id == "t3"]
+    assert len(t3s) == 1  # tombstoned, never reassembled
+    t1s = [t for t in traces if t.trace_id == "t1"]
+    assert len(t1s) == 2  # evicted t1 + fresh t1 from the forgotten id
+
+
 def test_loader_bounded_end_to_end(tmp_path: Path) -> None:
     """load_runtime_project on an interleaved export stays bounded."""
     spans = _many_spans(300, 3)

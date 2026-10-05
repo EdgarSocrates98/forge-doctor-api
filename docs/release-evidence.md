@@ -48,6 +48,33 @@ Companion to [release.md](release.md) and
 | After spec 079 (sec/rel precision) | 1434 passed |
 | After spec 080 (release maturity) | **1438 passed** |
 
+## Measured scale envelope (spec 086)
+
+`factory/runs/scale-benchmark.json` (committed baseline, this host —
+tracemalloc-instrumented; CI gates at 4.0x wall / 2.5x peak headroom):
+
+| Kind | Scale | Wall (s) | Peak (MB) | Executions | Traces done/incomplete | Evictions | Late | Tombstone overflow |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| endpoints | 5,000 (check) | 14.5 | 53.9 | — | — | — | — | — |
+| endpoints | 10,000 (recorded) | 41.6 | 107.6 | — | — | — | — | — |
+| spans grouped | 50,000 (check) | 62.8 | 63.9 | 2,000 | 2,000 / 0 | 0 | 0 | 0 |
+| spans grouped | 100,000 (recorded) | 132.3 | 128.0 | 4,000 | 4,000 / 0 | 0 | 0 | 0 |
+| spans churn | 50,000 (check) | 104.7 | 91.8 | 50,000 | 10,000 / 40,000 | 40,000 | 500 | 30,000 |
+| spans churn | 100,000 (recorded) | 193.9 | 184.0 | 100,000 | 10,000 / 90,000 | 90,000 | 500 | 80,000 |
+
+Snapshot suite (10k endpoints + 10k spans, recorded tier only):
+scan 681.8s / 388.2MB peak → 18,831,943-byte snapshot file, load
+121.5s, self-diff 0.06s with zero regressions and byte-identical
+bounded runtime summary. The snapshot leg is deliberately excluded
+from `--check` (recorded tier only) — check-tier runtime stays in the
+~2–3 minute band on CI.
+
+Correctness under pressure is asserted inside the run: grouped input
+never evicts (trace count < `window`); churn input evicts exactly
+`count - window` traces, counts `late_spans` against still-tombstoned
+ids, and reports `evictions - tombstone_limit` overflow — any
+deviation aborts the benchmark before headroom is even consulted.
+
 ## Clean-environment proof (spec 080 verification)
 
 A fresh venv + `pip install dist/*.whl` (no extras) on the built
@@ -70,7 +97,9 @@ annotations.
 | 077 OSS corpus | `2f68ba5` | real slices + provenance + negatives |
 | 078 frameworks | `1671c00` | four-adapter depth + labs |
 | 079 sec/rel precision | `23ca1c1` | auth chain, idempotency, cache, joins |
-| 080 release maturity | this commit | changelog, SBOM check, SHA256SUMS |
+| 080 release maturity | `this commit` | changelog, SBOM check, SHA256SUMS |
+| 081–085 rc hardening | `rc-hardening/081-091` | baseline freeze, conformance, MCP/plugin trust, OSS corpus depth |
+| 086 runtime scale | `rc-hardening/081-091` | 5k/50k check · 10k/100k recorded, full metrics, snapshot suite |
 
 Acceptance evidence per spec: `factory/reviews/` and archived spec
 files under `factory/specs/archive/2026/`.

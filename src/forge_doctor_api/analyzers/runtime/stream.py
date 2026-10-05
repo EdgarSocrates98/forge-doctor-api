@@ -162,7 +162,10 @@ class TraceAssembler:
             1 for s in ts if s.parent_id and s.parent_id not in ids
         )
         roots = [s for s in ts if not s.parent_id]
-        broken = any(s.parent_id and s.parent_id not in ids for s in ts)
+        broken = any(
+            s.parent_id
+            and (s.parent_id == s.span_id or s.parent_id not in ids)
+            for s in ts)
         incomplete = evicted or broken or len(roots) != 1
 
         unknowns: list[UnknownFact] = []
@@ -226,11 +229,14 @@ def _critical_path(root: Span, spans: list[Span]) -> tuple[str, ...]:
         children[s.parent_id].append(s)
     path = [root.operation]
     node = root
+    seen = {root.span_id}
     while True:
-        kids = children.get(node.span_id, [])
+        kids = [s for s in children.get(node.span_id, [])
+                if s.span_id not in seen]
         if not kids:
             return tuple(path)
         node = max(kids, key=lambda s: (s.duration_ms or 0, s.operation))
+        seen.add(node.span_id)
         path.append(node.operation)
 
 

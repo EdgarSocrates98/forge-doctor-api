@@ -86,15 +86,18 @@
   "sbom_dependency_count": 5,
   "scale_check_scales": {
     "endpoints": [
-      1000
+      5000
     ],
     "spans": [
-      10000
+      50000
+    ],
+    "spans_churn": [
+      50000
     ]
   },
   "scale_headroom": {
-    "peak_mb": 2.5,
-    "seconds": 4.0
+    "peak_bytes": 2.5,
+    "wall_seconds": 4.0
   },
   "test_file_count": 78,
   "version": "0.1.0"
