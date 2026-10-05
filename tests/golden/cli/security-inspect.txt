@@ -1,11 +1,3 @@
-Usage: forge-doctor-api security inspect [OPTIONS] {target}
-
-Passive security inspection (§163) - contract/config evidence only.
-
-┌─ Arguments ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-* target <str> Project directory. [required]
-└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
-┌─ Options ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
---json JSON output.
---help Show this message and exit.
-└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+Usage: forge-doctor-api security inspect [OPTIONS] {target} Passive security inspection (§163) -
+contract/config evidence only. Arguments * target <str> Project directory. [required] Options --json
+JSON output. --help Show this message and exit.

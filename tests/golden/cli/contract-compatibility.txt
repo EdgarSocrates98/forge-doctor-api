@@ -1,12 +1,4 @@
-Usage: forge-doctor-api contract compatibility [OPTIONS] {old} {new}
-
-Classify contract changes by compatibility (§16, §160).
-
-┌─ Arguments ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-* old <str> Old contract file or directory. [required]
-* new <str> New contract file or directory. [required]
-└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
-┌─ Options ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
---json JSON output.
---help Show this message and exit.
-└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+Usage: forge-doctor-api contract compatibility [OPTIONS] {old} {new} Classify contract changes by
+compatibility (§16, §160). Arguments * old <str> Old contract file or directory. [required] * new
+<str> New contract file or directory. [required] Options --json JSON output. --help Show this
+message and exit.

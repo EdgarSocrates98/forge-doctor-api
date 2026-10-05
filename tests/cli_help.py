@@ -10,6 +10,7 @@ rendering.
 from __future__ import annotations
 
 import re
+import textwrap
 
 import typer.rich_utils
 from typer.testing import CliRunner
@@ -43,44 +44,33 @@ def help_text(*argv: str) -> str:
 
 
 # Rich picks a box style per platform (rounded/heavy/double under
-# UTF-8 terminals, square under legacy Windows). Snapshots pin the
-# square set — map every variant onto it so the *box flavor* is never
-# part of the contract.
-_BOX_CANON = str.maketrans({
-    "╭": "┌", "╮": "┐", "╰": "└", "╯": "┘",
-    "┏": "┌", "┓": "┐", "┗": "└", "┛": "┘",
-    "╔": "┌", "╗": "┐", "╚": "└", "╝": "┘",
-    "━": "─", "═": "─", "┃": "│", "║": "│",
-    "┣": "├", "┫": "┤", "┳": "┬", "┻": "┴", "╋": "┼",
-    "╠": "├", "╣": "┤", "╦": "┬", "╩": "┴", "╬": "┼",
-    "╞": "├", "╡": "┤", "╤": "┬", "╧": "┴", "╪": "┼",
-})
-
-_DECORATIVE_RE = re.compile(r"^[\s─═━═╌╍┄┅┈┉\-_=~*#|+.·:<>]*$")
-_EDGE_GLYPHS = "│┃| "
-_WS_RUN_RE = re.compile(r"\s{2,}")
+# UTF-8 terminals, square under legacy Windows) and wraps at whatever
+# width its detection path reports — COLUMNS/pinning is not honored
+# identically on every platform. So the canonical form must be
+# width-invariant: strip every decoration glyph, collapse to a token
+# stream, re-wrap at a fixed 100 columns. Snapshots pin the contract
+# (content + order), never the renderer's layout.
+_BOX_GLYPHS = (
+    "─━═│┃║╌╍┄┅┈┉"
+    "┌┐└┘┏┓┗┛╔╗╚╝╭╮╰╯"
+    "├┤┬┴┼┣┫┳┻╋╠╣╦╩╬╞╡╤╧╪"
+)
 
 
 def normalized_help(*argv: str) -> str:
-    """`help_text` canonicalized to content: ANSI stripped, box-drawing
-    variants folded to the square set, decoration-only lines dropped,
-    edge glyphs and intra-line column padding collapsed — snapshots pin
-    the contract, not the renderer's layout or platform box style."""
-    lines: list[str] = []
-    blank = False
+    """`help_text` reduced to its token stream, re-wrapped at 100 cols.
+
+    Box borders, rules, padding and line-wrap positions are renderer
+    details; the snapshot asserts option names, argument names, help
+    text and their order — identical bytes on any platform/terminal.
+    """
+    tokens: list[str] = []
     for raw in help_text(*argv).splitlines():
-        line = raw.rstrip().translate(_BOX_CANON)
-        if _DECORATIVE_RE.match(line):
-            if lines and not blank:
-                lines.append("")
-            blank = True
+        line = raw.strip(_BOX_GLYPHS + " \t")
+        if not line:
             continue
-        line = _WS_RUN_RE.sub(" ", line.strip(_EDGE_GLYPHS))
-        lines.append(line)
-        blank = False
-    while lines and lines[-1] == "":
-        lines.pop()
-    return "\n".join(lines) + "\n"
+        tokens.extend(line.split())
+    return "\n".join(textwrap.wrap(" ".join(tokens), 100)) + "\n"
 
 
 def assert_option(command: str, *argv: str, option: str) -> str:

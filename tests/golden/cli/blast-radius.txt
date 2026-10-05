@@ -1,13 +1,4 @@
-Usage: forge-doctor-api blast-radius [OPTIONS] {old} {new}
-
-§68 blast radius: changed operation -> clients -> services -> business paths.
-
-┌─ Arguments ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-* old <str> Old contract file or directory. [required]
-* new <str> New contract file or directory. [required]
-└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
-┌─ Options ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
---clients <str> Directory of client sources.
---json JSON output.
---help Show this message and exit.
-└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+Usage: forge-doctor-api blast-radius [OPTIONS] {old} {new} §68 blast radius: changed operation ->
+clients -> services -> business paths. Arguments * old <str> Old contract file or directory.
+[required] * new <str> New contract file or directory. [required] Options --clients <str> Directory
+of client sources. --json JSON output. --help Show this message and exit.

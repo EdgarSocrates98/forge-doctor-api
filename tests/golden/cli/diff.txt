@@ -1,15 +1,5 @@
-Usage: forge-doctor-api diff [OPTIONS] {old} {new}
-
-Semantic contract diff (§66): typed change events + optional PR summary.
-
-┌─ Arguments ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-* old <str> Old contract file or directory. [required]
-* new <str> New contract file or directory. [required]
-└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
-┌─ Options ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
---semantic Emit typed change events (§65). [default: True]
---json JSON output.
---pr Print the §67 PR-intel summary.
---clients <str> Directory of client sources (blast radius).
---help Show this message and exit.
-└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+Usage: forge-doctor-api diff [OPTIONS] {old} {new} Semantic contract diff (§66): typed change events
++ optional PR summary. Arguments * old <str> Old contract file or directory. [required] * new <str>
+New contract file or directory. [required] Options --semantic Emit typed change events (§65).
+[default: True] --json JSON output. --pr Print the §67 PR-intel summary. --clients <str> Directory
+of client sources (blast radius). --help Show this message and exit.

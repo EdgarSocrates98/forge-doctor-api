@@ -1,11 +1,3 @@
-Usage: forge-doctor-api graph [OPTIONS] {target}
-
-Show the service graph built from contract + implementation + client evidence (§161).
-
-┌─ Arguments ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-* target <str> Directory with contract + source evidence. [required]
-└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
-┌─ Options ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
---json JSON output.
---help Show this message and exit.
-└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+Usage: forge-doctor-api graph [OPTIONS] {target} Show the service graph built from contract +
+implementation + client evidence (§161). Arguments * target <str> Directory with contract + source
+evidence. [required] Options --json JSON output. --help Show this message and exit.

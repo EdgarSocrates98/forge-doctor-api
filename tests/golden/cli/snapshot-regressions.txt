@@ -1,12 +1,3 @@
-Usage: forge-doctor-api snapshot regressions [OPTIONS] {a} {b}
-
-Evidence-backed architectural regressions a -> b.
-
-┌─ Arguments ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-* a <str> Snapshot id/label (older). [required]
-* b <str> Snapshot id/label (newer). [required]
-└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
-┌─ Options ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
---target <str> [default: .]
---help Show this message and exit.
-└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+Usage: forge-doctor-api snapshot regressions [OPTIONS] {a} {b} Evidence-backed architectural
+regressions a -> b. Arguments * a <str> Snapshot id/label (older). [required] * b <str> Snapshot
+id/label (newer). [required] Options --target <str> [default: .] --help Show this message and exit.
