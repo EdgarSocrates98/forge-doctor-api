@@ -5,12 +5,16 @@ Policy details live in [release-policy.md](release-policy.md); the
 evidence record for this stabilization program is in
 [release-evidence.md](release-evidence.md).
 
-## Version decision — 0.1.x
+## Version decision — 0.2.x, no 1.0
 
-**Decision: the package stays on the `0.1.x` line.**
+**Decision: the package moved to `0.2.0` and stays on the `0.x`
+line — no `1.0`.**
 
-`AGENTS.md` forbids a version bump for this program; this entry
-records the *why* so the decision survives the session that made it:
+The `0.1.x`→`0.2.0` bump was owner-authorized with documented
+rationale in [versioning.md](versioning.md) ("Trusted Unified
+Doctor" phase marker). The earlier `0.1.0` pin exists to prevent
+*undocumented* bumps; this entry records the *why* of both so the
+decision survives the session that made it:
 
 - The public contract is young. `forge-contracts/1` (spec 074) and
   the slim `ForgeRequest`/bounded handoff (spec 075) define the wire
@@ -23,11 +27,12 @@ records the *why* so the decision survives the session that made it:
 - **Revisit trigger:** cut `1.0.0` when a `forge-contracts/1` payload
   produced here is consumed unchanged by a Data Doctor / Forger
   release *and* the CLI inventory + check catalog go a full release
-  cycle additive-only. Until then, breaking changes land as `0.1.x`
+  cycle additive-only. Until then, breaking changes land as `0.2.x`
   with changelog notes.
 
-This is a decision record, not a date: `0.1.0` in `pyproject.toml`
-is intentional.
+This is a decision record, not a date. The `0.2.0` bump and the full
+versioning policy are recorded in
+[versioning.md](versioning.md).
 
 ## Artifact inventory
 
@@ -55,7 +60,7 @@ publishes. It never auto-publishes.
 | Dirty-tree policy | `python factory/release_manifest.py --rc` | refuses `rc: true` on a dirty or unverifiable tree unless `--allow-dirty` |
 | Provenance | `python factory/provenance.py` | deterministic in-toto-lite document over `dist/` subjects |
 | Release smoke | `python factory/release_smoke.py --extras "[graphql,mcp]"` | clean-venv wheel install fails to serve `--version`, `scan`, `contract inspect`, `lab`, or the MCP handshake |
-| Dogfood | `python factory/self_scan.py --check` | the self-scan report's *shape* (finding/unknown identities, gate result, versions) drifts from `factory/runs/doctor-self-scan-v0.1.json`; evidence text and line numbers are whitelisted as volatile |
+| Dogfood | `python factory/self_scan.py --check` | the self-scan report's *shape* (finding/unknown identities, gate result, versions) drifts from `factory/runs/doctor-self-scan.json`; evidence text and line numbers are whitelisted as volatile |
 
 All gates run in the `full`/`3.12` leg of `quality.yml`; the release
 smoke installs only the built wheel, never the source tree.

@@ -63,17 +63,17 @@
         "pkg:pypi/graphql-core@3.2",
         "pkg:pypi/mcp@2.0"
       ],
-      "ref": "pkg:pypi/forge-doctor-api@0.1.0"
+      "ref": "pkg:pypi/forge-doctor-api@0.2.0"
     }
   ],
   "metadata": {
     "component": {
-      "bom-ref": "pkg:pypi/forge-doctor-api@0.1.0",
+      "bom-ref": "pkg:pypi/forge-doctor-api@0.2.0",
       "description": "Deterministic, offline-first, evidence-first API architecture intelligence engine.",
       "licenses": [],
       "name": "forge-doctor-api",
       "type": "application",
-      "version": "0.1.0"
+      "version": "0.2.0"
     },
     "tools": [
       {

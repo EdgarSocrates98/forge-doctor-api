@@ -7,6 +7,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import forge_doctor_api
+
 ROOT = Path(__file__).resolve().parent.parent
 BASELINE = ROOT / "docs" / "rc-baseline.json"
 GENERATOR = ROOT / "factory" / "rc_baseline.py"
@@ -48,7 +50,7 @@ def test_baseline_file_exists_and_has_pinned_keys() -> None:
 
 def test_baseline_counts_match_reality() -> None:
     data = _load()
-    assert data["version"] == "0.1.0"
+    assert data["version"] == forge_doctor_api.__version__
     assert data["cli_command_count"] == len(data["cli_commands"])
     assert data["mcp_tool_count"] == len(data["mcp_tools"])
     assert data["cli_command_count"] > 0

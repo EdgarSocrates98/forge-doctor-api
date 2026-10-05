@@ -11,10 +11,10 @@
     },
     "source": {
       "repo": "https://github.com/EdgarSocrates98/forge-doctor-api.git",
-      "revision": "0797bd90650b3cd61c706716f01fc474b649f0d1"
+      "revision": "ee4e608da635fa10dc13c195397ecd3e14339953"
     },
     "tools": {
-      "forge_doctor_api": "0.1.0",
+      "forge_doctor_api": "0.2.0",
       "python": "3.14.6"
     }
   },
@@ -22,15 +22,15 @@
   "subject": [
     {
       "digest": {
-        "sha256": "cf32d232b7bc909eeab795e346e56e045717cebcb077fadb441f24397da5a4d4"
+        "sha256": "8a3d393d15fc9a086e3c7b7ddc23a7b070f28bfe792d16fb6028391a2d0bf0b5"
       },
-      "name": "forge_doctor_api-0.1.0-py3-none-any.whl"
+      "name": "forge_doctor_api-0.2.0-py3-none-any.whl"
     },
     {
       "digest": {
-        "sha256": "40c7dd0f1c2bc8ee7496191ef938ed5fdb52ff2b820d0bcf7d20a66b017815a4"
+        "sha256": "e0f247a7b1653b0dc1b5fd19cd8e0dbaab554deda3bcb7287b9c9e7721fc9adb"
       },
-      "name": "forge_doctor_api-0.1.0.tar.gz"
+      "name": "forge_doctor_api-0.2.0.tar.gz"
     }
   ]
 }

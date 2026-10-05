@@ -9,6 +9,8 @@ import tomllib
 import zipfile
 from pathlib import Path
 
+import forge_doctor_api
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -73,7 +75,7 @@ def test_wheel_and_sdist_contents(tmp_path: Path) -> None:
     with zipfile.ZipFile(wheels[0]) as zf:
         text = zf.read(meta).decode()
     assert "Requires-Python: >=3.11" in text
-    assert "Version: 0.1.0" in text
+    assert f"Version: {forge_doctor_api.__version__}" in text
 
     sdists = list(dist.glob("*.tar.gz"))
     if sdists:  # pip-wheel fallback produces no sdist

@@ -28,7 +28,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-BASELINE = ROOT / "factory" / "runs" / "doctor-self-scan-v0.1.json"
+BASELINE = ROOT / "factory" / "runs" / "doctor-self-scan.json"
 
 
 def _run_scan() -> dict:

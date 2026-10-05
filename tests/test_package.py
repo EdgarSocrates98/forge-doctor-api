@@ -18,7 +18,7 @@ def test_project_metadata() -> None:
     project = load_pyproject()["project"]
     assert isinstance(project, dict)
     assert project["name"] == "forge-doctor-api"
-    assert project["version"] == "0.1.0" == forge_doctor_api.__version__
+    assert project["version"] == "0.2.0" == forge_doctor_api.__version__
     assert project["requires-python"] == ">=3.11"
     assert project["scripts"] == {"forge-doctor-api": "forge_doctor_api.cli:main"}
 

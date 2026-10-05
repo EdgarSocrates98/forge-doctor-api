@@ -13,7 +13,7 @@ structured, evidence-bearing findings. It never calls a model, never
 fetches a URL, and never guesses: anything it cannot establish from
 local evidence is surfaced as an explicit `UnknownFact`.
 
-Status: `0.1.0` — the full deterministic surface is implemented (scan,
+Status: `0.2.0` — the full deterministic surface is implemented (scan,
 diff, diagnose, inventory, lab, handoff). This is **not** a stable public
 API commitment; interfaces may still change before 1.0.
 

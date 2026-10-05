@@ -5,7 +5,7 @@ Every machine-readable export carries the same three metadata fields:
 ```json
 {
   "schema_version": "1.0",
-  "tool_version": "0.1.0",
+  "tool_version": "0.2.0",
   "knowledge_versions": {"openapi-versions": "2026.10", "...": "..."}
 }
 ```
@@ -68,7 +68,7 @@ forge-doctor-api scan . --format agent
 A compact line format for agentic consumers:
 
 ```text
-# schema_version=1.0 tool_version=0.1.0
+# schema_version=1.0 tool_version=0.2.0
 # knowledge_versions=openapi-versions@2026.10,...
 OAS004|LOW|HIGH|operation:openapi:method_path:GET /items:5|GET /items has no operationId
 UNKNOWN|subject|what-is-missing

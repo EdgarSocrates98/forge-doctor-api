@@ -17,6 +17,8 @@ import release_manifest  # noqa: E402
 import self_scan  # noqa: E402
 import version_gate  # noqa: E402
 
+import forge_doctor_api  # noqa: E402
+
 # ---------- release manifest ----------
 
 
@@ -145,9 +147,10 @@ def test_provenance_subjects_from_dist(tmp_path: Path) -> None:
 
 def test_version_gate_current_tree_consistent() -> None:
     sources = version_gate.gather(ROOT / "no-such-dist")
-    assert sources["pyproject"] == "0.1.0"
-    assert sources["__init__.__version__"] == "0.1.0"
-    assert sources["sdk.SDK_VERSION"] == "0.1.0"
+    v = forge_doctor_api.__version__
+    assert sources["pyproject"] == v
+    assert sources["__init__.__version__"] == v
+    assert sources["sdk.SDK_VERSION"] == v
     assert len({v for v in sources.values()}) == 1
 
 

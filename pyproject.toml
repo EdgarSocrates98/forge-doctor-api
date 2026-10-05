@@ -1,6 +1,6 @@
 [project]
 name = "forge-doctor-api"
-version = "0.1.0"
+version = "0.2.0"
 description = "Deterministic, offline-first, evidence-first API architecture intelligence engine."
 readme = "README.md"
 requires-python = ">=3.11"
