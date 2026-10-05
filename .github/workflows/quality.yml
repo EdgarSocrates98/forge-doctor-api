@@ -113,3 +113,12 @@ jobs:
           python factory/sha256sums.py
           python factory/sha256sums.py --verify
           python factory/mcp_inventory.py --check
+          python factory/version_gate.py
+          python factory/release_manifest.py --check
+          python factory/provenance.py --stdout > /dev/null
+      - name: Self-scan dogfood gate
+        if: matrix.profile == 'full' && matrix.python-version == '3.12'
+        run: python factory/self_scan.py --check
+      - name: Release smoke (installed wheel)
+        if: matrix.profile == 'full' && matrix.python-version == '3.12'
+        run: python factory/release_smoke.py --extras "${{ matrix.extras }}"
