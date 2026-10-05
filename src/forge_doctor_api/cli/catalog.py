@@ -14,8 +14,8 @@ from __future__ import annotations
 
 import enum
 from dataclasses import dataclass
+from typing import Any
 
-import click
 import typer.main
 
 from forge_doctor_api.cli import app
@@ -78,7 +78,7 @@ def stability_of(path: str) -> CommandStability:
     return STABILITY.get(path, CommandStability.EXPERIMENTAL)
 
 
-def _options(cmd: click.Command) -> tuple[str, ...]:
+def _options(cmd: Any) -> tuple[str, ...]:
     """Long flags on the command. Duck-typed: typer 0.27 params are not
     `click.Option` subclasses, so classify by the declared flag names."""
     flags: set[str] = set()
@@ -92,7 +92,7 @@ def _options(cmd: click.Command) -> tuple[str, ...]:
     return tuple(sorted(flags))
 
 
-def _arguments(cmd: click.Command) -> tuple[str, ...]:
+def _arguments(cmd: Any) -> tuple[str, ...]:
     """Positional params — declared names with no `-`-prefixed flag."""
     return tuple(
         str(param.name)

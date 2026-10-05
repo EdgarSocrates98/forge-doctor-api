@@ -18,7 +18,7 @@ Companion to [release.md](release.md) and
 
 | Gate | Command | Result |
 | --- | --- | --- |
-| Tests | `python -m pytest -q` | **1434 passed** |
+| Tests | `python -m pytest -q` | **1438 passed** |
 | Lint | `python -m ruff check .` | clean |
 | Types | `python -m mypy src` | clean (231 files) |
 | Build | `python -m build` | wheel + sdist |
@@ -45,7 +45,18 @@ Companion to [release.md](release.md) and
 | After spec 076 (runtime/scale) | 1349 passed |
 | After spec 077 (OSS corpus) | 1398 passed |
 | After spec 078 (framework depth) | 1415 passed |
-| After spec 079 (sec/rel precision) | **1434 passed** |
+| After spec 079 (sec/rel precision) | 1434 passed |
+| After spec 080 (release maturity) | **1438 passed** |
+
+## Clean-environment proof (spec 080 verification)
+
+A fresh venv + `pip install dist/*.whl` (no extras) on the built
+wheel produced `51 passed / 2 skipped-with-reason / 0 failed` on
+`forge-doctor-api lab` — the original `3 failed / 26 skipped` mode is
+closed. This proof caught a real latent bug: `cli/catalog.py`
+imported `click`, which typer 0.27 no longer depends on — an
+undeclared-dependency break on minimal installs, fixed by duck-typed
+annotations.
 
 ## Wave record
 
