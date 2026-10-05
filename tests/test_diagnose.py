@@ -310,6 +310,6 @@ def test_explain_redaction(tmp_path: Path) -> None:
 
 
 def test_diagnose_help() -> None:
-    result = runner.invoke(app, ["diagnose", "--help"])
-    assert result.exit_code == 0
-    assert "--before" in result.output
+    from cli_help import assert_option
+
+    assert_option("diagnose", option="--before")

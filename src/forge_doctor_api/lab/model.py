@@ -47,6 +47,8 @@ class LabScenario(Model):
     diff_new: str | None = None
     hops: tuple[str, ...] = ()  # explicit RELAPI path for the scenario
     today: str | None = None  # deterministic evaluation date for policy
+    requires_extras: tuple[str, ...] = ()  # optional extras needed to run
+    requires_domains: tuple[str, ...] = ()  # domains whose extras are needed
     expected: LabExpectation = LabExpectation()
     provenance: tuple[tuple[str, str], ...] = ()  # realworld provenance block
     problems: tuple[str, ...] = ()  # structural validation errors
@@ -54,11 +56,18 @@ class LabScenario(Model):
 
 @dataclass(frozen=True, kw_only=True)
 class LabResult(Model):
-    """One scenario outcome."""
+    """One scenario outcome.
+
+    `skipped` means the scenario declared capabilities absent from this
+    install profile — it is neither a pass nor a fail, and `skip_reason`
+    says exactly what is missing.
+    """
 
     domain: str
     name: str
     passed: bool
+    skipped: bool = False
+    skip_reason: str = ""
     missing_findings: tuple[str, ...] = ()
     unexpected_findings: tuple[str, ...] = ()
     forbidden_hits: tuple[str, ...] = ()
@@ -154,15 +163,30 @@ class FamilyScore(Model):
 
 @dataclass(frozen=True, kw_only=True)
 class LabReport(Model):
-    """§200 full lab pass: per-scenario results + per-family scores."""
+    """§200 full lab pass: per-scenario results + per-family scores.
+
+    `extras_present`/`extras_absent` record the install profile the run
+    executed under — run records prove which optional capabilities were
+    exercised rather than assumed.
+    """
 
     results: tuple[LabResult, ...] = ()
     families: tuple[FamilyScore, ...] = ()
+    extras_present: tuple[str, ...] = ()
+    extras_absent: tuple[str, ...] = ()
 
     @property
     def passed(self) -> int:
-        return sum(1 for r in self.results if r.passed)
+        return sum(1 for r in self.results if r.passed and not r.skipped)
 
     @property
     def failed(self) -> int:
-        return sum(1 for r in self.results if not r.passed)
+        return sum(1 for r in self.results if not r.passed and not r.skipped)
+
+    @property
+    def skipped(self) -> int:
+        return sum(1 for r in self.results if r.skipped)
+
+    @property
+    def skipped_results(self) -> tuple[LabResult, ...]:
+        return tuple(r for r in self.results if r.skipped)

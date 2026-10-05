@@ -256,11 +256,27 @@ def test_runner_excludes_expected_yaml_and_respects_markers(tmp_path: Path) -> N
 
 
 def test_full_corpus_is_green() -> None:
-    """The repository labs/ tree: every scenario incl. adversarial passes."""
+    """The repository labs/ tree: every runnable scenario passes.
+
+    A scenario requiring an absent extra (e.g. graphql under a minimal
+    install) is a recorded skip — not a failure and not a silent pass.
+    Under a full install there are no skips at all.
+    """
+    from forge_doctor_api.lab.capabilities import extras_present
+
     report = run_labs(ProjectContext.from_root(REPO_LABS))
-    failures = [f"{r.domain}/{r.name}" for r in report.results if not r.passed]
+    failures = [
+        f"{r.domain}/{r.name}"
+        for r in report.results
+        if not r.passed and not r.skipped
+    ]
     assert failures == []
     assert len(report.results) >= 20
+    assert all(r.skip_reason for r in report.results if r.skipped)
+    if "graphql" in extras_present():
+        assert report.skipped == 0
+    else:
+        assert report.skipped >= 1  # graphql scenarios must degrade
 
 
 def test_corpus_covers_required_domains() -> None:
@@ -360,3 +376,93 @@ def test_run_records_metrics() -> None:
     assert any(r.elapsed_ms >= 0 for r in report.results)
     assert any(f.coverage_confidence in ("low", "medium")
                for f in report.families)
+
+
+# -- spec 071/073: capability matrix (minimal vs full install) --------------
+
+def test_requires_extras_and_domains_parsed(tmp_path: Path) -> None:
+    _write(tmp_path / "graphql" / "case", {
+        "expected.yaml": (
+            "run: [graphql]\n"
+            "requires_extras: [graphql]\n"
+            "requires_domains: [graphql]\n"
+            "expected_findings: []\n"),
+    })
+    (scenario,) = discover_scenarios(ProjectContext.from_root(tmp_path))
+    assert scenario.requires_extras == ("graphql",)
+    assert scenario.requires_domains == ("graphql",)
+
+
+def test_scenario_requirements_inferred(tmp_path: Path) -> None:
+    """Domain and explicit `run:` imply the graphql extra; defaults don't."""
+    from forge_doctor_api.lab import scenario_requirements
+
+    _write(tmp_path / "graphql" / "by-domain", {
+        "expected.yaml": "expected_findings: []\n"})
+    _write(tmp_path / "golden" / "by-run", {
+        "expected.yaml":
+            "run: [graphql]\nexpected_findings: []\n"})
+    _write(tmp_path / "golden" / "by-default", {
+        "expected.yaml": "expected_findings: []\n"})
+    scenarios = {
+        f"{s.domain}/{s.name}": s
+        for s in discover_scenarios(ProjectContext.from_root(tmp_path))
+    }
+    assert scenario_requirements(
+        scenarios["graphql/by-domain"]) == ("graphql",)
+    assert scenario_requirements(
+        scenarios["golden/by-run"]) == ("graphql",)
+    assert scenario_requirements(scenarios["golden/by-default"]) == ()
+
+
+def test_missing_extra_skips_with_reason(
+        tmp_path: Path, monkeypatch) -> None:
+    """Absent extras produce a recorded skip — not a failure, not a pass."""
+    from forge_doctor_api.lab import capabilities
+
+    monkeypatch.setattr(capabilities, "_find_spec", lambda name: None)
+    _write(tmp_path / "graphql" / "needs-gql", {
+        "expected.yaml":
+            "run: [graphql]\nrequires_extras: [graphql]\n"
+            "expected_findings: [GQL007]\n"})
+    _write(tmp_path / "openapi" / "plain", {
+        "readme.md": "# no API markers here\n",
+        "expected.yaml": "expected_findings: []\n"})
+    report = run_labs(ProjectContext.from_root(tmp_path))
+    skipped = {f"{r.domain}/{r.name}": r for r in report.results if r.skipped}
+    assert set(skipped) == {"graphql/needs-gql"}
+    assert "graphql" in skipped["graphql/needs-gql"].skip_reason
+    assert report.skipped == 1
+    assert report.failed == 0
+    assert report.passed == 1  # the openapi scenario still ran
+    # skipped scenarios contribute no family evidence either way
+    assert all(f.expected == 0 for f in report.families
+               if f.family == "GQL")
+
+
+def test_run_record_records_install_profile(
+        tmp_path: Path, monkeypatch) -> None:
+    """Spec 073: run records persist which extras were present."""
+    from forge_doctor_api.lab import capabilities
+
+    monkeypatch.setattr(
+        capabilities, "_find_spec",
+        lambda name: object() if name == "mcp" else None)
+    report = run_labs(ProjectContext.from_root(tmp_path))
+    data = report.to_dict()
+    assert data["extras_present"] == ["mcp"]
+    assert data["extras_absent"] == ["graphql"]
+
+
+def test_minimal_profile_still_counts_scenarios(
+        tmp_path: Path, monkeypatch) -> None:
+    """A minimal install reports full coverage intent: every scenario
+    is accounted for as passed, failed, or skipped-with-reason."""
+    from forge_doctor_api.lab import capabilities
+
+    monkeypatch.setattr(capabilities, "_find_spec", lambda name: None)
+    report = run_labs(ProjectContext.from_root(REPO_LABS))
+    assert report.failed == 0
+    assert report.skipped >= 1
+    assert report.passed + report.failed + report.skipped == len(
+        report.results)

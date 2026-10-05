@@ -88,6 +88,8 @@ def _scenario(context: ProjectContext, rel: str) -> LabScenario:
         diff_new=diff_new,
         hops=_list(doc.get("hops")),
         today=str(doc["today"]) if doc.get("today") else None,
+        requires_extras=_list(doc.get("requires_extras")),
+        requires_domains=_list(doc.get("requires_domains")),
         expected=_expectation(doc),
         provenance=provenance,
         problems=tuple(problems),

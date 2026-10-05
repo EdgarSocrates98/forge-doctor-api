@@ -31,7 +31,29 @@ forge-doctor-api lab --no-record  # skip factory/runs/ record
 ```
 
 Each run writes `factory/runs/<timestamp>.lab.json` with per-scenario
-pass/fail and per-family precision/recall.
+pass/fail/skip, per-family precision/recall, and the install profile
+(`extras_present`/`extras_absent`) the run executed under.
+
+## Capability matrix (specs 071/073)
+
+Optional extras gate parts of the corpus. A scenario declares
+`requires_extras: [<name>]` in `expected.yaml`; the `graphql` *domain*
+and an explicit `run: [graphql]` also imply the `graphql` extra. When a
+required extra is absent from the install:
+
+- the scenario is **skipped** — `skipped: true` + a `skip_reason`
+  naming the missing extras;
+- it counts under neither `passed` nor `failed`, and contributes no
+  evidence to family metrics either direction;
+- console output prints `SKIP <domain>/<name> (missing extras: …)` and
+  the summary reports `passed / failed / skipped` separately;
+- `lab` still exits 0 — minimal install is a supported profile, not an
+  error.
+
+"Full corpus" therefore means the full install profile
+(`pip install '.[graphql,mcp]'`): zero skipped scenarios. Under a
+minimal install the same corpus proves graceful degradation — every
+skipped scenario carries its reason in the run record.
 
 ## Determinism harness
 

@@ -338,8 +338,22 @@ def lab(
         typer.echo(json.dumps(report.to_dict(), indent=2, sort_keys=True))
         raise typer.Exit(code=0 if report.failed == 0 else 1)
 
-    _console.print(f"Forge Lab: {report.passed} passed, {report.failed} failed")
+    _console.print(
+        f"Forge Lab: {report.passed} passed, {report.failed} failed, "
+        f"{report.skipped} skipped"
+    )
+    if report.extras_absent:
+        _console.print(
+            f"  install profile: extras absent: "
+            f"{', '.join(report.extras_absent)}"
+        )
     for r in report.results:
+        if r.skipped:
+            _console.print(
+                f"  [yellow]SKIP[/yellow] {r.domain}/{r.name} "
+                f"({r.skip_reason})"
+            )
+            continue
         mark = "[green]PASS[/green]" if r.passed else "[red]FAIL[/red]"
         _console.print(f"  {mark} {r.domain}/{r.name}")
         if not r.passed:

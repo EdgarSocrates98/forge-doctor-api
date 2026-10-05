@@ -1,5 +1,7 @@
-# Spec 035: independent quality gate — tests, lint, types, build,
-# packaging smoke, lab, offline/determinism proof on the Python matrix.
+# Spec 035 + spec 071: independent quality gate — tests, lint, types,
+# build, packaging smoke, lab, offline/determinism proof. The matrix
+# splits minimal install (core only — optional capabilities degrade
+# gracefully) from full install (every advertised extra active).
 name: quality
 
 on:
@@ -24,16 +26,28 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11", "3.12", "3.13"]
+        include:
+          - python-version: "3.11"
+            profile: minimal
+            extras: ""
+          - python-version: "3.11"
+            profile: full
+            extras: "[graphql,mcp]"
+          - python-version: "3.12"
+            profile: full
+            extras: "[graphql,mcp]"
+          - python-version: "3.13"
+            profile: full
+            extras: "[graphql,mcp]"
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install
+      - name: Install (${{ matrix.profile }})
         run: |
           python -m pip install --upgrade pip
-          pip install -e . pytest ruff mypy types-PyYAML build
+          pip install -e '.${{ matrix.extras }}' pytest ruff mypy types-PyYAML build
       - name: Tests
         run: python -m pytest -q
       - name: Lint
@@ -45,7 +59,8 @@ jobs:
       - name: Wheel install smoke
         run: |
           python -m venv /tmp/wheelsmoke
-          /tmp/wheelsmoke/bin/pip install dist/*.whl
+          WHEEL=$(ls dist/*.whl)
+          /tmp/wheelsmoke/bin/pip install "${WHEEL}${{ matrix.extras }}"
           /tmp/wheelsmoke/bin/forge-doctor-api --version
       - name: CLI smoke
         run: |
@@ -53,3 +68,31 @@ jobs:
           forge-doctor-api contract inspect labs/golden/fastapi-service
       - name: Forge Lab
         run: forge-doctor-api lab --no-record
+      - name: Minimal graceful-degradation proof
+        if: matrix.profile == 'minimal'
+        run: |
+          forge-doctor-api lab --json --no-record | python -c "
+          import json, sys
+          report = json.load(sys.stdin)
+          skipped = [r for r in report['results'] if r.get('skipped')]
+          assert report['extras_absent'], 'minimal profile must report absent extras'
+          assert skipped, 'graphql scenarios must be skipped, not failed or silent'
+          assert all(r['skip_reason'] for r in skipped), 'every skip needs a reason'
+          failed = [r for r in report['results']
+                    if not r['passed'] and not r.get('skipped')]
+          assert not failed, f'minimal install must not fail: {failed}'
+          print(f'minimal graceful: {len(skipped)} skipped with reason')
+          "
+      - name: Full capability proof
+        if: matrix.profile == 'full'
+        run: |
+          forge-doctor-api lab --json --no-record | python -c "
+          import json, sys
+          report = json.load(sys.stdin)
+          skipped = [r for r in report['results'] if r.get('skipped')]
+          assert not skipped, f'full install must not skip: {skipped}'
+          failed = [r for r in report['results']
+                    if not r['passed'] and not r.get('skipped')]
+          assert not failed, f'full install failures: {failed}'
+          print('full install: zero skipped, zero failed')
+          "

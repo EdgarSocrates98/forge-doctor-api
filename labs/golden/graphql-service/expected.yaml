@@ -1,6 +1,8 @@
 # §99 golden: GraphQL service — SDL with @auth coverage, paginated
-# list field, declared introspection policy.
+# list field, declared introspection policy. Requires the graphql
+# extra — without it the forbidden list could only pass vacuously.
 run: [graphql]
+requires_extras: [graphql]
 expected_findings: []
 forbidden_findings:
   - GQL*

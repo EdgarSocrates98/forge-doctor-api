@@ -486,6 +486,6 @@ def test_cli_diff_malformed_input(tmp_path: Path) -> None:
 
 
 def test_diff_semantic_help() -> None:
-    result = runner.invoke(app, ["diff", "--help"])
-    assert result.exit_code == 0
-    assert "--semantic" in result.output
+    from cli_help import assert_option
+
+    assert_option("diff", option="--semantic")

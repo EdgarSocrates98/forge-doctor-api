@@ -13,6 +13,12 @@ from pathlib import Path
 from time import perf_counter
 
 from forge_doctor_api.core.context import ProjectContext
+from forge_doctor_api.lab.capabilities import (
+    extras_absent,
+    extras_present,
+    missing_extras,
+    scenario_requirements,
+)
 from forge_doctor_api.lab.loader import discover_scenarios
 from forge_doctor_api.lab.model import (
     FamilyScore,
@@ -121,12 +127,28 @@ def compare(scenario: LabScenario, obs: LabObservations) -> LabResult:
 def run_labs(context: ProjectContext) -> LabReport:
     """Discover + run every scenario under `context`, then score it.
 
+    A scenario whose declared capability requirements (`requires_extras`,
+    domain/pipeline-implied extras) are absent from this install profile
+    is `skipped` — recorded with its reason, counted separately, never a
+    failure and never a silent pass.
+
     Per-scenario timing/memory are *measurements* of the harness run,
     recorded on the result — never inputs to matching.
     """
     scenarios = discover_scenarios(context)
     pairs: list[tuple[LabScenario, LabResult]] = []
     for scenario in scenarios:
+        missing = missing_extras(scenario_requirements(scenario))
+        if missing:
+            pairs.append((scenario, LabResult(
+                domain=scenario.domain,
+                name=scenario.name,
+                passed=False,
+                skipped=True,
+                skip_reason="missing extras: " + ", ".join(missing),
+                problems=scenario.problems,
+            )))
+            continue
         tracemalloc.start()
         t0 = perf_counter()
         obs = run_scenario(context, scenario)
@@ -137,6 +159,8 @@ def run_labs(context: ProjectContext) -> LabReport:
     return LabReport(
         results=tuple(r for _, r in pairs),
         families=aggregate_scores(pairs),
+        extras_present=extras_present(),
+        extras_absent=extras_absent(),
     )
 
 
@@ -156,6 +180,8 @@ def aggregate_scores(
         )
 
     for scenario, result in pairs:
+        if result.skipped:
+            continue  # unrun scenarios contribute no evidence either way
         for entry in scenario.expected.findings:
             fam = _family(entry.rstrip("*"))
             stat(fam)["expected"] += 1
