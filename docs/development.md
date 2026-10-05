@@ -22,6 +22,33 @@ python -m build                     # wheel + sdist
 forge-doctor-api lab                # corpus precision/recall
 ```
 
+## Clean-install reproduction (CI equivalence)
+
+The dev environment drifts (stale editable installs, pre-installed
+extras). Reproduce the CI contract in a throwaway venv:
+
+```bash
+# minimal install — core only, extras absent
+python -m venv .venv-ci-min
+.venv-ci-min/Scripts/activate            # .venv-ci-min/bin/activate on POSIX
+python -m pip install -e . pytest ruff mypy types-PyYAML build
+python -m pytest -q                      # optional-extra tests skip-with-reason
+python -m ruff check . && python -m mypy src && python -m build
+
+# full install — every advertised extra
+python -m venv .venv-ci-full
+.venv-ci-full/Scripts/activate
+python -m pip install -e ".[graphql,mcp]" pytest ruff mypy types-PyYAML build
+python -m pytest -q                      # GraphQL + MCP tests active
+forge-doctor-api lab                     # full corpus incl. graphql/*
+```
+
+Rule: a test must never depend on whether the *developer's* env happens
+to have an extra installed. Optional-capability tests declare
+`pytest.importorskip`, and lab scenarios declare `requires_extras` in
+`expected.yaml` — absence is a recorded skip, never a failure and never
+a silent pass.
+
 ## Conventions that are enforced
 
 - **Frozen dataclass models** deriving from `core.models.Model` —
