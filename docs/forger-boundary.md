@@ -108,6 +108,15 @@ consumption shape, one scan projected four ways:
   keeping only compact report-equivalent fields — unevidenced model
   fields stay absent and surface downstream as explicit unknowns.
 
+### Facts, never routing instructions
+
+Universal payloads carry observations only. No emitted payload —
+`HandoffBundle`, `DiagnosticManifest`, `ForgeResult`, delta —
+contains orchestration keys (`next_tool`, `route_to`, `schedule`,
+`delegate`, `invoke`); the conformance suite scans every emitted
+shape recursively for them. Who acts on a handoff is the consumer's
+decision, outside the Doctor's contract surface.
+
 ## Boundary purity (package-wide)
 
 `tests/test_boundary.py` enforces the boundary rules at the AST
