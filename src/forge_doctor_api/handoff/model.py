@@ -10,7 +10,7 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass, field, replace
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from forge_doctor_api.core.graph import EdgeExport
 from forge_doctor_api.core.models import (
@@ -19,11 +19,9 @@ from forge_doctor_api.core.models import (
     Model,
     UnknownFact,
 )
+from forge_doctor_api.handoff.delta import DeltaContext
 from forge_doctor_api.handoff.protocol import ForgeCapability
 from forge_doctor_api.safefix.model import Remediation
-
-if TYPE_CHECKING:
-    from forge_doctor_api.handoff.delta import DeltaContext
 
 # §135/§075 — per-section entry budgets for handoff payloads. A bundle
 # is a *reference surface*; each budget provably caps growth. Sections

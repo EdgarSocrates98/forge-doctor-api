@@ -19,6 +19,7 @@ from forge_doctor_api.core.models import (
     Severity,
 )
 from forge_doctor_api.handoff import (
+    ApiHandoffBundle,
     DoctorApi,
     ExternalReference,
     ForgerRequest,
@@ -258,3 +259,21 @@ def test_bundle_deterministic(tmp_path: Path) -> None:
     b1 = assemble_bundle(openapi=api, findings=(_finding(),))
     b2 = assemble_bundle(openapi=api, findings=(_finding(),))
     assert b1.to_dict() == b2.to_dict()
+
+
+def test_bundle_from_dict_round_trip(tmp_path: Path) -> None:
+    """Regression: ``ApiHandoffBundle.from_dict`` resolves ``DeltaContext`` at
+    runtime (``get_type_hints``), so the import cannot live under
+    ``TYPE_CHECKING``."""
+    root = _write(tmp_path / "p", {"api.yaml": OPENAPI})
+    api = load_openapi_project(ProjectContext.from_root(root))
+    b = assemble_bundle(service="payments", openapi=api, findings=(_finding(),))
+    parsed = ApiHandoffBundle.from_dict(b.to_dict())
+    assert parsed.operations == b.operations
+    assert parsed.findings[0].id == b.findings[0].id
+    # spec 075: a bundle carrying a delta parses as well
+    from forge_doctor_api.handoff.delta import DeltaContext
+    payload = b.to_dict()
+    payload["delta"] = DeltaContext(initial=True).to_dict()
+    with_delta = ApiHandoffBundle.from_dict(payload)
+    assert with_delta.delta is not None and with_delta.delta.initial
