@@ -1,0 +1,15 @@
+{
+  "agent": "codex",
+  "command": [
+    "codex",
+    "exec",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\088-security-reliability-adversarial.implement.codex.md)"
+  ],
+  "created_at": "2026-10-05T20:43:38+00:00",
+  "id": "088-security-reliability-adversarial",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\088-security-reliability-adversarial.implement.codex.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\088-security-reliability-adversarial.md",
+  "spec_sha256": "2c894bb4c261372f107a3e77ae74abac57a1a132fad3db251b85d6887873b3d5",
+  "status": "planned",
+  "title": "Security/reliability adversarial \u2014 precision negatives, auth chain, retry topology, incidents"
+}

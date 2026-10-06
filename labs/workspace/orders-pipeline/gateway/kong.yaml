@@ -1,0 +1,9 @@
+_format_version: "3.0"
+services:
+  - name: orders-svc
+    host: orders.internal
+    port: 8080
+    routes:
+      - name: orders-route
+        paths:
+          - /orders

@@ -1,0 +1,6 @@
+source_repo: "https://github.com/OAI/learn.openapis.org"
+upstream_path: "examples/v3.1/non-oauth-scopes.yaml"
+upstream_ref: "bbb743ed3b7c5ed76b6e6ba9b302af38f3956c44"
+license: "CC-BY-4.0"
+sha256: "f51b1e1e8abda7bfc790f6e9fbddf36c24353576d3bf7cd2e33e0670e965b177"
+extracted_at_note: "verbatim excerpt fetched at the pinned upstream ref"

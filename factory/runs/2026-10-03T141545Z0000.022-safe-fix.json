@@ -1,0 +1,15 @@
+{
+  "agent": "codex",
+  "command": [
+    "codex",
+    "exec",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\022-safe-fix.implement.codex.md)"
+  ],
+  "created_at": "2026-10-03T14:15:45+00:00",
+  "id": "022-safe-fix",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\022-safe-fix.implement.codex.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\022-safe-fix.md",
+  "spec_sha256": "07d4ffc4ff64f81c54bb2bcdb8794a358eb2e493b7e444bfd3ba12402e5ac5aa",
+  "status": "planned",
+  "title": "Remediation classification \u2014 SAFE / REVIEW_REQUIRED / MANUAL_ONLY"
+}

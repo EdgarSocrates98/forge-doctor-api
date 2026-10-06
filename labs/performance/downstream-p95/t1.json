@@ -1,0 +1,940 @@
+{
+ "resourceSpans": [
+  {
+   "resource": {
+    "attributes": [
+     {
+      "key": "service.name",
+      "value": {
+       "stringValue": "checkout"
+      }
+     }
+    ]
+   },
+   "scopeSpans": [
+    {
+     "scope": {},
+     "spans": [
+      {
+       "traceId": "t1-0",
+       "spanId": "s1-0-a",
+       "name": "GET /checkout",
+       "parentSpanId": "",
+       "kind": 2,
+       "startTimeUnixNano": "1700003600000000000",
+       "endTimeUnixNano": "1700003601200000000",
+       "attributes": [
+        {
+         "key": "http.route",
+         "value": {
+          "stringValue": "/checkout"
+         }
+        }
+       ],
+       "status": {
+        "code": 1
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "resource": {
+    "attributes": [
+     {
+      "key": "service.name",
+      "value": {
+       "stringValue": "payments"
+      }
+     }
+    ]
+   },
+   "scopeSpans": [
+    {
+     "scope": {},
+     "spans": [
+      {
+       "traceId": "t1-0",
+       "spanId": "s1-0-b",
+       "name": "charge",
+       "parentSpanId": "s1-0-a",
+       "kind": 3,
+       "startTimeUnixNano": "1700003600005000000",
+       "endTimeUnixNano": "1700003600905000000",
+       "attributes": [
+        {
+         "key": "peer.service",
+         "value": {
+          "stringValue": "payments"
+         }
+        }
+       ],
+       "status": {
+        "code": 1
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "resource": {
+    "attributes": [
+     {
+      "key": "service.name",
+      "value": {
+       "stringValue": "checkout"
+      }
+     }
+    ]
+   },
+   "scopeSpans": [
+    {
+     "scope": {},
+     "spans": [
+      {
+       "traceId": "t1-1",
+       "spanId": "s1-1-a",
+       "name": "GET /checkout",
+       "parentSpanId": "",
+       "kind": 2,
+       "startTimeUnixNano": "1700003600000001000",
+       "endTimeUnixNano": "1700003601200001000",
+       "attributes": [
+        {
+         "key": "http.route",
+         "value": {
+          "stringValue": "/checkout"
+         }
+        }
+       ],
+       "status": {
+        "code": 1
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "resource": {
+    "attributes": [
+     {
+      "key": "service.name",
+      "value": {
+       "stringValue": "payments"
+      }
+     }
+    ]
+   },
+   "scopeSpans": [
+    {
+     "scope": {},
+     "spans": [
+      {
+       "traceId": "t1-1",
+       "spanId": "s1-1-b",
+       "name": "charge",
+       "parentSpanId": "s1-1-a",
+       "kind": 3,
+       "startTimeUnixNano": "1700003600005001000",
+       "endTimeUnixNano": "1700003600905001000",
+       "attributes": [
+        {
+         "key": "peer.service",
+         "value": {
+          "stringValue": "payments"
+         }
+        }
+       ],
+       "status": {
+        "code": 1
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "resource": {
+    "attributes": [
+     {
+      "key": "service.name",
+      "value": {
+       "stringValue": "checkout"
+      }
+     }
+    ]
+   },
+   "scopeSpans": [
+    {
+     "scope": {},
+     "spans": [
+      {
+       "traceId": "t1-2",
+       "spanId": "s1-2-a",
+       "name": "GET /checkout",
+       "parentSpanId": "",
+       "kind": 2,
+       "startTimeUnixNano": "1700003600000002000",
+       "endTimeUnixNano": "1700003601200002000",
+       "attributes": [
+        {
+         "key": "http.route",
+         "value": {
+          "stringValue": "/checkout"
+         }
+        }
+       ],
+       "status": {
+        "code": 1
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "resource": {
+    "attributes": [
+     {
+      "key": "service.name",
+      "value": {
+       "stringValue": "payments"
+      }
+     }
+    ]
+   },
+   "scopeSpans": [
+    {
+     "scope": {},
+     "spans": [
+      {
+       "traceId": "t1-2",
+       "spanId": "s1-2-b",
+       "name": "charge",
+       "parentSpanId": "s1-2-a",
+       "kind": 3,
+       "startTimeUnixNano": "1700003600005002000",
+       "endTimeUnixNano": "1700003600905002000",
+       "attributes": [
+        {
+         "key": "peer.service",
+         "value": {
+          "stringValue": "payments"
+         }
+        }
+       ],
+       "status": {
+        "code": 1
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "resource": {
+    "attributes": [
+     {
+      "key": "service.name",
+      "value": {
+       "stringValue": "checkout"
+      }
+     }
+    ]
+   },
+   "scopeSpans": [
+    {
+     "scope": {},
+     "spans": [
+      {
+       "traceId": "t1-3",
+       "spanId": "s1-3-a",
+       "name": "GET /checkout",
+       "parentSpanId": "",
+       "kind": 2,
+       "startTimeUnixNano": "1700003600000003000",
+       "endTimeUnixNano": "1700003601200003000",
+       "attributes": [
+        {
+         "key": "http.route",
+         "value": {
+          "stringValue": "/checkout"
+         }
+        }
+       ],
+       "status": {
+        "code": 1
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "resource": {
+    "attributes": [
+     {
+      "key": "service.name",
+      "value": {
+       "stringValue": "payments"
+      }
+     }
+    ]
+   },
+   "scopeSpans": [
+    {
+     "scope": {},
+     "spans": [
+      {
+       "traceId": "t1-3",
+       "spanId": "s1-3-b",
+       "name": "charge",
+       "parentSpanId": "s1-3-a",
+       "kind": 3,
+       "startTimeUnixNano": "1700003600005003000",
+       "endTimeUnixNano": "1700003600905003000",
+       "attributes": [
+        {
+         "key": "peer.service",
+         "value": {
+          "stringValue": "payments"
+         }
+        }
+       ],
+       "status": {
+        "code": 1
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "resource": {
+    "attributes": [
+     {
+      "key": "service.name",
+      "value": {
+       "stringValue": "checkout"
+      }
+     }
+    ]
+   },
+   "scopeSpans": [
+    {
+     "scope": {},
+     "spans": [
+      {
+       "traceId": "t1-4",
+       "spanId": "s1-4-a",
+       "name": "GET /checkout",
+       "parentSpanId": "",
+       "kind": 2,
+       "startTimeUnixNano": "1700003600000004000",
+       "endTimeUnixNano": "1700003601200004000",
+       "attributes": [
+        {
+         "key": "http.route",
+         "value": {
+          "stringValue": "/checkout"
+         }
+        }
+       ],
+       "status": {
+        "code": 1
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "resource": {
+    "attributes": [
+     {
+      "key": "service.name",
+      "value": {
+       "stringValue": "payments"
+      }
+     }
+    ]
+   },
+   "scopeSpans": [
+    {
+     "scope": {},
+     "spans": [
+      {
+       "traceId": "t1-4",
+       "spanId": "s1-4-b",
+       "name": "charge",
+       "parentSpanId": "s1-4-a",
+       "kind": 3,
+       "startTimeUnixNano": "1700003600005004000",
+       "endTimeUnixNano": "1700003600905004000",
+       "attributes": [
+        {
+         "key": "peer.service",
+         "value": {
+          "stringValue": "payments"
+         }
+        }
+       ],
+       "status": {
+        "code": 1
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "resource": {
+    "attributes": [
+     {
+      "key": "service.name",
+      "value": {
+       "stringValue": "checkout"
+      }
+     }
+    ]
+   },
+   "scopeSpans": [
+    {
+     "scope": {},
+     "spans": [
+      {
+       "traceId": "t1-5",
+       "spanId": "s1-5-a",
+       "name": "GET /checkout",
+       "parentSpanId": "",
+       "kind": 2,
+       "startTimeUnixNano": "1700003600000005000",
+       "endTimeUnixNano": "1700003601200005000",
+       "attributes": [
+        {
+         "key": "http.route",
+         "value": {
+          "stringValue": "/checkout"
+         }
+        }
+       ],
+       "status": {
+        "code": 1
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "resource": {
+    "attributes": [
+     {
+      "key": "service.name",
+      "value": {
+       "stringValue": "payments"
+      }
+     }
+    ]
+   },
+   "scopeSpans": [
+    {
+     "scope": {},
+     "spans": [
+      {
+       "traceId": "t1-5",
+       "spanId": "s1-5-b",
+       "name": "charge",
+       "parentSpanId": "s1-5-a",
+       "kind": 3,
+       "startTimeUnixNano": "1700003600005005000",
+       "endTimeUnixNano": "1700003600905005000",
+       "attributes": [
+        {
+         "key": "peer.service",
+         "value": {
+          "stringValue": "payments"
+         }
+        }
+       ],
+       "status": {
+        "code": 1
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "resource": {
+    "attributes": [
+     {
+      "key": "service.name",
+      "value": {
+       "stringValue": "checkout"
+      }
+     }
+    ]
+   },
+   "scopeSpans": [
+    {
+     "scope": {},
+     "spans": [
+      {
+       "traceId": "t1-6",
+       "spanId": "s1-6-a",
+       "name": "GET /checkout",
+       "parentSpanId": "",
+       "kind": 2,
+       "startTimeUnixNano": "1700003600000006000",
+       "endTimeUnixNano": "1700003601200006000",
+       "attributes": [
+        {
+         "key": "http.route",
+         "value": {
+          "stringValue": "/checkout"
+         }
+        }
+       ],
+       "status": {
+        "code": 1
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "resource": {
+    "attributes": [
+     {
+      "key": "service.name",
+      "value": {
+       "stringValue": "payments"
+      }
+     }
+    ]
+   },
+   "scopeSpans": [
+    {
+     "scope": {},
+     "spans": [
+      {
+       "traceId": "t1-6",
+       "spanId": "s1-6-b",
+       "name": "charge",
+       "parentSpanId": "s1-6-a",
+       "kind": 3,
+       "startTimeUnixNano": "1700003600005006000",
+       "endTimeUnixNano": "1700003600905006000",
+       "attributes": [
+        {
+         "key": "peer.service",
+         "value": {
+          "stringValue": "payments"
+         }
+        }
+       ],
+       "status": {
+        "code": 1
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "resource": {
+    "attributes": [
+     {
+      "key": "service.name",
+      "value": {
+       "stringValue": "checkout"
+      }
+     }
+    ]
+   },
+   "scopeSpans": [
+    {
+     "scope": {},
+     "spans": [
+      {
+       "traceId": "t1-7",
+       "spanId": "s1-7-a",
+       "name": "GET /checkout",
+       "parentSpanId": "",
+       "kind": 2,
+       "startTimeUnixNano": "1700003600000007000",
+       "endTimeUnixNano": "1700003601200007000",
+       "attributes": [
+        {
+         "key": "http.route",
+         "value": {
+          "stringValue": "/checkout"
+         }
+        }
+       ],
+       "status": {
+        "code": 1
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "resource": {
+    "attributes": [
+     {
+      "key": "service.name",
+      "value": {
+       "stringValue": "payments"
+      }
+     }
+    ]
+   },
+   "scopeSpans": [
+    {
+     "scope": {},
+     "spans": [
+      {
+       "traceId": "t1-7",
+       "spanId": "s1-7-b",
+       "name": "charge",
+       "parentSpanId": "s1-7-a",
+       "kind": 3,
+       "startTimeUnixNano": "1700003600005007000",
+       "endTimeUnixNano": "1700003600905007000",
+       "attributes": [
+        {
+         "key": "peer.service",
+         "value": {
+          "stringValue": "payments"
+         }
+        }
+       ],
+       "status": {
+        "code": 1
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "resource": {
+    "attributes": [
+     {
+      "key": "service.name",
+      "value": {
+       "stringValue": "checkout"
+      }
+     }
+    ]
+   },
+   "scopeSpans": [
+    {
+     "scope": {},
+     "spans": [
+      {
+       "traceId": "t1-8",
+       "spanId": "s1-8-a",
+       "name": "GET /checkout",
+       "parentSpanId": "",
+       "kind": 2,
+       "startTimeUnixNano": "1700003600000008000",
+       "endTimeUnixNano": "1700003601200008000",
+       "attributes": [
+        {
+         "key": "http.route",
+         "value": {
+          "stringValue": "/checkout"
+         }
+        }
+       ],
+       "status": {
+        "code": 1
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "resource": {
+    "attributes": [
+     {
+      "key": "service.name",
+      "value": {
+       "stringValue": "payments"
+      }
+     }
+    ]
+   },
+   "scopeSpans": [
+    {
+     "scope": {},
+     "spans": [
+      {
+       "traceId": "t1-8",
+       "spanId": "s1-8-b",
+       "name": "charge",
+       "parentSpanId": "s1-8-a",
+       "kind": 3,
+       "startTimeUnixNano": "1700003600005008000",
+       "endTimeUnixNano": "1700003600905008000",
+       "attributes": [
+        {
+         "key": "peer.service",
+         "value": {
+          "stringValue": "payments"
+         }
+        }
+       ],
+       "status": {
+        "code": 1
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "resource": {
+    "attributes": [
+     {
+      "key": "service.name",
+      "value": {
+       "stringValue": "checkout"
+      }
+     }
+    ]
+   },
+   "scopeSpans": [
+    {
+     "scope": {},
+     "spans": [
+      {
+       "traceId": "t1-9",
+       "spanId": "s1-9-a",
+       "name": "GET /checkout",
+       "parentSpanId": "",
+       "kind": 2,
+       "startTimeUnixNano": "1700003600000009000",
+       "endTimeUnixNano": "1700003601200009000",
+       "attributes": [
+        {
+         "key": "http.route",
+         "value": {
+          "stringValue": "/checkout"
+         }
+        }
+       ],
+       "status": {
+        "code": 1
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "resource": {
+    "attributes": [
+     {
+      "key": "service.name",
+      "value": {
+       "stringValue": "payments"
+      }
+     }
+    ]
+   },
+   "scopeSpans": [
+    {
+     "scope": {},
+     "spans": [
+      {
+       "traceId": "t1-9",
+       "spanId": "s1-9-b",
+       "name": "charge",
+       "parentSpanId": "s1-9-a",
+       "kind": 3,
+       "startTimeUnixNano": "1700003600005009000",
+       "endTimeUnixNano": "1700003600905009000",
+       "attributes": [
+        {
+         "key": "peer.service",
+         "value": {
+          "stringValue": "payments"
+         }
+        }
+       ],
+       "status": {
+        "code": 1
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "resource": {
+    "attributes": [
+     {
+      "key": "service.name",
+      "value": {
+       "stringValue": "checkout"
+      }
+     }
+    ]
+   },
+   "scopeSpans": [
+    {
+     "scope": {},
+     "spans": [
+      {
+       "traceId": "t1-10",
+       "spanId": "s1-10-a",
+       "name": "GET /checkout",
+       "parentSpanId": "",
+       "kind": 2,
+       "startTimeUnixNano": "1700003600000010000",
+       "endTimeUnixNano": "1700003601200010000",
+       "attributes": [
+        {
+         "key": "http.route",
+         "value": {
+          "stringValue": "/checkout"
+         }
+        }
+       ],
+       "status": {
+        "code": 1
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "resource": {
+    "attributes": [
+     {
+      "key": "service.name",
+      "value": {
+       "stringValue": "payments"
+      }
+     }
+    ]
+   },
+   "scopeSpans": [
+    {
+     "scope": {},
+     "spans": [
+      {
+       "traceId": "t1-10",
+       "spanId": "s1-10-b",
+       "name": "charge",
+       "parentSpanId": "s1-10-a",
+       "kind": 3,
+       "startTimeUnixNano": "1700003600005010000",
+       "endTimeUnixNano": "1700003600905010000",
+       "attributes": [
+        {
+         "key": "peer.service",
+         "value": {
+          "stringValue": "payments"
+         }
+        }
+       ],
+       "status": {
+        "code": 1
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "resource": {
+    "attributes": [
+     {
+      "key": "service.name",
+      "value": {
+       "stringValue": "checkout"
+      }
+     }
+    ]
+   },
+   "scopeSpans": [
+    {
+     "scope": {},
+     "spans": [
+      {
+       "traceId": "t1-11",
+       "spanId": "s1-11-a",
+       "name": "GET /checkout",
+       "parentSpanId": "",
+       "kind": 2,
+       "startTimeUnixNano": "1700003600000011000",
+       "endTimeUnixNano": "1700003601200011000",
+       "attributes": [
+        {
+         "key": "http.route",
+         "value": {
+          "stringValue": "/checkout"
+         }
+        }
+       ],
+       "status": {
+        "code": 1
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "resource": {
+    "attributes": [
+     {
+      "key": "service.name",
+      "value": {
+       "stringValue": "payments"
+      }
+     }
+    ]
+   },
+   "scopeSpans": [
+    {
+     "scope": {},
+     "spans": [
+      {
+       "traceId": "t1-11",
+       "spanId": "s1-11-b",
+       "name": "charge",
+       "parentSpanId": "s1-11-a",
+       "kind": 3,
+       "startTimeUnixNano": "1700003600005011000",
+       "endTimeUnixNano": "1700003600905011000",
+       "attributes": [
+        {
+         "key": "peer.service",
+         "value": {
+          "stringValue": "payments"
+         }
+        }
+       ],
+       "status": {
+        "code": 1
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

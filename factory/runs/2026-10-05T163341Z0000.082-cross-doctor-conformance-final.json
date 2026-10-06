@@ -1,0 +1,15 @@
+{
+  "agent": "claude",
+  "command": [
+    "claude",
+    "-p",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\082-cross-doctor-conformance-final.implement.claude.md)"
+  ],
+  "created_at": "2026-10-05T16:33:41+00:00",
+  "id": "082-cross-doctor-conformance-final",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\082-cross-doctor-conformance-final.implement.claude.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\082-cross-doctor-conformance-final.md",
+  "spec_sha256": "166fb8097a5ea1f1c8aed6d7c9d80a73dfef3bc74dd32639755cf321420893c1",
+  "status": "planned",
+  "title": "Cross-doctor conformance final \u2014 canonical fixtures, x-forge-api registry, extraction doc"
+}

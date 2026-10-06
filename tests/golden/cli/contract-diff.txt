@@ -1,0 +1,4 @@
+Usage: forge-doctor-api contract diff [OPTIONS] {old} {new} Diff two API contracts (§66). Arguments
+* old <str> Old contract file or directory. [required] * new <str> New contract file or directory.
+[required] Options --semantic Emit the semantic change list. [default: True] --json JSON output.
+--help Show this message and exit.

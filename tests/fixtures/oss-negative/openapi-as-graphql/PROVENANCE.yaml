@@ -1,0 +1,4 @@
+origin: "oai-learn/petstore (CC-BY-4.0)"
+domain: "graphql"
+sha256: "cefaafa05eee75b1888762dea08a295f245e9f3e4bdb8777f4bdfed09e335339"
+extracted_at_note: "verbatim OpenAPI YAML bytes served with a .graphql name"

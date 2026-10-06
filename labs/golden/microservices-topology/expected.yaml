@@ -1,0 +1,6 @@
+# §99 golden: microservices topology — the §109 workspace fixture.
+# Single-repo analyzers see only the manifest at this level; the
+# workspace pipeline is covered by spec 024 unit tests.
+run: [clients]
+expected_findings: []
+forbidden_findings: []

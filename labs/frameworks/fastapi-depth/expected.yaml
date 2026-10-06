@@ -1,0 +1,12 @@
+# FastAPI depth: auth (Security), DI (Depends), error contract
+# (exception_handler + raised HTTPException) are positive;
+# validation is absent and must surface as an explicit unknown.
+run: [frameworks]
+expected_entities:
+  - "capability:fastapi:auth-dependency:oauth"
+  - "capability:fastapi:depends-target:get_db"
+  - "capability:fastapi:error-handler:ValueError -> on_value"
+  - "capability:fastapi:http-error:raise HTTPException(404)"
+expected_issues:
+  - "fastapi validation:static validation evidence"
+  - "fastapi schemas:static schemas evidence"

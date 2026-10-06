@@ -1,0 +1,15 @@
+{
+  "agent": "codex",
+  "command": [
+    "codex",
+    "exec",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\029-handoff.implement.codex.md)"
+  ],
+  "created_at": "2026-10-03T16:19:22+00:00",
+  "id": "029-handoff",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\029-handoff.implement.codex.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\029-handoff.md",
+  "spec_sha256": "2d69fe6a79dc4e76ca68b71aa0fff01c71143a273c7ef734e03b4df9f3962e99",
+  "status": "planned",
+  "title": "Handoff & integration \u2014 ApiHandoffBundle, MCP surface, Forger routing, decision intelligence"
+}

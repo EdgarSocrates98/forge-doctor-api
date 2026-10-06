@@ -1,0 +1,4 @@
+origin: "apollographql/supergraph-demo subgraphs/products/products.graphql @ c385e0b79d988921b88ca3280141a06076c83a56, MIT"
+domain: "graphql"
+sha256: "fd743c5f0e5865a4ee1cee043247bf8d2104a3f00da5020e0eca918d7d3d7fee"
+extracted_at_note: "verbatim federation SDL — std SDL rejects @key/@provides"

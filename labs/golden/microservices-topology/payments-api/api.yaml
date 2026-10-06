@@ -1,0 +1,12 @@
+openapi: "3.0.3"
+info: {title: Payments, version: "1.0", x-owner: payments-team}
+paths:
+  /charges/{id}:
+    get:
+      operationId: getCharge
+      security: [{apiKey: []}]
+      responses:
+        '200': {description: ok}
+components:
+  securitySchemes:
+    apiKey: {type: apiKey, in: header, name: X-Key}

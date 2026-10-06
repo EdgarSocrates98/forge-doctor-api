@@ -1,0 +1,15 @@
+{
+  "agent": "codex",
+  "command": [
+    "codex",
+    "exec",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\087-contract-compatibility-hardening.implement.codex.md)"
+  ],
+  "created_at": "2026-10-05T19:56:10+00:00",
+  "id": "087-contract-compatibility-hardening",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\087-contract-compatibility-hardening.implement.codex.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\087-contract-compatibility-hardening.md",
+  "spec_sha256": "9dd51df2413661211af33742c60ad7f1d3499ba45eb18b969bbc148db4625e89",
+  "status": "planned",
+  "title": "Contract compatibility hardening \u2014 adversarial matrix, client impact depth, graph identity"
+}

@@ -1,0 +1,6 @@
+source_repo: https://github.com/APIs-guru/openapi-directory
+upstream_path: APIs/worldtimeapi.org/20210108/openapi.yaml
+upstream_ref: f04b8d0bcd39c52e1cf3ad7a5fe744709832ae49
+license: CC0-1.0
+sha256: b224311d71d990cc70a0c0c38693fc2d346c3382659a00154bb41d462021ae25
+extracted_at_note: verbatim excerpt fetched at the pinned upstream ref

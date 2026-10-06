@@ -1,0 +1,124 @@
+openapi: 3.0.3
+info:
+  title: Petstore
+  version: 1.0.0
+  x-audience: public
+externalDocs:
+  url: https://example.com/docs
+servers:
+  - url: https://{env}.example.com/v1
+    description: main
+    variables:
+      env:
+        default: api
+        enum: [api, staging]
+security:
+  - bearerAuth: []
+tags:
+  - name: pets
+    description: Pet operations
+    externalDocs:
+      url: https://example.com/pets
+paths:
+  x-paths-note: not a path
+  /pets:
+    summary: Pets collection
+    parameters:
+      - $ref: '#/components/parameters/Limit'
+    get:
+      operationId: listPets
+      tags: [pets]
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pet'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      tags: [pets]
+      x-rate-limit: 10
+      security:
+        - {}
+        - apiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pet'
+            example:
+              x-not-an-extension: true
+              $ref: not-a-ref
+      callbacks:
+        onAdopted:
+          '{$request.body#/callbackUrl}':
+            post:
+              responses:
+                '204':
+                  description: delivered
+      responses:
+        201:
+          description: created
+  /pets/{petId}:
+    get:
+      operationId: getPet
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ok
+components:
+  schemas:
+    Pet:
+      type: object
+      required: [id]
+      externalDocs:
+        url: https://example.com/pet
+      properties:
+        id:
+          type: integer
+        x-legacy:
+          type: string
+        $ref:
+          type: string
+        parent:
+          $ref: '#/components/schemas/Pet'
+      x-entity: pet
+    Error:
+      type: object
+      nullable: true
+      properties:
+        message:
+          type: string
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        default: 20
+  responses:
+    Error:
+      description: error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    apiKey:
+      type: apiKey
+      in: header
+      name: X-Key

@@ -1,0 +1,15 @@
+{
+  "agent": "codex",
+  "command": [
+    "codex",
+    "exec",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\014-runtime-evidence.implement.codex.md)"
+  ],
+  "created_at": "2026-10-03T12:57:19+00:00",
+  "id": "014-runtime-evidence",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\014-runtime-evidence.implement.codex.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\014-runtime-evidence.md",
+  "spec_sha256": "427b55e67d2bf77f9ef679b310c52be5aca87e9412440e9a1dc400191bcc5f81",
+  "status": "planned",
+  "title": "Runtime artifact ingestion \u2014 traces, spans, observability signals"
+}

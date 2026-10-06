@@ -1,0 +1,15 @@
+{
+  "agent": "claude",
+  "command": [
+    "claude",
+    "-p",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\011-asyncapi.implement.claude.md)"
+  ],
+  "created_at": "2026-10-03T12:25:07+00:00",
+  "id": "011-asyncapi",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\011-asyncapi.implement.claude.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\011-asyncapi.md",
+  "spec_sha256": "78365b5e6bab2615c8a8626cd25c10bfbcdbf192d4ff777c89882fe692f88c7f",
+  "status": "planned",
+  "title": "AsyncAPI model, graph edges, and ASYNC### checks"
+}

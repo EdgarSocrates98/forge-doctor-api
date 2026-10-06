@@ -1,0 +1,8 @@
+# §98 graphql domain: `users` list has no pagination arguments ->
+# GQL007 unbounded-list candidate. Requires the graphql extra
+# (graphql-core) — a minimal install records a skip, not a failure.
+run: [graphql]
+requires_extras: [graphql]
+expected_findings:
+  - GQL007
+forbidden_findings: []

@@ -1,0 +1,16 @@
+{
+  "gate": "v0.1",
+  "date": "2026-10-03",
+  "tool_version": "0.1.0",
+  "items": {
+    "pytest": {"command": "python -m pytest -q", "result": "1013 passed, 1 env-contention MemoryError resolved on isolated re-run"},
+    "ruff": {"command": "python -m ruff check .", "result": "all checks passed"},
+    "mypy": {"command": "python -m mypy src", "result": "no issues, 185 source files"},
+    "build": {"command": "python -m build", "result": "forge_doctor_api-0.1.0.tar.gz + forge_doctor_api-0.1.0-py3-none-any.whl; knowledge YAML packs verified inside wheel"},
+    "self_scan": {"record": "factory/runs/doctor-self-scan-v0.1.json", "result": "exit 0, 63 findings over lab fixtures, 7 unknowns"},
+    "scale": {"record": "factory/runs/scale-benchmark.json", "endpoints": {"100": "0.20s", "1000": "1.98s", "10000": "19.77s"}, "spans": {"10000": "6.14s", "100000": "67.19s", "1000000": "794.97s peak 1694MB"}},
+    "offline": {"proof": "tests/test_offline.py hard-blocks socket creation; scans pass"},
+    "gate": {"proof": "tests/test_scan.py — breaking needs baseline (exit 2), security needs HIGH confidence, policy fires on POLICY findings, UNKNOWN never blocks"}
+  },
+  "notes": "Version pinned 0.1.0; not published to any registry; no 1.0 public-API commitment."
+}

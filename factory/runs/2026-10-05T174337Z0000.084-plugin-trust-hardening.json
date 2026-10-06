@@ -1,0 +1,15 @@
+{
+  "agent": "claude",
+  "command": [
+    "claude",
+    "-p",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\084-plugin-trust-hardening.implement.claude.md)"
+  ],
+  "created_at": "2026-10-05T17:43:37+00:00",
+  "id": "084-plugin-trust-hardening",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\084-plugin-trust-hardening.implement.claude.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\084-plugin-trust-hardening.md",
+  "spec_sha256": "ba87fecf4a8b112670d291ca93ad02f643c17aea833f169574380fb1a3887f45",
+  "status": "planned",
+  "title": "Plugin trust hardening \u2014 import-gating proof, failure matrix, result validation"
+}

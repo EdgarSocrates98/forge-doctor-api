@@ -1,0 +1,3 @@
+Usage: forge-doctor-api plugins inspect [OPTIONS] {plugin_id} §52 manifest + compat + rejection
+reasons for one plugin. Arguments * plugin_id <str> Plugin id. [required] Options --dir <str>
+Directory scanned for plugin manifests. [default: plugins] --help Show this message and exit.

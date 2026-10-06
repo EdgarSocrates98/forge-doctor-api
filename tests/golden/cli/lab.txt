@@ -1,0 +1,3 @@
+Usage: forge-doctor-api lab [OPTIONS] [target] §199-§201 Forge Lab: run every scenario + report per-
+family precision. Arguments target <str> Labs corpus directory. [default: labs] Options --json JSON
+output. --no-record Skip factory/runs record. --help Show this message and exit.

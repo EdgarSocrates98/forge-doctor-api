@@ -1,0 +1,7 @@
+openapi: 3.0.3
+info: {title: Billing API, version: "1.0"}
+paths:
+  /invoices:
+    get:
+      operationId: listInvoices
+      responses: {"200": {description: ok}}

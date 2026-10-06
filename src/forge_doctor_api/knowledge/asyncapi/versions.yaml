@@ -1,0 +1,38 @@
+# §126/§128 AsyncAPI version facts — bundled, never fetched.
+pack: asyncapi-versions
+domain: asyncapi
+edition: "2026.10"
+maturity: semantic-model
+entries:
+  asyncapi-2:
+    fields:
+      families: ["2.0", "2.1", "2.2", "2.3", "2.4", "2.5", "2.6"]
+      releases: ["2.0.0", "2.1.0", "2.2.0", "2.3.0", "2.4.0", "2.5.0", "2.6.0"]
+      verbs: [publish, subscribe]
+      supported: true
+    provenance:
+      source: https://www.asyncapi.com/docs/reference/specification/v2.6.0
+      source_version: "2.6.0"
+      last_verified: "2026-09-15"
+      effective_since: "2017-12-04"
+  asyncapi-3:
+    fields:
+      families: ["3.0", "3.1"]
+      releases: ["3.0.0", "3.1.0"]
+      actions: [send, receive]
+      supported: true
+    provenance:
+      source: https://www.asyncapi.com/docs/reference/specification/v3.0.0
+      source_version: "3.0.0"
+      last_verified: "2026-09-15"
+      effective_since: "2023-12-06"
+  bindings:
+    fields:
+      protocols:
+        [amqp, amqp1, anypointmq, googlepubsub, http, ibmmq, jms, kafka,
+         mercure, mqtt, mqtt5, nats, pulsar, redis, sns, solace, sqs,
+         stomp, ws]
+    provenance:
+      source: https://github.com/asyncapi/bindings
+      source_version: "2026-09"
+      last_verified: "2026-09-15"

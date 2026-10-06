@@ -1,0 +1,3 @@
+cache:
+  listPets: {key: pets-key, ttl: 60}
+  createPet: {key: pets-key, ttl: 0}

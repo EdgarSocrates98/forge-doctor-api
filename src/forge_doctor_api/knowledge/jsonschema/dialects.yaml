@@ -1,0 +1,30 @@
+# §126/§128 JSON Schema notes — bundled, never fetched.
+pack: jsonschema-dialects
+domain: jsonschema
+edition: "2026.10"
+maturity: detection
+entries:
+  openapi-3.0-dialect:
+    fields:
+      dialect: "subset of JSON Schema draft-00/05 + OpenAPI extensions"
+      divergences: [nullable, discriminator, xml, example]
+    provenance:
+      source: https://spec.openapis.org/oas/v3.0.4.html#schema-object
+      source_version: "3.0.4"
+      last_verified: "2026-09-15"
+  openapi-3.1-dialect:
+    fields:
+      dialect: "JSON Schema 2020-12"
+      divergences: []
+    provenance:
+      source: https://spec.openapis.org/oas/v3.1.2.html#schema-object
+      source_version: "3.1.2"
+      last_verified: "2026-09-15"
+  jsonschema-2020-12:
+    fields:
+      dialect: "JSON Schema 2020-12"
+      vocabularies: [core, applicator, validation, meta-data, format]
+    provenance:
+      source: https://json-schema.org/draft/2020-12
+      source_version: "2020-12"
+      last_verified: "2026-09-15"

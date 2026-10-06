@@ -1,0 +1,6 @@
+source_repo: https://github.com/kubernetes-sigs/gateway-api
+upstream_path: examples/standard/basic-http.yaml
+upstream_ref: 40be951cebe5cb3f0365fe6951403de4ff8b9f33
+license: Apache-2.0
+sha256: a64790a70dd1a65645f7c6914d183dfda0549367ebb4fecc042d61beff2f3acb
+extracted_at_note: verbatim excerpt fetched at the pinned upstream ref
