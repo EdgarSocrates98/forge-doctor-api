@@ -1,0 +1,15 @@
+# §130 capability pack: Kong — gateway -> known capabilities.
+pack: kong-capabilities
+domain: gateways
+edition: "2026.10"
+maturity: detection
+entries:
+  kong:
+    fields:
+      platform: kong
+      capabilities: [rate-limiting, retry, auth-plugins, acl, cors]
+      config_surface: kong.yaml (declarative)
+    provenance:
+      source: https://docs.konghq.com/
+      source_version: "3.x"
+      last_verified: "2026-09-15"

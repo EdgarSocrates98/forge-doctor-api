@@ -1,0 +1,10 @@
+# §99 golden: Spring service — contract + spec-051 Spring adapter:
+# implementation-side route entities are now real evidence.
+run: [openapi]
+expected_entities:
+  - getUser
+  - endpoint:GET /users/{id}
+  - operation:UserController.getUser
+expected_findings: []
+forbidden_findings:
+  - OAS*

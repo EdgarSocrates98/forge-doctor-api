@@ -1,0 +1,6 @@
+source_repo: https://github.com/spring-petclinic/spring-framework-petclinic
+upstream_path: src/main/resources/spring/mvc-core-config.xml
+upstream_ref: cf392920cdbe9cd07689f1f4b603271940bac957
+license: Apache-2.0
+sha256: accffff5ff7471ce5f9531be187d05aedd8e278138fdf25e17f38ac19bc59f73
+extracted_at_note: verbatim excerpt fetched at the pinned upstream ref

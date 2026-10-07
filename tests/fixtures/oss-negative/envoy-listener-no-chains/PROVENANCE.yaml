@@ -1,0 +1,7 @@
+origin: "authored adversarial case in envoy front-proxy style (envoyproxy/examples\
+  \ @ 0148dd34a3de4b4ece9a5d46186fefe770d9b956, Apache-2.0): listener without filter_chains\
+  \ \u2014 no routes declarable"
+domain: envoy
+sha256: 5b3797dc8dad8406840c9373df60cbf2617b9c6b7a73d77dd6e8a39d45611f96
+extracted_at_note: authored adversarial slice; provenance documents the real upstream
+  it imitates

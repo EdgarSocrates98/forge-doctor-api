@@ -1,0 +1,17 @@
+# §130 capability pack: Express — platform -> known capabilities.
+pack: express-capabilities
+domain: frameworks
+edition: "2026.10"
+maturity: detection
+entries:
+  express:
+    fields:
+      platform: express
+      language: typescript
+      capabilities: [middleware, routers]
+      native_openapi: false
+      route_style: call
+    provenance:
+      source: https://expressjs.com/
+      source_version: "4.x"
+      last_verified: "2026-09-15"

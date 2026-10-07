@@ -1,0 +1,16 @@
+# §228 third demo target: gateway retry=3 x service retry=3 on a
+# non-idempotent payment op -> amplification candidate + honest
+# idempotency unknown + candidate hygiene checks.
+run: [reliability]
+hops: [gateway, payment-api]
+expected_findings:
+  - RELAPI001   # retry amplification candidate (3 x 3)
+  - RELAPI002   # idempotency unknown on non-idempotent operation
+  - RELAPI005   # no circuit breaker evidence (candidate)
+  - RELAPI006   # no health check evidence (candidate)
+  - RELAPI007   # no graceful shutdown evidence (candidate)
+expected_description_contains:
+  - idempotency
+forbidden_description_contains:
+  - confirmed
+  - will retry 9 times

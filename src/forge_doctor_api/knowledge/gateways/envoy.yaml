@@ -1,0 +1,17 @@
+# §130 capability pack: Envoy — gateway -> known capabilities.
+pack: envoy-capabilities
+domain: gateways
+edition: "2026.10"
+maturity: semantic-model
+entries:
+  envoy:
+    fields:
+      platform: envoy
+      capabilities: [rate-limiting, retry, hedging, timeouts,
+                     circuit-breaking, health-check, mtls,
+                     external-authorization]
+      config_surface: envoy.yaml / xDS
+    provenance:
+      source: https://www.envoyproxy.io/docs/envoy/latest/
+      source_version: "1.x"
+      last_verified: "2026-09-15"

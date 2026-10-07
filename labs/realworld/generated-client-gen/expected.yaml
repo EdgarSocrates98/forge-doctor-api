@@ -1,0 +1,7 @@
+# generated code: client call sites are real evidence, no invented entities.
+provenance: {source: openapi-generator-style-fixture, retrieved: "2026-10"}
+run: [clients]
+expected_clients:
+  - client
+forbidden_entities:
+  - endpoint:

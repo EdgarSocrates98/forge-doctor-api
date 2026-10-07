@@ -1,0 +1,555 @@
+slices:
+- name: apisguru/worldtimeapi
+  file: slice.yaml
+  domain: openapi
+  protocol: http
+  expected_findings:
+  - APISEC011
+  - OAS004
+  - OAS006
+  - OAS010
+  - OAS020
+  expected_entities:
+  - GET /ip
+  - GET /ip.txt
+  - 'GET /ip/{ipv4}'
+  - 'GET /ip/{ipv4}.txt'
+  - GET /timezone
+  - GET /timezone.txt
+  - 'GET /timezone/{area}'
+  - 'GET /timezone/{area}.txt'
+  - 'GET /timezone/{area}/{location}'
+  - 'GET /timezone/{area}/{location}.txt'
+  - 'GET /timezone/{area}/{location}/{region}'
+  - 'GET /timezone/{area}/{location}/{region}.txt'
+  - slice.yaml
+  forbidden_findings:
+  - "ASYNC*"
+  - "GQL*"
+  - "GRPC*"
+  sha256: b224311d71d990cc70a0c0c38693fc2d346c3382659a00154bb41d462021ae25
+- name: asyncapi/gitter-streaming
+  file: slice.yaml
+  domain: asyncapi
+  protocol: events
+  expected_findings:
+  - ASYNC002
+  - ASYNC007
+  expected_entities: []
+  forbidden_findings:
+  - "GQL*"
+  - "GRPC*"
+  - "OAS*"
+  sha256: b490002680f7aec53f4e1e80a7b8ebb99139bb48da67f03f1eb14af2015fe6db
+- name: asyncapi/mercure
+  file: slice.yaml
+  domain: asyncapi
+  protocol: events
+  expected_findings:
+  - ASYNC002
+  - ASYNC008
+  expected_entities: []
+  forbidden_findings:
+  - "GQL*"
+  - "GRPC*"
+  - "OAS*"
+  sha256: 0dd4bea20c823a166400e31af220caca1507e1bd9f4c6350a9252bf1e63eb7d2
+- name: asyncapi/slack-rtm
+  file: slice.yaml
+  domain: asyncapi
+  protocol: events
+  expected_findings:
+  - ASYNC002
+  - ASYNC008
+  expected_entities: []
+  forbidden_findings:
+  - "GQL*"
+  - "GRPC*"
+  - "OAS*"
+  sha256: 714f0635858eef8ed5e54262c073aea93309a087291da959f8932158ca9efa83
+- name: asyncapi/social-media-comments
+  file: slice.yaml
+  domain: asyncapi
+  protocol: events
+  expected_findings:
+  - ASYNC001
+  - ASYNC002
+  - ASYNC007
+  - ASYNC008
+  expected_entities: []
+  forbidden_findings:
+  - "GQL*"
+  - "GRPC*"
+  - "OAS*"
+  sha256: 77fa6907335b5d98186e05f041adc8d2c205e2ea043ecc86af5a886c7d22c412
+- name: asyncapi/streetlights-kafka
+  file: slice.yaml
+  domain: asyncapi
+  protocol: events
+  expected_findings:
+  - ASYNC002
+  - ASYNC007
+  - ASYNC008
+  expected_entities: []
+  forbidden_findings:
+  - "GQL*"
+  - "GRPC*"
+  - "OAS*"
+  sha256: 916c6d5a3c16ce9d2837f24ffc27509044de4fe8c2685de50917438b0d5b2076
+- name: envoyproxy/front-proxy-service
+  file: slice.yaml
+  domain: envoy
+  protocol: http
+  expected_findings: []
+  expected_entities:
+  - slice.yaml
+  forbidden_findings:
+  - "APISEC*"
+  - "ASYNC*"
+  - "GQL*"
+  - "GRPC*"
+  - "OAS*"
+  - "RELAPI*"
+  expected_unknowns:
+  - 'PROVENANCE.yaml'
+  sha256: 91bc3d1f4a2aade3de8a801c6447a7038cc732aeba1a867a6c02a3ac0d4b77a6
+- name: expressjs/route-separation-index
+  file: slice.js
+  domain: express
+  protocol: http
+  expected_findings: []
+  expected_entities:
+  - 'ALL /user/{id}/{op}?'
+  - GET /
+  - GET /posts
+  - 'GET /user/{id}'
+  - 'GET /user/{id}/edit'
+  - 'GET /user/{id}/view'
+  - GET /users
+  - 'PUT /user/{id}/edit'
+  forbidden_findings:
+  - "APISEC*"
+  - "ASYNC*"
+  - "GQL*"
+  - "GRPC*"
+  - "OAS*"
+  - "RELAPI*"
+  sha256: 9bcb5bfb881bf8dc1489b40b064144e770407afe210202f8a9d6c8db393df0d2
+- name: gateway-api/basic-http
+  file: slice.yaml
+  domain: k8s-gateway
+  protocol: http
+  expected_findings: []
+  expected_entities:
+  - example
+  - http-app-1
+  - my-gateway
+  forbidden_findings:
+  - "APISEC*"
+  - "ASYNC*"
+  - "GQL*"
+  - "GRPC*"
+  - "OAS*"
+  - "RELAPI*"
+  expected_unknowns:
+  - 'HTTPRoute/http-app-1'
+  sha256: a64790a70dd1a65645f7c6914d183dfda0549367ebb4fecc042d61beff2f3acb
+- name: googleapis/annotations
+  file: slice.proto
+  domain: grpc
+  protocol: grpc
+  expected_findings: []
+  expected_entities: []
+  forbidden_findings:
+  - "ASYNC*"
+  - "GQL*"
+  - "OAS*"
+  sha256: e79ea741cb605a65e78ca322174764a4af9fde1962c1631e12b84c4934ba9a6c
+- name: googleapis/code
+  file: slice.proto
+  domain: grpc
+  protocol: grpc
+  expected_findings: []
+  expected_entities: []
+  forbidden_findings:
+  - "ASYNC*"
+  - "GQL*"
+  - "OAS*"
+  sha256: 83a63185b83cf7332196fc5ead0ec91b93ac207fbe91b3d5bc3d72f461b0bb31
+- name: googleapis/http
+  file: slice.proto
+  domain: grpc
+  protocol: grpc
+  expected_findings: []
+  expected_entities: []
+  forbidden_findings:
+  - "ASYNC*"
+  - "GQL*"
+  - "OAS*"
+  sha256: ead99129aa15dd5f6233942030c72eec33bc0d7b1c7c260dc143293ef66c5b78
+- name: grpc/routeguide
+  file: slice.proto
+  domain: grpc
+  protocol: grpc
+  expected_findings:
+  - GRPC001
+  expected_entities: []
+  forbidden_findings:
+  - "ASYNC*"
+  - "GQL*"
+  - "OAS*"
+  sha256: 5379accb8d9156b3a992f6d7a1633441f80ec849a8fbce22c1b263677942fbcf
+- name: istio/bookinfo-virtual-services
+  file: slice.yaml
+  domain: mesh
+  protocol: http
+  expected_findings: []
+  expected_entities:
+  - details
+  - istio
+  - productpage
+  - ratings
+  - reviews
+  forbidden_findings:
+  - "APISEC*"
+  - "ASYNC*"
+  - "GQL*"
+  - "GRPC*"
+  - "OAS*"
+  - "RELAPI*"
+  sha256: d0538009109cc1e764c964fab4f7008bfd3dc7f868af7f06f578ee21e16fcabc
+- name: kong/deck-gateway-input
+  file: slice.yaml
+  domain: kong
+  protocol: http
+  expected_findings: []
+  expected_entities:
+  - slice.yaml
+  forbidden_findings:
+  - "APISEC*"
+  - "ASYNC*"
+  - "GQL*"
+  - "GRPC*"
+  - "OAS*"
+  - "RELAPI*"
+  expected_unknowns:
+  - 'PROVENANCE.yaml'
+  sha256: cdf13c381ea00ace704c2e7e9a24b575025a69e019ca02430e7bcb240208f9ae
+- name: kubernetes/ingress-wildcard
+  file: slice.yaml
+  domain: k8s-ingress
+  protocol: http
+  expected_findings: []
+  expected_entities:
+  - ingress-wildcard-host
+  forbidden_findings:
+  - "APISEC*"
+  - "ASYNC*"
+  - "GQL*"
+  - "GRPC*"
+  - "OAS*"
+  - "RELAPI*"
+  expected_unknowns:
+  - 'Ingress/ingress-wildcard-host'
+  sha256: f94baf782d671e73aa5a1081cdc639c1831916d263795b59fe5d01703ca234fe
+- name: nestjs/cats-controller
+  file: slice.ts
+  domain: nestjs
+  protocol: http
+  expected_findings: []
+  expected_entities:
+  - GET /cats
+  - 'GET /cats/{id}'
+  - POST /cats
+  forbidden_findings:
+  - "APISEC*"
+  - "ASYNC*"
+  - "GQL*"
+  - "GRPC*"
+  - "OAS*"
+  - "RELAPI*"
+  sha256: 5d4d18608b14e15110b270ab997b4bc1a7dcae9a86185ca3e46f07db0ef19f98
+- name: oai-learn/api-with-examples
+  file: slice.yaml
+  domain: openapi
+  protocol: http
+  expected_findings:
+  - APISEC011
+  - OAS009
+  - OAS010
+  - OAS020
+  expected_entities:
+  - GET /
+  - GET /v2
+  - slice.yaml
+  forbidden_findings:
+  - "ASYNC*"
+  - "GQL*"
+  - "GRPC*"
+  sha256: 2b8d39097f8d0800b3d9b94f784348ea6d046a82c2b78e83b737874c938e63b9
+- name: oai-learn/callback-example
+  file: slice.yaml
+  domain: openapi
+  protocol: http
+  expected_findings:
+  - APISEC011
+  - OAS004
+  - OAS010
+  - OAS020
+  - RELAPI008
+  expected_entities:
+  - POST /streams
+  - 'POST {$request.query.callbackUrl}/data'
+  - slice.yaml
+  forbidden_findings:
+  - "ASYNC*"
+  - "GQL*"
+  - "GRPC*"
+  sha256: c9695b830c457df0b2f7e62f91b270be5628f239947926e279ccca895b950c0f
+- name: oai-learn/link-example
+  file: slice.yaml
+  domain: openapi
+  protocol: http
+  expected_findings:
+  - APISEC006
+  - APISEC011
+  - OAS010
+  - OAS020
+  - RELAPI008
+  expected_entities:
+  - 'GET /2.0/repositories/{username}'
+  - 'GET /2.0/repositories/{username}/{slug}'
+  - 'GET /2.0/repositories/{username}/{slug}/pullrequests'
+  - 'GET /2.0/repositories/{username}/{slug}/pullrequests/{pid}'
+  - 'GET /2.0/users/{username}'
+  - 'POST /2.0/repositories/{username}/{slug}/pullrequests/{pid}/merge'
+  - slice.yaml
+  forbidden_findings:
+  - "ASYNC*"
+  - "GQL*"
+  - "GRPC*"
+  sha256: 92b502f64d80d67e2a8e634e5b82e9b7ae1f1e8fb5b754cc1c2cad1102447206
+- name: oai-learn/non-oauth-scopes
+  file: slice.yaml
+  domain: openapi
+  protocol: http
+  expected_findings:
+  - APISEC013
+  - OAS004
+  - OAS005
+  - OAS020
+  expected_entities:
+  - GET /users
+  - slice.yaml
+  forbidden_findings:
+  - "ASYNC*"
+  - "GQL*"
+  - "GRPC*"
+  expected_unknowns:
+  - 'DESIRED state'
+  - 'HYPOTHETICAL state'
+  - 'IMPLEMENTED state'
+  - 'OBSERVED state'
+  sha256: f51b1e1e8abda7bfc790f6e9fbddf36c24353576d3bf7cd2e33e0670e965b177
+- name: oai-learn/petstore
+  file: slice.yaml
+  domain: openapi
+  protocol: http
+  expected_findings:
+  - APISEC001
+  - APISEC011
+  - OAS010
+  - OAS018
+  - RELAPI008
+  expected_entities:
+  - GET /pets
+  - 'GET /pets/{petId}'
+  - POST /pets
+  - slice.yaml
+  forbidden_findings:
+  - "ASYNC*"
+  - "GQL*"
+  - "GRPC*"
+  sha256: cefaafa05eee75b1888762dea08a295f245e9f3e4bdb8777f4bdfed09e335339
+- name: oai-learn/petstore-expanded
+  file: slice.yaml
+  domain: openapi
+  protocol: http
+  expected_findings:
+  - APISEC001
+  - APISEC011
+  - OAS010
+  - OAS018
+  - OAS020
+  - RELAPI008
+  expected_entities:
+  - 'DELETE /pets/{id}'
+  - GET /pets
+  - 'GET /pets/{id}'
+  - POST /pets
+  - slice.yaml
+  forbidden_findings:
+  - "ASYNC*"
+  - "GQL*"
+  - "GRPC*"
+  sha256: abc68d08c674c8f0415aaeeb87c4203d5dd7257cdb79ac7ccb0446d1c5b9a7c2
+- name: oai-learn/uspto
+  file: slice.yaml
+  domain: openapi
+  protocol: http
+  expected_findings:
+  - APISEC011
+  - OAS010
+  - RELAPI008
+  expected_entities:
+  - GET /
+  - 'GET /{dataset}/{version}/fields'
+  - 'POST /{dataset}/{version}/records'
+  - slice.yaml
+  forbidden_findings:
+  - "ASYNC*"
+  - "GQL*"
+  - "GRPC*"
+  sha256: 29d32d0a0710b0acac434807e018ebd9cc192ad604fefdcf51422833b5963642
+- name: oai-learn/webhook-example
+  file: slice.yaml
+  domain: openapi
+  protocol: http
+  expected_findings:
+  - APISEC011
+  - OAS010
+  - RELAPI008
+  expected_entities:
+  - POST newPet
+  - slice.yaml
+  forbidden_findings:
+  - "ASYNC*"
+  - "GQL*"
+  - "GRPC*"
+  sha256: 1bf9c928e1d42d5ffd3d793dbc6b569bd47a97a4679ee5c85cd78091136ab2a4
+- name: spacexland/schema
+  file: slice.graphql
+  domain: graphql
+  protocol: graphql
+  expected_findings:
+  - GQL006
+  - GQL007
+  - GQL009
+  - GQL010
+  expected_entities: []
+  forbidden_findings:
+  - "ASYNC*"
+  - "GRPC*"
+  - "OAS*"
+  sha256: 2da61b885d23b03b4073497a9a15b1fc90b0510b28e8b5e9ee7ed8006a4dacde
+- name: spring-petclinic/mvc-core-config
+  file: slice.xml
+  domain: spring
+  protocol: http
+  expected_findings: []
+  expected_entities: []
+  forbidden_findings:
+  - "APISEC*"
+  - "ASYNC*"
+  - "GQL*"
+  - "GRPC*"
+  - "OAS*"
+  - "RELAPI*"
+  sha256: accffff5ff7471ce5f9531be187d05aedd8e278138fdf25e17f38ac19bc59f73
+- name: spring-petclinic/owner-controller
+  file: slice.java
+  domain: spring
+  protocol: http
+  expected_findings: []
+  expected_entities:
+  - GET /owners
+  - GET /owners/find
+  - GET /owners/new
+  - 'GET /owners/{ownerId}'
+  - 'GET /owners/{ownerId}/edit'
+  - POST /owners/new
+  - 'POST /owners/{ownerId}/edit'
+  forbidden_findings:
+  - "APISEC*"
+  - "ASYNC*"
+  - "GQL*"
+  - "GRPC*"
+  - "OAS*"
+  - "RELAPI*"
+  sha256: 4ed4411a2c412113d59067ff4be4c05bb26050fc6e23b606a6e6d6924b48489b
+- name: spring-petclinic/vet-controller
+  file: slice.java
+  domain: spring
+  protocol: http
+  expected_findings: []
+  expected_entities:
+  - GET /vets
+  - GET /vets.json
+  - GET /vets.xml
+  forbidden_findings:
+  - "APISEC*"
+  - "ASYNC*"
+  - "GQL*"
+  - "GRPC*"
+  - "OAS*"
+  - "RELAPI*"
+  sha256: bbd51d87b798ae509b15b52c17755272b262ad79363eee408644df86e60ef1fd
+- name: swagger-api/petstore
+  file: slice.yaml
+  domain: openapi
+  protocol: http
+  expected_findings:
+  - APISEC001
+  - APISEC006
+  - APISEC011
+  - APISEC012
+  - APISEC013
+  - OAS010
+  - RELAPI008
+  expected_entities:
+  - 'DELETE /pet/{petId}'
+  - 'DELETE /store/order/{orderId}'
+  - 'DELETE /user/{username}'
+  - GET /pet/findByStatus
+  - GET /pet/findByTags
+  - 'GET /pet/{petId}'
+  - GET /store/inventory
+  - 'GET /store/order/{orderId}'
+  - GET /user/login
+  - GET /user/logout
+  - 'GET /user/{username}'
+  - POST /pet
+  - 'POST /pet/{petId}'
+  - 'POST /pet/{petId}/uploadImage'
+  - POST /store/order
+  - POST /user
+  - POST /user/createWithList
+  - PUT /pet
+  - 'PUT /user/{username}'
+  - slice.yaml
+  forbidden_findings:
+  - "ASYNC*"
+  - "GQL*"
+  - "GRPC*"
+  expected_unknowns:
+  - 'DESIRED state'
+  - 'HYPOTHETICAL state'
+  - 'IMPLEMENTED state'
+  - 'OBSERVED state'
+  sha256: e1a2480ffa440e44b981db5b038374214c532ffc92026fd51fb957c88bfbdd88
+- name: swapi-graphql/schema
+  file: slice.graphql
+  domain: graphql
+  protocol: graphql
+  expected_findings:
+  - GQL006
+  - GQL007
+  - GQL008
+  - GQL009
+  - GQL010
+  expected_entities: []
+  forbidden_findings:
+  - "ASYNC*"
+  - "GRPC*"
+  - "OAS*"
+  sha256: ebc4d09b21e2aec2735d6f0d3c812fc017cd49a44900dd3ae34f49f6f8c25133

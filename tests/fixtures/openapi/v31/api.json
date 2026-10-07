@@ -1,0 +1,29 @@
+{
+  "openapi": "3.1.0",
+  "info": {"title": "Events", "version": "2.0"},
+  "jsonSchemaDialect": "https://spec.openapis.org/oas/3.1/dialect/base",
+  "webhooks": {
+    "newPet": {
+      "post": {
+        "requestBody": {
+          "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Pet"}}}
+        },
+        "responses": {"200": {"description": "ok"}}
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Pet": {
+        "type": ["object", "null"],
+        "properties": {"name": {"type": "string"}},
+        "examples": [{"$ref": "ignored"}]
+      },
+      "Tree": {
+        "$dynamicAnchor": "node",
+        "type": "object",
+        "properties": {"children": {"type": "array", "items": {"$dynamicRef": "#node"}}}
+      }
+    }
+  }
+}

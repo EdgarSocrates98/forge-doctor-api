@@ -1,0 +1,194 @@
+cases:
+- name: annotations-truncated
+  file: slice.proto
+  domain: grpc
+  protocol: grpc
+  expect_status: MALFORMED
+  expected_findings: []
+  forbidden_findings:
+  - "ASYNC*"
+  - "GQL*"
+  - "OAS*"
+  sha256: 5f35faca825ccc280a93ffba940d4a4e50eecbd21995eff3e81099f7fd899d9a
+- name: api-with-examples-truncated-json
+  file: slice.json
+  domain: openapi
+  protocol: http
+  expect_status: MALFORMED
+  expected_findings:
+  - OAS001
+  forbidden_findings:
+  - "ASYNC*"
+  - "GQL*"
+  - "GRPC*"
+  sha256: ff24fefcb84594666342de1455b00a542b4ee81f125ee4b88b5a9701e9f7427c
+- name: asyncapi-unsupported-version
+  file: slice.yaml
+  domain: asyncapi
+  protocol: events
+  expect_status: UNSUPPORTED_VERSION
+  expected_findings: []
+  forbidden_findings:
+  - "GQL*"
+  - "GRPC*"
+  - "OAS*"
+  sha256: 23f9670fac33242477baf848577c5e40445b7513e4bb8921965ac8267c2291f8
+- name: envoy-listener-no-chains
+  file: slice.yaml
+  domain: envoy
+  protocol: http
+  expect_status: SCANNED
+  expected_findings: []
+  forbidden_findings:
+  - "APISEC*"
+  - "ASYNC*"
+  - "GQL*"
+  - "GRPC*"
+  - "OAS*"
+  - "RELAPI*"
+  expected_unknowns:
+  - 'PROVENANCE.yaml'
+  sha256: 5b3797dc8dad8406840c9373df60cbf2617b9c6b7a73d77dd6e8a39d45611f96
+- name: express-dynamic-dispatch
+  file: slice.js
+  domain: express
+  protocol: http
+  expect_status: SCANNED
+  expected_findings: []
+  forbidden_findings:
+  - "APISEC*"
+  - "ASYNC*"
+  - "GQL*"
+  - "GRPC*"
+  - "OAS*"
+  - "RELAPI*"
+  sha256: f92b6ea0072700883ecf6fff198e7e00218f9029d560af56536003f13e4b5f29
+- name: graphql-federation-sdl
+  file: slice.graphql
+  domain: graphql
+  protocol: graphql
+  expect_status: MALFORMED
+  expected_findings:
+  - GQL010
+  forbidden_findings:
+  - "ASYNC*"
+  - "GRPC*"
+  - "OAS*"
+  sha256: fd743c5f0e5865a4ee1cee043247bf8d2104a3f00da5020e0eca918d7d3d7fee
+- name: k8s-gateway-orphan-route
+  file: slice.yaml
+  domain: k8s-gateway
+  protocol: http
+  expect_status: SCANNED
+  expected_findings: []
+  forbidden_findings:
+  - "APISEC*"
+  - "ASYNC*"
+  - "GQL*"
+  - "GRPC*"
+  - "OAS*"
+  - "RELAPI*"
+  expected_unknowns:
+  - 'HTTPRoute/orphan-route'
+  sha256: a1a4c63bb4d3ae462da6ff4acd18f4bbf843f993fa1a36e283a8615c0a9b922b
+- name: k8s-ingress-empty-spec
+  file: slice.yaml
+  domain: k8s-ingress
+  protocol: http
+  expect_status: SCANNED
+  expected_findings: []
+  forbidden_findings:
+  - "APISEC*"
+  - "ASYNC*"
+  - "GQL*"
+  - "GRPC*"
+  - "OAS*"
+  - "RELAPI*"
+  expected_unknowns:
+  - 'Ingress/empty-ingress'
+  sha256: 224d465a8dcf989e541293384891b422df3843f9c8a3ad293fa9b345da051d49
+- name: kong-partial-services
+  file: slice.yaml
+  domain: kong
+  protocol: http
+  expect_status: SCANNED
+  expected_findings: []
+  forbidden_findings:
+  - "APISEC*"
+  - "ASYNC*"
+  - "GQL*"
+  - "GRPC*"
+  - "OAS*"
+  - "RELAPI*"
+  expected_unknowns:
+  - 'PROVENANCE.yaml'
+  sha256: 8fc1ce090ee95829353a4174ec2ef6e6a85be6a574a375ed5838347eddbcdae5
+- name: nestjs-dynamic-prefix
+  file: slice.ts
+  domain: nestjs
+  protocol: http
+  expect_status: SCANNED
+  expected_findings: []
+  forbidden_findings:
+  - "APISEC*"
+  - "ASYNC*"
+  - "GQL*"
+  - "GRPC*"
+  - "OAS*"
+  - "RELAPI*"
+  sha256: 63337e6d960cd45da5fb1dd2bfa7bf805eb310b8ba1fbdec53cc153abf130491
+- name: openapi-as-graphql
+  file: slice.graphql
+  domain: graphql
+  protocol: graphql
+  expect_status: MALFORMED
+  expected_findings:
+  - GQL010
+  forbidden_findings:
+  - "ASYNC*"
+  - "GRPC*"
+  - "OAS*"
+  sha256: cefaafa05eee75b1888762dea08a295f245e9f3e4bdb8777f4bdfed09e335339
+- name: petstore-truncated
+  file: slice.yaml
+  domain: openapi
+  protocol: http
+  expect_status: PARSED
+  expected_findings:
+  - APISEC011
+  - OAS002
+  - OAS005
+  - OAS008
+  - OAS010
+  - RELAPI008
+  forbidden_findings:
+  - "ASYNC*"
+  - "GQL*"
+  - "GRPC*"
+  sha256: 212e8460a2717b295635ca31d3337253971de235dd01a844e14739cc2e01cd73
+- name: spring-dynamic-path
+  file: slice.java
+  domain: spring
+  protocol: http
+  expect_status: SCANNED
+  expected_findings: []
+  forbidden_findings:
+  - "APISEC*"
+  - "ASYNC*"
+  - "GQL*"
+  - "GRPC*"
+  - "OAS*"
+  - "RELAPI*"
+  sha256: 292e12ca686c0826037bf5c642a488a4f66f08b70fa9df8ffe7b502d2a7e5d67
+- name: swagger-2-petstore
+  file: slice.yaml
+  domain: openapi
+  protocol: http
+  expect_status: UNSUPPORTED_VERSION
+  expected_findings:
+  - OAS001
+  forbidden_findings:
+  - "ASYNC*"
+  - "GQL*"
+  - "GRPC*"
+  sha256: 9fdb0fc3767861fcd86811901165a930c2c3102edbbcc20e4efb13064bfc44c7

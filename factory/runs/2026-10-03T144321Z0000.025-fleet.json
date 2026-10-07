@@ -1,0 +1,15 @@
+{
+  "agent": "codex",
+  "command": [
+    "codex",
+    "exec",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\025-fleet.implement.codex.md)"
+  ],
+  "created_at": "2026-10-03T14:43:21+00:00",
+  "id": "025-fleet",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\025-fleet.implement.codex.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\025-fleet.md",
+  "spec_sha256": "2ee45e769c59d68e69281ede1e9db604a49d21d625d48b4aa12a38227fb29d30",
+  "status": "planned",
+  "title": "Fleet intelligence \u2014 portfolio, complexity, deprecation readiness, external APIs"
+}

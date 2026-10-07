@@ -1,0 +1,15 @@
+{
+  "agent": "claude",
+  "command": [
+    "claude",
+    "-p",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\043-runtime-benchmark.implement.claude.md)"
+  ],
+  "created_at": "2026-10-04T04:59:57+00:00",
+  "id": "043-runtime-benchmark",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\043-runtime-benchmark.implement.claude.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\043-runtime-benchmark.md",
+  "spec_sha256": "8eda37be0624c7ac3c0fb93c108e6264dfe9ff81410e7755ce2c3ef8f48e6112",
+  "status": "planned",
+  "title": "Runtime benchmark suite + regression gate with environment record"
+}

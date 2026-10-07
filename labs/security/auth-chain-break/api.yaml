@@ -1,0 +1,30 @@
+openapi: "3.0.3"
+info:
+  title: Orders API
+  version: "1.0"
+  x-owner: orders-team
+paths:
+  /orders/{id}:
+    get:
+      operationId: getOrder
+      summary: fetch an order
+      tags: [orders]
+      security:
+        - apiKey: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: {type: string}
+      responses:
+        '200':
+          description: the order
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: {type: string}
+components:
+  securitySchemes:
+    apiKey: {type: apiKey, in: header, name: X-Key}

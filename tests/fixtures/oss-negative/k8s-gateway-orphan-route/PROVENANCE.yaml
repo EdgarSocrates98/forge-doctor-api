@@ -1,0 +1,7 @@
+origin: 'authored adversarial case in gateway-api examples style (kubernetes-sigs/gateway-api
+  v1.3.0 @ 40be951cebe5cb3f0365fe6951403de4ff8b9f33, Apache-2.0): HTTPRoute with no
+  parentRefs and no rules'
+domain: k8s-gateway
+sha256: a1a4c63bb4d3ae462da6ff4acd18f4bbf843f993fa1a36e283a8615c0a9b922b
+extracted_at_note: authored adversarial slice; provenance documents the real upstream
+  it imitates

@@ -1,0 +1,11 @@
+directive @auth on FIELD_DEFINITION
+
+type Query {
+  user(id: ID!): User @auth
+  users(first: Int, after: String): [User!]! @auth
+}
+
+type User {
+  id: ID!
+  email: String!
+}

@@ -1,0 +1,124 @@
+# Spec 035 + spec 071: independent quality gate — tests, lint, types,
+# build, packaging smoke, lab, offline/determinism proof. The matrix
+# splits minimal install (core only — optional capabilities degrade
+# gracefully) from full install (every advertised extra active).
+name: quality
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-review:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    # Requires Dependency graph + GitHub Advanced Security on private repos.
+    # The step is advisory: it runs where the capability exists and
+    # annotates the run, without blocking PRs where it cannot.
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/dependency-review-action@v4
+        continue-on-error: true
+
+  quality:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - python-version: "3.11"
+            profile: minimal
+            extras: ""
+          - python-version: "3.11"
+            profile: full
+            extras: "[graphql,mcp]"
+          - python-version: "3.12"
+            profile: full
+            extras: "[graphql,mcp]"
+          - python-version: "3.13"
+            profile: full
+            extras: "[graphql,mcp]"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install (${{ matrix.profile }})
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e '.${{ matrix.extras }}' pytest ruff mypy types-PyYAML build
+      - name: Tests
+        run: python -m pytest -q
+      - name: Lint
+        run: python -m ruff check .
+      - name: Types
+        run: python -m mypy src
+      - name: Build
+        run: python -m build
+      - name: Wheel install smoke
+        run: |
+          python -m venv /tmp/wheelsmoke
+          WHEEL=$(ls dist/*.whl)
+          /tmp/wheelsmoke/bin/pip install "${WHEEL}${{ matrix.extras }}"
+          /tmp/wheelsmoke/bin/forge-doctor-api --version
+      - name: Wheel MCP smoke
+        if: matrix.profile == 'full'
+        run: python factory/mcp_smoke.py --exe /tmp/wheelsmoke/bin/forge-doctor-api
+      - name: CLI smoke
+        run: |
+          forge-doctor-api scan labs/golden/fastapi-service --format agent
+          forge-doctor-api contract inspect labs/golden/fastapi-service
+      - name: Forge Lab
+        run: forge-doctor-api lab --no-record
+      - name: Minimal graceful-degradation proof
+        if: matrix.profile == 'minimal'
+        run: |
+          forge-doctor-api lab --json --no-record | python -c "
+          import json, sys
+          report = json.load(sys.stdin)
+          skipped = [r for r in report['results'] if r.get('skipped')]
+          assert report['extras_absent'], 'minimal profile must report absent extras'
+          assert skipped, 'graphql scenarios must be skipped, not failed or silent'
+          assert all(r['skip_reason'] for r in skipped), 'every skip needs a reason'
+          failed = [r for r in report['results']
+                    if not r['passed'] and not r.get('skipped')]
+          assert not failed, f'minimal install must not fail: {failed}'
+          print(f'minimal graceful: {len(skipped)} skipped with reason')
+          "
+      - name: Full capability proof
+        if: matrix.profile == 'full'
+        run: |
+          forge-doctor-api lab --json --no-record | python -c "
+          import json, sys
+          report = json.load(sys.stdin)
+          skipped = [r for r in report['results'] if r.get('skipped')]
+          assert not skipped, f'full install must not skip: {skipped}'
+          failed = [r for r in report['results']
+                    if not r['passed'] and not r.get('skipped')]
+          assert not failed, f'full install failures: {failed}'
+          print('full install: zero skipped, zero failed')
+          "
+      - name: Scale budget gate
+        if: matrix.profile == 'full' && matrix.python-version == '3.12'
+        run: python factory/benchmarks/scale_benchmark.py --check
+      - name: Release artifact gates
+        if: matrix.profile == 'full' && matrix.python-version == '3.12'
+        run: |
+          python factory/sbom.py --check
+          python factory/sha256sums.py
+          python factory/sha256sums.py --verify
+          python factory/mcp_inventory.py --check
+          python factory/version_gate.py
+          python factory/release_manifest.py --check
+          python factory/provenance.py --stdout > /dev/null
+      - name: Self-scan dogfood gate
+        if: matrix.profile == 'full' && matrix.python-version == '3.12'
+        run: python factory/self_scan.py --check
+      - name: Release smoke (installed wheel)
+        if: matrix.profile == 'full' && matrix.python-version == '3.12'
+        run: python factory/release_smoke.py --extras "${{ matrix.extras }}"

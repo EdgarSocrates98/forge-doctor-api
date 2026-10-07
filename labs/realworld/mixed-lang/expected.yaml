@@ -1,0 +1,6 @@
+# mixed languages: Java Spring + Python FastAPI in one repo.
+provenance: {source: handwritten-mixed-lang-fixture, retrieved: "2026-10"}
+run: [openapi]
+expected_entities:
+  - /shop/items/{id}
+  - /health

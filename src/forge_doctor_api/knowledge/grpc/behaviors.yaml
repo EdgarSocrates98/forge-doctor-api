@@ -1,0 +1,69 @@
+# §126/§128 gRPC official behaviors — bundled, never fetched.
+pack: grpc-behaviors
+domain: grpc
+edition: "2026.10"
+maturity: checks
+entries:
+  streaming-modes:
+    fields:
+      modes: [unary, client_streaming, server_streaming, bidi_streaming]
+    provenance:
+      source: https://grpc.io/docs/what-is-grpc/core-concepts/
+      source_version: "1.x"
+      last_verified: "2026-09-15"
+  deadlines:
+    fields:
+      note: deadlines propagate per-call; absence is a candidate finding
+      config_keys: [timeout, deadline, deadlineMs]
+    provenance:
+      source: https://grpc.io/docs/guides/deadlines/
+      source_version: "1.x"
+      last_verified: "2026-09-15"
+  health-check:
+    fields:
+      service: grpc.health.v1.Health
+      note: standard health-checking protocol for prod deployments
+    provenance:
+      source: https://github.com/grpc/grpc/blob/master/doc/health-checking.md
+      source_version: "v1"
+      last_verified: "2026-09-15"
+  retry-policy:
+    fields:
+      keys: [maxAttempts, initialBackoff, maxBackoff, backoffMultiplier,
+             retryableStatusCodes]
+      note: hedging is mutually exclusive with retry in one methodConfig
+    provenance:
+      source: https://github.com/grpc/proposal/blob/master/A6-client-retries.md
+      source_version: "A6"
+      last_verified: "2026-09-15"
+  http-to-grpc-status:
+    fields:
+      # §79 status-semantics mapping: HTTP status -> canonical gRPC code.
+      mapping:
+        "200": OK
+        "201": OK
+        "202": OK
+        "204": OK
+        "400": INVALID_ARGUMENT
+        "401": UNAUTHENTICATED
+        "403": PERMISSION_DENIED
+        "404": NOT_FOUND
+        "409": ABORTED
+        "410": NOT_FOUND
+        "412": FAILED_PRECONDITION
+        "413": RESOURCE_EXHAUSTED
+        "416": OUT_OF_RANGE
+        "422": INVALID_ARGUMENT
+        "429": RESOURCE_EXHAUSTED
+        "499": CANCELLED
+        "500": INTERNAL
+        "501": UNIMPLEMENTED
+        "502": UNAVAILABLE
+        "503": UNAVAILABLE
+        "504": DEADLINE_EXCEEDED
+      note: unmapped codes approximate to UNKNOWN / require explicit
+        status contract on the target
+    provenance:
+      source: https://github.com/googleapis/googleapis/blob/master/google/rpc/code.proto
+      source_version: "v1"
+      last_verified: "2026-09-30"

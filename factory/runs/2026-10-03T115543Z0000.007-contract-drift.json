@@ -1,0 +1,15 @@
+{
+  "agent": "claude",
+  "command": [
+    "claude",
+    "-p",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\007-contract-drift.implement.claude.md)"
+  ],
+  "created_at": "2026-10-03T11:55:43+00:00",
+  "id": "007-contract-drift",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\007-contract-drift.implement.claude.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\007-contract-drift.md",
+  "spec_sha256": "8ea6d62c8b3857adcb859ab37aa6aac3d5a8ecfd32ebd5cdd9f5cf7026810f4e",
+  "status": "planned",
+  "title": "ApiContractDrift \u2014 contract vs implementation"
+}

@@ -1,0 +1,16 @@
+{
+  "agent": "claude",
+  "command": [
+    "claude",
+    "-p",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\002-evidence-findings.implement.claude.md)"
+  ],
+  "created_at": "2026-10-03T03:13:10+00:00",
+  "id": "002-evidence-findings",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\002-evidence-findings.implement.claude.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\002-evidence-findings.md",
+  "spec_sha256": "5328ed5b041c5863bf242f4d41a2c089336fb8f36318124ce17806e6d1c32ded",
+  "status": "dispatched",
+  "title": "Evidence model and Finding contracts",
+  "updated_at": "2026-10-03T03:28:06+00:00"
+}

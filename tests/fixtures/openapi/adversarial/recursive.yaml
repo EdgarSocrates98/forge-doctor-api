@@ -1,0 +1,45 @@
+openapi: 3.0.3
+info:
+  title: Recursive
+  version: 1.0.0
+paths:
+  /loop:
+    $ref: '#/components/pathItems/LoopA'
+  /self:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/P1'
+      responses:
+        '200':
+          $ref: '#/components/responses/R1'
+components:
+  pathItems:
+    LoopA:
+      $ref: '#/components/pathItems/LoopB'
+    LoopB:
+      $ref: '#/components/pathItems/LoopA'
+  parameters:
+    P1:
+      $ref: '#/components/parameters/P1'
+  responses:
+    R1:
+      $ref: '#/components/responses/R2'
+    R2:
+      $ref: '#/components/responses/R1'
+  schemas:
+    Self:
+      $ref: '#/components/schemas/Self'
+    Tree:
+      type: object
+      properties:
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tree'
+    A:
+      allOf:
+        - $ref: '#/components/schemas/B'
+    B:
+      properties:
+        a:
+          $ref: '#/components/schemas/A'

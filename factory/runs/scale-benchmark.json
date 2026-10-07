@@ -1,0 +1,116 @@
+{
+  "tool": "forge-doctor-api",
+  "window": 10000,
+  "results": [
+    {
+      "kind": "endpoints",
+      "scale": 100,
+      "operations": 100,
+      "wall_seconds": 0.325,
+      "peak_bytes": 1082227
+    },
+    {
+      "kind": "endpoints",
+      "scale": 1000,
+      "operations": 1000,
+      "wall_seconds": 3.275,
+      "peak_bytes": 10867211
+    },
+    {
+      "kind": "endpoints",
+      "scale": 5000,
+      "operations": 5000,
+      "wall_seconds": 14.536,
+      "peak_bytes": 53919067
+    },
+    {
+      "kind": "endpoints",
+      "scale": 10000,
+      "operations": 10000,
+      "wall_seconds": 41.595,
+      "peak_bytes": 107559883
+    },
+    {
+      "kind": "spans",
+      "scale": 10000,
+      "wall_seconds": 11.503,
+      "peak_bytes": 12681917,
+      "executions": 400,
+      "traces_completed": 400,
+      "traces_incomplete": 0,
+      "evictions": 0,
+      "late_spans": 0,
+      "tombstone_overflow": 0
+    },
+    {
+      "kind": "spans",
+      "scale": 50000,
+      "wall_seconds": 62.784,
+      "peak_bytes": 63899161,
+      "executions": 2000,
+      "traces_completed": 2000,
+      "traces_incomplete": 0,
+      "evictions": 0,
+      "late_spans": 0,
+      "tombstone_overflow": 0
+    },
+    {
+      "kind": "spans",
+      "scale": 100000,
+      "wall_seconds": 132.288,
+      "peak_bytes": 127971637,
+      "executions": 4000,
+      "traces_completed": 4000,
+      "traces_incomplete": 0,
+      "evictions": 0,
+      "late_spans": 0,
+      "tombstone_overflow": 0
+    },
+    {
+      "kind": "spans_churn",
+      "scale": 10000,
+      "wall_seconds": 11.213,
+      "peak_bytes": 17166605,
+      "executions": 10000,
+      "traces_completed": 10000,
+      "traces_incomplete": 0,
+      "evictions": 0,
+      "late_spans": 0,
+      "tombstone_overflow": 0
+    },
+    {
+      "kind": "spans_churn",
+      "scale": 50000,
+      "wall_seconds": 104.731,
+      "peak_bytes": 91752954,
+      "executions": 50000,
+      "traces_completed": 10000,
+      "traces_incomplete": 40000,
+      "evictions": 40000,
+      "late_spans": 500,
+      "tombstone_overflow": 30000
+    },
+    {
+      "kind": "spans_churn",
+      "scale": 100000,
+      "wall_seconds": 193.936,
+      "peak_bytes": 183962422,
+      "executions": 100000,
+      "traces_completed": 10000,
+      "traces_incomplete": 90000,
+      "evictions": 90000,
+      "late_spans": 500,
+      "tombstone_overflow": 80000
+    },
+    {
+      "kind": "snapshot",
+      "scale": 10000,
+      "wall_seconds": 681.781,
+      "peak_bytes": 388167415,
+      "snapshot_bytes": 18831943,
+      "snapshot_load_seconds": 121.477,
+      "snapshot_diff_seconds": 0.06,
+      "snapshot_save_seconds": 114.28
+    }
+  ]
+}

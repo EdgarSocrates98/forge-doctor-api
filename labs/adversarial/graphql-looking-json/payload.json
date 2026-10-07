@@ -1,0 +1,5 @@
+{
+  "query": "{ users { id email } }",
+  "variables": {"limit": 10},
+  "operationName": "ListUsers"
+}

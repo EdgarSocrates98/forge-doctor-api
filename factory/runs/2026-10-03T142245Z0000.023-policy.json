@@ -1,0 +1,15 @@
+{
+  "agent": "codex",
+  "command": [
+    "codex",
+    "exec",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\023-policy.implement.codex.md)"
+  ],
+  "created_at": "2026-10-03T14:22:45+00:00",
+  "id": "023-policy",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\023-policy.implement.codex.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\023-policy.md",
+  "spec_sha256": "5d4afeed7d1f715c4082b6be8ecefaec322101a8e96dd11a563eb76205f49adf",
+  "status": "planned",
+  "title": "Policy engine \u2014 org policies, inheritance, exceptions, ownership"
+}

@@ -1,0 +1,36 @@
+{
+  "_type": "https://in-toto.io/Statement/v1",
+  "predicate": {
+    "build": {
+      "commands": [
+        "python -m build"
+      ]
+    },
+    "builder": {
+      "id": "local-build"
+    },
+    "source": {
+      "repo": "https://github.com/EdgarSocrates98/forge-doctor-api.git",
+      "revision": "ee4e608da635fa10dc13c195397ecd3e14339953"
+    },
+    "tools": {
+      "forge_doctor_api": "0.2.0",
+      "python": "3.14.6"
+    }
+  },
+  "predicateType": "https://forge-doctor.dev/provenance/v1",
+  "subject": [
+    {
+      "digest": {
+        "sha256": "8a3d393d15fc9a086e3c7b7ddc23a7b070f28bfe792d16fb6028391a2d0bf0b5"
+      },
+      "name": "forge_doctor_api-0.2.0-py3-none-any.whl"
+    },
+    {
+      "digest": {
+        "sha256": "e0f247a7b1653b0dc1b5fd19cd8e0dbaab554deda3bcb7287b9c9e7721fc9adb"
+      },
+      "name": "forge_doctor_api-0.2.0.tar.gz"
+    }
+  ]
+}

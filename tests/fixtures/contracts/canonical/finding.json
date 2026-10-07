@@ -1,0 +1,23 @@
+{
+  "contract_version": "forge-contracts/1",
+  "check_id": "OAS009",
+  "title": "Operation missing description",
+  "severity": "warning",
+  "category": "oas",
+  "message": "GET /pets lacks a description",
+  "fingerprint": "fp-9f8e7d6c",
+  "file": "api.yaml",
+  "line": 42,
+  "column": 5,
+  "recommendation": "Add a description to the operation.",
+  "confidence": "medium",
+  "evidence": "api.yaml:L42",
+  "evidence_kind": "static",
+  "source": "forge-doctor-api",
+  "fixable": true,
+  "tags": ["docs"],
+  "x-forge-api": {
+    "entity_ids": ["operation:openapi:get /pets"],
+    "evidence_refs": ["api.yaml:L42"]
+  }
+}

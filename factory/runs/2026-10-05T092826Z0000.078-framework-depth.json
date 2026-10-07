@@ -1,0 +1,15 @@
+{
+  "agent": "claude",
+  "command": [
+    "claude",
+    "-p",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\078-framework-depth.implement.claude.md)"
+  ],
+  "created_at": "2026-10-05T09:28:26+00:00",
+  "id": "078-framework-depth",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\078-framework-depth.implement.claude.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\078-framework-depth.md",
+  "spec_sha256": "992e073e804e864cbf573b3734d9721449347cef81d020f9e6fee4340460ac93",
+  "status": "planned",
+  "title": "Framework depth \u2014 FastAPI/Spring/Express/NestJS deepening + lab cases"
+}

@@ -1,0 +1,30 @@
+# §126/§128 GraphQL spec facts — bundled, never fetched.
+pack: graphql-spec
+domain: graphql
+edition: "2026.10"
+maturity: checks
+entries:
+  operation-kinds:
+    fields:
+      kinds: [query, mutation, subscription]
+      note: subscription roots carry operation_root=subscription
+    provenance:
+      source: https://spec.graphql.org/October2021/#sec-Operations
+      source_version: "October2021"
+      last_verified: "2026-09-15"
+  introspection:
+    fields:
+      fields: [__schema, __type, __typename]
+      note: introspection exposure is a deployment-policy question
+    provenance:
+      source: https://spec.graphql.org/October2021/#sec-Introspection
+      source_version: "October2021"
+      last_verified: "2026-09-15"
+  depth-guidance:
+    fields:
+      transparency_depth_threshold: 5
+      note: heuristic for deep-traversal candidates, not spec law
+    provenance:
+      source: internal-engineering-guideline
+      source_version: "1.0"
+      last_verified: "2026-09-15"

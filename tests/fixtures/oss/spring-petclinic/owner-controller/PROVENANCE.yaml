@@ -1,0 +1,6 @@
+source_repo: https://github.com/spring-petclinic/spring-framework-petclinic
+upstream_path: src/main/java/org/springframework/samples/petclinic/web/OwnerController.java
+upstream_ref: cf392920cdbe9cd07689f1f4b603271940bac957
+license: Apache-2.0
+sha256: 4ed4411a2c412113d59067ff4be4c05bb26050fc6e23b606a6e6d6924b48489b
+extracted_at_note: verbatim excerpt fetched at the pinned upstream ref

@@ -1,0 +1,15 @@
+{
+  "agent": "codex",
+  "command": [
+    "codex",
+    "exec",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\086-runtime-scale-expansion.implement.codex.md)"
+  ],
+  "created_at": "2026-10-05T18:35:23+00:00",
+  "id": "086-runtime-scale-expansion",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\086-runtime-scale-expansion.implement.codex.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\086-runtime-scale-expansion.md",
+  "spec_sha256": "3447df4247b8db2d380ea83dca96d67a6c9a8cf6d9a1735159bedf918545d3d9",
+  "status": "planned",
+  "title": "Runtime scale expansion \u2014 measured envelope, full metric set, snapshot scale"
+}

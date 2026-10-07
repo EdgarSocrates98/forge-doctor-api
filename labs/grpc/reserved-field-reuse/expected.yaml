@@ -1,0 +1,5 @@
+# §98 grpc domain: field number 2 collides with `reserved 2`.
+run: [grpc]
+expected_findings:
+  - GRPC004
+forbidden_findings: []

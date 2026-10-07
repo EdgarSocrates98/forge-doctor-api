@@ -1,0 +1,9 @@
+prompt_*.md
+__pycache__/
+*.egg-info/
+dist/
+.venv/
+.pytest_cache/
+.pytest-tmp/
+.mypy_cache/
+.ruff_cache/

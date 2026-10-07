@@ -1,0 +1,16 @@
+openapi: "3.0.3"
+info: {title: Spring Users API, version: "1.0", x-owner: users-team}
+paths:
+  /users/{id}:
+    get:
+      operationId: getUser
+      summary: fetch a user
+      tags: [users]
+      security: [{apiKey: []}]
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string}}
+      responses:
+        '200': {description: ok}
+components:
+  securitySchemes:
+    apiKey: {type: apiKey, in: header, name: X-Key}

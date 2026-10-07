@@ -1,0 +1,5 @@
+# §98 openapi domain: unresolved local $ref -> OAS002 (HIGH).
+run: [openapi]
+expected_findings:
+  - OAS002
+forbidden_findings: []

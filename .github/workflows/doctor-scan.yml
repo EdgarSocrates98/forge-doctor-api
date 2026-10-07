@@ -1,0 +1,66 @@
+# §177-§178 CI gate: forge-doctor-api scan with configurable fail-on.
+name: forge-doctor-api scan
+
+on:
+  workflow_dispatch:
+    inputs:
+      fail-on:
+        description: "Gate categories (comma-separated): breaking,security,policy"
+        required: false
+        default: "breaking"
+      baseline:
+        description: "Baseline contract file or directory"
+        required: false
+        default: ""
+      policy:
+        description: "Extra policy file or directory"
+        required: false
+        default: ""
+      format:
+        description: "Output format: console|json|jsonl|sarif|agent"
+        required: false
+        default: "console"
+      target:
+        description: "Project directory to scan"
+        required: false
+        default: "."
+  pull_request:
+    paths:
+      - "**/*.yaml"
+      - "**/*.yml"
+      - "**/*.json"
+      - "**/*.proto"
+      - "**/*.graphql"
+      - "**/*.py"
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install forge-doctor-api
+        run: pip install .
+      - name: Scan
+        # On pull_request there is no baseline contract — the breaking
+        # gate cannot evaluate (fail-on=breaking without --baseline is a
+        # config error by design), so PRs prove "scan completes without
+        # crashing on this repo". `workflow_dispatch` callers may still
+        # pass fail-on + baseline explicitly.
+        env:
+          FAIL_ON: ${{ github.event.inputs.fail-on || '' }}
+          BASELINE: ${{ github.event.inputs.baseline || '' }}
+          POLICY: ${{ github.event.inputs.policy || '' }}
+          FORMAT: ${{ github.event.inputs.format || 'console' }}
+          TARGET: ${{ github.event.inputs.target || '.' }}
+        run: |
+          args=(scan "$TARGET" --format "$FORMAT")
+          [ -n "$FAIL_ON" ] && args+=(--fail-on "$FAIL_ON")
+          [ -n "$BASELINE" ] && args+=(--baseline "$BASELINE")
+          [ -n "$POLICY" ] && args+=(--policy "$POLICY")
+          forge-doctor-api "${args[@]}"

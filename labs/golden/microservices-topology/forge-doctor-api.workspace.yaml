@@ -1,0 +1,6 @@
+name: payments-platform
+members:
+  - {name: payments-api, path: payments-api, role: service}
+  - {name: payments-sdk, path: payments-sdk, role: client, provides: [payments-sdk]}
+  - {name: checkout, path: checkout, role: client}
+  - {name: edge, path: edge, role: gateway}

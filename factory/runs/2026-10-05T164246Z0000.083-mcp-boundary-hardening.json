@@ -1,0 +1,15 @@
+{
+  "agent": "claude",
+  "command": [
+    "claude",
+    "-p",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\083-mcp-boundary-hardening.implement.claude.md)"
+  ],
+  "created_at": "2026-10-05T16:42:46+00:00",
+  "id": "083-mcp-boundary-hardening",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\083-mcp-boundary-hardening.implement.claude.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\083-mcp-boundary-hardening.md",
+  "spec_sha256": "da856b7aa221951594fc680488a1aad3da7f7042aa39c589f7f63df62a2a705b",
+  "status": "planned",
+  "title": "MCP boundary hardening \u2014 error matrix, inventory freeze, bounded payloads, wheel smoke"
+}

@@ -1,0 +1,15 @@
+{
+  "agent": "claude",
+  "command": [
+    "claude",
+    "-p",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\042-runtime-aggregation.implement.claude.md)"
+  ],
+  "created_at": "2026-10-04T04:59:57+00:00",
+  "id": "042-runtime-aggregation",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\042-runtime-aggregation.implement.claude.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\042-runtime-aggregation.md",
+  "spec_sha256": "0520c35485765597d81649505eadeb859bf8f3e7e7e0ec4f1a041e1fe21e2278",
+  "status": "planned",
+  "title": "Runtime online aggregation \u2014 incremental stats without dataset retention"
+}

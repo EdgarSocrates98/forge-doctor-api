@@ -1,0 +1,21 @@
+{
+  "contract_version": "forge-contracts/1",
+  "tool": {"name": "forge-doctor-api", "version": "0.1.0"},
+  "domains": ["oas", "openapi"],
+  "entity_count": 1,
+  "finding_count": 1,
+  "unknown_count": 1,
+  "risks": [],
+  "capabilities": [
+    {
+      "contract_version": "forge-contracts/1",
+      "id": "openapi-contract",
+      "domain": "api",
+      "status": "supported",
+      "confidence": "high",
+      "evidence_refs": ["api.yaml:L1"]
+    }
+  ],
+  "evidence_refs": ["api.yaml:L42"],
+  "x-forge-api": {"analysis_rev": "rev-deadbeef"}
+}

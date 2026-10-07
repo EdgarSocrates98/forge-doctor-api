@@ -1,0 +1,16 @@
+{
+  "agent": "claude",
+  "command": [
+    "claude",
+    "-p",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\001-core-models.implement.claude.md)"
+  ],
+  "created_at": "2026-10-03T02:27:39+00:00",
+  "id": "001-core-models",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\001-core-models.implement.claude.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\001-core-models.md",
+  "spec_sha256": "058e32d8f80cfd5720f46a2e8f8c3e52cae980e3533d4c0d5271e2b6ebc01288",
+  "status": "dispatched",
+  "title": "Repository skeleton and core universal models",
+  "updated_at": "2026-10-03T02:38:09+00:00"
+}

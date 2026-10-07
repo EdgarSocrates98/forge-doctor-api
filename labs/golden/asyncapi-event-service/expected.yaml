@@ -1,0 +1,4 @@
+# §99 golden: AsyncAPI event service — declared channels only.
+run: [asyncapi]
+expected_findings: []
+forbidden_findings: []

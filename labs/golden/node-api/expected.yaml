@@ -1,0 +1,9 @@
+# §99 golden: Node/express service — contract + spec-052 Express
+# adapter: implementation-side route entities are real evidence.
+run: [openapi]
+expected_entities:
+  - getItem
+  - endpoint:GET /items/{id}
+expected_findings: []
+forbidden_findings:
+  - OAS*

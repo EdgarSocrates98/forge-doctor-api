@@ -1,0 +1,91 @@
+{
+  "contract_version": "forge-contracts/1",
+  "tool": {"name": "forge-doctor-api", "version": "0.1.0"},
+  "project": {"name": "petstore", "root": "labs/realworld/petstore-lite"},
+  "summary": {
+    "findings": 1,
+    "entities": 1,
+    "relationships": 1,
+    "capabilities": 1,
+    "unknowns": 1,
+    "verdict": "pass-with-findings"
+  },
+  "findings": [
+    {
+      "contract_version": "forge-contracts/1",
+      "check_id": "OAS009",
+      "title": "Operation missing description",
+      "severity": "warning",
+      "category": "oas",
+      "message": "GET /pets lacks a description",
+      "fingerprint": "fp-9f8e7d6c",
+      "file": "api.yaml",
+      "line": 42,
+      "column": 5,
+      "recommendation": "Add a description to the operation.",
+      "confidence": "medium",
+      "evidence": "api.yaml:L42",
+      "evidence_kind": "static",
+      "source": "forge-doctor-api",
+      "fixable": true,
+      "tags": ["docs"],
+      "x-forge-api": {"entity_ids": ["operation:openapi:get /pets"]}
+    }
+  ],
+  "entities": [
+    {
+      "contract_version": "forge-contracts/1",
+      "id": "operation:openapi:get /pets",
+      "kind": "operation",
+      "domain": "openapi",
+      "identifier": "get /pets",
+      "name": "listPets",
+      "file": "api.yaml",
+      "line": 42,
+      "attrs": {"method": "get"}
+    }
+  ],
+  "relationships": [
+    {
+      "contract_version": "forge-contracts/1",
+      "src": "service:runtime:orders",
+      "dst": "operation:openapi:get /orders",
+      "kind": "exposes",
+      "evidence_kind": "static",
+      "attrs": {"confidence": "high"}
+    }
+  ],
+  "capabilities": [
+    {
+      "contract_version": "forge-contracts/1",
+      "id": "openapi-contract",
+      "domain": "api",
+      "status": "supported",
+      "confidence": "high",
+      "evidence_refs": ["api.yaml:L1"]
+    }
+  ],
+  "plans": [
+    {
+      "contract_version": "forge-contracts/1",
+      "id": "fix-oas009-pets",
+      "check_id": "OAS009",
+      "problem": "GET /pets lacks a description",
+      "targets": ["api.yaml"],
+      "actions": ["add description to get /pets"],
+      "risks": ["none"],
+      "requires_approval": false
+    }
+  ],
+  "unknowns": [
+    {
+      "contract_version": "forge-contracts/1",
+      "subject": "client:python:orders",
+      "kind": "evidence",
+      "reason": "client calls resolved but response models unread",
+      "source": "forge-doctor-api",
+      "detail": "dynamic base_url unresolvable statically"
+    }
+  ],
+  "x-forge-api": {"analysis_rev": "rev-deadbeef", "schema_version": "1.0"}
+}

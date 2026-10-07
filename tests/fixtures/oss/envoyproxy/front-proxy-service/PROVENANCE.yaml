@@ -1,0 +1,6 @@
+source_repo: https://github.com/envoyproxy/examples
+upstream_path: front-proxy/service-envoy.yaml
+upstream_ref: 0148dd34a3de4b4ece9a5d46186fefe770d9b956
+license: Apache-2.0
+sha256: 91bc3d1f4a2aade3de8a801c6447a7038cc732aeba1a867a6c02a3ac0d4b77a6
+extracted_at_note: verbatim excerpt fetched at the pinned upstream ref

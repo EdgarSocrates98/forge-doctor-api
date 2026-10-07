@@ -1,0 +1,12 @@
+{
+  "contract_version": "forge-contracts/1",
+  "id": "operation:openapi:get /pets",
+  "kind": "operation",
+  "domain": "openapi",
+  "identifier": "get /pets",
+  "name": "listPets",
+  "file": "api.yaml",
+  "line": 42,
+  "attrs": {"method": "get"},
+  "x-forge-api": {"operation_id": "listPets"}
+}
