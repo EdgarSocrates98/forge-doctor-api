@@ -24,6 +24,7 @@ import os
 import platform
 import sys
 import tempfile
+import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -64,6 +65,7 @@ E_DRIFT = "FORGE-INSTALL-DRIFT-UNREPAIRABLE"
 E_UNSUPPORTED = "FORGE-INSTALL-UNSUPPORTED"
 E_SPAWN = "FORGE-INSTALL-SPAWN-DISABLED"
 E_VERIFY = "FORGE-INSTALL-VERIFY-FAILED"
+E_WRITE = "FORGE-INSTALL-WRITE-FAILED"
 
 
 class InstallError(Exception):
@@ -301,21 +303,82 @@ class LockError(InstallError):
     pass
 
 
+def _pid_alive(pid: int) -> bool | None:
+    """Best-effort liveness; ``None`` = cannot determine (do not steal)."""
+    if pid <= 0:
+        return False
+    if os.name == "nt":
+        try:
+            import ctypes  # noqa: PLC0415
+
+            h = ctypes.windll.kernel32.OpenProcess(0x1000, False, pid)
+            if h:
+                ctypes.windll.kernel32.CloseHandle(h)
+                return True
+            return False
+        except Exception:
+            return None
+    try:
+        os.kill(pid, 0)
+        return True
+    except ProcessLookupError:
+        return False
+    except (PermissionError, OSError):
+        return None
+
+
 class _Lock:
-    def __init__(self, lock: Path) -> None:
+    """O_EXCL lockfile carrying ``{pid, created_at}``. Stale locks — dead
+    holder or older than ``stale_after_s`` — are reclaimed once so an
+    interrupted install never bricks the target."""
+
+    def __init__(self, lock: Path, stale_after_s: float = 900.0) -> None:
         self._lock = lock
+        self._stale = stale_after_s
         self.held = False
+        self.recovered = False
 
     def __enter__(self) -> _Lock:
         try:
-            fd = os.open(str(self._lock), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-            os.write(fd, str(os.getpid()).encode())
-            os.close(fd)
-            self.held = True
+            self._create()
             return self
         except FileExistsError:
-            holder = _load_json(self._lock) or self._lock.read_text(errors="replace")
-            raise LockError(E_LOCKED, f"install lock held at {self._lock} ({holder})") from None
+            holder = _load_json(self._lock) or {"pid": None}
+            stale = self._is_stale(holder)
+            if not stale:
+                raise LockError(E_LOCKED, f"install lock held at {self._lock} ({holder})") from None
+            try:
+                self._lock.unlink()
+            except OSError as exc:
+                raise LockError(
+                    E_LOCKED, f"install lock at {self._lock} could not be reclaimed"
+                ) from exc
+            self.recovered = True
+            self._create()
+            return self
+
+    def _create(self) -> None:
+        fd = os.open(str(self._lock), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        os.write(
+            fd,
+            _json_bytes({"pid": os.getpid(), "created_at": _utc_now()}),
+        )
+        os.close(fd)
+        self.held = True
+
+    def _is_stale(self, holder: dict[str, Any]) -> bool:
+        pid = holder.get("pid")
+        if isinstance(pid, int) and pid != os.getpid():
+            alive = _pid_alive(pid)
+            if alive is False:
+                return True
+            if alive is True:
+                return False
+        try:
+            age = time.time() - self._lock.stat().st_mtime
+        except OSError:
+            return False
+        return age > self._stale
 
     def __exit__(self, *exc: object) -> None:
         if self.held:
@@ -327,7 +390,7 @@ class _Lock:
 
 def acquire_lock(state_dir: Path, timeout_s: float = 0.0) -> _Lock:
     """O_EXCL lockfile. Non-blocking by default — contention is a refusal,
-    not a hang."""
+    not a hang. Dead/expired locks are reclaimed once."""
     state_dir.mkdir(parents=True, exist_ok=True)
     return _Lock(state_dir / LOCK_NAME)
 
@@ -571,6 +634,26 @@ def _asset_kind(rel: str) -> str:
     return "state"
 
 
+def _rollback_writes(ctx: InstallContext, created: list[Path], backups: dict[Path, Path]) -> None:
+    """§14.3.7 — revert managed writes from a failed apply: restore pre-state
+    backups, remove files created by the operation. User-owned files were
+    never touched (conflicts refuse the plan before this point), so rollback
+    can only undo our own writes."""
+    for target, bak in backups.items():
+        try:
+            _atomic_write(target, bak.read_bytes())
+        except OSError:
+            pass
+    removed: list[str] = []
+    for target in created:
+        try:
+            target.unlink()
+            removed.append(str(target.relative_to(ctx.root)))
+        except (OSError, ValueError):
+            pass
+    _prune_empty_dirs(ctx.root, removed)
+
+
 def apply_install(ctx: InstallContext, *, approved: bool = False) -> dict[str, Any]:
     """The governed write path. Idempotent: unchanged assets are not
     re-touched; pre-existing identical files are adopted, never owned."""
@@ -587,51 +670,84 @@ def apply_install(ctx: InstallContext, *, approved: bool = False) -> dict[str, A
     markers: list[dict[str, Any]] = []
     checks: list[dict[str, Any]] = []
     ledger = ctx.ledger or Ledger.load(ctx.state_dir)
+    # §14.3 journal — every write is either a creation (removable) or an
+    # overwrite with a pre-state snapshot; on failure the managed half is
+    # reverted before the error propagates.
+    created: list[Path] = []
+    backups: dict[Path, Path] = {}
 
-    assets = ctx.spec.render_assets(ctx) if ctx.spec.render_assets else {}
-    kinds = set(profile_asset_kinds(ctx.profile))
-    ctx_bytes = {"skill": 0, "agent": 0, "managed": 0}
-    for rel in sorted(assets):
-        kind = _asset_kind(rel)
-        if kind not in kinds:
-            continue
-        data = assets[rel]
-        if kind in ("skill", "agent"):
-            ctx_bytes[kind] += len(data)
-        ctx_bytes["managed"] += len(data)
-        target = ctx.root / rel
-        existing_entry = ledger.get(rel)
-        if target.exists():
-            cur = target.read_bytes()
-            if cur == data:
-                action = "unchanged" if existing_entry else "adopted"
-                files.append(ledger.record(rel, data, kind, action, managed=bool(existing_entry)))
+    def _snapshot(target: Path, rel: str) -> None:
+        bak = ctx.state_dir / "backups" / rel
+        bak.parent.mkdir(parents=True, exist_ok=True)
+        _atomic_write(bak, target.read_bytes())
+        backups[target] = bak
+
+    try:
+        assets = ctx.spec.render_assets(ctx) if ctx.spec.render_assets else {}
+        kinds = set(profile_asset_kinds(ctx.profile))
+        ctx_bytes = {"skill": 0, "agent": 0, "managed": 0}
+        for rel in sorted(assets):
+            kind = _asset_kind(rel)
+            if kind not in kinds:
                 continue
-            if existing_entry is None:
-                # Pre-existing foreign file — never overwrite silently.
-                files.append(
-                    {
-                        "path": rel,
-                        "sha256": _sha(cur),
-                        "kind": kind,
-                        "action": "unchanged",
-                        "note": "user-owned, not managed — skipped",
-                    }
+            data = assets[rel]
+            if kind in ("skill", "agent"):
+                ctx_bytes[kind] += len(data)
+            ctx_bytes["managed"] += len(data)
+            target = ctx.root / rel
+            existing_entry = ledger.get(rel)
+            if target.exists():
+                cur = target.read_bytes()
+                if cur == data:
+                    action = "unchanged" if existing_entry else "adopted"
+                    files.append(
+                        ledger.record(rel, data, kind, action, managed=bool(existing_entry))
+                    )
+                    continue
+                if existing_entry is None:
+                    # Pre-existing foreign file — never overwrite silently.
+                    files.append(
+                        {
+                            "path": rel,
+                            "sha256": _sha(cur),
+                            "kind": kind,
+                            "action": "unchanged",
+                            "note": "user-owned, not managed — skipped",
+                        }
+                    )
+                    continue
+                _snapshot(target, rel)
+            else:
+                created.append(target)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            _atomic_write(target, data)
+            files.append(ledger.record(rel, data, kind, "updated" if existing_entry else "created"))
+
+        # Marker blocks in AGENTS.md / CLAUDE.md — delimited, user content kept.
+        if "marker" in kinds and ctx.spec.marker_body:
+            for m in ctx.spec.marker_files:
+                target = ctx.root / m
+                if not target.exists() and m != "AGENTS.md":
+                    continue  # never create CLAUDE.md unprompted; AGENTS.md is the generic contract
+                original = target.read_text(encoding="utf-8") if target.exists() else ""
+                updated = apply_marker_block(original, ctx.spec.tag, ctx.spec.marker_body)
+                if updated == original:
+                    markers.append(
+                        {
+                            "file": m,
+                            "marker": ctx.spec.tag,
+                            "sha256": marker_sha(ctx.spec.tag, ctx.spec.marker_body),
+                        }
+                    )
+                    continue
+                if target.exists():
+                    _snapshot(target, m)
+                else:
+                    created.append(target)
+                _atomic_write(target, updated.encode("utf-8"))
+                ledger.record(
+                    m, updated.encode(), "marker", "updated" if ledger.get(m) else "created"
                 )
-                continue
-        target.parent.mkdir(parents=True, exist_ok=True)
-        _atomic_write(target, data)
-        files.append(ledger.record(rel, data, kind, "updated" if existing_entry else "created"))
-
-    # Marker blocks in AGENTS.md / CLAUDE.md — delimited, user content kept.
-    if "marker" in kinds and ctx.spec.marker_body:
-        for m in ctx.spec.marker_files:
-            target = ctx.root / m
-            if not target.exists() and m != "AGENTS.md":
-                continue  # never create CLAUDE.md unprompted; AGENTS.md is the generic contract
-            original = target.read_text(encoding="utf-8") if target.exists() else ""
-            updated = apply_marker_block(original, ctx.spec.tag, ctx.spec.marker_body)
-            if updated == original:
                 markers.append(
                     {
                         "file": m,
@@ -639,62 +755,62 @@ def apply_install(ctx: InstallContext, *, approved: bool = False) -> dict[str, A
                         "sha256": marker_sha(ctx.spec.tag, ctx.spec.marker_body),
                     }
                 )
-                continue
-            _atomic_write(target, updated.encode("utf-8"))
-            ledger.record(m, updated.encode(), "marker", "updated" if ledger.get(m) else "created")
-            markers.append(
-                {
-                    "file": m,
-                    "marker": ctx.spec.tag,
-                    "sha256": marker_sha(ctx.spec.tag, ctx.spec.marker_body),
-                }
-            )
 
-    # .mcp.json managed key — only when the forge has an MCP server.
-    mcp_entries: list[dict[str, Any]] = []
-    if ctx.spec.mcp_server_name and "mcp" in kinds:
-        mcp_file = ctx.root / ".mcp.json"
-        entry = {"command": ctx.spec.mcp_command[0], "args": list(ctx.spec.mcp_command[1:])}
-        if mcp_file.exists():
-            cur = _load_json(mcp_file, None)
-            if cur is None:
-                checks.append(
-                    {
-                        "id": "mcp-json",
-                        "status": "FAIL",
-                        "detail": ".mcp.json exists but is not JSON",
-                    }
-                )
-            else:
-                new = mcp_set(cur, ctx.spec.mcp_server_name, entry, ctx.spec.tag)
-                if _json_bytes(new) != mcp_file.read_bytes():
-                    _atomic_write(mcp_file, _json_bytes(new))
-                    ledger.record(
-                        ".mcp.json",
-                        _json_bytes(new),
-                        "mcp",
-                        "updated" if ledger.get(".mcp.json") else "created",
+        # .mcp.json managed key — only when the forge has an MCP server.
+        mcp_entries: list[dict[str, Any]] = []
+        if ctx.spec.mcp_server_name and "mcp" in kinds:
+            mcp_file = ctx.root / ".mcp.json"
+            entry = {"command": ctx.spec.mcp_command[0], "args": list(ctx.spec.mcp_command[1:])}
+            if mcp_file.exists():
+                cur = _load_json(mcp_file, None)
+                if cur is None:
+                    checks.append(
+                        {
+                            "id": "mcp-json",
+                            "status": "FAIL",
+                            "detail": ".mcp.json exists but is not JSON",
+                        }
                     )
+                else:
+                    new = mcp_set(cur, ctx.spec.mcp_server_name, entry, ctx.spec.tag)
+                    if _json_bytes(new) != mcp_file.read_bytes():
+                        _snapshot(mcp_file, ".mcp.json")
+                        _atomic_write(mcp_file, _json_bytes(new))
+                        ledger.record(
+                            ".mcp.json",
+                            _json_bytes(new),
+                            "mcp",
+                            "updated" if ledger.get(".mcp.json") else "created",
+                        )
+                    mcp_entries.append(
+                        {
+                            "server": ctx.spec.mcp_server_name,
+                            "file": ".mcp.json",
+                            "key": f"managed:{ctx.spec.tag}",
+                            "action": "set",
+                        }
+                    )
+            else:
+                new = mcp_set(None, ctx.spec.mcp_server_name, entry, ctx.spec.tag)
+                created.append(mcp_file)
+                _atomic_write(mcp_file, _json_bytes(new))
+                ledger.record(".mcp.json", _json_bytes(new), "mcp", "created")
                 mcp_entries.append(
                     {
                         "server": ctx.spec.mcp_server_name,
                         "file": ".mcp.json",
                         "key": f"managed:{ctx.spec.tag}",
-                        "action": "set",
+                        "action": "created",
                     }
                 )
-        else:
-            new = mcp_set(None, ctx.spec.mcp_server_name, entry, ctx.spec.tag)
-            _atomic_write(mcp_file, _json_bytes(new))
-            ledger.record(".mcp.json", _json_bytes(new), "mcp", "created")
-            mcp_entries.append(
-                {
-                    "server": ctx.spec.mcp_server_name,
-                    "file": ".mcp.json",
-                    "key": f"managed:{ctx.spec.tag}",
-                    "action": "created",
-                }
-            )
+    except InstallError:
+        _rollback_writes(ctx, created, backups)
+        raise
+    except Exception as exc:
+        _rollback_writes(ctx, created, backups)
+        raise InstallError(
+            E_WRITE, f"install failed at write stage; managed writes reverted: {exc}"
+        ) from exc
 
     ledger.save()
     written = sum(1 for f in files if f.get("action") in ("created", "updated"))
@@ -904,6 +1020,10 @@ def repair(ctx: InstallContext) -> dict[str, Any]:
         if target.exists() and target.read_bytes() == data:
             kept.append(rel)
             continue
+        if target.exists():
+            bak = ctx.state_dir / "backups" / rel
+            bak.parent.mkdir(parents=True, exist_ok=True)
+            _atomic_write(bak, target.read_bytes())
         target.parent.mkdir(parents=True, exist_ok=True)
         _atomic_write(target, data)
         ledger.record(
