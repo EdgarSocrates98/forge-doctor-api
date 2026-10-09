@@ -8,7 +8,7 @@ A instalação registra uma entrada gerenciada em `.mcp.json` (chave
 Verificar de verdade (handshake real + tools/list + invocação segura):
 
 ```bash
-forge-doctor-api doctor
+python scripts/forge_install.py mcp-verify
 ```
 
 O doctor executa `initialize` → `tools/list` → `tools/call` de leitura

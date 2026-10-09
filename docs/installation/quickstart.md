@@ -22,8 +22,8 @@ forge-doctor-api já estão instaladas.
 ## Verificar
 
 ```bash
-forge-doctor-api status
-forge-doctor-api doctor
+python scripts/forge_install.py status
+python scripts/forge_install.py doctor
 ```
 
 Problemas? → [troubleshooting.md](troubleshooting.md)
