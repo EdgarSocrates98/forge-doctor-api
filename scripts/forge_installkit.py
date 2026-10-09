@@ -246,18 +246,43 @@ class Ledger:
         return sorted(p for p, e in self.doc["entries"].items()
                       if e.get("managed"))
 
-    def drift(self, root: Path) -> list[dict[str, str]]:
-        """Compare recorded sha256 to current bytes — per-file verdict."""
+    def drift(self, root: Path,
+              spec: "ForgeSpec | None" = None) -> list[dict[str, str]]:
+        """Per-file verdict. When ``spec`` is given the check is kind-aware:
+        ``marker`` entries pass when their managed *block* is intact (user
+        text outside the markers is never drift); ``mcp`` entries pass when
+        the managed ``mcpServers`` key holds canonical command/args (other
+        keys are user content); every other entry is compared by sha256."""
         out = []
         for rel, e in sorted(self.doc["entries"].items()):
             p = root / rel
             if not p.exists():
                 out.append({"path": rel, "status": "missing"})
-            elif _sha_file(p) != e["sha256"]:
-                out.append({"path": rel, "status": "modified"})
-            else:
+                continue
+            if spec is not None and _entry_intact(spec, e, rel, p):
                 out.append({"path": rel, "status": "ok"})
+            else:
+                out.append({"path": rel, "status": "modified"})
         return out
+
+
+def _entry_intact(spec: "ForgeSpec", entry: dict[str, Any], rel: str,
+                  path: Path) -> bool:
+    """Kind-aware health check for one ledger entry. Marker entries verify
+    the managed block only; ``.mcp.json`` verifies the managed server key;
+    everything else compares whole-file sha256."""
+    kind = entry.get("kind")
+    if kind == "marker" and rel in spec.marker_files and spec.marker_body:
+        txt = path.read_text(encoding="utf-8")
+        return apply_marker_block(txt, spec.tag, spec.marker_body) == txt
+    if kind == "mcp" and spec.mcp_server_name:
+        cur = _load_json(path, None)
+        if not isinstance(cur, dict):
+            return False
+        want = {"command": spec.mcp_command[0],
+                "args": list(spec.mcp_command[1:])}
+        return bool(mcp_set(cur, spec.mcp_server_name, want, spec.tag) == cur)
+    return _sha_file(path) == entry["sha256"]
 
 
 # --------------------------------------------------------------------------
@@ -350,7 +375,7 @@ def mcp_set(doc: dict[str, Any] | None, key: str, value: dict[str, Any],
     servers[key] = value
     doc["mcpServers"] = servers
     managed = dict(doc.get("_forge_managed") or {})
-    managed[tag] = sorted(managed.get(tag, []) + [f"mcpServers.{key}"])
+    managed[tag] = sorted(set(managed.get(tag, [])) | {f"mcpServers.{key}"})
     doc["_forge_managed"] = managed
     return doc
 
@@ -655,7 +680,7 @@ def _write_receipt(state_dir: Path, receipt: dict[str, Any]) -> Path:
 
 def status(ctx: InstallContext) -> dict[str, Any]:
     ledger = Ledger.load(ctx.state_dir)
-    drift = ledger.drift(ctx.root)
+    drift = ledger.drift(ctx.root, ctx.spec)
     ok = sum(1 for d in drift if d["status"] == "ok")
     bad = [d for d in drift if d["status"] != "ok"]
     receipts = sorted((ctx.state_dir / RECEIPTS_DIR).glob("*.json")) \
@@ -682,7 +707,7 @@ def doctor(ctx: InstallContext) -> dict[str, Any]:
     checks.append({"id": "ledger", "status": "PASS" if installed else "UNVERIFIED",
                    "detail": f"{len(installed)} managed entries",
                    "repairable": False})
-    for d in ledger.drift(ctx.root):
+    for d in ledger.drift(ctx.root, ctx.spec):
         if d["status"] != "ok":
             checks.append({"id": f"drift:{d['path']}", "status": "FAIL",
                            "detail": d["status"], "repairable": True})
@@ -709,40 +734,69 @@ def doctor(ctx: InstallContext) -> dict[str, Any]:
                 c.get("repairable") for c in checks) else None}
 
 
+def _repair_content(ctx: InstallContext, rel: str, entry: dict[str, Any],
+                    assets: dict[str, bytes], target: Path) -> bytes | None:
+    """Canonical bytes for a drifted *managed* entry, or ``None`` when the
+    entry cannot be re-asserted. Marker entries re-heal the managed block
+    inside the user's file (content outside the markers survives);
+    ``.mcp.json`` re-sets the managed server key preserving sibling keys;
+    whole-file managed assets re-assert the rendered bytes."""
+    kind = entry.get("kind")
+    if kind == "marker" and rel in ctx.spec.marker_files:
+        original = (target.read_text(encoding="utf-8")
+                    if target.exists() else "")
+        return apply_marker_block(
+            original, ctx.spec.tag, ctx.spec.marker_body).encode("utf-8")
+    if kind == "mcp" and ctx.spec.mcp_server_name:
+        cur = _load_json(target, {})
+        if not isinstance(cur, dict):
+            cur = {}
+        want = {"command": ctx.spec.mcp_command[0],
+                "args": list(ctx.spec.mcp_command[1:])}
+        new = mcp_set(cur, ctx.spec.mcp_server_name, want, ctx.spec.tag)
+        return _json_bytes(new)
+    return assets.get(rel)
+
+
 def repair(ctx: InstallContext) -> dict[str, Any]:
-    """Re-assert drifted *managed* bytes. Foreign/modified-by-user content
-    whose entry is absent is never touched."""
+    """Re-assert drifted *managed* content: missing entries are restored,
+    damaged managed regions (marker block, mcp key) are healed inside the
+    user's file, drifted managed assets are re-asserted. Entries with no
+    canonical source land in ``skipped`` as unrepairable; foreign content is
+    never touched."""
     ledger = Ledger.load(ctx.state_dir)
-    drift = [d for d in ledger.drift(ctx.root) if d["status"] != "ok"]
-    fixed, skipped = [], []
+    drift = [d for d in ledger.drift(ctx.root, ctx.spec) if d["status"] != "ok"]
+    fixed, kept, skipped = [], [], []
     assets = (ctx.spec.render_assets(ctx) if ctx.spec.render_assets else {})
     for d in drift:
         rel = d["path"]
         entry = ledger.get(rel)
         target = ctx.root / rel
-        if d["status"] == "missing" and entry and rel in assets:
-            target.parent.mkdir(parents=True, exist_ok=True)
-            _atomic_write(target, assets[rel])
-            ledger.record(rel, assets[rel], entry["kind"], "restored")
-            fixed.append(rel)
-        elif d["status"] == "modified" and entry and entry.get("managed"):
-            # Drifted managed file: re-assert canonical bytes.
-            if rel in assets:
-                _atomic_write(target, assets[rel])
-                ledger.record(rel, assets[rel], entry["kind"], "restored")
-                fixed.append(rel)
-            else:
-                skipped.append(rel)
-        else:
+        if entry is None:
             skipped.append(rel)
+            continue
+        data = _repair_content(ctx, rel, entry, assets, target)
+        if data is None:
+            skipped.append(rel)
+            continue
+        if target.exists() and target.read_bytes() == data:
+            kept.append(rel)
+            continue
+        target.parent.mkdir(parents=True, exist_ok=True)
+        _atomic_write(target, data)
+        ledger.record(rel, data, entry["kind"],
+                      "restored" if d["status"] == "missing" else "rehealed")
+        fixed.append(rel)
     ledger.save()
     return {"schema": SCHEMA_RECEIPT, "forge_id": ctx.spec.forge_id,
             "operation": "repair", "scope": ctx.scope,
             "target_root": str(ctx.root),
-            "repaired": fixed, "skipped": skipped,
+            "repaired": fixed, "kept": kept, "skipped": skipped,
             "managed_files": [], "checks": [
-                {"id": "repair", "status": "PASS" if not skipped else "FAIL",
-                 "detail": f"{len(fixed)} restored, {len(skipped)} skipped"}],
+                {"id": "repair",
+                 "status": "PASS" if not skipped else "FAIL",
+                 "detail": (f"{len(fixed)} restored, {len(kept)} kept, "
+                            f"{len(skipped)} skipped")}],
             "verification": {"status": "PASS" if not skipped else "FAIL"},
             "status": "completed", "created_at": _utc_now()}
 
@@ -792,6 +846,14 @@ def uninstall(ctx: InstallContext, *, purge_state: bool = False) -> dict[str, An
     if purge_state and ctx.state_dir.exists():
         import shutil
         shutil.rmtree(ctx.state_dir, ignore_errors=True)
+        # prune now-empty forge state ancestors (e.g. .forge-doctor-data/)
+        parent = ctx.state_dir.parent
+        while parent != ctx.root and ctx.root in parent.parents:
+            try:
+                parent.rmdir()
+            except OSError:
+                break
+            parent = parent.parent
     else:
         ledger.save()
     receipt = {"schema": SCHEMA_RECEIPT, "forge_id": ctx.spec.forge_id,

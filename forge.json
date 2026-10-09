@@ -11,5 +11,9 @@
   "mcp_command": [
     "forge-doctor-api",
     "mcp"
+  ],
+  "install_command": [
+    "{python}",
+    "{checkout}/scripts/forge_install.py"
   ]
 }

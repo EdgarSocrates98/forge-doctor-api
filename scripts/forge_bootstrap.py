@@ -326,6 +326,11 @@ def register(cfg: dict, install_root: Path, venv: Path, version: str,
     if mcp_name:
         doc["mcp"] = {"server_name": mcp_name, "command": mcp_cmd,
                       "verified": False}
+    if cfg.get("install_command"):
+        # Alternate install entrypoint (argv template; {python}/{checkout}
+        # resolved by the delegator) for forges whose package boundary
+        # forbids an in-package install engine.
+        doc["install_command"] = list(cfg["install_command"])
     path = forge_home() / INSTALLATIONS / f"{cfg['forge_id']}.json"
     _atomic_write(path, (json.dumps(doc, indent=2, sort_keys=True) + "\n").encode())
     _log(f"registered {path}")
