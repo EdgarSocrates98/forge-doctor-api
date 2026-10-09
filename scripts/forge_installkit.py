@@ -44,7 +44,7 @@ PROFILES = ("minimal", "recommended", "full")
 HOSTS = ("claude", "devin", "codex", "copilot")
 CHECK_STATUSES = ("PASS", "FAIL", "BLOCKED", "UNVERIFIED", "NOT_APPLICABLE")
 
-FORGE_HOME = ".forge"            # under $HOME — the forge-neutral registry
+FORGE_HOME = ".forge"  # under $HOME — the forge-neutral registry
 INSTALLATIONS_DIR = "installations"
 LEDGER_NAME = "install-ledger.json"
 RECEIPTS_DIR = "receipts"
@@ -81,7 +81,8 @@ class InstallError(Exception):
             "status": "failed",
             "verification": {"status": "FAIL"},
             "error": {"kind": self.kind, "detail": self.detail},
-            "checks": [], "managed_files": [],
+            "checks": [],
+            "managed_files": [],
         }
 
 
@@ -160,27 +161,28 @@ def _shim_dir() -> Path:
 # Spec — what a Forge declares about itself
 # --------------------------------------------------------------------------
 
+
 @dataclass(frozen=True)
 class ForgeSpec:
     """What the engine needs to know about a Forge. Everything host- or
     domain-specific enters through ``render_assets``/hooks — the engine is
     generic."""
 
-    forge_id: str                 # e.g. "spark-forge-aws" (repo name)
-    package: str                  # import name
-    distribution: str             # pip dist name
-    cli_name: str                 # console script
-    python_spec: str              # e.g. ">=3.10" or ">=3.12,<3.13"
-    state_dir: str                # project state dir, e.g. ".sparkforge-aws"
-    mcp_command: tuple[str, ...] = ()     # e.g. ("sparkforge-aws","mcp","serve")
-    mcp_server_name: str | None = None    # .mcp.json key
+    forge_id: str  # e.g. "spark-forge-aws" (repo name)
+    package: str  # import name
+    distribution: str  # pip dist name
+    cli_name: str  # console script
+    python_spec: str  # e.g. ">=3.10" or ">=3.12,<3.13"
+    state_dir: str  # project state dir, e.g. ".sparkforge-aws"
+    mcp_command: tuple[str, ...] = ()  # e.g. ("sparkforge-aws","mcp","serve")
+    mcp_server_name: str | None = None  # .mcp.json key
     version_cmd: tuple[str, ...] = ("--version",)
     render_assets: Callable[[InstallContext], dict[str, bytes]] | None = None
     marker_files: tuple[str, ...] = ("AGENTS.md", "CLAUDE.md")
-    marker_tag: str | None = None          # defaults to forge_id
+    marker_tag: str | None = None  # defaults to forge_id
     marker_body: str = ""
-    user_state_dir: str | None = None      # e.g. "~/.sparkforge-aws"
-    spawn_ok: bool = True                  # False where subprocess is banned
+    user_state_dir: str | None = None  # e.g. "~/.sparkforge-aws"
+    spawn_ok: bool = True  # False where subprocess is banned
     extra: dict[str, Any] = field(default_factory=dict)
 
     @property
@@ -192,9 +194,9 @@ class ForgeSpec:
 class InstallContext:
     spec: ForgeSpec
     scope: str
-    root: Path          # resolved target root (project/workspace) or $HOME
-    state_dir: Path     # <root>/<spec.state_dir> for project/workspace,
-                        # <state_dir under HOME> for user
+    root: Path  # resolved target root (project/workspace) or $HOME
+    state_dir: Path  # <root>/<spec.state_dir> for project/workspace,
+    # <state_dir under HOME> for user
     profile: str
     hosts: tuple[str, ...]
     dry_run: bool = False
@@ -204,6 +206,7 @@ class InstallContext:
 # --------------------------------------------------------------------------
 # Ledger — sha256-keyed ownership of managed files
 # --------------------------------------------------------------------------
+
 
 class Ledger:
     """Records every managed write under a target root.
@@ -215,7 +218,9 @@ class Ledger:
     def __init__(self, path: Path):
         self.path = path
         self.doc: dict[str, Any] = _load_json(path, None) or {
-            "schema": "forge/InstallLedger/v1", "entries": {}}
+            "schema": "forge/InstallLedger/v1",
+            "entries": {},
+        }
 
     @classmethod
     def load(cls, state_dir: Path) -> Ledger:
@@ -224,13 +229,18 @@ class Ledger:
     def save(self) -> None:
         _atomic_write(self.path, _json_bytes(self.doc))
 
-    def record(self, rel: str, data: bytes, kind: str, action: str,
-               *, managed: bool = True) -> dict[str, Any]:
-        entry = {"sha256": _sha(data), "kind": kind, "action": action,
-                 "managed": managed, "updated_at": _utc_now()}
+    def record(
+        self, rel: str, data: bytes, kind: str, action: str, *, managed: bool = True
+    ) -> dict[str, Any]:
+        entry = {
+            "sha256": _sha(data),
+            "kind": kind,
+            "action": action,
+            "managed": managed,
+            "updated_at": _utc_now(),
+        }
         self.doc["entries"][rel] = entry
-        return {"path": rel, "sha256": entry["sha256"], "kind": kind,
-                "action": action}
+        return {"path": rel, "sha256": entry["sha256"], "kind": kind, "action": action}
 
     def drop(self, rel: str) -> None:
         self.doc["entries"].pop(rel, None)
@@ -243,11 +253,9 @@ class Ledger:
         return dict(self.doc["entries"])
 
     def owned_paths(self) -> list[str]:
-        return sorted(p for p, e in self.doc["entries"].items()
-                      if e.get("managed"))
+        return sorted(p for p, e in self.doc["entries"].items() if e.get("managed"))
 
-    def drift(self, root: Path,
-              spec: "ForgeSpec | None" = None) -> list[dict[str, str]]:
+    def drift(self, root: Path, spec: "ForgeSpec | None" = None) -> list[dict[str, str]]:
         """Per-file verdict. When ``spec`` is given the check is kind-aware:
         ``marker`` entries pass when their managed *block* is intact (user
         text outside the markers is never drift); ``mcp`` entries pass when
@@ -266,8 +274,7 @@ class Ledger:
         return out
 
 
-def _entry_intact(spec: "ForgeSpec", entry: dict[str, Any], rel: str,
-                  path: Path) -> bool:
+def _entry_intact(spec: "ForgeSpec", entry: dict[str, Any], rel: str, path: Path) -> bool:
     """Kind-aware health check for one ledger entry. Marker entries verify
     the managed block only; ``.mcp.json`` verifies the managed server key;
     everything else compares whole-file sha256."""
@@ -279,15 +286,15 @@ def _entry_intact(spec: "ForgeSpec", entry: dict[str, Any], rel: str,
         cur = _load_json(path, None)
         if not isinstance(cur, dict):
             return False
-        want = {"command": spec.mcp_command[0],
-                "args": list(spec.mcp_command[1:])}
+        want = {"command": spec.mcp_command[0], "args": list(spec.mcp_command[1:])}
         return bool(mcp_set(cur, spec.mcp_server_name, want, spec.tag) == cur)
-    return _sha_file(path) == entry["sha256"]
+    return bool(_sha_file(path) == entry["sha256"])
 
 
 # --------------------------------------------------------------------------
 # Locks — refuse concurrent mutation rather than racing
 # --------------------------------------------------------------------------
+
 
 class LockError(InstallError):
     pass
@@ -306,11 +313,8 @@ class _Lock:
             self.held = True
             return self
         except FileExistsError:
-            holder = (_load_json(self._lock)
-                      or self._lock.read_text(errors="replace"))
-            raise LockError(E_LOCKED,
-                            f"install lock held at {self._lock} ({holder})"
-                            ) from None
+            holder = _load_json(self._lock) or self._lock.read_text(errors="replace")
+            raise LockError(E_LOCKED, f"install lock held at {self._lock} ({holder})") from None
 
     def __exit__(self, *exc: object) -> None:
         if self.held:
@@ -331,6 +335,7 @@ def acquire_lock(state_dir: Path, timeout_s: float = 0.0) -> _Lock:
 # Marker blocks — delimited managed regions inside user-owned files
 # --------------------------------------------------------------------------
 
+
 def _markers(tag: str) -> tuple[str, str]:
     return (f"<!-- {tag}:managed:begin -->", f"<!-- {tag}:managed:end -->")
 
@@ -342,7 +347,7 @@ def apply_marker_block(text: str, tag: str, body: str) -> str:
     block = f"{begin}\n{body.rstrip()}\n{end}"
     if begin in text and end in text:
         pre = text[: text.index(begin)]
-        post = text[text.index(end) + len(end):]
+        post = text[text.index(end) + len(end) :]
         return pre + block + post
     sep = "" if text.endswith("\n\n") or not text else "\n\n" if text.endswith("\n") else "\n\n"
     return text + sep + block + "\n" if text else block + "\n"
@@ -352,7 +357,7 @@ def remove_marker_block(text: str, tag: str) -> str:
     begin, end = _markers(tag)
     if begin in text and end in text:
         pre = text[: text.index(begin)]
-        post = text[text.index(end) + len(end):]
+        post = text[text.index(end) + len(end) :]
         return (pre.rstrip("\n") + "\n" + post.lstrip("\n")).strip("\n") + "\n"
     return text
 
@@ -366,8 +371,10 @@ def marker_sha(tag: str, body: str) -> str:
 # .mcp.json — managed key inside a shared config file
 # --------------------------------------------------------------------------
 
-def mcp_set(doc: dict[str, Any] | None, key: str, value: dict[str, Any],
-            tag: str) -> dict[str, Any]:
+
+def mcp_set(
+    doc: dict[str, Any] | None, key: str, value: dict[str, Any], tag: str
+) -> dict[str, Any]:
     """Set ``mcpServers.<key>`` inside a managed sub-block. Other servers and
     top-level keys are preserved byte-for-byte as JSON."""
     doc = dict(doc or {})
@@ -401,6 +408,7 @@ def mcp_unset(doc: dict[str, Any], key: str, tag: str) -> dict[str, Any]:
 # Scope resolution
 # --------------------------------------------------------------------------
 
+
 def _find_vcs_root(start: Path) -> Path | None:
     cur = start.resolve()
     for _ in range(64):
@@ -415,8 +423,12 @@ def _find_vcs_root(start: Path) -> Path | None:
 def _find_workspace_root(start: Path) -> Path | None:
     cur = start.resolve()
     for _ in range(64):
-        for name in ("forge.workspace.yaml", "forge.workspace.json",
-                     ".forge-workspace", "pyproject.toml"):
+        for name in (
+            "forge.workspace.yaml",
+            "forge.workspace.json",
+            ".forge-workspace",
+            "pyproject.toml",
+        ):
             if (cur / name).exists():
                 if name == "pyproject.toml" and not _is_workspace_pyproject(cur):
                     cur = cur.parent
@@ -448,8 +460,7 @@ def _find_state_root(spec: ForgeSpec, cwd: Path) -> Path | None:
         cur = cur.parent
 
 
-def resolve_scope(spec: ForgeSpec, scope: str, cwd: Path,
-                  explicit: Path | None) -> Path:
+def resolve_scope(spec: ForgeSpec, scope: str, cwd: Path, explicit: Path | None) -> Path:
     if scope not in SCOPES:
         raise InstallError(E_SCOPE, f"scope {scope!r} — expected {SCOPES}")
     if scope == "user":
@@ -464,8 +475,7 @@ def resolve_scope(spec: ForgeSpec, scope: str, cwd: Path,
         state_root = _find_state_root(spec, cwd)
         if state_root is not None:
             return state_root
-        raise InstallError(
-            E_NOTREPO, f"{cwd}: no VCS root — pass --root or cd into a repo")
+        raise InstallError(E_NOTREPO, f"{cwd}: no VCS root — pass --root or cd into a repo")
     return root
 
 
@@ -479,6 +489,7 @@ def state_dir_for(spec: ForgeSpec, scope: str, root: Path) -> Path:
 # --------------------------------------------------------------------------
 # The engine
 # --------------------------------------------------------------------------
+
 
 def _host_dirs(host: str, scope: str) -> list[str]:
     """Project/user roots a host reads its assets from."""
@@ -507,7 +518,7 @@ def profile_asset_kinds(profile: str) -> tuple[str, ...]:
 
 def plan(ctx: InstallContext) -> dict[str, Any]:
     """Pure plan — what *would* change. Never writes."""
-    assets = (ctx.spec.render_assets(ctx) if ctx.spec.render_assets else {})
+    assets = ctx.spec.render_assets(ctx) if ctx.spec.render_assets else {}
     kinds = set(profile_asset_kinds(ctx.profile))
     files = []
     for rel in sorted(assets):
@@ -516,19 +527,34 @@ def plan(ctx: InstallContext) -> dict[str, Any]:
             continue
         target = ctx.root / rel
         exists = target.exists()
-        files.append({"path": rel, "kind": kind,
-                      "action": "update" if exists else "create",
-                      "sha256": _sha(assets[rel])})
-    markers = [{"file": m, "marker": ctx.spec.tag}
-               for m in ctx.spec.marker_files
-               if (ctx.root / m).exists() or m == "AGENTS.md"]
+        files.append(
+            {
+                "path": rel,
+                "kind": kind,
+                "action": "update" if exists else "create",
+                "sha256": _sha(assets[rel]),
+            }
+        )
+    markers = [
+        {"file": m, "marker": ctx.spec.tag}
+        for m in ctx.spec.marker_files
+        if (ctx.root / m).exists() or m == "AGENTS.md"
+    ]
     return {
-        "schema": SCHEMA_RECEIPT, "forge_id": ctx.spec.forge_id,
-        "operation": "install", "scope": ctx.scope, "profile": ctx.profile,
-        "target_root": str(ctx.root), "hosts": list(ctx.hosts),
-        "dry_run": ctx.dry_run, "status": "planned",
-        "planned_files": files, "planned_markers": markers,
-        "managed_files": [], "checks": [], "verification": {"status": "UNVERIFIED"},
+        "schema": SCHEMA_RECEIPT,
+        "forge_id": ctx.spec.forge_id,
+        "operation": "install",
+        "scope": ctx.scope,
+        "profile": ctx.profile,
+        "target_root": str(ctx.root),
+        "hosts": list(ctx.hosts),
+        "dry_run": ctx.dry_run,
+        "status": "planned",
+        "planned_files": files,
+        "planned_markers": markers,
+        "managed_files": [],
+        "checks": [],
+        "verification": {"status": "UNVERIFIED"},
     }
 
 
@@ -548,8 +574,9 @@ def apply_install(ctx: InstallContext, *, approved: bool = False) -> dict[str, A
     """The governed write path. Idempotent: unchanged assets are not
     re-touched; pre-existing identical files are adopted, never owned."""
     if not approved and not ctx.dry_run:
-        raise InstallError(E_NOTAPPROVED, "install requires --yes/--approve "
-                           "or --dry-run; the plan is the contract")
+        raise InstallError(
+            E_NOTAPPROVED, "install requires --yes/--approve or --dry-run; the plan is the contract"
+        )
     p = plan(ctx)
     if ctx.dry_run:
         p["status"] = "planned"
@@ -560,7 +587,7 @@ def apply_install(ctx: InstallContext, *, approved: bool = False) -> dict[str, A
     checks: list[dict[str, Any]] = []
     ledger = ctx.ledger or Ledger.load(ctx.state_dir)
 
-    assets = (ctx.spec.render_assets(ctx) if ctx.spec.render_assets else {})
+    assets = ctx.spec.render_assets(ctx) if ctx.spec.render_assets else {}
     kinds = set(profile_asset_kinds(ctx.profile))
     for rel in sorted(assets):
         kind = _asset_kind(rel)
@@ -573,19 +600,23 @@ def apply_install(ctx: InstallContext, *, approved: bool = False) -> dict[str, A
             cur = target.read_bytes()
             if cur == data:
                 action = "unchanged" if existing_entry else "adopted"
-                files.append(ledger.record(rel, data, kind, action,
-                                           managed=bool(existing_entry)))
+                files.append(ledger.record(rel, data, kind, action, managed=bool(existing_entry)))
                 continue
             if existing_entry is None:
                 # Pre-existing foreign file — never overwrite silently.
-                files.append({"path": rel, "sha256": _sha(cur), "kind": kind,
-                              "action": "unchanged",
-                              "note": "user-owned, not managed — skipped"})
+                files.append(
+                    {
+                        "path": rel,
+                        "sha256": _sha(cur),
+                        "kind": kind,
+                        "action": "unchanged",
+                        "note": "user-owned, not managed — skipped",
+                    }
+                )
                 continue
         target.parent.mkdir(parents=True, exist_ok=True)
         _atomic_write(target, data)
-        files.append(ledger.record(
-            rel, data, kind, "updated" if existing_entry else "created"))
+        files.append(ledger.record(rel, data, kind, "updated" if existing_entry else "created"))
 
     # Marker blocks in AGENTS.md / CLAUDE.md — delimited, user content kept.
     if "marker" in kinds and ctx.spec.marker_body:
@@ -594,70 +625,95 @@ def apply_install(ctx: InstallContext, *, approved: bool = False) -> dict[str, A
             if not target.exists() and m != "AGENTS.md":
                 continue  # never create CLAUDE.md unprompted; AGENTS.md is the generic contract
             original = target.read_text(encoding="utf-8") if target.exists() else ""
-            updated = apply_marker_block(original, ctx.spec.tag,
-                                         ctx.spec.marker_body)
+            updated = apply_marker_block(original, ctx.spec.tag, ctx.spec.marker_body)
             if updated == original:
-                markers.append({"file": m, "marker": ctx.spec.tag,
-                                "sha256": marker_sha(ctx.spec.tag,
-                                                     ctx.spec.marker_body)})
+                markers.append(
+                    {
+                        "file": m,
+                        "marker": ctx.spec.tag,
+                        "sha256": marker_sha(ctx.spec.tag, ctx.spec.marker_body),
+                    }
+                )
                 continue
             _atomic_write(target, updated.encode("utf-8"))
-            ledger.record(m, updated.encode(), "marker",
-                          "updated" if ledger.get(m) else "created")
-            markers.append({"file": m, "marker": ctx.spec.tag,
-                            "sha256": marker_sha(ctx.spec.tag,
-                                                 ctx.spec.marker_body)})
+            ledger.record(m, updated.encode(), "marker", "updated" if ledger.get(m) else "created")
+            markers.append(
+                {
+                    "file": m,
+                    "marker": ctx.spec.tag,
+                    "sha256": marker_sha(ctx.spec.tag, ctx.spec.marker_body),
+                }
+            )
 
     # .mcp.json managed key — only when the forge has an MCP server.
     mcp_entries: list[dict[str, Any]] = []
     if ctx.spec.mcp_server_name and "mcp" in kinds:
         mcp_file = ctx.root / ".mcp.json"
-        entry = {"command": ctx.spec.mcp_command[0],
-                 "args": list(ctx.spec.mcp_command[1:])}
+        entry = {"command": ctx.spec.mcp_command[0], "args": list(ctx.spec.mcp_command[1:])}
         if mcp_file.exists():
             cur = _load_json(mcp_file, None)
             if cur is None:
-                checks.append({"id": "mcp-json", "status": "FAIL",
-                               "detail": ".mcp.json exists but is not JSON"})
+                checks.append(
+                    {
+                        "id": "mcp-json",
+                        "status": "FAIL",
+                        "detail": ".mcp.json exists but is not JSON",
+                    }
+                )
             else:
-                new = mcp_set(cur, ctx.spec.mcp_server_name, entry,
-                              ctx.spec.tag)
+                new = mcp_set(cur, ctx.spec.mcp_server_name, entry, ctx.spec.tag)
                 if _json_bytes(new) != mcp_file.read_bytes():
                     _atomic_write(mcp_file, _json_bytes(new))
-                    ledger.record(".mcp.json", _json_bytes(new), "mcp",
-                                  "updated" if ledger.get(".mcp.json")
-                                  else "created")
-                mcp_entries.append({"server": ctx.spec.mcp_server_name,
-                                    "file": ".mcp.json",
-                                    "key": f"managed:{ctx.spec.tag}",
-                                    "action": "set"})
+                    ledger.record(
+                        ".mcp.json",
+                        _json_bytes(new),
+                        "mcp",
+                        "updated" if ledger.get(".mcp.json") else "created",
+                    )
+                mcp_entries.append(
+                    {
+                        "server": ctx.spec.mcp_server_name,
+                        "file": ".mcp.json",
+                        "key": f"managed:{ctx.spec.tag}",
+                        "action": "set",
+                    }
+                )
         else:
-            new = mcp_set(None, ctx.spec.mcp_server_name, entry,
-                          ctx.spec.tag)
+            new = mcp_set(None, ctx.spec.mcp_server_name, entry, ctx.spec.tag)
             _atomic_write(mcp_file, _json_bytes(new))
             ledger.record(".mcp.json", _json_bytes(new), "mcp", "created")
-            mcp_entries.append({"server": ctx.spec.mcp_server_name,
-                                "file": ".mcp.json",
-                                "key": f"managed:{ctx.spec.tag}",
-                                "action": "created"})
+            mcp_entries.append(
+                {
+                    "server": ctx.spec.mcp_server_name,
+                    "file": ".mcp.json",
+                    "key": f"managed:{ctx.spec.tag}",
+                    "action": "created",
+                }
+            )
 
     ledger.save()
-    written = sum(1 for f in files
-                  if f.get("action") in ("created", "updated"))
-    checks.append({"id": "files-written", "status": "PASS",
-                   "detail": f"{written} writes"})
+    written = sum(1 for f in files if f.get("action") in ("created", "updated"))
+    checks.append({"id": "files-written", "status": "PASS", "detail": f"{written} writes"})
     receipt = {
         "schema": SCHEMA_RECEIPT,
         "receipt_id": f"sha256:{_sha(_json_bytes({'f': files, 'm': markers}))}",
-        "forge_id": ctx.spec.forge_id, "operation": "install",
-        "scope": ctx.scope, "profile": ctx.profile,
-        "target_root": str(ctx.root), "host": ",".join(ctx.hosts) or None,
-        "dry_run": False, "managed_files": files,
-        "managed_markers": markers, "mcp": mcp_entries,
+        "forge_id": ctx.spec.forge_id,
+        "operation": "install",
+        "scope": ctx.scope,
+        "profile": ctx.profile,
+        "target_root": str(ctx.root),
+        "host": ",".join(ctx.hosts) or None,
+        "dry_run": False,
+        "managed_files": files,
+        "managed_markers": markers,
+        "mcp": mcp_entries,
         "env": {"python": platform.python_version()},
         "checks": checks,
-        "verification": {"status": "PASS" if all(
-            c["status"] in ("PASS", "NOT_APPLICABLE") for c in checks) else "FAIL"},
+        "verification": {
+            "status": "PASS"
+            if all(c["status"] in ("PASS", "NOT_APPLICABLE") for c in checks)
+            else "FAIL"
+        },
         "status": "completed",
         "rollback": {"available": bool(files), "restore": "ledger"},
         "created_at": _utc_now(),
@@ -678,23 +734,32 @@ def _write_receipt(state_dir: Path, receipt: dict[str, Any]) -> Path:
 # status / doctor / repair / uninstall
 # --------------------------------------------------------------------------
 
+
 def status(ctx: InstallContext) -> dict[str, Any]:
     ledger = Ledger.load(ctx.state_dir)
     drift = ledger.drift(ctx.root, ctx.spec)
     ok = sum(1 for d in drift if d["status"] == "ok")
     bad = [d for d in drift if d["status"] != "ok"]
-    receipts = sorted((ctx.state_dir / RECEIPTS_DIR).glob("*.json")) \
-        if (ctx.state_dir / RECEIPTS_DIR).is_dir() else []
+    receipts = (
+        sorted((ctx.state_dir / RECEIPTS_DIR).glob("*.json"))
+        if (ctx.state_dir / RECEIPTS_DIR).is_dir()
+        else []
+    )
     return {
-        "schema": SCHEMA_HEALTH, "forge_id": ctx.spec.forge_id,
-        "scope": ctx.scope, "target_root": str(ctx.root),
+        "schema": SCHEMA_HEALTH,
+        "forge_id": ctx.spec.forge_id,
+        "scope": ctx.scope,
+        "target_root": str(ctx.root),
         "state_dir": str(ctx.state_dir),
         "ledger_entries": len(ledger.entries()),
-        "drift": {"ok": ok, "modified": [d for d in bad if d["status"] == "modified"],
-                  "missing": [d for d in bad if d["status"] == "missing"]},
+        "drift": {
+            "ok": ok,
+            "modified": [d for d in bad if d["status"] == "modified"],
+            "missing": [d for d in bad if d["status"] == "missing"],
+        },
         "receipts": [r.name for r in receipts],
-        "status": ("healthy" if not bad else
-                   "degraded" if ok else "broken") if ledger.entries()
+        "status": ("healthy" if not bad else "degraded" if ok else "broken")
+        if ledger.entries()
         else "unverified",
         "checked_at": _utc_now(),
     }
@@ -704,38 +769,62 @@ def doctor(ctx: InstallContext) -> dict[str, Any]:
     checks: list[dict[str, Any]] = []
     ledger = Ledger.load(ctx.state_dir)
     installed = ledger.entries()
-    checks.append({"id": "ledger", "status": "PASS" if installed else "UNVERIFIED",
-                   "detail": f"{len(installed)} managed entries",
-                   "repairable": False})
+    checks.append(
+        {
+            "id": "ledger",
+            "status": "PASS" if installed else "UNVERIFIED",
+            "detail": f"{len(installed)} managed entries",
+            "repairable": False,
+        }
+    )
     for d in ledger.drift(ctx.root, ctx.spec):
         if d["status"] != "ok":
-            checks.append({"id": f"drift:{d['path']}", "status": "FAIL",
-                           "detail": d["status"], "repairable": True})
+            checks.append(
+                {
+                    "id": f"drift:{d['path']}",
+                    "status": "FAIL",
+                    "detail": d["status"],
+                    "repairable": True,
+                }
+            )
     if ctx.spec.mcp_server_name:
         mcp_file = ctx.root / ".mcp.json"
         if mcp_file.exists():
             doc = _load_json(mcp_file, None)
             ok = isinstance(doc, dict) and ctx.spec.mcp_server_name in doc.get("mcpServers", {})
-            checks.append({"id": "mcp-config", "status": "PASS" if ok else "FAIL",
-                           "repairable": not ok})
+            checks.append(
+                {"id": "mcp-config", "status": "PASS" if ok else "FAIL", "repairable": not ok}
+            )
         else:
-            checks.append({"id": "mcp-config", "status": "FAIL",
-                           "detail": ".mcp.json missing", "repairable": True})
+            checks.append(
+                {
+                    "id": "mcp-config",
+                    "status": "FAIL",
+                    "detail": ".mcp.json missing",
+                    "repairable": True,
+                }
+            )
         checks.append(mcp_verify(ctx.spec))
     overall = "healthy"
     if any(c["status"] == "FAIL" for c in checks):
         overall = "degraded" if installed else "broken"
     elif not installed:
         overall = "unverified"
-    return {"schema": SCHEMA_HEALTH, "forge_id": ctx.spec.forge_id,
-            "status": overall, "checks": checks,
-            "checked_at": _utc_now(),
-            "repair_hint": f"{ctx.spec.cli_name} repair" if any(
-                c.get("repairable") for c in checks) else None}
+    return {
+        "schema": SCHEMA_HEALTH,
+        "forge_id": ctx.spec.forge_id,
+        "status": overall,
+        "checks": checks,
+        "checked_at": _utc_now(),
+        "repair_hint": f"{ctx.spec.cli_name} repair"
+        if any(c.get("repairable") for c in checks)
+        else None,
+    }
 
 
-def _repair_content(ctx: InstallContext, rel: str, entry: dict[str, Any],
-                    assets: dict[str, bytes], target: Path) -> bytes | None:
+def _repair_content(
+    ctx: InstallContext, rel: str, entry: dict[str, Any], assets: dict[str, bytes], target: Path
+) -> bytes | None:
     """Canonical bytes for a drifted *managed* entry, or ``None`` when the
     entry cannot be re-asserted. Marker entries re-heal the managed block
     inside the user's file (content outside the markers survives);
@@ -743,16 +832,13 @@ def _repair_content(ctx: InstallContext, rel: str, entry: dict[str, Any],
     whole-file managed assets re-assert the rendered bytes."""
     kind = entry.get("kind")
     if kind == "marker" and rel in ctx.spec.marker_files:
-        original = (target.read_text(encoding="utf-8")
-                    if target.exists() else "")
-        return apply_marker_block(
-            original, ctx.spec.tag, ctx.spec.marker_body).encode("utf-8")
+        original = target.read_text(encoding="utf-8") if target.exists() else ""
+        return apply_marker_block(original, ctx.spec.tag, ctx.spec.marker_body).encode("utf-8")
     if kind == "mcp" and ctx.spec.mcp_server_name:
         cur = _load_json(target, {})
         if not isinstance(cur, dict):
             cur = {}
-        want = {"command": ctx.spec.mcp_command[0],
-                "args": list(ctx.spec.mcp_command[1:])}
+        want = {"command": ctx.spec.mcp_command[0], "args": list(ctx.spec.mcp_command[1:])}
         new = mcp_set(cur, ctx.spec.mcp_server_name, want, ctx.spec.tag)
         return _json_bytes(new)
     return assets.get(rel)
@@ -767,7 +853,7 @@ def repair(ctx: InstallContext) -> dict[str, Any]:
     ledger = Ledger.load(ctx.state_dir)
     drift = [d for d in ledger.drift(ctx.root, ctx.spec) if d["status"] != "ok"]
     fixed, kept, skipped = [], [], []
-    assets = (ctx.spec.render_assets(ctx) if ctx.spec.render_assets else {})
+    assets = ctx.spec.render_assets(ctx) if ctx.spec.render_assets else {}
     for d in drift:
         rel = d["path"]
         entry = ledger.get(rel)
@@ -784,21 +870,32 @@ def repair(ctx: InstallContext) -> dict[str, Any]:
             continue
         target.parent.mkdir(parents=True, exist_ok=True)
         _atomic_write(target, data)
-        ledger.record(rel, data, entry["kind"],
-                      "restored" if d["status"] == "missing" else "rehealed")
+        ledger.record(
+            rel, data, entry["kind"], "restored" if d["status"] == "missing" else "rehealed"
+        )
         fixed.append(rel)
     ledger.save()
-    return {"schema": SCHEMA_RECEIPT, "forge_id": ctx.spec.forge_id,
-            "operation": "repair", "scope": ctx.scope,
-            "target_root": str(ctx.root),
-            "repaired": fixed, "kept": kept, "skipped": skipped,
-            "managed_files": [], "checks": [
-                {"id": "repair",
-                 "status": "PASS" if not skipped else "FAIL",
-                 "detail": (f"{len(fixed)} restored, {len(kept)} kept, "
-                            f"{len(skipped)} skipped")}],
-            "verification": {"status": "PASS" if not skipped else "FAIL"},
-            "status": "completed", "created_at": _utc_now()}
+    return {
+        "schema": SCHEMA_RECEIPT,
+        "forge_id": ctx.spec.forge_id,
+        "operation": "repair",
+        "scope": ctx.scope,
+        "target_root": str(ctx.root),
+        "repaired": fixed,
+        "kept": kept,
+        "skipped": skipped,
+        "managed_files": [],
+        "checks": [
+            {
+                "id": "repair",
+                "status": "PASS" if not skipped else "FAIL",
+                "detail": (f"{len(fixed)} restored, {len(kept)} kept, {len(skipped)} skipped"),
+            }
+        ],
+        "verification": {"status": "PASS" if not skipped else "FAIL"},
+        "status": "completed",
+        "created_at": _utc_now(),
+    }
 
 
 def uninstall(ctx: InstallContext, *, purge_state: bool = False) -> dict[str, Any]:
@@ -810,8 +907,7 @@ def uninstall(ctx: InstallContext, *, purge_state: bool = False) -> dict[str, An
         target = ctx.root / rel
         if rel in ctx.spec.marker_files and target.exists():
             # marker files: excise the block, keep the file
-            txt = remove_marker_block(target.read_text(encoding="utf-8"),
-                                      ctx.spec.tag)
+            txt = remove_marker_block(target.read_text(encoding="utf-8"), ctx.spec.tag)
             if txt.strip():
                 _atomic_write(target, txt.encode())
                 kept.append(rel)
@@ -845,6 +941,7 @@ def uninstall(ctx: InstallContext, *, purge_state: bool = False) -> dict[str, An
     _prune_empty_dirs(ctx.root, removed)
     if purge_state and ctx.state_dir.exists():
         import shutil
+
         shutil.rmtree(ctx.state_dir, ignore_errors=True)
         # prune now-empty forge state ancestors (e.g. .forge-doctor-data/)
         parent = ctx.state_dir.parent
@@ -856,14 +953,26 @@ def uninstall(ctx: InstallContext, *, purge_state: bool = False) -> dict[str, An
             parent = parent.parent
     else:
         ledger.save()
-    receipt = {"schema": SCHEMA_RECEIPT, "forge_id": ctx.spec.forge_id,
-               "operation": "uninstall", "scope": ctx.scope,
-               "target_root": str(ctx.root), "removed": removed,
-               "kept": kept, "managed_files": [], "checks": [
-                   {"id": "uninstall", "status": "PASS",
-                    "detail": f"{len(removed)} removed, {len(kept)} kept"}],
-               "verification": {"status": "PASS"},
-               "status": "completed", "created_at": _utc_now()}
+    receipt = {
+        "schema": SCHEMA_RECEIPT,
+        "forge_id": ctx.spec.forge_id,
+        "operation": "uninstall",
+        "scope": ctx.scope,
+        "target_root": str(ctx.root),
+        "removed": removed,
+        "kept": kept,
+        "managed_files": [],
+        "checks": [
+            {
+                "id": "uninstall",
+                "status": "PASS",
+                "detail": f"{len(removed)} removed, {len(kept)} kept",
+            }
+        ],
+        "verification": {"status": "PASS"},
+        "status": "completed",
+        "created_at": _utc_now(),
+    }
     if not purge_state:
         _write_receipt(ctx.state_dir, receipt)
     return receipt
@@ -889,19 +998,29 @@ def _prune_empty_dirs(root: Path, removed: list[str]) -> None:
 # ~/.forge registry — the forge-neutral installations directory
 # --------------------------------------------------------------------------
 
-def manifest_for(spec: ForgeSpec, *, install_root: Path, venv: Path | None,
-                 version: str, source: dict[str, Any],
-                 shim: Path | None) -> dict[str, Any]:
+
+def manifest_for(
+    spec: ForgeSpec,
+    *,
+    install_root: Path,
+    venv: Path | None,
+    version: str,
+    source: dict[str, Any],
+    shim: Path | None,
+) -> dict[str, Any]:
     doc = {
-        "schema": SCHEMA_MANIFEST, "forge_id": spec.forge_id,
-        "package": spec.package, "distribution": spec.distribution,
-        "cli": {"name": spec.cli_name,
-                "version_cmd": [spec.cli_name, *spec.version_cmd]},
+        "schema": SCHEMA_MANIFEST,
+        "forge_id": spec.forge_id,
+        "package": spec.package,
+        "distribution": spec.distribution,
+        "cli": {"name": spec.cli_name, "version_cmd": [spec.cli_name, *spec.version_cmd]},
         "version": version,
         "install_root": str(install_root),
-        "python": {"executable": str(_venv_python(venv)) if venv else sys.executable,
-                   "version": platform.python_version(),
-                   "satisfies": spec.python_spec},
+        "python": {
+            "executable": str(_venv_python(venv)) if venv else sys.executable,
+            "version": platform.python_version(),
+            "satisfies": spec.python_spec,
+        },
         "source": source,
         "installed_at": _utc_now(),
         "installed_by": {"agent": "forge_bootstrap", "version": _INSTALLKIT_VERSION},
@@ -913,8 +1032,11 @@ def manifest_for(spec: ForgeSpec, *, install_root: Path, venv: Path | None,
         if isinstance(cli_doc, dict):
             cli_doc["shim"] = str(shim)
     if spec.mcp_server_name:
-        doc["mcp"] = {"server_name": spec.mcp_server_name,
-                      "command": list(spec.mcp_command), "verified": False}
+        doc["mcp"] = {
+            "server_name": spec.mcp_server_name,
+            "command": list(spec.mcp_command),
+            "verified": False,
+        }
     return doc
 
 
@@ -945,21 +1067,80 @@ def installed_forges() -> list[dict[str, Any]]:
 
 
 # --------------------------------------------------------------------------
+# Workspace members — multi-repo discovery (``forge/WorkspaceInstall/v1``)
+# --------------------------------------------------------------------------
+
+
+def discover_projects(root: Path, *, max_depth: int = 2) -> list[Path]:
+    """Independent repos under a workspace root: directories containing
+    ``.git``. ``root`` itself is included when it is a repository; nested
+    checkouts are found up to ``max_depth`` levels deep. Never descends
+    into a discovered repo (its inner modules stay isolated)."""
+    root = Path(root).resolve()
+    found: list[Path] = []
+    if (root / ".git").exists():
+        found.append(root)
+
+    def _walk(d: Path, depth: int) -> None:
+        if depth > max_depth:
+            return
+        try:
+            children = sorted(p for p in d.iterdir() if p.is_dir())
+        except OSError:
+            return
+        for child in children:
+            if child.name.startswith("."):  # hidden dirs incl. .git internals
+                continue
+            if (child / ".git").exists():
+                found.append(child.resolve())
+            else:
+                _walk(child, depth + 1)
+
+    _walk(root, 1)
+    return found
+
+
+def member_precedence(member: Path, spec: ForgeSpec) -> str | None:
+    """``"project"`` when a member already carries a project-scope install
+    or its own managed MCP key for this forge — local specializes the
+    workspace install and must never be silently widened. ``None`` when
+    the member is a clean adoption target."""
+    state = member / spec.state_dir
+    if state.is_dir():
+        return "project"
+    mcp = member / ".mcp.json"
+    if spec.mcp_server_name and mcp.exists():
+        doc = _load_json(mcp, None)
+        if isinstance(doc, dict) and spec.mcp_server_name in (doc.get("mcpServers") or {}):
+            return "project"
+    return None
+
+
+# --------------------------------------------------------------------------
 # Spawn-gated ops — refused honestly where subprocess is unavailable
 # --------------------------------------------------------------------------
 
-def _spawn(spec: ForgeSpec, cmd: list[str], *, timeout: int = 30,
-           input_bytes: bytes | None = None,
-           env: dict[str, str] | None = None) -> tuple[int, bytes, bytes]:
+
+def _spawn(
+    spec: ForgeSpec,
+    cmd: list[str],
+    *,
+    timeout: int = 30,
+    input_bytes: bytes | None = None,
+    env: dict[str, str] | None = None,
+) -> tuple[int, bytes, bytes]:
     if not spec.spawn_ok:
         raise InstallError(
-            E_SPAWN, f"{spec.forge_id}: subprocess disabled by policy — "
-            "run the equivalent scripts/ helper instead")
+            E_SPAWN,
+            f"{spec.forge_id}: subprocess disabled by policy — "
+            "run the equivalent scripts/ helper instead",
+        )
     # --vendor-strip:subprocess-begin
     import subprocess  # noqa: PLC0415 - lazy: spawn_ok gates reachability
+
     proc = subprocess.run(  # noqa: S603 — cmd is the declared spec
-        cmd, capture_output=True, timeout=timeout,
-                          input=input_bytes, env=env)
+        cmd, capture_output=True, timeout=timeout, input=input_bytes, env=env
+    )
     return proc.returncode, proc.stdout, proc.stderr
     # --vendor-strip:subprocess-end
 
@@ -968,40 +1149,65 @@ def mcp_verify(spec: ForgeSpec, *, timeout: int = 20) -> dict[str, Any]:
     """JSON-RPC stdio handshake: initialize → notifications/initialized →
     tools/list. Reports honestly — never infers success from file presence."""
     if not spec.mcp_server_name or not spec.mcp_command:
-        return {"id": "mcp-handshake", "status": "NOT_APPLICABLE",
-                "detail": "no MCP server declared"}
+        return {
+            "id": "mcp-handshake",
+            "status": "NOT_APPLICABLE",
+            "detail": "no MCP server declared",
+        }
     if not spec.spawn_ok:
-        return {"id": "mcp-handshake", "status": "BLOCKED",
-                "detail": "subprocess disabled by policy"}
+        return {
+            "id": "mcp-handshake",
+            "status": "BLOCKED",
+            "detail": "subprocess disabled by policy",
+        }
     try:
         import subprocess  # noqa: PLC0415
+
         proc = subprocess.Popen(  # noqa: S603 — command is the declared spec
-            list(spec.mcp_command), stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            list(spec.mcp_command),
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
     except FileNotFoundError as exc:
         # CLI not on PATH — the install is incomplete, not defective.
-        return {"id": "mcp-handshake", "status": "BLOCKED",
-                "detail": f"cannot spawn {spec.mcp_command[0]!r}: {exc}"}
+        return {
+            "id": "mcp-handshake",
+            "status": "BLOCKED",
+            "detail": f"cannot spawn {spec.mcp_command[0]!r}: {exc}",
+        }
     except OSError as exc:
-        return {"id": "mcp-handshake", "status": "FAIL",
-                "detail": f"cannot spawn {spec.mcp_command[0]!r}: {exc}"}
+        return {
+            "id": "mcp-handshake",
+            "status": "FAIL",
+            "detail": f"cannot spawn {spec.mcp_command[0]!r}: {exc}",
+        }
     if proc.stdin is None or proc.stdout is None:
         proc.kill()
-        return {"id": "mcp-handshake", "status": "FAIL",
-                "detail": "stdio pipes unavailable"}
+        return {"id": "mcp-handshake", "status": "FAIL", "detail": "stdio pipes unavailable"}
     try:
-        req = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "initialize",
-                          "params": {"protocolVersion": "2024-11-05",
-                                     "capabilities": {},
-                                     "clientInfo": {"name": "forge-verify",
-                                                    "version": "1"}}}).encode()
+        req = json.dumps(
+            {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "initialize",
+                "params": {
+                    "protocolVersion": "2024-11-05",
+                    "capabilities": {},
+                    "clientInfo": {"name": "forge-verify", "version": "1"},
+                },
+            }
+        ).encode()
         proc.stdin.write(req + b"\n")
-        proc.stdin.write(json.dumps({
-            "jsonrpc": "2.0", "method": "notifications/initialized"}).encode() + b"\n")
-        proc.stdin.write(json.dumps({
-            "jsonrpc": "2.0", "id": 2, "method": "tools/list"}).encode() + b"\n")
+        proc.stdin.write(
+            json.dumps({"jsonrpc": "2.0", "method": "notifications/initialized"}).encode() + b"\n"
+        )
+        proc.stdin.write(
+            json.dumps({"jsonrpc": "2.0", "id": 2, "method": "tools/list"}).encode() + b"\n"
+        )
         proc.stdin.flush()
         import selectors
+
         sel = selectors.DefaultSelector()
         sel.register(proc.stdout, selectors.EVENT_READ)
         tools: list[str] = []
@@ -1019,14 +1225,16 @@ def mcp_verify(spec: ForgeSpec, *, timeout: int = 20) -> dict[str, Any]:
                 if msg.get("id") == 1 and "result" in msg:
                     got_init = True
                 if msg.get("id") == 2 and "result" in msg:
-                    tools = [t.get("name", "?")
-                             for t in msg["result"].get("tools", [])]
+                    tools = [t.get("name", "?") for t in msg["result"].get("tools", [])]
                     break
         if not got_init:
-            return {"id": "mcp-handshake", "status": "FAIL",
-                    "detail": "no initialize response"}
-        return {"id": "mcp-handshake", "status": "PASS",
-                "detail": f"{len(tools)} tools", "tools": tools[:50]}
+            return {"id": "mcp-handshake", "status": "FAIL", "detail": "no initialize response"}
+        return {
+            "id": "mcp-handshake",
+            "status": "PASS",
+            "detail": f"{len(tools)} tools",
+            "tools": tools[:50],
+        }
     except Exception as exc:  # handshake failures are FAIL, not crashes
         return {"id": "mcp-handshake", "status": "FAIL", "detail": str(exc)}
     finally:
@@ -1042,8 +1250,7 @@ def mcp_verify(spec: ForgeSpec, *, timeout: int = 20) -> dict[str, Any]:
 
 def cli_version(spec: ForgeSpec, *, timeout: int = 15) -> str | None:
     try:
-        code, out, _ = _spawn(spec, [spec.cli_name, *spec.version_cmd],
-                              timeout=timeout)
+        code, out, _ = _spawn(spec, [spec.cli_name, *spec.version_cmd], timeout=timeout)
         if code == 0:
             return out.decode(errors="replace").strip().splitlines()[0]
     except (InstallError, Exception):
@@ -1054,6 +1261,7 @@ def cli_version(spec: ForgeSpec, *, timeout: int = 15) -> str | None:
 # --------------------------------------------------------------------------
 # Launcher shims — make <cli> resolvable in a new terminal
 # --------------------------------------------------------------------------
+
 
 def write_launcher(spec: ForgeSpec, venv: Path) -> Path:
     """Write a shim into the shim dir that delegates to the venv's console
@@ -1083,10 +1291,10 @@ def path_guidance() -> str | None:
     if str(shim) in path.split(os.pathsep):
         return None
     if os.name == "nt":
-        return (f'setx PATH "%PATH%;{shim}"  # then open a new terminal')
+        return f'setx PATH "%PATH%;{shim}"  # then open a new terminal'
     shell = Path(os.environ.get("SHELL", "/bin/sh")).name
     rc = {"zsh": "~/.zshrc", "bash": "~/.bashrc"}.get(shell, "~/.profile")
-    return f'echo \'export PATH="{shim}:$PATH"\' >> {rc}  # then restart the shell'
+    return f"echo 'export PATH=\"{shim}:$PATH\"' >> {rc}  # then restart the shell"
 
 
 __all__ = [name for name in dir() if not name.startswith("_")]
