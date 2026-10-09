@@ -64,7 +64,7 @@ _stderr = Console(stderr=True, highlight=False)
 app = typer.Typer(
     name="forge-doctor-api",
     help="Deterministic, offline-first API architecture intelligence.",
-    no_args_is_help=True,
+    invoke_without_command=True,
     add_completion=False,
 )
 contract_app = typer.Typer(help="Inspect, diff and check API contracts.", no_args_is_help=True)
@@ -99,12 +99,29 @@ def _version(value: bool) -> None:
 
 @app.callback()
 def _root(
+    ctx: typer.Context,
     version: Annotated[
         bool,
         typer.Option("--version", callback=_version, is_eager=True, help="Show version and exit."),
     ] = False,
 ) -> None:
     """Deterministic, offline-first API architecture intelligence."""
+    if ctx.invoked_subcommand is None:
+        import sys as _sys
+
+        if _sys.stdin.isatty() and _sys.stdout.isatty():
+            try:
+                from forge_doctor_api.ui.home import run_home
+                from forge_doctor_api.ui.kit import NonInteractive
+
+                try:
+                    raise typer.Exit(run_home())
+                except NonInteractive:
+                    pass
+            except ImportError:
+                pass
+        typer.echo(ctx.get_help())
+        raise typer.Exit()
 
 
 @app.command()

@@ -52,6 +52,8 @@ extend-exclude = ["factory", "docs", ".claude", "labs"]
 select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF", "DTZ"]
 
 [tool.ruff.lint.per-file-ignores]
+# Vendored Forge UI kit (canonical: the-forge/src/theforge/ui)
+"src/forge_doctor_api/ui/**/*.py" = ["ALL"]
 # Vendored shared sources — canonical copies in the-forge are the lint target.
 "scripts/forge_installkit.py" = ["ALL"]
 "scripts/forge_bootstrap.py" = ["ALL"]
