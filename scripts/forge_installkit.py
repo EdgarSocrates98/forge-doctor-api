@@ -916,7 +916,11 @@ def mcp_verify(spec: ForgeSpec, *, timeout: int = 20) -> dict[str, Any]:
         proc = subprocess.Popen(  # noqa: S603 — command is the declared spec
             list(spec.mcp_command), stdin=subprocess.PIPE,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    except (OSError, FileNotFoundError) as exc:
+    except FileNotFoundError as exc:
+        # CLI not on PATH — the install is incomplete, not defective.
+        return {"id": "mcp-handshake", "status": "BLOCKED",
+                "detail": f"cannot spawn {spec.mcp_command[0]!r}: {exc}"}
+    except OSError as exc:
         return {"id": "mcp-handshake", "status": "FAIL",
                 "detail": f"cannot spawn {spec.mcp_command[0]!r}: {exc}"}
     if proc.stdin is None or proc.stdout is None:
