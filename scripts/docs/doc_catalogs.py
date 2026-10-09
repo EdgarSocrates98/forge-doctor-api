@@ -19,6 +19,7 @@ from pathlib import Path
 
 SKILL_DIRS = ("skills", ".claude/skills", ".devin/skills", ".agents/skills")
 AGENT_DIRS = ("agents", ".claude/agents", ".devin/agents", ".agents/agents")
+AGENT_SPEC_DIRS = ("agentic/agents",)  # AgentSpec/v1 TOML registries (the-forge)
 
 
 def _summary(path: Path) -> str:
@@ -80,6 +81,35 @@ def scan(repo: Path, dirs: tuple[str, ...], nested_name: str | None) -> list[dic
     return sorted(seen.values(), key=lambda x: x["name"])
 
 
+def scan_toml_specs(repo: Path, dirs: tuple[str, ...]) -> list[dict]:
+    """AgentSpec/v1 registries — TOML files with ``id``/``authority``/
+    ``summary`` fields (the-forge's eight specialists)."""
+    import tomllib
+
+    found: list[dict] = []
+    for d in dirs:
+        root = repo / d
+        if not root.is_dir():
+            continue
+        for p in sorted(root.glob("*.toml")):
+            try:
+                spec = tomllib.loads(p.read_text(encoding="utf-8"))
+            except tomllib.TOMLDecodeError:
+                continue
+            name = spec.get("id") or spec.get("name") or p.stem
+            auth = spec.get("authority", "")
+            summary = (
+                spec.get("summary") or spec.get("role")
+                or spec.get("purpose") or spec.get("description") or "—"
+            )
+            summary = summary.strip().splitlines()[0][:160]
+            if auth:
+                summary = f"authority: {auth} — {summary}"
+            found.append({"name": name, "summary": summary,
+                          "path": p.relative_to(repo).as_posix()})
+    return found
+
+
 def emit(title: str, items: list[dict], note: str) -> str:
     out = [f"# {title}", "", note, ""]
     if not items:
@@ -107,6 +137,8 @@ def main() -> int:
     flat = scan(repo, AGENT_DIRS, None)
     names = {a["name"] for a in agents}
     agents += [a for a in flat if a["name"] not in names]
+    names = {a["name"] for a in agents}
+    agents += [a for a in scan_toml_specs(repo, AGENT_SPEC_DIRS) if a["name"] not in names]
     agents = sorted(agents, key=lambda x: x["name"])
 
     (out / "skills.md").write_text(
