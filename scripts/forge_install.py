@@ -70,6 +70,7 @@ def _spec() -> kit.ForgeSpec:
         state_dir=STATE_DIR,
         mcp_command=("forge-doctor-api", "mcp"),
         mcp_server_name="forge-doctor-api",
+        mcp_verify_tool="doctor.get_reliability",
         version_cmd=("--version",),
         render_assets=lambda ctx: {},  # no host mirrors published
         marker_files=("AGENTS.md", "CLAUDE.md"),

@@ -176,6 +176,7 @@ class ForgeSpec:
     state_dir: str  # project state dir, e.g. ".sparkforge-aws"
     mcp_command: tuple[str, ...] = ()  # e.g. ("sparkforge-aws","mcp","serve")
     mcp_server_name: str | None = None  # .mcp.json key
+    mcp_verify_tool: str | None = None  # no-arg read-only tool for tools/call
     version_cmd: tuple[str, ...] = ("--version",)
     render_assets: Callable[[InstallContext], dict[str, bytes]] | None = None
     marker_files: tuple[str, ...] = ("AGENTS.md", "CLAUDE.md")
@@ -804,7 +805,18 @@ def doctor(ctx: InstallContext) -> dict[str, Any]:
                     "repairable": True,
                 }
             )
-        checks.append(mcp_verify(ctx.spec))
+        mcp_check = mcp_verify(ctx.spec)
+        checks.append(mcp_check)
+        invoke = mcp_check.get("invoke")
+        if isinstance(invoke, dict):  # hoisted so a FAIL degrades health
+            checks.append(
+                {
+                    "id": "mcp-invoke",
+                    "status": invoke["status"],
+                    "detail": f"{invoke['tool']}: {invoke['detail']}",
+                    "repairable": False,
+                }
+            )
     overall = "healthy"
     if any(c["status"] == "FAIL" for c in checks):
         overall = "degraded" if installed else "broken"
@@ -1032,11 +1044,14 @@ def manifest_for(
         if isinstance(cli_doc, dict):
             cli_doc["shim"] = str(shim)
     if spec.mcp_server_name:
-        doc["mcp"] = {
+        mcp_doc: dict[str, Any] = {
             "server_name": spec.mcp_server_name,
             "command": list(spec.mcp_command),
             "verified": False,
         }
+        if spec.mcp_verify_tool:
+            mcp_doc["verify_tool"] = spec.mcp_verify_tool
+        doc["mcp"] = mcp_doc
     return doc
 
 
@@ -1160,6 +1175,16 @@ def mcp_verify(spec: ForgeSpec, *, timeout: int = 20) -> dict[str, Any]:
             "status": "BLOCKED",
             "detail": "subprocess disabled by policy",
         }
+    exe = spec.mcp_command[0]
+    if not (os.sep in exe or (os.altsep and os.altsep in exe)):
+        import shutil  # noqa: PLC0415
+
+        if shutil.which(exe) is None:
+            return {
+                "id": "mcp-handshake",
+                "status": "BLOCKED",
+                "detail": f"{exe!r} not resolvable on PATH — install incomplete",
+            }
     try:
         import subprocess  # noqa: PLC0415
 
@@ -1186,66 +1211,137 @@ def mcp_verify(spec: ForgeSpec, *, timeout: int = 20) -> dict[str, Any]:
         proc.kill()
         return {"id": "mcp-handshake", "status": "FAIL", "detail": "stdio pipes unavailable"}
     try:
-        req = json.dumps(
-            {
-                "jsonrpc": "2.0",
-                "id": 1,
-                "method": "initialize",
-                "params": {
-                    "protocolVersion": "2024-11-05",
-                    "capabilities": {},
-                    "clientInfo": {"name": "forge-verify", "version": "1"},
-                },
-            }
-        ).encode()
-        proc.stdin.write(req + b"\n")
-        proc.stdin.write(
-            json.dumps({"jsonrpc": "2.0", "method": "notifications/initialized"}).encode() + b"\n"
-        )
-        proc.stdin.write(
-            json.dumps({"jsonrpc": "2.0", "id": 2, "method": "tools/list"}).encode() + b"\n"
-        )
-        proc.stdin.flush()
-        import selectors
-
-        sel = selectors.DefaultSelector()
-        sel.register(proc.stdout, selectors.EVENT_READ)
-        tools: list[str] = []
-        deadline_ok = sel.select(timeout)
-        got_init = False
-        if deadline_ok:
-            for _ in range(64):
-                line = proc.stdout.readline()
-                if not line:
-                    break
-                try:
-                    msg = json.loads(line)
-                except ValueError:
-                    continue
-                if msg.get("id") == 1 and "result" in msg:
-                    got_init = True
-                if msg.get("id") == 2 and "result" in msg:
-                    tools = [t.get("name", "?") for t in msg["result"].get("tools", [])]
-                    break
-        if not got_init:
-            return {"id": "mcp-handshake", "status": "FAIL", "detail": "no initialize response"}
-        return {
-            "id": "mcp-handshake",
-            "status": "PASS",
-            "detail": f"{len(tools)} tools",
-            "tools": tools[:50],
-        }
+        out = _mcp_handshake(proc, spec, timeout)
     except Exception as exc:  # handshake failures are FAIL, not crashes
-        return {"id": "mcp-handshake", "status": "FAIL", "detail": str(exc)}
-    finally:
+        out = {"id": "mcp-handshake", "status": "FAIL", "detail": str(exc)}
+    killed = False
+    try:
+        proc.terminate()
+        proc.wait(timeout=3)
+    except Exception:
         try:
-            proc.terminate()
-            proc.wait(timeout=3)
-        except Exception:
-            try:
-                proc.kill()
-            except Exception:  # noqa: S110 — best-effort kill after terminate
-                pass
+            proc.kill()
+            killed = True
+        except Exception:  # noqa: S110 — best-effort kill after terminate
+            pass
+    stderr_tail = b""
+    try:
+        if proc.stderr is not None:
+            stderr_tail = proc.stderr.read()[-400:]
+    except Exception:  # noqa: S110 — server stderr is best-effort evidence
+        pass
+    out["process"] = {
+        "exit": ("clean" if proc.returncode == 0 else "killed" if killed else "terminated"),
+        "returncode": proc.returncode,
+        "stderr_tail": stderr_tail.decode(errors="replace").strip()[-200:] or None,
+    }
+    return out
+
+
+def _mcp_handshake(proc: Any, spec: ForgeSpec, timeout: int) -> dict[str, Any]:
+    """initialize → initialized → tools/list (+ tools/call when the spec
+    declares a no-arg ``mcp_verify_tool``). Returns the check dict; the
+    caller attaches process-exit evidence."""
+    assert proc.stdin is not None and proc.stdout is not None
+    req = json.dumps(
+        {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "initialize",
+            "params": {
+                "protocolVersion": "2024-11-05",
+                "capabilities": {},
+                "clientInfo": {"name": "forge-verify", "version": "1"},
+            },
+        }
+    ).encode()
+    proc.stdin.write(req + b"\n")
+    proc.stdin.write(
+        json.dumps({"jsonrpc": "2.0", "method": "notifications/initialized"}).encode() + b"\n"
+    )
+    proc.stdin.write(
+        json.dumps({"jsonrpc": "2.0", "id": 2, "method": "tools/list"}).encode() + b"\n"
+    )
+    if spec.mcp_verify_tool:
+        proc.stdin.write(
+            json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "id": 3,
+                    "method": "tools/call",
+                    "params": {"name": spec.mcp_verify_tool, "arguments": {}},
+                }
+            ).encode()
+            + b"\n"
+        )
+    proc.stdin.flush()
+    # selectors cannot watch pipes on Windows — a daemon reader thread
+    # draining stdout into a queue is the portable deadline mechanism.
+    import queue  # noqa: PLC0415
+    import threading  # noqa: PLC0415
+    import time  # noqa: PLC0415
+
+    lines: "queue.Queue[bytes]" = queue.Queue()
+
+    def _drain() -> None:
+        for ln in proc.stdout:
+            lines.put(ln)
+
+    threading.Thread(target=_drain, daemon=True).start()
+    tools: list[str] = []
+    got_init = False
+    invoke: dict[str, Any] | None = (
+        {"tool": spec.mcp_verify_tool, "status": "UNVERIFIED", "detail": "no response"}
+        if spec.mcp_verify_tool
+        else None
+    )
+    want_ids = {1, 2} | ({3} if spec.mcp_verify_tool else set())
+    deadline = time.monotonic() + timeout
+    while want_ids:
+        remain = deadline - time.monotonic()
+        if remain <= 0:
+            break
+        try:
+            line = lines.get(timeout=remain)
+        except queue.Empty:
+            break
+        if not line:
+            break
+        try:
+            msg = json.loads(line)
+        except ValueError:
+            continue
+        mid = msg.get("id")
+        if mid == 1 and "result" in msg:
+            got_init = True
+            want_ids.discard(1)
+        elif mid == 2 and "result" in msg:
+            tools = [t.get("name", "?") for t in msg["result"].get("tools", [])]
+            want_ids.discard(2)
+        elif mid == 3 and invoke is not None:
+            want_ids.discard(3)
+            if "error" in msg:
+                invoke["status"] = "FAIL"
+                invoke["detail"] = str(msg["error"])[:200]
+            else:
+                result = msg.get("result") or {}
+                if result.get("isError"):
+                    invoke["status"] = "FAIL"
+                    invoke["detail"] = "tool reported isError"
+                else:
+                    invoke["status"] = "PASS"
+                    invoke["detail"] = "structured result returned"
+    if not got_init:
+        return {"id": "mcp-handshake", "status": "FAIL", "detail": "no initialize response"}
+    out: dict[str, Any] = {
+        "id": "mcp-handshake",
+        "status": "PASS",
+        "detail": f"{len(tools)} tools",
+        "tools": tools[:50],
+    }
+    if invoke is not None:
+        out["invoke"] = invoke
+    return out
 
 
 def cli_version(spec: ForgeSpec, *, timeout: int = 15) -> str | None:
