@@ -590,11 +590,15 @@ def apply_install(ctx: InstallContext, *, approved: bool = False) -> dict[str, A
 
     assets = ctx.spec.render_assets(ctx) if ctx.spec.render_assets else {}
     kinds = set(profile_asset_kinds(ctx.profile))
+    ctx_bytes = {"skill": 0, "agent": 0, "managed": 0}
     for rel in sorted(assets):
         kind = _asset_kind(rel)
         if kind not in kinds:
             continue
         data = assets[rel]
+        if kind in ("skill", "agent"):
+            ctx_bytes[kind] += len(data)
+        ctx_bytes["managed"] += len(data)
         target = ctx.root / rel
         existing_entry = ledger.get(rel)
         if target.exists():
@@ -708,6 +712,16 @@ def apply_install(ctx: InstallContext, *, approved: bool = False) -> dict[str, A
         "managed_files": files,
         "managed_markers": markers,
         "mcp": mcp_entries,
+        # Context-budget metrics — only what is observable at write time
+        # (§13.2). Token counts are never invented: hosts that supply
+        # them report through their own telemetry.
+        "context": {
+            "profile": ctx.profile,
+            "skills_bytes": ctx_bytes["skill"],
+            "agents_bytes": ctx_bytes["agent"],
+            "managed_bytes": ctx_bytes["managed"] or None,
+            "mcp_entries": len(mcp_entries) or None,
+        },
         "env": {"python": platform.python_version()},
         "checks": checks,
         "verification": {
@@ -822,11 +836,21 @@ def doctor(ctx: InstallContext) -> dict[str, Any]:
         overall = "degraded" if installed else "broken"
     elif not installed:
         overall = "unverified"
+    handshake = next((c for c in checks if c.get("id") == "mcp-handshake"), None)
     return {
         "schema": SCHEMA_HEALTH,
         "forge_id": ctx.spec.forge_id,
         "status": overall,
         "checks": checks,
+        # Observable context budget only (§13.2): tools the server
+        # actually enumerated; nothing inferred.
+        "context": {
+            "profile": ctx.profile,
+            "managed_entries": len(installed),
+            "tools_exposed": len(handshake["tools"])
+            if isinstance(handshake, dict) and isinstance(handshake.get("tools"), list)
+            else None,
+        },
         "checked_at": _utc_now(),
         "repair_hint": f"{ctx.spec.cli_name} repair"
         if any(c.get("repairable") for c in checks)
