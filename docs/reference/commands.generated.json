@@ -1,0 +1,1056 @@
+{
+  "schema": "forge/CommandInventory/v1",
+  "forge_id": "forge-doctor-api",
+  "cli": "forge-doctor-api",
+  "generated_at": "2026-10-09T22:45:19Z",
+  "generated_by": "doc_inventory.py/1",
+  "command_count": 35,
+  "commands": [
+    {
+      "path": "blast-radius",
+      "help": "§68 blast radius: changed operation -> clients -> services -> business paths.",
+      "arguments": [
+        {
+          "name": "old",
+          "flags": [
+            "old"
+          ],
+          "required": true,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Old contract file or directory."
+        },
+        {
+          "name": "new",
+          "flags": [
+            "new"
+          ],
+          "required": true,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "New contract file or directory."
+        },
+        {
+          "name": "clients",
+          "flags": [
+            "--clients"
+          ],
+          "required": false,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Directory of client sources."
+        },
+        {
+          "name": "json_out",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "default": "False",
+          "choices": null,
+          "positional": false,
+          "help": "JSON output."
+        }
+      ]
+    },
+    {
+      "path": "contract",
+      "help": "Inspect, diff and check API contracts.",
+      "arguments": [],
+      "group": true
+    },
+    {
+      "path": "contract compatibility",
+      "help": "Classify contract changes by compatibility (§16, §160).",
+      "arguments": [
+        {
+          "name": "old",
+          "flags": [
+            "old"
+          ],
+          "required": true,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Old contract file or directory."
+        },
+        {
+          "name": "new",
+          "flags": [
+            "new"
+          ],
+          "required": true,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "New contract file or directory."
+        },
+        {
+          "name": "json_out",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "default": "False",
+          "choices": null,
+          "positional": false,
+          "help": "JSON output."
+        }
+      ]
+    },
+    {
+      "path": "contract diff",
+      "help": "Diff two API contracts (§66).",
+      "arguments": [
+        {
+          "name": "old",
+          "flags": [
+            "old"
+          ],
+          "required": true,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Old contract file or directory."
+        },
+        {
+          "name": "new",
+          "flags": [
+            "new"
+          ],
+          "required": true,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "New contract file or directory."
+        },
+        {
+          "name": "semantic",
+          "flags": [
+            "--semantic"
+          ],
+          "required": false,
+          "default": "True",
+          "choices": null,
+          "positional": false,
+          "help": "Emit the semantic change list."
+        },
+        {
+          "name": "json_out",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "default": "False",
+          "choices": null,
+          "positional": false,
+          "help": "JSON output."
+        }
+      ]
+    },
+    {
+      "path": "contract inspect",
+      "help": "Inspect an API contract: documents, operations, schemas, servers, refs.\n\nMetadata surface only — never emits schema bodies or payloads.",
+      "arguments": [
+        {
+          "name": "target",
+          "flags": [
+            "target"
+          ],
+          "required": true,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Contract file or directory."
+        },
+        {
+          "name": "json_out",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "default": "False",
+          "choices": null,
+          "positional": false,
+          "help": "JSON output."
+        }
+      ]
+    },
+    {
+      "path": "diagnose",
+      "help": "§165 cluster findings into symptom/candidate causes/affected services/unknowns.",
+      "arguments": [
+        {
+          "name": "target",
+          "flags": [
+            "target"
+          ],
+          "required": true,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Directory with current-state evidence (contract + config + runtime artifacts)."
+        },
+        {
+          "name": "before",
+          "flags": [
+            "--before"
+          ],
+          "required": false,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Prior-state directory for the change diff."
+        },
+        {
+          "name": "json_out",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "default": "False",
+          "choices": null,
+          "positional": false,
+          "help": "JSON output."
+        }
+      ]
+    },
+    {
+      "path": "diff",
+      "help": "Semantic contract diff (§66): typed change events + optional PR summary.",
+      "arguments": [
+        {
+          "name": "old",
+          "flags": [
+            "old"
+          ],
+          "required": true,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Old contract file or directory."
+        },
+        {
+          "name": "new",
+          "flags": [
+            "new"
+          ],
+          "required": true,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "New contract file or directory."
+        },
+        {
+          "name": "semantic",
+          "flags": [
+            "--semantic"
+          ],
+          "required": false,
+          "default": "True",
+          "choices": null,
+          "positional": false,
+          "help": "Emit typed change events (§65)."
+        },
+        {
+          "name": "json_out",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "default": "False",
+          "choices": null,
+          "positional": false,
+          "help": "JSON output."
+        },
+        {
+          "name": "pr",
+          "flags": [
+            "--pr"
+          ],
+          "required": false,
+          "default": "False",
+          "choices": null,
+          "positional": false,
+          "help": "Print the §67 PR-intel summary."
+        },
+        {
+          "name": "clients",
+          "flags": [
+            "--clients"
+          ],
+          "required": false,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Directory of client sources (blast radius)."
+        }
+      ]
+    },
+    {
+      "path": "explain",
+      "help": "§166 render the evidence chain + rule rationale for a finding.",
+      "arguments": [
+        {
+          "name": "target",
+          "flags": [
+            "target"
+          ],
+          "required": true,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Directory the finding came from."
+        },
+        {
+          "name": "finding",
+          "flags": [
+            "finding"
+          ],
+          "required": true,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Finding id or subject token to explain."
+        },
+        {
+          "name": "json_out",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "default": "False",
+          "choices": null,
+          "positional": false,
+          "help": "JSON output."
+        }
+      ]
+    },
+    {
+      "path": "fingerprint",
+      "help": "Print the semantic fingerprint of a contract (§180).",
+      "arguments": [
+        {
+          "name": "target",
+          "flags": [
+            "target"
+          ],
+          "required": true,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Contract file or directory."
+        }
+      ]
+    },
+    {
+      "path": "graph",
+      "help": "Show the service graph built from contract + implementation + client evidence (§161).",
+      "arguments": [
+        {
+          "name": "target",
+          "flags": [
+            "target"
+          ],
+          "required": true,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Directory with contract + source evidence."
+        },
+        {
+          "name": "json_out",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "default": "False",
+          "choices": null,
+          "positional": false,
+          "help": "JSON output."
+        }
+      ]
+    },
+    {
+      "path": "inventory",
+      "help": "§159 inventory: services, APIs, operations, protocols, owners.",
+      "arguments": [
+        {
+          "name": "target",
+          "flags": [
+            "target"
+          ],
+          "required": false,
+          "default": ".",
+          "choices": null,
+          "positional": false,
+          "help": "Workspace or repo directory."
+        },
+        {
+          "name": "json_out",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "default": "False",
+          "choices": null,
+          "positional": false,
+          "help": "JSON output."
+        }
+      ]
+    },
+    {
+      "path": "knowledge",
+      "help": "Knowledge-pack manifests, compat and precedence.",
+      "arguments": [],
+      "group": true
+    },
+    {
+      "path": "knowledge list",
+      "help": "List pack manifests with lifecycle status.\n\nPrecedence: explicit dirs > project .forge-doctor/knowledge > builtin.",
+      "arguments": [
+        {
+          "name": "dirs",
+          "flags": [
+            "dirs"
+          ],
+          "required": false,
+          "default": "[]",
+          "choices": null,
+          "positional": false,
+          "help": "Pack dirs, highest precedence first."
+        },
+        {
+          "name": "target",
+          "flags": [
+            "--target"
+          ],
+          "required": false,
+          "default": ".",
+          "choices": null,
+          "positional": false,
+          "help": "Project dir for .forge-doctor/knowledge."
+        }
+      ]
+    },
+    {
+      "path": "knowledge validate",
+      "help": "Strict-validate one knowledge manifest.",
+      "arguments": [
+        {
+          "name": "directory",
+          "flags": [
+            "directory"
+          ],
+          "required": true,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Pack dir or toml file."
+        }
+      ]
+    },
+    {
+      "path": "lab",
+      "help": "§199-§201 Forge Lab: run every scenario + report per-family precision.",
+      "arguments": [
+        {
+          "name": "target",
+          "flags": [
+            "target"
+          ],
+          "required": false,
+          "default": "labs",
+          "choices": null,
+          "positional": false,
+          "help": "Labs corpus directory."
+        },
+        {
+          "name": "json_out",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "default": "False",
+          "choices": null,
+          "positional": false,
+          "help": "JSON output."
+        },
+        {
+          "name": "no_record",
+          "flags": [
+            "--no-record"
+          ],
+          "required": false,
+          "default": "False",
+          "choices": null,
+          "positional": false,
+          "help": "Skip factory/runs record."
+        }
+      ]
+    },
+    {
+      "path": "mcp",
+      "help": "§216 serve the Doctor over MCP (requires the `mcp` extra).",
+      "arguments": [
+        {
+          "name": "target",
+          "flags": [
+            "target"
+          ],
+          "required": false,
+          "default": ".",
+          "choices": null,
+          "positional": false,
+          "help": "Project directory to serve over MCP."
+        },
+        {
+          "name": "transport",
+          "flags": [
+            "--transport"
+          ],
+          "required": false,
+          "default": "stdio",
+          "choices": null,
+          "positional": false,
+          "help": "stdio (default)."
+        }
+      ]
+    },
+    {
+      "path": "plugins",
+      "help": "Plugin manifests, registry and conformance.",
+      "arguments": [],
+      "group": true
+    },
+    {
+      "path": "plugins inspect",
+      "help": "§52 manifest + compat + rejection reasons for one plugin.",
+      "arguments": [
+        {
+          "name": "plugin_id",
+          "flags": [
+            "plugin_id"
+          ],
+          "required": true,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Plugin id."
+        },
+        {
+          "name": "directory",
+          "flags": [
+            "--dir"
+          ],
+          "required": false,
+          "default": "plugins",
+          "choices": null,
+          "positional": false,
+          "help": "Directory scanned for plugin manifests."
+        }
+      ]
+    },
+    {
+      "path": "plugins list",
+      "help": "§52 list discovered plugin manifests + rejection reasons.",
+      "arguments": [
+        {
+          "name": "directory",
+          "flags": [
+            "--dir"
+          ],
+          "required": false,
+          "default": "plugins",
+          "choices": null,
+          "positional": false,
+          "help": "Directory scanned for plugin manifests."
+        }
+      ]
+    },
+    {
+      "path": "plugins verify",
+      "help": "§54 compat check + conformance preflight (never imports UNTRUSTED).",
+      "arguments": [
+        {
+          "name": "plugin_id",
+          "flags": [
+            "plugin_id"
+          ],
+          "required": true,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Plugin id."
+        },
+        {
+          "name": "target",
+          "flags": [
+            "target"
+          ],
+          "required": false,
+          "default": ".",
+          "choices": null,
+          "positional": false,
+          "help": "Project the plugin analyzes during conformance."
+        },
+        {
+          "name": "directory",
+          "flags": [
+            "--dir"
+          ],
+          "required": false,
+          "default": "plugins",
+          "choices": null,
+          "positional": false,
+          "help": "Directory scanned for plugin manifests."
+        }
+      ]
+    },
+    {
+      "path": "reliability",
+      "help": "Reliability analysis.",
+      "arguments": [],
+      "group": true
+    },
+    {
+      "path": "reliability inspect",
+      "help": "Passive reliability inspection of declared config (§164).",
+      "arguments": [
+        {
+          "name": "target",
+          "flags": [
+            "target"
+          ],
+          "required": true,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Directory with config artifacts."
+        },
+        {
+          "name": "json_out",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "default": "False",
+          "choices": null,
+          "positional": false,
+          "help": "JSON output."
+        }
+      ]
+    },
+    {
+      "path": "reliability path",
+      "help": "Reliability along an explicit call path (§164, §228).",
+      "arguments": [
+        {
+          "name": "target",
+          "flags": [
+            "target"
+          ],
+          "required": true,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Directory with config artifacts."
+        },
+        {
+          "name": "hops",
+          "flags": [
+            "--hop"
+          ],
+          "required": false,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Hop name in call order; repeatable."
+        },
+        {
+          "name": "policy",
+          "flags": [
+            "--policy"
+          ],
+          "required": false,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Inline declared retry: scope=max_attempts; repeatable."
+        },
+        {
+          "name": "timeout",
+          "flags": [
+            "--timeout"
+          ],
+          "required": false,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Inline declared timeout: scope=ms; repeatable."
+        },
+        {
+          "name": "json_out",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "default": "False",
+          "choices": null,
+          "positional": false,
+          "help": "JSON output."
+        }
+      ]
+    },
+    {
+      "path": "runtime",
+      "help": "Analyze exported runtime evidence.",
+      "arguments": [],
+      "group": true
+    },
+    {
+      "path": "runtime baseline",
+      "help": "Build runtime baselines (§36, §88, §162).",
+      "arguments": [
+        {
+          "name": "target",
+          "flags": [
+            "target"
+          ],
+          "required": true,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Directory with runtime artifacts."
+        },
+        {
+          "name": "json_out",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "default": "False",
+          "choices": null,
+          "positional": false,
+          "help": "JSON output."
+        }
+      ]
+    },
+    {
+      "path": "runtime regressions",
+      "help": "Detect runtime regressions against baselines (§37, §162).",
+      "arguments": [
+        {
+          "name": "target",
+          "flags": [
+            "target"
+          ],
+          "required": true,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Directory with runtime artifacts."
+        },
+        {
+          "name": "json_out",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "default": "False",
+          "choices": null,
+          "positional": false,
+          "help": "JSON output."
+        }
+      ]
+    },
+    {
+      "path": "runtime requests",
+      "help": "Summarize normalized request executions (§28, §162).",
+      "arguments": [
+        {
+          "name": "target",
+          "flags": [
+            "target"
+          ],
+          "required": true,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Directory with runtime artifacts."
+        },
+        {
+          "name": "json_out",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "default": "False",
+          "choices": null,
+          "positional": false,
+          "help": "JSON output."
+        }
+      ]
+    },
+    {
+      "path": "scan",
+      "help": "§177 full scan: every deterministic pipeline + optional §178 gate.",
+      "arguments": [
+        {
+          "name": "target",
+          "flags": [
+            "target"
+          ],
+          "required": false,
+          "default": ".",
+          "choices": null,
+          "positional": false,
+          "help": "Project directory."
+        },
+        {
+          "name": "fail_on",
+          "flags": [
+            "--fail-on"
+          ],
+          "required": false,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "§178 gate categories, comma-separated: breaking,security,policy."
+        },
+        {
+          "name": "baseline",
+          "flags": [
+            "--baseline"
+          ],
+          "required": false,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Baseline contract file/dir for the breaking gate."
+        },
+        {
+          "name": "policy",
+          "flags": [
+            "--policy"
+          ],
+          "required": false,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Extra policy file/dir merged into evaluation."
+        },
+        {
+          "name": "fmt",
+          "flags": [
+            "--format"
+          ],
+          "required": false,
+          "default": "console",
+          "choices": null,
+          "positional": false,
+          "help": "console | json | jsonl | sarif | agent | report (full DoctorReport)."
+        },
+        {
+          "name": "out",
+          "flags": [
+            "--out"
+          ],
+          "required": false,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Write the export to a file."
+        },
+        {
+          "name": "stats_timing",
+          "flags": [
+            "--stats-timing"
+          ],
+          "required": false,
+          "default": "False",
+          "choices": null,
+          "positional": false,
+          "help": "Record per-analyzer wall time in report.stats (non-canonical; excluded from deterministic hashing)."
+        },
+        {
+          "name": "incremental",
+          "flags": [
+            "--incremental"
+          ],
+          "required": false,
+          "default": "False",
+          "choices": null,
+          "positional": false,
+          "help": "Reuse cached analyzer models under .forge-doctor/cache/ (findings always recompute)."
+        }
+      ]
+    },
+    {
+      "path": "security",
+      "help": "Passive security analysis.",
+      "arguments": [],
+      "group": true
+    },
+    {
+      "path": "security inspect",
+      "help": "Passive security inspection (§163) - contract/config evidence only.",
+      "arguments": [
+        {
+          "name": "target",
+          "flags": [
+            "target"
+          ],
+          "required": true,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Project directory."
+        },
+        {
+          "name": "json_out",
+          "flags": [
+            "--json"
+          ],
+          "required": false,
+          "default": "False",
+          "choices": null,
+          "positional": false,
+          "help": "JSON output."
+        }
+      ]
+    },
+    {
+      "path": "snapshot",
+      "help": "Temporal snapshots + architectural regressions.",
+      "arguments": [],
+      "group": true
+    },
+    {
+      "path": "snapshot diff",
+      "help": "Delta context between two snapshots (spec-049 delta).",
+      "arguments": [
+        {
+          "name": "a",
+          "flags": [
+            "a"
+          ],
+          "required": true,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Snapshot id/label (older)."
+        },
+        {
+          "name": "b",
+          "flags": [
+            "b"
+          ],
+          "required": true,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Snapshot id/label (newer)."
+        },
+        {
+          "name": "target",
+          "flags": [
+            "--target"
+          ],
+          "required": false,
+          "default": ".",
+          "choices": null,
+          "positional": false,
+          "help": null
+        }
+      ]
+    },
+    {
+      "path": "snapshot list",
+      "help": "List stored snapshots (never creates the store).",
+      "arguments": [
+        {
+          "name": "target",
+          "flags": [
+            "target"
+          ],
+          "required": false,
+          "default": ".",
+          "choices": null,
+          "positional": false,
+          "help": null
+        }
+      ]
+    },
+    {
+      "path": "snapshot regressions",
+      "help": "Evidence-backed architectural regressions a -> b.",
+      "arguments": [
+        {
+          "name": "a",
+          "flags": [
+            "a"
+          ],
+          "required": true,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Snapshot id/label (older)."
+        },
+        {
+          "name": "b",
+          "flags": [
+            "b"
+          ],
+          "required": true,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Snapshot id/label (newer)."
+        },
+        {
+          "name": "target",
+          "flags": [
+            "--target"
+          ],
+          "required": false,
+          "default": ".",
+          "choices": null,
+          "positional": false,
+          "help": null
+        }
+      ]
+    },
+    {
+      "path": "snapshot save",
+      "help": "Scan the project and store a snapshot under .forge-doctor/.",
+      "arguments": [
+        {
+          "name": "target",
+          "flags": [
+            "target"
+          ],
+          "required": false,
+          "default": ".",
+          "choices": null,
+          "positional": false,
+          "help": "Project directory."
+        },
+        {
+          "name": "label",
+          "flags": [
+            "--label"
+          ],
+          "required": false,
+          "default": "",
+          "choices": null,
+          "positional": false,
+          "help": null
+        }
+      ]
+    }
+  ]
+}

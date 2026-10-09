@@ -1,3 +1,6 @@
+
+> Instalação portátil: [`docs/installation/quickstart.md`](docs/installation/quickstart.md) — clone → setup → install.
+> Docs: [commands](docs/reference/commands.md) · [skills](docs/reference/skills.md) · [agents](docs/reference/agents.md) · [tutorial](docs/tutorials/first-run.md) · [economy](docs/economy.md) · [troubleshooting](docs/installation/troubleshooting.md)
 <p align="center">
   <img src="docs/assets/logo.png" alt="Forge Doctor API" width="440">
 </p>
@@ -47,6 +50,32 @@ python -m pytest -q
 python -m ruff check .
 python -m mypy src
 ```
+
+### Portable install (Forge contract)
+
+The checkout also carries the Forge family's portable-installation
+contract — clone once, setup once:
+
+```bash
+./setup.sh          # or .\setup.ps1 — venv + wheel + ~/.forge registry
+```
+
+Installing the Forge into a *consumer* project (managed `.mcp.json` key +
+`AGENTS.md` marker block, sha256-ledgered) is deliberately a **checkout
+script**, not a `forge-doctor-api` verb: the package boundary bans
+`os`/`subprocess` imports across `src/` and the 0.2.0 RC window forbids
+new CLI commands. Same verbs, same receipts as sibling forges:
+
+```bash
+python scripts/forge_install.py install --dry-run   # plan only
+python scripts/forge_install.py install --yes       # apply to a repo
+python scripts/forge_install.py status|doctor|repair
+python scripts/forge_install.py uninstall [--purge]
+python scripts/forge_install.py update|mcp-verify
+```
+
+`theforge install auto` delegates here automatically via the
+`install_command` field in `forge.json`.
 
 ## Quickstart
 

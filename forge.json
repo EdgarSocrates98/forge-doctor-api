@@ -1,0 +1,19 @@
+{
+  "forge_id": "forge-doctor-api",
+  "package": "forge_doctor_api",
+  "distribution": "forge-doctor-api",
+  "cli": "forge-doctor-api",
+  "python": ">=3.11",
+  "extras": [
+    "mcp"
+  ],
+  "mcp_server_name": "forge-doctor-api",
+  "mcp_command": [
+    "forge-doctor-api",
+    "mcp"
+  ],
+  "install_command": [
+    "{python}",
+    "{checkout}/scripts/forge_install.py"
+  ]
+}
