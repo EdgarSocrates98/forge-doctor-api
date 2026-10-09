@@ -147,8 +147,28 @@ def walk_click(cmd: Any, prefix: str, out: list[dict[str, Any]]) -> None:
 # --------------------------------------------------------------------------
 
 
+_FENCE = re.compile(r"^```")
+
+
+def _fenced_lines(text: str) -> list[tuple[int, str]]:
+    """Lines inside ``` fences — invocation-shaped content lives there.
+
+    Inline backtick prose (`` `apiforge here` intentionally deferred ``) is
+    excluded on purpose: docs legitimately name absent commands to say they
+    are absent; only fenced blocks claim "run this"."""
+    inside = False
+    out: list[tuple[int, str]] = []
+    for i, line in enumerate(text.splitlines(), 1):
+        if _FENCE.match(line.strip()):
+            inside = not inside
+            continue
+        if inside:
+            out.append((i, line))
+    return out
+
+
 def _doc_verbs(cli: str, md_files: list[Path]) -> tuple[set[str], dict[str, list[str]]]:
-    """``<cli> <verb>`` tokens used in docs; returns (verbs, verb→files)."""
+    """``<cli> <verb>`` tokens used in fenced blocks; returns (verbs, verb→files:lines)."""
     pat = re.compile(rf"\b{re.escape(cli)}\s+([a-z][a-z0-9-]+)\b")
     verbs: set[str] = set()
     where: dict[str, list[str]] = {}
@@ -157,9 +177,22 @@ def _doc_verbs(cli: str, md_files: list[Path]) -> tuple[set[str], dict[str, list
             text = f.read_text(encoding="utf-8", errors="replace")
         except OSError:
             continue
-        for m in pat.finditer(text):
-            verbs.add(m.group(1))
-            where.setdefault(m.group(1), []).append(str(f))
+        for lineno, line in _fenced_lines(text):
+            # invocation position: `<cli>` starts the line (modulo prompt
+            # chars) or follows a shell separator — not inside a comment
+            # or prose like `# sparkforge-aws instalado`.
+            code = line.split("#", 1)[0]  # comments can't contain invocations
+            stripped = code.lstrip(" \t$>%")
+            if not (
+                stripped.startswith(cli)
+                or f"&& {cli}" in code
+                or f"; {cli}" in code
+                or f"| {cli}" in code
+            ):
+                continue
+            for m in pat.finditer(code):
+                verbs.add(m.group(1))
+                where.setdefault(m.group(1), []).append(f"{f}:{lineno}")
     return verbs, where
 
 

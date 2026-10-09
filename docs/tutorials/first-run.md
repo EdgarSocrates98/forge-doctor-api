@@ -34,7 +34,7 @@ varre o projeto e emite findings.
 ## 4. Segundo passo (offline)
 
 ```bash
-forge-doctor-api checks --help
+forge-doctor-api inventory --help
 ```
 
 inspeciona os checks disponíveis.
@@ -61,7 +61,7 @@ saída limpa do processo. Um `FAIL` aqui vem com `stderr_tail` e
 ## 7. Próximo passo
 
 ```bash
-forge-doctor-api doctor --help
+python scripts/forge_install.py doctor
 ```
 
 verifica saúde do ambiente.

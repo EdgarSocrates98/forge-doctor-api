@@ -1,8 +1,8 @@
 # Uninstall — forge-doctor-api
 
 ```bash
-forge-doctor-api uninstall            # remove só arquivos gerenciados
-forge-doctor-api uninstall --purge    # + remove o estado local (.forge-doctor-api/install/)
+python scripts/forge_install.py uninstall            # remove só arquivos gerenciados
+python scripts/forge_install.py uninstall --purge    # + remove o estado local (.forge-doctor-api/install/)
 ```
 
 O ledger SHA-256 decide ownership: arquivos que você criou ou modificou

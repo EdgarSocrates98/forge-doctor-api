@@ -3,7 +3,7 @@
 ## Update
 
 ```bash
-forge-doctor-api update --to <versão ou tag pinada>
+python scripts/forge_install.py update --to <versão ou tag pinada>
 ```
 
 `latest` é recusado por contrato — sempre pin a versão. Sem checkout
@@ -12,8 +12,8 @@ registrado o update reporta BLOCKED honestamente.
 ## Repair
 
 ```bash
-forge-doctor-api doctor   # mostra o drift
-forge-doctor-api repair   # reassegura regiões gerenciadas
+python scripts/forge_install.py doctor   # mostra o drift
+python scripts/forge_install.py repair   # reassegura regiões gerenciadas
 ```
 
 Repair restaura arquivos gerenciados removidos e cura blocos

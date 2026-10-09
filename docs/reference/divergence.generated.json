@@ -3,83 +3,13 @@
   "cli": "forge-doctor-api",
   "documented_missing": [
     {
-      "file": "forge-doctor-api\\docs\\installation\\portable-installation.md; forge-doctor-api\\docs\\installation\\quickstart.md",
-      "line": "-",
-      "problem": "`forge-doctor-api checkout` documented but not a real command",
-      "impact": "user runs a command that fails",
-      "fix": "remove or rename the `checkout` mention"
-    },
-    {
-      "file": "forge-doctor-api\\docs\\forger-boundary.md",
+      "file": "forge-doctor-api\\docs\\forger-boundary.md:7",
       "line": "-",
       "problem": "`forge-doctor-api deterministic` documented but not a real command",
       "impact": "user runs a command that fails",
       "fix": "remove or rename the `deterministic` mention"
-    },
-    {
-      "file": "forge-doctor-api\\docs\\installation\\mcp.md; forge-doctor-api\\docs\\installation\\quickstart.md; forge-doctor-api\\docs\\installation\\update-and-repair.md",
-      "line": "-",
-      "problem": "`forge-doctor-api doctor` documented but not a real command",
-      "impact": "user runs a command that fails",
-      "fix": "remove or rename the `doctor` mention"
-    },
-    {
-      "file": "forge-doctor-api\\docs\\plugins.md",
-      "line": "-",
-      "problem": "`forge-doctor-api has` documented but not a real command",
-      "impact": "user runs a command that fails",
-      "fix": "remove or rename the `has` mention"
-    },
-    {
-      "file": "forge-doctor-api\\docs\\installation\\troubleshooting.md",
-      "line": "-",
-      "problem": "`forge-doctor-api mcp-verify` documented but not a real command",
-      "impact": "user runs a command that fails",
-      "fix": "remove or rename the `mcp-verify` mention"
-    },
-    {
-      "file": "forge-doctor-api\\docs\\installation\\troubleshooting.md; forge-doctor-api\\docs\\installation\\update-and-repair.md",
-      "line": "-",
-      "problem": "`forge-doctor-api repair` documented but not a real command",
-      "impact": "user runs a command that fails",
-      "fix": "remove or rename the `repair` mention"
-    },
-    {
-      "file": "forge-doctor-api\\docs\\installation\\quickstart.md",
-      "line": "-",
-      "problem": "`forge-doctor-api repo` documented but not a real command",
-      "impact": "user runs a command that fails",
-      "fix": "remove or rename the `repo` mention"
-    },
-    {
-      "file": "forge-doctor-api\\docs\\mcp.md",
-      "line": "-",
-      "problem": "`forge-doctor-api serves` documented but not a real command",
-      "impact": "user runs a command that fails",
-      "fix": "remove or rename the `serves` mention"
-    },
-    {
-      "file": "forge-doctor-api\\docs\\installation\\quickstart.md",
-      "line": "-",
-      "problem": "`forge-doctor-api status` documented but not a real command",
-      "impact": "user runs a command that fails",
-      "fix": "remove or rename the `status` mention"
-    },
-    {
-      "file": "forge-doctor-api\\docs\\installation\\uninstall.md",
-      "line": "-",
-      "problem": "`forge-doctor-api uninstall` documented but not a real command",
-      "impact": "user runs a command that fails",
-      "fix": "remove or rename the `uninstall` mention"
-    },
-    {
-      "file": "forge-doctor-api\\docs\\installation\\update-and-repair.md",
-      "line": "-",
-      "problem": "`forge-doctor-api update` documented but not a real command",
-      "impact": "user runs a command that fails",
-      "fix": "remove or rename the `update` mention"
     }
   ],
   "undocumented_commands": [],
-  "generated_at": "2026-10-09T22:28:09Z"
+  "generated_at": "2026-10-09T22:45:19Z"
 }
