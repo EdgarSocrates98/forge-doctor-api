@@ -236,7 +236,8 @@ class Ledger:
         self.doc["entries"].pop(rel, None)
 
     def get(self, rel: str) -> dict[str, Any] | None:
-        return self.doc["entries"].get(rel)
+        entry = self.doc["entries"].get(rel)
+        return entry if isinstance(entry, dict) else None
 
     def entries(self) -> dict[str, Any]:
         return dict(self.doc["entries"])
@@ -267,36 +268,38 @@ class LockError(InstallError):
     pass
 
 
-def acquire_lock(state_dir: Path, timeout_s: float = 0.0):
+class _Lock:
+    def __init__(self, lock: Path) -> None:
+        self._lock = lock
+        self.held = False
+
+    def __enter__(self) -> _Lock:
+        try:
+            fd = os.open(str(self._lock), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            os.write(fd, str(os.getpid()).encode())
+            os.close(fd)
+            self.held = True
+            return self
+        except FileExistsError:
+            holder = (_load_json(self._lock)
+                      or self._lock.read_text(errors="replace"))
+            raise LockError(E_LOCKED,
+                            f"install lock held at {self._lock} ({holder})"
+                            ) from None
+
+    def __exit__(self, *exc: object) -> None:
+        if self.held:
+            try:
+                self._lock.unlink()
+            except OSError:
+                pass
+
+
+def acquire_lock(state_dir: Path, timeout_s: float = 0.0) -> _Lock:
     """O_EXCL lockfile. Non-blocking by default — contention is a refusal,
     not a hang."""
     state_dir.mkdir(parents=True, exist_ok=True)
-    lock = state_dir / LOCK_NAME
-
-    class _Lock:
-        held = False
-
-        def __enter__(self):
-            try:
-                fd = os.open(str(lock), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-                os.write(fd, str(os.getpid()).encode())
-                os.close(fd)
-                self.held = True
-                return self
-            except FileExistsError:
-                holder = _load_json(lock) or lock.read_text(errors="replace")
-                raise LockError(E_LOCKED,
-                                f"install lock held at {lock} ({holder})") from None
-
-        def __exit__(self, *exc):
-            if self.held:
-                try:
-                    lock.unlink()
-                except OSError:
-                    pass
-            return False
-
-    return _Lock()
+    return _Lock(state_dir / LOCK_NAME)
 
 
 # --------------------------------------------------------------------------
@@ -785,6 +788,7 @@ def uninstall(ctx: InstallContext, *, purge_state: bool = False) -> dict[str, An
                 else:
                     mcp_file.unlink()
                 ledger.drop(".mcp.json")
+    _prune_empty_dirs(ctx.root, removed)
     if purge_state and ctx.state_dir.exists():
         import shutil
         shutil.rmtree(ctx.state_dir, ignore_errors=True)
@@ -801,6 +805,22 @@ def uninstall(ctx: InstallContext, *, purge_state: bool = False) -> dict[str, An
     if not purge_state:
         _write_receipt(ctx.state_dir, receipt)
     return receipt
+
+
+def _prune_empty_dirs(root: Path, removed: list[str]) -> None:
+    """Remove empty parent dirs of deleted managed files, stopping at the
+    first non-empty ancestor or ``root``. User dirs are never touched —
+    ``rmdir`` refuses on non-empty directories by design."""
+    seen: set[Path] = set()
+    for rel in removed:
+        parent = (root / rel).parent
+        while parent != root and root in parent.parents and parent not in seen:
+            try:
+                parent.rmdir()
+            except OSError:
+                break
+            seen.add(parent)
+            parent = parent.parent
 
 
 # --------------------------------------------------------------------------
