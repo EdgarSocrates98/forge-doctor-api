@@ -16,4 +16,6 @@
 | "O que mudou semanticamente no contrato?" | [contract-diff](recipes/contract-diff.md) |
 | "Os findings formam qual sintoma?" | [diagnose-explain](recipes/diagnose-explain.md) |
 
+Hub do ecossistema (descoberta cross-forge): `the-forge/docs/hub/` — install, which-forge, hosts, MCP, troubleshooting.
+
 Índice gerado: [../INDEX.md](../INDEX.md).
