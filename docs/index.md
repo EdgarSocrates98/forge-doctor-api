@@ -33,10 +33,6 @@ _Task-oriented guides and workflows._
 - [Forge Doctor API](../README.md)
 - [Security Policy](../SECURITY.md)
 
-### docs/
-
-- [Documentation index](index.md)
-
 ### experience/
 
 - [Installation wizard](experience/installation-wizard.md)
@@ -57,6 +53,11 @@ _Task-oriented guides and workflows._
 - [Instalação portátil — forge-doctor-api](installation/portable-installation.md)
 - [Instalação em workspace — forge-doctor-api](installation/workspace-installation.md)
 
+### learn/
+
+- [Forge Doctor API — trilha de aprendizado](learn/README.md)
+- [Receita — os findings formam qual sintoma?](learn/recipes/diagnose-explain.md)
+
 ## Reference
 
 _Command, contract, schema and tool references._
@@ -73,6 +74,11 @@ _Command, contract, schema and tool references._
 - [Grill Gate](../factory/prompts/072-cli-contract-stability.implement.claude.md)
 - [Grill Gate](../factory/prompts/074-forge-contracts-conformance.implement.claude.md)
 - [Grill Gate](../factory/prompts/087-contract-compatibility-hardening.implement.codex.md)
+
+### learn/
+
+- [Receita — o que mudou semanticamente no contrato?](learn/recipes/contract-diff.md)
+- [Receita — auditoria determinística completa do serviço](learn/recipes/scan-contract.md)
 
 ### reference/
 
