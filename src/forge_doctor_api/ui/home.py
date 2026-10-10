@@ -104,6 +104,9 @@ def _script_call(op: str, **kw) -> dict:
     for key in ("scope", "host", "profile"):
         if kw.get(key) is not None:
             argv += [f"--{key}", str(kw[key])]
+    if kw.get("components"):
+        comps = kw["components"]
+        argv += ["--components", ",".join(comps) if not isinstance(comps, str) else comps]
     if kw.get("dry_run"):
         argv.append("--dry-run")
     if kw.get("yes"):

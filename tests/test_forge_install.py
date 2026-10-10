@@ -171,3 +171,22 @@ def test_package_surface_unchanged() -> None:
     src = ROOT / "src" / "forge_doctor_api"
     assert not (src / "_installkit.py").exists()
     assert not (src / "install").exists()
+
+
+def test_hosts_none_e_csv():
+    """GAP-003: `none` nunca vira `all`; csv subconjunto e validado."""
+    import importlib.util
+    import sys
+    from pathlib import Path
+    import pytest
+    spec = importlib.util.spec_from_file_location(
+        "forge_install_script",
+        Path(__file__).parents[1] / "scripts" / "forge_install.py")
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules["forge_install_script"] = mod
+    spec.loader.exec_module(mod)
+    assert mod._hosts("all") == mod.HOSTS
+    assert mod._hosts("none") == ()
+    assert set(mod._hosts("claude,devin")) == {"claude", "devin"}
+    with pytest.raises(Exception):
+        mod._hosts("nope")
