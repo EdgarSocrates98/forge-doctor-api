@@ -4,9 +4,10 @@ The three products stay separated by responsibility, not by
 convention:
 
 ```text
-forge-doctor-api  deterministic + offline-first + evidence-first
-api-forge         agentic engineering (implements changes)
-the-forger        orchestration/routing (decides who acts)
+| forge            | role                                          |
+| forge-doctor-api | deterministic + offline-first + evidence-first |
+| api-forge        | agentic engineering (implements changes)       |
+| the-forger       | orchestration/routing (decides who acts)       |
 ```
 
 ## What the Doctor owns

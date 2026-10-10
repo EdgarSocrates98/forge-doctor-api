@@ -29,7 +29,7 @@ EXCLUDE_DIRS = {
     ".git", "venv", "node_modules", "__pycache__", ".mypy_cache",
     ".pytest_cache", ".ruff_cache", "dist", "build", ".forge", ".sparkforge-aws",
     ".sparkforge-azure", ".apiforge", ".platformforge", ".forge-doctor-data",
-    ".forge-doctor-api", "site",
+    ".forge-doctor-api", ".pytest-tmp", ".pytest_tmp", "site",
 }
 _EXCLUDE_PREFIXES = (".venv",)  # .venv, .venv-verify, .venv-*
 
@@ -92,8 +92,12 @@ def _classify(rel: Path, text: str) -> tuple[str, list[str]]:
         return any(k in s for k in keys)
 
     # Host-mirror roots render canonical sources verbatim — intentional copies.
-    if s.startswith((".claude/", ".agents/", ".devin/", ".codex/")):
+    if s.startswith((".claude/", ".agents/", ".devin/", ".codex/",
+                     ".github/agents/", ".github/skills/")):
         return "GENERATED", []
+    # Vendored trees are upstream-owned: inventoried but never fixed here.
+    if s.startswith("vendor/"):
+        return "INTERNAL", ["VENDORED_UPSTREAM"]
     if has("do-not-edit", "generated") or any(m in head for m in _GENERATED_MARKERS):
         return "GENERATED", []
     if name in ("agents.md", "claude.md", "codex.md", "agent_protocol.md"):
@@ -162,12 +166,20 @@ def _fenced_lines(text: str) -> list[tuple[int, str]]:
 
 
 def _anchor(title: str) -> str:
+    """GitHub-style anchor: lowercase, non-word chars (except space/hyphen)
+    dropped, each space → one hyphen (no collapse — ` → ` becomes `--`)."""
     a = re.sub(r"[^\w\s-]", "", title.strip().lower())
-    return re.sub(r"[\s_]+", "-", a)
+    return a.replace(" ", "-")
+
+
+_INLINE_CODE = re.compile(r"`[^`\n]*`")
 
 
 def _links_and_anchors(text: str) -> tuple[list[str], set[str]]:
-    links = [m.group(2) for m in _LINK_RE.finditer(text)]
+    # Inline code can't contain a real link — strip it before scanning so
+    # regex shapes like `[pattern](?:...)` inside backticks aren't findings.
+    prose = _INLINE_CODE.sub("`x`", text)
+    links = [m.group(2) for m in _LINK_RE.finditer(prose)]
     anchors = {_anchor(m.group(1)) for m in _ANCHOR_RE.finditer(text)}
     return links, anchors
 
@@ -177,7 +189,9 @@ def _check_links(repo: Path, rel: Path, links: list[str]) -> list[dict[str, str]
     findings: list[dict[str, str]] = []
     base = repo / rel.parent
     for raw in links:
-        if raw.startswith(("http://", "https://", "mailto:", "#")):
+        # Root-relative targets are external-site paths (e.g. quoted
+        # devin.ai docs), never repo files — skip alongside http/mailto.
+        if raw.startswith(("http://", "https://", "mailto:", "#", "/")):
             if raw.startswith("#") and len(raw) > 1:
                 continue  # same-file anchor checked via target==self below
             continue
@@ -266,7 +280,8 @@ def build_manifest(repo: Path, forge_id: str, cli: str) -> tuple[list[dict], dic
             "quality_findings": [],
             "recommended_action": "keep",
         })
-        all_links += _check_links(repo, rel, links)
+        if cat != "INTERNAL" or "VENDORED_UPSTREAM" not in secondary:
+            all_links += _check_links(repo, rel, links)
 
     stats = {
         "total": len(rows),
@@ -276,7 +291,11 @@ def build_manifest(repo: Path, forge_id: str, cli: str) -> tuple[list[dict], dic
     # Duplicate groups that contain at least one non-GENERATED member —
     # all-mirror groups are intentional host-rendered copies, not findings.
     generated_paths = {r["path"] for r in rows if r["category"] == "GENERATED"}
-    raw_groups = [g for g in hashes.values() if len(g) > 1]
+    upstream_paths = {r["path"] for r in rows
+                      if "VENDORED_UPSTREAM" in r["secondary"]}
+    raw_groups = [
+        g for g in hashes.values()
+        if len(g) > 1 and not all(p in upstream_paths for p in g)]
     # A real duplicate finding needs >=2 non-generated members; canonical +
     # host mirrors share one hash by design and are reported separately.
     stats["duplicate_groups"] = [

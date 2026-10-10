@@ -1,15 +1,7 @@
 {
   "schema": "forge/DocDivergence/v1",
   "cli": "forge-doctor-api",
-  "documented_missing": [
-    {
-      "file": "forge-doctor-api\\docs\\forger-boundary.md:7",
-      "line": "-",
-      "problem": "`forge-doctor-api deterministic` documented but not a real command",
-      "impact": "user runs a command that fails",
-      "fix": "remove or rename the `deterministic` mention"
-    }
-  ],
+  "documented_missing": [],
   "undocumented_commands": [],
-  "generated_at": "2026-10-09T22:45:19Z"
+  "generated_at": "2026-10-10T09:50:48Z"
 }
