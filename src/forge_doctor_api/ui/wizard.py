@@ -157,12 +157,12 @@ def run_wizard(
         host_arg = ",".join(hosts_available[i] for i in sorted(chosen))
 
     # --- review (real dry-run plan) ------------------------------------------
-    # Contrato explicito: install_fn aceita `components` — wrappers **kw
-    # encaminham sem inspecao de assinatura (GAP-002).
+    # Contrato explícito: install_fn aceita `components` — wrappers **kw
+    # encaminham sem inspeção de assinatura (GAP-002).
     kwargs: dict = {"scope": scope, "profile": profile, "components": components}
     try:
-        # `none` e opt-out explicito — zero hosts escolhidos nunca vira
-        # "all" (GAP-003); csv de subconjunto e contrato valido (GAP-003b).
+        # `none` é opt-out explícito — zero hosts escolhidos nunca vira
+        # "all" (GAP-003); csv de subconjunto é contrato válido (GAP-003b).
         plan = install_fn(host=host_arg or "none", dry_run=True, **kwargs)
     except Exception as exc:
         print(_c(ctx, "31", f"plan failed: {exc}"))

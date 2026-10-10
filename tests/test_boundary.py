@@ -85,6 +85,7 @@ _BOUNDARY_EXTRA_CALLS = {"getattr"}
 _VENDORED = frozenset({
     "_graphstudio.py",
     "ui/i18n.py", "ui/kit.py", "ui/wizard.py", "ui/home.py",
+    "ui/app.py", "ui/screen.py", "ui/tui.py",
 })
 
 
