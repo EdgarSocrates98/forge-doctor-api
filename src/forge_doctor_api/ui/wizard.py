@@ -15,7 +15,6 @@ from __future__ import annotations
 import json
 import shutil
 import sys
-from inspect import signature
 from typing import Any
 
 from forge_doctor_api.ui import i18n
@@ -158,11 +157,13 @@ def run_wizard(
         host_arg = ",".join(hosts_available[i] for i in sorted(chosen))
 
     # --- review (real dry-run plan) ------------------------------------------
-    kwargs: dict = {"scope": scope, "profile": profile}
-    if "components" in signature(install_fn).parameters:
-        kwargs["components"] = components
+    # Contrato explicito: install_fn aceita `components` — wrappers **kw
+    # encaminham sem inspecao de assinatura (GAP-002).
+    kwargs: dict = {"scope": scope, "profile": profile, "components": components}
     try:
-        plan = install_fn(host=host_arg or "all", dry_run=True, **kwargs)
+        # `none` e opt-out explicito — zero hosts escolhidos nunca vira
+        # "all" (GAP-003); csv de subconjunto e contrato valido (GAP-003b).
+        plan = install_fn(host=host_arg or "none", dry_run=True, **kwargs)
     except Exception as exc:
         print(_c(ctx, "31", f"plan failed: {exc}"))
         return 1
@@ -195,7 +196,7 @@ def run_wizard(
         return 130
 
     # --- apply (real governed install) ---------------------------------------
-    receipt = install_fn(host=host_arg or "all", yes=True, dry_run=False, **kwargs)
+    receipt = install_fn(host=host_arg or "none", yes=True, dry_run=False, **kwargs)
     status = receipt.get("status", "unknown")
     if out_json:
         print(json.dumps(receipt, indent=2, ensure_ascii=False))

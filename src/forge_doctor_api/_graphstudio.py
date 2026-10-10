@@ -56,7 +56,8 @@ padding:0 8px;margin:1px 2px;font-size:11px}
 <div id="wrap"><canvas id="cv"></canvas></div>
 <div id="insp"><h4>Inspector</h4><div id="ibody" class="dim">select a node or edge</div></div>
 <footer><span id="stats"></span><span id="prov"></span>
-<span class="dim">scroll=zoom · drag=pan · click=inspect · n=neighbors · esc=reset</span></footer>
+<span class="dim">scroll=zoom · drag=pan · click=inspect · n=neighbors ·
+e=export · d=diff · s=snapshot · esc=reset</span></footer>
 <script>
 let G={nodes:[],edges:[]},L={},view={x:0,y:0,s:1},sel=null,hover=null,
 kindsOn={},ekindsOn={},PAL={},running=true;
@@ -116,7 +117,8 @@ cx.clearRect(0,0,r.width,r.height);
 const q=(document.getElementById('q').value||'').toLowerCase();
 const vis={};let vc=0,ec=0;
 G.nodes.forEach(n=>{const s=(n.label||'')+' '+n.id;
-vis[n.id]=kindsOn[n.kind]&&(!q||s.toLowerCase().includes(q));
+vis[n.id]=kindsOn[n.kind]&&(!q||s.toLowerCase().includes(q))&&
+(!focusSet||focusSet.has(n.id));
 if(vis[n.id])vc++});
 G.edges.forEach(e=>{if(!vis[e.source]||!vis[e.target]||!ekindsOn[e.kind])return;ec++;
 const a=G.nodes.find(n=>n.id===e.source),b=G.nodes.find(n=>n.id===e.target);
@@ -132,7 +134,8 @@ cx.setLineDash([]);
 G.nodes.forEach(n=>{if(!vis[n.id])return;const[x,y]=toS(n.x,n.y);
 const rad=4+Math.min(n.deg,12);
 cx.beginPath();cx.arc(x,y,rad,0,7);
-cx.fillStyle=n===sel?'#f0f6fc':(n===hover?'#fff':pal(n.kind));cx.fill();
+const dcol=drawDiffColors&&DC[drawDiffColors[n.id]];
+cx.fillStyle=n===sel?'#f0f6fc':(n===hover?'#fff':(dcol||pal(n.kind)));cx.fill();
 if(n===sel){cx.strokeStyle='#58a6ff';cx.lineWidth=2;cx.stroke()}
 if(view.s>0.5||n.deg>4){cx.fillStyle='#8b949e';cx.font='10px monospace';
 cx.fillText((n.label||n.id).slice(0,24),x+rad+2,y+3)}});
@@ -182,7 +185,64 @@ ${sel.confidence!=null?`<span class="pill">conf ${sel.confidence}</span>`:''}
 JSON.stringify(sel.temporal):'none'}</div>`}
 b.innerHTML=h}
 document.getElementById('q').oninput=draw;
-document.onkeydown=e=>{if(e.key==='Escape'){view={x:0,y:0,s:1};sel=null;inspect();draw()}};
+// --- premium interactions (Cycle 4): neighbors / export / diff / snapshot ---
+let focusSet=null; // BFS subgraph when 'n' pressed
+function neighbors(seed){const adj={};G.edges.forEach(e=>{
+(adj[e.source]=adj[e.source]||new Set()).add(e.target);
+(adj[e.target]=adj[e.target]||new Set()).add(e.source)});
+const seen=new Set([seed]);let fr=[seed];
+for(let d=0;d<2&&fr.length;d++){const nx=[];fr.forEach(id=>{
+(adj[id]||[]).forEach(m=>{if(!seen.has(m)){seen.add(m);nx.push(m)}})});fr=nx}
+return seen}
+async function exportVisible(){const q=(document.getElementById('q').value||'').toLowerCase();
+const vis={};G.nodes.forEach(n=>{const s=(n.label||'')+' '+n.id;
+vis[n.id]=kindsOn[n.kind]&&(!q||s.toLowerCase().includes(q))&&(!focusSet||focusSet.has(n.id))});
+const doc={exported_at:new Date().toISOString(),
+nodes:G.nodes.filter(n=>vis[n.id]).map(n=>({id:n.id,kind:n.kind,label:n.label,
+epistemic_state:n.epistemic_state,attributes:n.attributes,evidence_refs:n.evidence_refs})),
+edges:G.edges.filter(e=>vis[e.source]&&vis[e.target]&&ekindsOn[e.kind])};
+const a=document.createElement('a');a.href=URL.createObjectURL(
+new Blob([JSON.stringify(doc,null,1)],{type:'application/json'}));
+a.download='forge-graph-subgraph.json';a.click()}
+let diffRef=null;
+async function diffMode(){const r=await fetch('/api/graphs');const d=await r.json();
+if(d.graphs.length<2){document.getElementById('prov').textContent=
+'diff needs ≥2 graphs loaded';return}
+const other=d.graphs.map(g=>g.graph_id).find(id=>id!==curId)||d.graphs[0].graph_id;
+const rr=await fetch('/api/graph/'+encodeURIComponent(other));const o=await rr.json();
+const on={};(o.nodes||[]).forEach(n=>on[n.id]=n);
+const oe={};(o.edges||[]).forEach(e=>oe[e.source+'>'+e.target+':'+e.kind]=1);
+const eadded=G.edges.filter(e=>!oe[e.source+'>'+e.target+':'+e.kind]).length;
+let added=0,removed=0,changed=0;const cls={};
+G.nodes.forEach(n=>{if(!on[n.id]){cls[n.id]='added';added++}else if(
+JSON.stringify(on[n.id].attributes)!==JSON.stringify(n.attributes)||
+on[n.id].epistemic_state!==n.epistemic_state){cls[n.id]='changed';changed++}else cls[n.id]='same'});
+removed=(o.nodes||[]).filter(n=>!G.nodes.find(x=>x.id===n.id)).length;
+diffRef={other,cls};
+drawDiffColors=cls;
+document.getElementById('prov').textContent=
+`diff vs ${other}: +${added} ~${changed} −${removed} nodes · +${eadded} edges (esc clears)`;
+draw()}
+let drawDiffColors=null;
+const DC={added:'#7ee787',removed:'#f78166',changed:'#ffa657',same:null};
+let curId=null;
+const _loadGraph=loadGraph;
+loadGraph=async function(id){curId=id;diffRef=null;drawDiffColors=null;
+await _loadGraph(id)}
+function snapshotSave(){try{localStorage.setItem('forge-graph-snap',
+JSON.stringify({graph:curId,view,q:document.getElementById('q').value,
+kinds:kindsOn,ekinds:ekindsOn,when:Date.now()}));
+document.getElementById('prov').textContent='snapshot saved (s restores)'}catch(e){}}
+function snapshotLoad(){try{const s=JSON.parse(localStorage.getItem('forge-graph-snap')||'null');
+if(!s)return;view=s.view;document.getElementById('q').value=s.q||'';
+Object.assign(kindsOn,s.kinds||{});Object.assign(ekindsOn,s.ekinds||{});draw()}catch(e){}}
+document.onkeydown=e=>{
+if(e.key==='Escape'){view={x:0,y:0,s:1};sel=null;focusSet=null;diffRef=null;
+drawDiffColors=null;inspect();draw()}
+else if(e.key==='n'&&sel&&sel.id!==undefined){focusSet=focusSet?null:neighbors(sel.id);draw()}
+else if(e.key==='e')exportVisible()
+else if(e.key==='d')diffMode()
+else if(e.key==='s'){localStorage.getItem('forge-graph-snap')?snapshotLoad():snapshotSave()}};
 loadGraphs();
 </script></body></html>
 """
