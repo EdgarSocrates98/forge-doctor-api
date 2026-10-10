@@ -17,7 +17,7 @@ product summary instead — automation never hits an interactive prompt.
 
 | Key | Action |
 |---|---|
-| ↑ / ↓ | move selection |
+| ↑ / ↓ or j / k | move selection |
 | Enter | confirm |
 | Space | toggle (multi-select) |
 | q / Esc | cancel or quit |
