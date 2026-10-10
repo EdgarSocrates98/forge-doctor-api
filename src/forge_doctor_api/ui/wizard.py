@@ -15,6 +15,7 @@ from __future__ import annotations
 import json
 import shutil
 import sys
+from inspect import signature
 from typing import Any
 
 from forge_doctor_api.ui import i18n
@@ -105,6 +106,36 @@ def run_wizard(
         return 130
     profile = _PROFILES[idx]
 
+    # --- optional components ---------------------------------------------------
+    # The profile decides the default; the operator can narrow or extend it.
+    # "graph-studio"/"tui" are runtime flags persisted to components.json —
+    # skills/agents/mcp map to real asset kinds.
+    _COMP_LABELS = {
+        "skills": "Skills",
+        "agents": "Agents",
+        "mcp": "MCP",
+        "tui": "TUI",
+        "graph-studio": "Graph Studio",
+    }
+    _COMP_ORDER = ("skills", "agents", "mcp", "tui", "graph-studio")
+    _profile_defaults = {
+        "minimal": {"mcp", "tui"},
+        "recommended": {"skills", "mcp", "tui", "graph-studio"},
+        "full": {"skills", "agents", "mcp", "tui", "graph-studio"},
+    }
+    comp_checked = _profile_defaults.get(profile, set())
+    comp_chosen = multi_select(
+        i18n.t("install_components_q", ctx.language),
+        [_COMP_LABELS[c] for c in _COMP_ORDER],
+        checked={i for i, c in enumerate(_COMP_ORDER) if c in comp_checked},
+        ctx=ctx,
+    )
+    if comp_chosen is None:
+        return 130
+    components = tuple(
+        sorted(_COMP_ORDER[i] for i in comp_chosen)
+    )
+
     # --- hosts ---------------------------------------------------------------
     detected = {
         i
@@ -127,13 +158,16 @@ def run_wizard(
         host_arg = ",".join(hosts_available[i] for i in sorted(chosen))
 
     # --- review (real dry-run plan) ------------------------------------------
+    kwargs: dict = {"scope": scope, "profile": profile}
+    if "components" in signature(install_fn).parameters:
+        kwargs["components"] = components
     try:
-        plan = install_fn(host=host_arg or "all", scope=scope, profile=profile, dry_run=True)
+        plan = install_fn(host=host_arg or "all", dry_run=True, **kwargs)
     except Exception as exc:
         print(_c(ctx, "31", f"plan failed: {exc}"))
         return 1
 
-    planned = plan.get("planned") or plan.get("writes") or []
+    planned = plan.get("planned") or plan.get("planned_files") or plan.get("writes") or []
     dashboard(
         f"{forge_name} — {i18n.t('review', ctx.language)}",
         [
@@ -142,6 +176,7 @@ def run_wizard(
                 [
                     ("scope", scope),
                     ("profile", profile),
+                    ("components", ", ".join(components) or "none"),
                     ("hosts", host_arg or "none"),
                     ("managed writes", str(len(planned) if isinstance(planned, list) else planned)),
                 ],
@@ -160,9 +195,7 @@ def run_wizard(
         return 130
 
     # --- apply (real governed install) ---------------------------------------
-    receipt = install_fn(
-        host=host_arg or "all", scope=scope, profile=profile, yes=True, dry_run=False
-    )
+    receipt = install_fn(host=host_arg or "all", yes=True, dry_run=False, **kwargs)
     status = receipt.get("status", "unknown")
     if out_json:
         print(json.dumps(receipt, indent=2, ensure_ascii=False))

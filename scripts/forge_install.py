@@ -95,7 +95,12 @@ def _ctx(args: argparse.Namespace, hosts: tuple[str, ...]) -> kit.InstallContext
         spec=spec, scope=args.scope, root=target,
         state_dir=kit.state_dir_for(spec, args.scope, target),
         profile=getattr(args, "profile", "recommended"),
-        hosts=hosts, dry_run=getattr(args, "dry_run", False))
+        hosts=hosts, dry_run=getattr(args, "dry_run", False),
+        options=kit.component_options(
+            getattr(args, "profile", "recommended"),
+            tuple(c.strip() for c in args.components.split(",") if c.strip())
+            if getattr(args, "components", None) else None,
+        ))
 
 
 def _hosts(host: str) -> tuple[str, ...]:
@@ -285,6 +290,8 @@ def main(argv: list[str] | None = None) -> int:
     _base(p)
     p.add_argument("--host", default="all")
     p.add_argument("--profile", choices=PROFILES, default="recommended")
+    p.add_argument("--components", default=None,
+                   help="optional components csv: skills,agents,mcp,tui,graph-studio")
     p.add_argument("--yes", "-y", action="store_true")
     p.set_defaults(fn=cmd_install)
 

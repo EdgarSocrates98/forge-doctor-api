@@ -25,6 +25,7 @@ _MENU: list[tuple[str, list[str] | None]] = [
     ('Diagnose', ['diagnose']),
     ('Fingerprint APIs', ['fingerprint']),
 
+        'Graph Studio (browser)', ['graph','.','--ui'],
     ("installation wizard", "__wizard__"),
     ("quit", None),
 ]
