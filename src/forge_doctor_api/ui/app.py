@@ -54,12 +54,26 @@ class TextData:
 
 
 @dataclass(kw_only=True)
+class DocMeta:
+    """Contextual doc metadata for an action (Forge Knowledge §21):
+    description, prerequisites, example, risk, expected result and the
+    canonical doc — a pointer, never an inlined manual."""
+    description: str = ""
+    prerequisites: str = ""
+    example: str = ""
+    risk: str = ""
+    expected: str = ""
+    doc_path: str = ""
+
+
+@dataclass(kw_only=True)
 class ActionData:
     callable: Callable[[], object]
     title: str
     # suspend=True → exit alt-screen + cooked stdin before calling
     # (wizards, subprocess prompts); Screen is re-entered after.
     suspend: bool = False
+    doc: DocMeta | None = None
 
 
 @dataclass(kw_only=True)
@@ -78,6 +92,25 @@ class _Pane:
 
 _HELP = [("up/dn", "nav"), ("enter", "open/run"), ("r", "refresh"),
          ("/", "filter"), ("?", "help"), ("q", "back/quit")]
+
+
+def _doc_lines(d: "ActionData") -> list[str]:
+    """Render DocMeta as compact labelled lines (pointer, not manual)."""
+    if d.doc is None:
+        return []
+    doc = d.doc
+    out = [""]
+    for label, val in (
+        ("what", doc.description),
+        ("needs", doc.prerequisites),
+        ("example", doc.example),
+        ("risk", doc.risk),
+        ("expected", doc.expected),
+        ("docs", doc.doc_path),
+    ):
+        if val:
+            out.append(f"  {label:8s} {val}")
+    return out
 
 
 class ForgeApp:
@@ -168,7 +201,8 @@ class ForgeApp:
                   selected=self.pane.selected, theme=self.theme)
             return
         lines = d.lines if isinstance(d, TextData) else (
-            [f"action: {d.title}", "", "press enter to execute"] + self.pane.log)
+            [f"action: {d.title}"] + _doc_lines(d) +
+            ["", "press enter to execute"] + self.pane.log)
         for i, line in enumerate(lines[:h]):
             buf.draw(y + i, x, line)
 

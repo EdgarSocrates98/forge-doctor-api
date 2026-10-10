@@ -66,10 +66,10 @@ _OPERATE_HINTS = (
 
 def _section_for(row: dict) -> str:
     path = row["path"].lower()
-    if row["category"] not in ("HISTORICAL", "DEPRECATED", "SDD_ARTIFACT",
-                              "TEST_EVIDENCE", "RELEASE_REPORT", "GENERATED"):
-        if any(h in path for h in _OPERATE_HINTS):
-            return "Operate"
+    frozen = {"HISTORICAL", "DEPRECATED", "SDD_ARTIFACT", "TEST_EVIDENCE",
+              "RELEASE_REPORT", "GENERATED"}
+    if row["category"] not in frozen and any(h in path for h in _OPERATE_HINTS):
+        return "Operate"
     return CATEGORY_TO_SECTION.get(row["category"], "Archive")
 
 
@@ -142,8 +142,8 @@ def main() -> int:
     args = ap.parse_args()
 
     inv = args.repo / args.inventory
-    rows = [json.loads(l) for l in
-            inv.read_text("utf-8").splitlines() if l.strip()]
+    rows = [json.loads(line) for line in
+            inv.read_text("utf-8").splitlines() if line.strip()]
     md = build_index(rows, args.forge)
     out = args.repo / args.out
     out.parent.mkdir(parents=True, exist_ok=True)

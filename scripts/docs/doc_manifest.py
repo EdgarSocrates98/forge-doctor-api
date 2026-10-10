@@ -118,8 +118,11 @@ def _classify(rel: Path, text: str) -> tuple[str, list[str]]:
         return "SCHEMA", []
     if has("mcp") and (has("/reference/", "/mcp") or "mcp" in name):
         secondary.append("MCP_REFERENCE")
-    if has("tutorial", "first-run", "walkthrough", "getting-started", "quickstart", "onboarding"):
-        return "GETTING_STARTED" if has("quickstart", "getting-started", "first-run", "onboarding") else "TUTORIAL", secondary
+    if has("tutorial", "first-run", "walkthrough", "getting-started",
+           "quickstart", "onboarding"):
+        beginner = has("quickstart", "getting-started", "first-run",
+                       "onboarding")
+        return ("GETTING_STARTED" if beginner else "TUTORIAL"), secondary
     if has("how-to", "recipe", "guide") or name.startswith("how-"):
         return "HOW_TO", secondary
     if has("/reference/", "reference") or name.endswith(".generated.md"):
@@ -141,7 +144,8 @@ def _classify(rel: Path, text: str) -> tuple[str, list[str]]:
 
 def _audience(category: str, rel: Path) -> str:
     s = "/".join(rel.parts).lower()
-    if category in {"INTERNAL", "SDD_ARTIFACT", "TEST_EVIDENCE", "RELEASE_REPORT", "ADR", "HISTORICAL"}:
+    if category in {"INTERNAL", "SDD_ARTIFACT", "TEST_EVIDENCE",
+                    "RELEASE_REPORT", "ADR", "HISTORICAL"}:
         return "maintainer"
     if "agent" in s or category in {"AGENT_INSTRUCTIONS", "SKILL", "MCP_REFERENCE"}:
         return "agent"
@@ -377,6 +381,22 @@ def _write_reports(out: Path, rows: list[dict], stats: dict, forge_id: str) -> N
     ledger = out / "semantic-review-ledger.jsonl"
     if not ledger.exists():
         ledger.write_text("", "utf-8")
+
+    # §22 context/RAG metadata: one compact row per doc — enough for a
+    # context pack or an index without any retrieval infrastructure.
+    ctx_map = out / "context-map.jsonl"
+    with ctx_map.open("w", encoding="utf-8", newline="\n") as fh:
+        for r in rows:
+            if r["category"] == "GENERATED" or "VENDORED_UPSTREAM" in r["secondary"]:
+                continue
+            fh.write(json.dumps({
+                "path": r["path"],
+                "title": r["title"],
+                "category": r["category"],
+                "audience": r["audience"],
+                "related_commands": r["related_commands"],
+                "review_level": r["review_level"],
+            }) + "\n")
 
 
 def main() -> int:
