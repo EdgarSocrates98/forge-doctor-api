@@ -25,6 +25,11 @@ product summary instead — automation never hits an interactive prompt.
 
 ## What the menu runs
 
+The menu also offers **Graph Studio** — it runs the real `graph ui`
+argv (embedded local explorer on 127.0.0.1). If `graph-studio` was
+declined at install, the underlying command refuses with a named code;
+the menu shows that exit verbatim.
+
 Menu entries resolve the CLI argv — the installed launcher when present,
 otherwise the checkout entry point declared in `forge.agentic.json` —
 and execute it as a real subprocess. The exit code is shown verbatim.
