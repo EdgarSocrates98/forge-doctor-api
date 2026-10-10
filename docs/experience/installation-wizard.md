@@ -1,8 +1,9 @@
 # Installation wizard
 
-Bare `forge-doctor-api install` on a TTY opens the guided wizard. On a non-TTY it
-exits with a usage error pointing at `install apply` — scripts keep the
-flag contract.
+On a TTY, bare `forge-doctor-api` opens the interactive home; the
+*installation wizard* entry there runs the guided flow. The wizard drives
+the real `scripts/forge_install.py` lifecycle — on a non-TTY scripts call
+it directly with the flag contract below.
 
 ## Steps
 
@@ -19,7 +20,7 @@ flag contract.
 7. **Confirm** — explicit approval; Esc cancels with zero writes.
 8. **Apply** — the governed install runs (`--yes` equivalent, with
    locking, ledger, rollback on failure).
-9. **Verify** — `install doctor` health report.
+9. **Verify** — `forge_install.py doctor` health report.
 
 Non-interactive equivalent:
 

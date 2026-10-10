@@ -5,7 +5,7 @@ Every interactive surface degrades to a deterministic, scriptable path.
 | Situation | Behavior |
 |---|---|
 | Non-TTY bare `forge-doctor-api` | product summary, exit 0 |
-| Non-TTY `forge-doctor-api install` | usage error pointing at `install apply` |
+| Non-TTY `python scripts/forge_install.py` | usage error listing the lifecycle verbs |
 | Interactive fn called headless | `NonInteractive` raised — never blocks |
 | `--dry-run` | real plan, zero writes |
 | `--yes` | explicit approval for writes |
