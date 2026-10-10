@@ -2,7 +2,7 @@
   "schema": "forge/CommandInventory/v1",
   "forge_id": "forge-doctor-api",
   "cli": "forge-doctor-api",
-  "generated_at": "2026-10-10T10:17:25Z",
+  "generated_at": "2026-10-10T10:22:48Z",
   "generated_by": "doc_inventory.py/1",
   "command_count": 35,
   "commands": [
