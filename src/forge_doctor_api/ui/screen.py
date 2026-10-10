@@ -42,15 +42,9 @@ MIN_HEIGHT = 16
 
 # ---------------------------------------------------------------- theme
 
-_ACCENTS = {
-    "the-forge": "33",          # gold
-    "api-forge": "34",          # blue
-    "spark-forge-aws": "35",    # magenta
-    "spark-forge-azure": "36",  # cyan
-    "platform-forge": "32",     # green
-    "forge-doctor-data": "37",  # silver
-    "forge-doctor-api": "37",
-}
+# Deterministic accent per forge_id — stable across processes, and the
+# core never names a real provider (TestNoSpecialistNamesInCore).
+_ACCENT_CYCLE = ("33", "34", "35", "36", "32", "37")
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -67,7 +61,8 @@ class Theme:
 
     @staticmethod
     def for_forge(forge_id: str) -> Theme:
-        return Theme(accent=_ACCENTS.get(forge_id, "36"))
+        idx = sum(forge_id.encode("utf-8")) % len(_ACCENT_CYCLE)
+        return Theme(accent=_ACCENT_CYCLE[idx])
 
 
 _STATE_ICON_UNI = {
