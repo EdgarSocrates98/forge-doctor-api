@@ -1,6 +1,8 @@
 # `forge-doctor-api` command reference
 
-Generated from the real CLI parser by `doc_inventory.py` + `doc_reference.py`. Do not hand-edit generated sections — write between `keep:start`/`keep:end` markers. Status vocabulary: `available` unless marked otherwise.
+Generated from the real CLI parser by `doc_inventory.py` + `doc_reference.py`. Do not hand-edit generated sections — write between `keep:start`/`keep:end` markers. `por que`/`quando` lines come from the curated `command-rationale.json` — edit rationale there, never here. Status vocabulary: `available` unless marked otherwise.
+
+Rationale coverage: **17/17** first-level groups curated in `command-rationale.json`.
 
 ## Groups
 
@@ -26,7 +28,10 @@ Generated from the real CLI parser by `doc_inventory.py` + `doc_reference.py`. D
 
 ### `blast-radius`
 
-§68 blast radius: changed operation -> clients -> services -> business paths.
+**para que:** §68 blast radius: changed operation -> clients -> services -> business paths.
+
+- **por que:** blast radius: operação mudada -> clients -> serviços -> caminhos de negócio
+- **quando usar:** antes de mudar uma operação: medir quem quebra
 
 **Syntax**
 
@@ -49,7 +54,10 @@ _free notes — errors, examples, next steps (hand-written, preserved)_
 
 ### `contract`
 
-Inspect, diff and check API contracts.
+**para que:** Inspect, diff and check API contracts.
+
+- **por que:** inspeciona, diffs e checa contratos de API
+- **quando usar:** trabalhar contratos: inspeção, diff, check
 
 **Syntax**
 
@@ -63,7 +71,10 @@ _free notes — errors, examples, next steps (hand-written, preserved)_
 
 ### `contract compatibility`
 
-Classify contract changes by compatibility (§16, §160).
+**para que:** Classify contract changes by compatibility (§16, §160).
+
+- **por que:** inspeciona, diffs e checa contratos de API
+- **quando usar:** trabalhar contratos: inspeção, diff, check
 
 **Syntax**
 
@@ -83,7 +94,10 @@ _free notes — errors, examples, next steps (hand-written, preserved)_
 
 ### `contract diff`
 
-Diff two API contracts (§66).
+**para que:** Diff two API contracts (§66).
+
+- **por que:** inspeciona, diffs e checa contratos de API
+- **quando usar:** trabalhar contratos: inspeção, diff, check
 
 **Syntax**
 
@@ -104,9 +118,12 @@ _free notes — errors, examples, next steps (hand-written, preserved)_
 
 ### `contract inspect`
 
-Inspect an API contract: documents, operations, schemas, servers, refs.
+**para que:** Inspect an API contract: documents, operations, schemas, servers, refs.
 
 Metadata surface only — never emits schema bodies or payloads.
+
+- **por que:** inspeciona, diffs e checa contratos de API
+- **quando usar:** trabalhar contratos: inspeção, diff, check
 
 **Syntax**
 
@@ -127,7 +144,10 @@ _free notes — errors, examples, next steps (hand-written, preserved)_
 
 ### `diagnose`
 
-§165 cluster findings into symptom/candidate causes/affected services/unknowns.
+**para que:** §165 cluster findings into symptom/candidate causes/affected services/unknowns.
+
+- **por que:** agrupa findings em sintoma/causas candidatas/serviços afetados/unknowns
+- **quando usar:** transformar um scan em hipóteses organizadas
 
 **Syntax**
 
@@ -149,7 +169,10 @@ _free notes — errors, examples, next steps (hand-written, preserved)_
 
 ### `diff`
 
-Semantic contract diff (§66): typed change events + optional PR summary.
+**para que:** Semantic contract diff (§66): typed change events + optional PR summary.
+
+- **por que:** diff semântico de contrato: eventos de mudança tipados + resumo opcional para PR
+- **quando usar:** comparar duas versões de contrato com breaking/risky tipados
 
 **Syntax**
 
@@ -174,7 +197,10 @@ _free notes — errors, examples, next steps (hand-written, preserved)_
 
 ### `explain`
 
-§166 render the evidence chain + rule rationale for a finding.
+**para que:** §166 render the evidence chain + rule rationale for a finding.
+
+- **por que:** renderiza a cadeia de evidência + racional da regra de um finding
+- **quando usar:** entender por que um finding disparou
 
 **Syntax**
 
@@ -196,7 +222,10 @@ _free notes — errors, examples, next steps (hand-written, preserved)_
 
 ### `fingerprint`
 
-Print the semantic fingerprint of a contract (§180).
+**para que:** Print the semantic fingerprint of a contract (§180).
+
+- **por que:** imprime o fingerprint semântico de um contrato
+- **quando usar:** identificar/ancorar um contrato pelo seu fingerprint
 
 **Syntax**
 
@@ -216,7 +245,10 @@ _free notes — errors, examples, next steps (hand-written, preserved)_
 
 ### `graph`
 
-Show the service graph built from contract + implementation + client evidence (§161).
+**para que:** Show the service graph built from contract + implementation + client evidence (§161).
+
+- **por que:** mostra o grafo de serviços construído de contrato+implementação+evidência de client
+- **quando usar:** navegar relações de serviço com evidência
 
 **Syntax**
 
@@ -241,7 +273,10 @@ _free notes — errors, examples, next steps (hand-written, preserved)_
 
 ### `inventory`
 
-§159 inventory: services, APIs, operations, protocols, owners.
+**para que:** §159 inventory: services, APIs, operations, protocols, owners.
+
+- **por que:** inventário: serviços, APIs, operações, protocolos, owners
+- **quando usar:** primeiro mapa de um estate de APIs
 
 **Syntax**
 
@@ -262,7 +297,10 @@ _free notes — errors, examples, next steps (hand-written, preserved)_
 
 ### `knowledge`
 
-Knowledge-pack manifests, compat and precedence.
+**para que:** Knowledge-pack manifests, compat and precedence.
+
+- **por que:** manifestos de knowledge-pack, compat e precedência
+- **quando usar:** consultar fontes versionadas e sua precedência
 
 **Syntax**
 
@@ -276,9 +314,12 @@ _free notes — errors, examples, next steps (hand-written, preserved)_
 
 ### `knowledge list`
 
-List pack manifests with lifecycle status.
+**para que:** List pack manifests with lifecycle status.
 
 Precedence: explicit dirs > project .forge-doctor/knowledge > builtin.
+
+- **por que:** manifestos de knowledge-pack, compat e precedência
+- **quando usar:** consultar fontes versionadas e sua precedência
 
 **Syntax**
 
@@ -297,7 +338,10 @@ _free notes — errors, examples, next steps (hand-written, preserved)_
 
 ### `knowledge validate`
 
-Strict-validate one knowledge manifest.
+**para que:** Strict-validate one knowledge manifest.
+
+- **por que:** manifestos de knowledge-pack, compat e precedência
+- **quando usar:** consultar fontes versionadas e sua precedência
 
 **Syntax**
 
@@ -317,7 +361,10 @@ _free notes — errors, examples, next steps (hand-written, preserved)_
 
 ### `lab`
 
-§199-§201 Forge Lab: run every scenario + report per-family precision.
+**para que:** §199-§201 Forge Lab: run every scenario + report per-family precision.
+
+- **por que:** Forge Lab: roda todos os cenários + relatório de precisão por família
+- **quando usar:** validar a ferramenta offline contra ground truth
 
 **Syntax**
 
@@ -339,7 +386,10 @@ _free notes — errors, examples, next steps (hand-written, preserved)_
 
 ### `mcp`
 
-§216 serve the Doctor over MCP (requires the `mcp` extra).
+**para que:** §216 serve the Doctor over MCP (requires the `mcp` extra).
+
+- **por que:** serve o Doctor via MCP (requer o extra `mcp`)
+- **quando usar:** integrar o doctor a hosts via MCP
 
 **Syntax**
 
@@ -360,7 +410,10 @@ _free notes — errors, examples, next steps (hand-written, preserved)_
 
 ### `plugins`
 
-Plugin manifests, registry and conformance.
+**para que:** Plugin manifests, registry and conformance.
+
+- **por que:** manifestos de plugin, registry e conformance
+- **quando usar:** inspecionar/validar plugins externos
 
 **Syntax**
 
@@ -374,7 +427,10 @@ _free notes — errors, examples, next steps (hand-written, preserved)_
 
 ### `plugins inspect`
 
-§52 manifest + compat + rejection reasons for one plugin.
+**para que:** §52 manifest + compat + rejection reasons for one plugin.
+
+- **por que:** manifestos de plugin, registry e conformance
+- **quando usar:** inspecionar/validar plugins externos
 
 **Syntax**
 
@@ -393,7 +449,10 @@ _free notes — errors, examples, next steps (hand-written, preserved)_
 
 ### `plugins list`
 
-§52 list discovered plugin manifests + rejection reasons.
+**para que:** §52 list discovered plugin manifests + rejection reasons.
+
+- **por que:** manifestos de plugin, registry e conformance
+- **quando usar:** inspecionar/validar plugins externos
 
 **Syntax**
 
@@ -411,7 +470,10 @@ _free notes — errors, examples, next steps (hand-written, preserved)_
 
 ### `plugins verify`
 
-§54 compat check + conformance preflight (never imports UNTRUSTED).
+**para que:** §54 compat check + conformance preflight (never imports UNTRUSTED).
+
+- **por que:** manifestos de plugin, registry e conformance
+- **quando usar:** inspecionar/validar plugins externos
 
 **Syntax**
 
@@ -433,7 +495,10 @@ _free notes — errors, examples, next steps (hand-written, preserved)_
 
 ### `reliability`
 
-Reliability analysis.
+**para que:** Reliability analysis.
+
+- **por que:** análise de confiabilidade
+- **quando usar:** avaliar resiliência/SLO com evidência
 
 **Syntax**
 
@@ -447,7 +512,10 @@ _free notes — errors, examples, next steps (hand-written, preserved)_
 
 ### `reliability inspect`
 
-Passive reliability inspection of declared config (§164).
+**para que:** Passive reliability inspection of declared config (§164).
+
+- **por que:** análise de confiabilidade
+- **quando usar:** avaliar resiliência/SLO com evidência
 
 **Syntax**
 
@@ -466,7 +534,10 @@ _free notes — errors, examples, next steps (hand-written, preserved)_
 
 ### `reliability path`
 
-Reliability along an explicit call path (§164, §228).
+**para que:** Reliability along an explicit call path (§164, §228).
+
+- **por que:** análise de confiabilidade
+- **quando usar:** avaliar resiliência/SLO com evidência
 
 **Syntax**
 
@@ -490,7 +561,10 @@ _free notes — errors, examples, next steps (hand-written, preserved)_
 
 ### `runtime`
 
-Analyze exported runtime evidence.
+**para que:** Analyze exported runtime evidence.
+
+- **por que:** analisa evidência de runtime exportada
+- **quando usar:** trabalhar dumps de runtime offline
 
 **Syntax**
 
@@ -504,7 +578,10 @@ _free notes — errors, examples, next steps (hand-written, preserved)_
 
 ### `runtime baseline`
 
-Build runtime baselines (§36, §88, §162).
+**para que:** Build runtime baselines (§36, §88, §162).
+
+- **por que:** analisa evidência de runtime exportada
+- **quando usar:** trabalhar dumps de runtime offline
 
 **Syntax**
 
@@ -523,7 +600,10 @@ _free notes — errors, examples, next steps (hand-written, preserved)_
 
 ### `runtime regressions`
 
-Detect runtime regressions against baselines (§37, §162).
+**para que:** Detect runtime regressions against baselines (§37, §162).
+
+- **por que:** analisa evidência de runtime exportada
+- **quando usar:** trabalhar dumps de runtime offline
 
 **Syntax**
 
@@ -542,7 +622,10 @@ _free notes — errors, examples, next steps (hand-written, preserved)_
 
 ### `runtime requests`
 
-Summarize normalized request executions (§28, §162).
+**para que:** Summarize normalized request executions (§28, §162).
+
+- **por que:** analisa evidência de runtime exportada
+- **quando usar:** trabalhar dumps de runtime offline
 
 **Syntax**
 
@@ -563,7 +646,10 @@ _free notes — errors, examples, next steps (hand-written, preserved)_
 
 ### `scan`
 
-§177 full scan: every deterministic pipeline + optional §178 gate.
+**para que:** §177 full scan: every deterministic pipeline + optional §178 gate.
+
+- **por que:** scan completo: todos os pipelines determinísticos + gate opcional
+- **quando usar:** primeira passada num repo — produz findings
 
 **Syntax**
 
@@ -590,7 +676,10 @@ _free notes — errors, examples, next steps (hand-written, preserved)_
 
 ### `security`
 
-Passive security analysis.
+**para que:** Passive security analysis.
+
+- **por que:** análise de segurança passiva
+- **quando usar:** revisar postura de segurança declarada sem tocar o serviço
 
 **Syntax**
 
@@ -604,7 +693,10 @@ _free notes — errors, examples, next steps (hand-written, preserved)_
 
 ### `security inspect`
 
-Passive security inspection (§163) - contract/config evidence only.
+**para que:** Passive security inspection (§163) - contract/config evidence only.
+
+- **por que:** análise de segurança passiva
+- **quando usar:** revisar postura de segurança declarada sem tocar o serviço
 
 **Syntax**
 
@@ -625,7 +717,10 @@ _free notes — errors, examples, next steps (hand-written, preserved)_
 
 ### `snapshot`
 
-Temporal snapshots + architectural regressions.
+**para que:** Temporal snapshots + architectural regressions.
+
+- **por que:** snapshots temporais + regressões arquiteturais
+- **quando usar:** comparar o estado da arquitetura ao longo do tempo
 
 **Syntax**
 
@@ -639,7 +734,10 @@ _free notes — errors, examples, next steps (hand-written, preserved)_
 
 ### `snapshot diff`
 
-Delta context between two snapshots (spec-049 delta).
+**para que:** Delta context between two snapshots (spec-049 delta).
+
+- **por que:** snapshots temporais + regressões arquiteturais
+- **quando usar:** comparar o estado da arquitetura ao longo do tempo
 
 **Syntax**
 
@@ -659,7 +757,10 @@ _free notes — errors, examples, next steps (hand-written, preserved)_
 
 ### `snapshot list`
 
-List stored snapshots (never creates the store).
+**para que:** List stored snapshots (never creates the store).
+
+- **por que:** snapshots temporais + regressões arquiteturais
+- **quando usar:** comparar o estado da arquitetura ao longo do tempo
 
 **Syntax**
 
@@ -677,7 +778,10 @@ _free notes — errors, examples, next steps (hand-written, preserved)_
 
 ### `snapshot regressions`
 
-Evidence-backed architectural regressions a -> b.
+**para que:** Evidence-backed architectural regressions a -> b.
+
+- **por que:** snapshots temporais + regressões arquiteturais
+- **quando usar:** comparar o estado da arquitetura ao longo do tempo
 
 **Syntax**
 
@@ -697,7 +801,10 @@ _free notes — errors, examples, next steps (hand-written, preserved)_
 
 ### `snapshot save`
 
-Scan the project and store a snapshot under .forge-doctor/.
+**para que:** Scan the project and store a snapshot under .forge-doctor/.
+
+- **por que:** snapshots temporais + regressões arquiteturais
+- **quando usar:** comparar o estado da arquitetura ao longo do tempo
 
 **Syntax**
 

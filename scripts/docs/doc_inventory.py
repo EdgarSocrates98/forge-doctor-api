@@ -70,17 +70,23 @@ def _argparse_args(parser: argparse.ArgumentParser) -> list[dict[str, Any]]:
 
 
 def walk_argparse(
-    parser: argparse.ArgumentParser, prefix: str, out: list[dict[str, Any]]
+    parser: argparse.ArgumentParser,
+    prefix: str,
+    out: list[dict[str, Any]],
+    _choice_help: str | None = None,
 ) -> None:
     subs = next(
         (a for a in parser._actions if isinstance(a, argparse._SubParsersAction)),
         None)
+    # ``add_parser(name, help=...)`` text lives on the choice actions, not on
+    # the child parser's description — merge it so command help is real.
+    help_text = (parser.description or "").strip() or _choice_help
     if subs is None:
         if prefix:
             out.append(
                 {
                     "path": prefix,
-                    "help": (parser.description or "").strip() or None,
+                    "help": help_text or None,
                     "arguments": _argparse_args(parser),
                 }
             )
@@ -89,15 +95,20 @@ def walk_argparse(
         out.append(
             {
                 "path": prefix,
-                "help": (parser.description or "").strip() or None,
+                "help": help_text or None,
                 "arguments": _argparse_args(parser),
                 "group": True,
             }
         )
+    choice_help = {
+        a.dest: (a.help or "").strip() or None
+        for a in getattr(subs, "_choices_actions", [])
+    }
     for name, sub in subs.choices.items():
         if name in ("-h", "--help") or not isinstance(sub, argparse.ArgumentParser):
             continue
-        walk_argparse(sub, f"{prefix} {name}".strip(), out)
+        walk_argparse(sub, f"{prefix} {name}".strip(), out,
+                    _choice_help=choice_help.get(name))
 
 
 # --------------------------------------------------------------------------
