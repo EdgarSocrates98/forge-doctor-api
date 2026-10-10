@@ -77,3 +77,14 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = ["forge_doctor_api.handoff.mcp_server"]
 disallow_untyped_decorators = false
+
+[[tool.mypy.overrides]]
+# Vendored upstream surfaces (byte-parity with the-forge, same convention
+# as api-forge's `_installkit`/`tui.*`): canonical copy is the typecheck
+# target; kept byte-identical here outside `strict`.
+module = [
+    "forge_doctor_api._graphview",
+    "forge_doctor_api._graphstudio",
+    "forge_doctor_api.ui.*",
+]
+ignore_errors = true
