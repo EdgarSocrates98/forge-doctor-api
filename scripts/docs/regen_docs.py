@@ -52,7 +52,7 @@ def _python() -> str:
 def _run(script: str, args: list[str]) -> None:
     cmd = [_python(), str(DOCS_SCRIPTS / script), *args]
     print(f"$ {' '.join([script, *args])}")
-    cp = subprocess.run(cmd, cwd=ROOT, check=False)
+    cp = subprocess.run(cmd, cwd=ROOT, check=False)  # noqa: S603 -- argv fixo, sem shell
     if cp.returncode != 0:
         raise SystemExit(f"regen_docs: {script} failed ({cp.returncode})")
 
@@ -69,6 +69,12 @@ def main() -> int:
                 "--out", "docs/reference/commands.generated.json",
                 "--divergence", *cfg.get("docs", ["docs", "README.md"])]
         _run("doc_inventory.py", args)
+
+    if steps.get("reference", True):
+        _run("doc_reference.py", [
+            "--inventory", "docs/reference/commands.generated.json",
+            "--out", "docs/reference/commands.md", "--cli", cli,
+            "--rationale", "docs/reference/command-rationale.json"])
 
     if steps.get("manifest", True):
         _run("doc_manifest.py", [

@@ -66,7 +66,19 @@ def _extract_keeps(existing: str) -> dict[str, str]:
     return keeps
 
 
-def render(inv: dict, cli: str, existing: str | None) -> str:
+def _resolve_rationale(rationale: dict, path: str) -> dict | None:
+    """Longest-prefix match: `capabilities list` inherits `capabilities`."""
+    words = path.split()
+    for n in range(len(words), 0, -1):
+        hit = rationale.get(" ".join(words[:n]))
+        if hit:
+            return hit
+    return None
+
+
+def render(inv: dict, cli: str, existing: str | None,
+           rationale: dict | None = None) -> str:
+    rationale = rationale or {}
     keeps = _extract_keeps(existing or "")
     out = [
         f"# `{cli}` command reference",
@@ -74,7 +86,9 @@ def render(inv: dict, cli: str, existing: str | None) -> str:
         (
             "Generated from the real CLI parser by `doc_inventory.py` +"
             " `doc_reference.py`. Do not hand-edit generated sections — write"
-            " between `keep:start`/`keep:end` markers. Status vocabulary:"
+            " between `keep:start`/`keep:end` markers. `por que`/`quando`"
+            " lines come from the curated `command-rationale.json` — edit"
+            " rationale there, never here. Status vocabulary:"
             " `available` unless marked otherwise."
         ),
         "",
@@ -83,6 +97,11 @@ def render(inv: dict, cli: str, existing: str | None) -> str:
     for cmd in inv["commands"]:
         top = cmd["path"].split()[0]
         groups.setdefault(top, []).append(cmd)
+    covered = sum(1 for g in groups if g in rationale)
+    out.append(
+        f"Rationale coverage: **{covered}/{len(groups)}** first-level groups"
+        " curated in `command-rationale.json`.")
+    out.append("")
     out.append("## Groups")
     out.append("")
     for top in sorted(groups):
@@ -96,7 +115,14 @@ def render(inv: dict, cli: str, existing: str | None) -> str:
             out.append(f"### `{path}`")
             out.append("")
             if cmd.get("help"):
-                out.append(cmd["help"].strip())
+                out.append(f"**para que:** {cmd['help'].strip()}")
+                out.append("")
+            r = _resolve_rationale(rationale, path)
+            if r:
+                for label, key in (("por que", "why"), ("quando usar", "when"),
+                                   ("quando não", "when_not")):
+                    if r.get(key):
+                        out.append(f"- **{label}:** {r[key]}")
                 out.append("")
             out.append("**Syntax**")
             out.append("")
@@ -118,11 +144,17 @@ def main() -> int:
     ap.add_argument("--inventory", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--cli", required=True)
+    ap.add_argument("--rationale", default=None,
+                    help="curated command-rationale.json (optional)")
     a = ap.parse_args()
     inv = json.loads(Path(a.inventory).read_text(encoding="utf-8"))
     out_path = Path(a.out)
+    rationale = (
+        json.loads(Path(a.rationale).read_text(encoding="utf-8"))
+        if a.rationale and Path(a.rationale).exists() else None
+    )
     existing = out_path.read_text(encoding="utf-8") if out_path.exists() else None
-    text = render(inv, a.cli, existing)
+    text = render(inv, a.cli, existing, rationale)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(text, encoding="utf-8")
     print(f"wrote {out_path} ({len(inv['commands'])} commands)")
