@@ -28,7 +28,7 @@ import importlib
 import json
 import re
 import sys
-from datetime import datetime, timezone
+import time
 from pathlib import Path
 from typing import Any
 
@@ -42,7 +42,7 @@ def _resolve(spec: str) -> Any:
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
 
 # --------------------------------------------------------------------------
@@ -52,7 +52,7 @@ def _utc_now() -> str:
 
 def _argparse_args(parser: argparse.ArgumentParser) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
-    for act in parser._actions:  # noqa: SLF001 — the parser IS the source
+    for act in parser._actions:  # the parser IS the source
         if isinstance(act, argparse._SubParsersAction) or act is argparse._HelpAction:
             continue
         out.append(
@@ -73,8 +73,8 @@ def walk_argparse(
     parser: argparse.ArgumentParser, prefix: str, out: list[dict[str, Any]]
 ) -> None:
     subs = next(
-        (a for a in parser._actions if isinstance(a, argparse._SubParsersAction)), None  # noqa: SLF001
-    )
+        (a for a in parser._actions if isinstance(a, argparse._SubParsersAction)),
+        None)
     if subs is None:
         if prefix:
             out.append(
