@@ -382,6 +382,7 @@ _Historical, deprecated, generated and evidence docs (preserved, not entry point
 - [Command drift report](knowledge-program/command-drift-report.md) `UNKNOWN`
 - [Documentation quality report](knowledge-program/documentation-quality-report.md) `UNKNOWN`
 - [Duplicate content report](knowledge-program/duplicate-content-report.md) `UNKNOWN`
+- [Forge Knowledge Program — final report](knowledge-program/final-report.md) `UNKNOWN`
 - [Obsolete document report](knowledge-program/obsolete-document-report.md) `UNKNOWN`
 
 ### reports/

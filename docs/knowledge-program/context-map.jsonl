@@ -46,6 +46,7 @@
 {"path": "docs/knowledge-program/command-drift-report.md", "title": "Command drift report", "category": "UNKNOWN", "audience": "public", "related_commands": [], "review_level": "AUTOMATICALLY_CHECKED"}
 {"path": "docs/knowledge-program/documentation-quality-report.md", "title": "Documentation quality report", "category": "UNKNOWN", "audience": "public", "related_commands": [], "review_level": "AUTOMATICALLY_CHECKED"}
 {"path": "docs/knowledge-program/duplicate-content-report.md", "title": "Duplicate content report", "category": "UNKNOWN", "audience": "public", "related_commands": [], "review_level": "AUTOMATICALLY_CHECKED"}
+{"path": "docs/knowledge-program/final-report.md", "title": "Forge Knowledge Program \u2014 final report", "category": "UNKNOWN", "audience": "public", "related_commands": [], "review_level": "AUTOMATICALLY_CHECKED"}
 {"path": "docs/knowledge-program/obsolete-document-report.md", "title": "Obsolete document report", "category": "UNKNOWN", "audience": "public", "related_commands": [], "review_level": "AUTOMATICALLY_CHECKED"}
 {"path": "docs/knowledge-program/tutorial-coverage-report.md", "title": "Tutorial coverage report", "category": "TUTORIAL", "audience": "public", "related_commands": [], "review_level": "AUTOMATICALLY_CHECKED"}
 {"path": "docs/lab.md", "title": "Forge Lab", "category": "UNKNOWN", "audience": "public", "related_commands": ["lab"], "review_level": "AUTOMATICALLY_CHECKED"}
