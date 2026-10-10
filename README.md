@@ -176,3 +176,9 @@ factory/                Loop Factory specs, run records, quality gate
 .github/workflows/      doctor-scan.yml CI gate
 docs/                   documentation
 ```
+
+## Graph Studio
+
+`forge-doctor-api graph . --view|--ui` projects the service graph through
+`forge/ForgeGraphView/v1` and serves the embedded local explorer (declinable at
+install via `--components`). Full docs: `the-forge/docs/graph-studio/`.
