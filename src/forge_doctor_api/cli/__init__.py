@@ -46,6 +46,7 @@ from forge_doctor_api.checks.relapi import run_reliability_checks
 from forge_doctor_api.core.context import ProjectContext
 from forge_doctor_api.core.export import export_findings
 from forge_doctor_api.core.graph import GraphError, ServiceGraph
+from forge_doctor_api.service_graph import build_service_graph
 from forge_doctor_api.core.models import UnknownFact
 from forge_doctor_api.diagnose import diagnose as diagnose_episodes
 from forge_doctor_api.perf.baseline import build_baselines
@@ -782,24 +783,50 @@ def contract_fingerprint(
 def graph(
     target: Annotated[str, typer.Argument(help="Directory with contract + source evidence.")],
     json_out: Annotated[bool, typer.Option("--json", help="JSON output.")] = False,
+    view: Annotated[
+        bool, typer.Option("--view", help="Emit ForgeGraphView/v1 (Graph Studio contract).")
+    ] = False,
+    ui: Annotated[
+        bool, typer.Option("--ui", help="Open the local Graph Studio explorer.")
+    ] = False,
+    no_browser: Annotated[
+        bool, typer.Option("--no-browser", help="Serve without opening a browser (SSH).")
+    ] = False,
+    port: Annotated[int, typer.Option("--port", help="Port to bind (default ephemeral).")] = 0,
 ) -> None:
     """Show the service graph built from contract + implementation + client evidence (§161)."""
     path = Path(target).resolve()
     if not path.is_dir():
         _stderr.print(f"cannot read path: {target}")
         raise typer.Exit(code=2)
-    ctx = ProjectContext.from_root(path)
-    files = list(ctx.iter_files())
-    openapi = load_openapi_project(ctx)
-    service_graph = contract_graph(openapi)
-    try:
-        scan = FastApiAdapter().scan(ctx, path.name)
-    except Exception:
-        scan = None
-    if scan is not None:
-        _merge_graph(service_graph, scan_graph(scan))
-    client_model = scan_clients(ctx, files)
-    _merge_graph(service_graph, client_graph(client_model))
+    if view or ui:
+        from forge_doctor_api.graphview import build_view
+
+        gv = build_view(path)
+        if gv is None:
+            _stderr.print("no service graph could be built for this target")
+            raise typer.Exit(code=2)
+        if ui:
+            from forge_doctor_api._graphstudio import (
+                graph_studio_enabled,
+                open_studio,
+            )
+
+            if not graph_studio_enabled(
+                path,
+                state_rel=".forge-doctor-api/install",
+                user_state_rel="~/.forge-doctor-api/install",
+            ):
+                _stderr.print(
+                    "Graph Studio declined at install — reinstall with graph-studio"
+                )
+                raise typer.Exit(code=2)
+            raise typer.Exit(
+                open_studio([gv], open_browser=not no_browser, port=port)
+            )
+        typer.echo(json.dumps(gv.to_dict(), indent=2, sort_keys=True))
+        return
+    service_graph = build_service_graph(path)
     if json_out:
         typer.echo(json.dumps(service_graph.to_dict(), indent=2, sort_keys=True))
         return
