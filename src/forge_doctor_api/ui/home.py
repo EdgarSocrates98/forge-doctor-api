@@ -24,8 +24,7 @@ _MENU: list[tuple[str, list[str] | None]] = [
     ('Scan this project', ['scan']),
     ('Diagnose', ['diagnose']),
     ('Fingerprint APIs', ['fingerprint']),
-
-        'Graph Studio (browser)', ['graph','.','--ui'],
+    ('Graph Studio (browser)', ['graph','.','--ui']),
     ("installation wizard", "__wizard__"),
     ("quit", None),
 ]
@@ -64,6 +63,9 @@ def run_home(*, ctx: UIContext | None = None) -> int:
     ctx = ctx or UIContext.detect()
     if not ctx.interactive:
         raise NonInteractive("home requires a TTY")
+    if ctx.ansi:  # full-screen path; ANSI-free terminals keep the inline kit
+        from forge_doctor_api.ui.tui import run_tui
+        return run_tui(ctx=ctx)
     dashboard(
         f"{FORGE_NAME}  workspace: {Path.cwd().name}",
         [("CLI", [("command", CLI_NAME), ("entry", CLI_ENTRY or "-")])],
