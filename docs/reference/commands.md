@@ -221,13 +221,17 @@ Show the service graph built from contract + implementation + client evidence (�
 **Syntax**
 
 ```text
-forge-doctor-api graph <target> [json_out]
+forge-doctor-api graph <target> [json_out] [view] [ui] [no_browser] [port]
 ```
 
 | argument/flag | required | default | description |
 |---|---|---|---|
 | `target` | yes | — | Directory with contract + source evidence. |
 | `json_out` | no | — | JSON output. |
+| `view` | no | — | Emit ForgeGraphView/v1 (Graph Studio contract). |
+| `ui` | no | — | Open the local Graph Studio explorer. |
+| `no_browser` | no | — | Serve without opening a browser (SSH). |
+| `port` | no | — | Port to bind (default ephemeral). |
 
 <!-- keep:start -->
 _free notes — errors, examples, next steps (hand-written, preserved)_

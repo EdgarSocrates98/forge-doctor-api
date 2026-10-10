@@ -10,18 +10,24 @@ flag contract.
    binaries on PATH.
 2. **Scope** — `project` / `workspace` / `user`.
 3. **Profile** — Balanced (recommended), Economy (minimal), Full.
-4. **Hosts** — multi-select over detected AI hosts.
-5. **Review** — the real dry-run plan (managed writes count + paths).
-6. **Confirm** — explicit approval; Esc cancels with zero writes.
-7. **Apply** — the governed install runs (`--yes` equivalent, with
+4. **Optional components** — multi-select with profile defaults:
+   `skills`, `agents`, `mcp`, `tui`, `graph-studio`. Unchecked components
+   are persisted to `components.json`; declining `graph-studio` makes
+   `graph ui` refuse with an unlock hint.
+5. **Hosts** — multi-select over detected AI hosts.
+6. **Review** — the real dry-run plan (managed writes count + paths).
+7. **Confirm** — explicit approval; Esc cancels with zero writes.
+8. **Apply** — the governed install runs (`--yes` equivalent, with
    locking, ledger, rollback on failure).
-8. **Verify** — `install doctor` health report.
+9. **Verify** — `install doctor` health report.
 
 Non-interactive equivalent:
 
 ```bash
 python scripts/forge_install.py install --scope project --profile recommended --host all --dry-run
 python scripts/forge_install.py install --scope project --profile recommended --host all --yes
+# optional components:
+python scripts/forge_install.py install --yes --components skills,mcp,tui,graph-studio
 python scripts/forge_install.py doctor
 ```
 

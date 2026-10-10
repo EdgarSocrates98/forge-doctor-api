@@ -2,7 +2,7 @@
   "schema": "forge/CommandInventory/v1",
   "forge_id": "forge-doctor-api",
   "cli": "forge-doctor-api",
-  "generated_at": "2026-10-09T22:45:19Z",
+  "generated_at": "2026-10-10T01:11:11Z",
   "generated_by": "doc_inventory.py/1",
   "command_count": 35,
   "commands": [
@@ -371,6 +371,50 @@
           "choices": null,
           "positional": false,
           "help": "JSON output."
+        },
+        {
+          "name": "view",
+          "flags": [
+            "--view"
+          ],
+          "required": false,
+          "default": "False",
+          "choices": null,
+          "positional": false,
+          "help": "Emit ForgeGraphView/v1 (Graph Studio contract)."
+        },
+        {
+          "name": "ui",
+          "flags": [
+            "--ui"
+          ],
+          "required": false,
+          "default": "False",
+          "choices": null,
+          "positional": false,
+          "help": "Open the local Graph Studio explorer."
+        },
+        {
+          "name": "no_browser",
+          "flags": [
+            "--no-browser"
+          ],
+          "required": false,
+          "default": "False",
+          "choices": null,
+          "positional": false,
+          "help": "Serve without opening a browser (SSH)."
+        },
+        {
+          "name": "port",
+          "flags": [
+            "--port"
+          ],
+          "required": false,
+          "default": "0",
+          "choices": null,
+          "positional": false,
+          "help": "Port to bind (default ephemeral)."
         }
       ]
     },
