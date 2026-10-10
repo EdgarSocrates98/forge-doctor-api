@@ -157,10 +157,13 @@ def _doc_command_lines() -> list[tuple[Path, str]]:
                 continue
             if in_block:
                 m = re.search(
-                    r"\bforge-doctor-api\s+(?P<rest>[^`|\n]*)", line)
+                    r"(?<!<)\bforge-doctor-api\s+(?P<rest>[^`|\n]*)", line)
                 if not m:
                     continue
                 rest = m.group("rest").strip()
+                # `# ...` is a shell comment tail, not an argument —
+                # `forge-doctor-api   # interactive home` is a bare call.
+                rest = re.split(r"(?:^|\s)#", rest)[0].strip()
                 # diagram/prose lines reuse the binary name as a label:
                 # "forge-doctor-api = deterministic + ..." is not an
                 # invocation — real commands never lead with =/+ or
@@ -171,7 +174,9 @@ def _doc_command_lines() -> list[tuple[Path, str]]:
             for span in re.findall(r"`([^`]+)`", line):
                 m = re.match(r"forge-doctor-api\s+(?P<rest>.+)", span)
                 if m:
-                    out.append((md, m.group("rest").strip()))
+                    rest = re.split(r"\s+#", m.group("rest").strip())[0].strip()
+                    if rest:
+                        out.append((md, rest))
     return out
 
 

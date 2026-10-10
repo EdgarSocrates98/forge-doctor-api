@@ -3,7 +3,7 @@
 Instala uma vez para todos os projetos do usuário:
 
 ```bash
-python scripts/forge_install.py apply --scope user
+python scripts/forge_install.py install --yes --scope user
 ```
 
 Escreve em `~/.claude/`, `~/.agents/`, `~/.config/<host>/` e config MCP

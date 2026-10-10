@@ -33,7 +33,7 @@ from typing import Any
 _INSTALLKIT_VERSION = "1.0.0"
 # Filled by the vendor step (scripts/installkit/vendor.py) — the sha256 of
 # the canonical source body, so drift checks can compare vendored copies.
-_SOURCE_SHA256 = "83e639b0d4f956b4"
+_SOURCE_SHA256 = "7830ed9c28a380e8"
 
 SCHEMA_MANIFEST = "forge/InstallationManifest/v1"
 SCHEMA_RECEIPT = "forge/InstallReceipt/v1"
@@ -595,6 +595,38 @@ def asset_kinds_for(ctx: InstallContext) -> tuple[str, ...]:
 def components_path(state_dir: Path) -> Path:
     """Where the optional-component selection is persisted."""
     return state_dir / "components.json"
+
+
+# Optional components selectable beyond the profile. Public names map to
+# asset kinds; "graph-studio"/"tui" are runtime flags persisted to
+# components.json. Core kinds are always installed.
+COMPONENT_KINDS = {"skills": "skill", "agents": "agent", "mcp": "mcp"}
+CORE_KINDS = ("config", "marker", "state")
+OPTIONAL_COMPONENTS = ("skills", "agents", "mcp", "tui", "graph-studio")
+
+
+def component_options(
+    profile: str, components: tuple[str, ...] | list[str] | None
+) -> dict[str, Any]:
+    """Component list → InstallContext.options. None = profile default."""
+    if components is None:
+        return {}
+    selected = set(components)
+    unknown = selected - set(OPTIONAL_COMPONENTS)
+    if unknown:
+        raise InstallError(
+            E_PROFILE,
+            f"unknown components {sorted(unknown)}; known: {list(OPTIONAL_COMPONENTS)}",
+        )
+    kinds = list(CORE_KINDS)
+    for comp, kind in COMPONENT_KINDS.items():
+        if comp in selected and kind not in kinds:
+            kinds.append(kind)
+    return {
+        "asset_kinds": kinds,
+        "graph_studio": "graph-studio" in selected,
+        "tui": "tui" in selected,
+    }
 
 
 def load_components(state_dir: Path) -> dict[str, Any]:

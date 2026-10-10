@@ -12,7 +12,7 @@ Depois, dentro de qualquer projeto:
 
 ```bash
 cd ~/meu-projeto
-python <forge-doctor-api checkout>/scripts/forge_install.py apply --root .
+python <forge-doctor-api checkout>/scripts/forge_install.py install --yes --root .
 # ou deixe o orquestrador decidir: theforge install auto
 ```
 

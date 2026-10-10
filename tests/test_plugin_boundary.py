@@ -39,7 +39,13 @@ SRC = ROOT / "src" / "forge_doctor_api"
 # anywhere else, a dynamic import may only target a literal
 # `forge_doctor_api.*` prefix (internal lazy catalogs, never a
 # plugin-supplied module path).
-_DYNAMIC_IMPORT_SITES = {"plugins/trust.py"}
+_DYNAMIC_IMPORT_SITES = {
+    "plugins/trust.py",
+    # Vendored upstream surfaces (byte-parity with the-forge): lazy stdlib
+    # imports inside the host-side Studio server and terminal UI kit.
+    "_graphstudio.py",
+    "ui/i18n.py", "ui/kit.py", "ui/wizard.py", "ui/home.py",
+}
 _INTERNAL_PREFIX = "forge_doctor_api."
 
 

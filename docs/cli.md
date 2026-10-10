@@ -117,12 +117,18 @@ and comment changes (§180). Used by `BackwardCompatibilityBaseline`.
 
 
 ```text
-forge-doctor-api graph TARGET [--json]
+forge-doctor-api graph TARGET [--json] [--view] [--ui] [--no-browser] [--port N]
 ```
 
 Merged service graph: contract entities, discovered routes, and client
 call sites in one `ServiceGraph`. Console prints entity/edge counts;
 `--json` emits the graph.
+
+- `--view` — emit the `ForgeGraphView/v1` projection (Graph Studio
+  producer contract) instead of the console summary.
+- `--ui` — open the local Graph Studio explorer on a loopback server.
+- `--no-browser` — serve the Studio without opening a browser (SSH).
+- `--port N` — bind a specific port (default ephemeral).
 
 ## blast-radius
 

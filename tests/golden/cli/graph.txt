@@ -1,3 +1,6 @@
 Usage: forge-doctor-api graph [OPTIONS] {target} Show the service graph built from contract +
 implementation + client evidence (§161). Arguments * target <str> Directory with contract + source
-evidence. [required] Options --json JSON output. --help Show this message and exit.
+evidence. [required] Options --json JSON output. --view Emit ForgeGraphView/v1 (Graph Studio
+contract). --ui Open the local Graph Studio explorer. --no-browser Serve without opening a browser
+(SSH). --port <int> Port to bind (default ephemeral). [default: 0] --help Show this message and
+exit.

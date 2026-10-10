@@ -112,7 +112,7 @@ def _hosts(host: str) -> tuple[str, ...]:
 
 
 def _emit(doc: Any) -> None:
-    print(json.dumps(doc, indent=2, ensure_ascii=False))
+    print(json.dumps(doc, indent=2))
 
 
 def _register(ctx: kit.InstallContext) -> None:

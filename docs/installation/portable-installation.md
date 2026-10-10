@@ -4,10 +4,10 @@ Instala em qualquer diretório/repositório — sem estrutura prévia exigida.
 
 ```bash
 cd <qualquer-projeto>
-python <forge-doctor-api checkout>/scripts/forge_install.py apply --root .                    # escopo projeto (padrão)
-python <forge-doctor-api checkout>/scripts/forge_install.py apply --root . --dry-run          # planeja sem escrever
-python <forge-doctor-api checkout>/scripts/forge_install.py apply --root . --profile minimal  # só CLI+MCP+marker
-python <forge-doctor-api checkout>/scripts/forge_install.py apply --root . --profile full     # skills + agents + todos os hosts
+python <forge-doctor-api checkout>/scripts/forge_install.py install --yes --root .                    # escopo projeto (padrão)
+python <forge-doctor-api checkout>/scripts/forge_install.py install --root . --dry-run                # planeja sem escrever
+python <forge-doctor-api checkout>/scripts/forge_install.py install --yes --root . --profile minimal  # só CLI+MCP+marker
+python <forge-doctor-api checkout>/scripts/forge_install.py install --yes --root . --profile full     # skills + agents + todos os hosts
 ```
 
 O que acontece: assets gerenciados vão para `.agents/`, `.claude/`,

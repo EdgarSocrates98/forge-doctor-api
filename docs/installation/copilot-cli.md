@@ -2,7 +2,7 @@
 
 ```bash
 cd ~/meu-projeto
-python scripts/forge_install.py apply
+python scripts/forge_install.py install --yes
 ```
 
 Assets vão para `.github/skills/` e `.agents/`. Suporte estrutural —
