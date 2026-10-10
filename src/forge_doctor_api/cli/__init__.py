@@ -12,14 +12,11 @@ from rich.table import Table
 from rich.text import Text
 
 from forge_doctor_api import __version__
-from forge_doctor_api.analyzers.clients.graph import client_graph
 from forge_doctor_api.analyzers.clients.model import ApiClientModel
 from forge_doctor_api.analyzers.clients.scan import scan_clients
-from forge_doctor_api.analyzers.openapi.graph import contract_graph
 from forge_doctor_api.analyzers.openapi.model import OpenApiProjectModel
 from forge_doctor_api.analyzers.openapi.parser import load_openapi_project
 from forge_doctor_api.analyzers.routes import FastApiAdapter
-from forge_doctor_api.analyzers.routes.graph import scan_graph
 from forge_doctor_api.analyzers.runtime.execution import (
     RequestExecution,
     executions_from_summaries,
@@ -46,7 +43,6 @@ from forge_doctor_api.checks.relapi import run_reliability_checks
 from forge_doctor_api.core.context import ProjectContext
 from forge_doctor_api.core.export import export_findings
 from forge_doctor_api.core.graph import GraphError, ServiceGraph
-from forge_doctor_api.service_graph import build_service_graph
 from forge_doctor_api.core.models import UnknownFact
 from forge_doctor_api.diagnose import diagnose as diagnose_episodes
 from forge_doctor_api.perf.baseline import build_baselines
@@ -59,6 +55,7 @@ from forge_doctor_api.reliability import (
 from forge_doctor_api.scan import ScanReport
 from forge_doctor_api.security import load_security_model
 from forge_doctor_api.security.model import SensitiveBusinessFlow
+from forge_doctor_api.service_graph import build_service_graph
 
 _stderr = Console(stderr=True, highlight=False)
 

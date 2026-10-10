@@ -25,7 +25,10 @@ import re
 import sys
 from pathlib import Path
 
-FENCE_CMD = re.compile(r"^(\s{0,4})([a-z][a-z0-9_-]*)\s+([a-z][a-z0-9-]*(?:\s+[a-z][a-z0-9-]*)?)\s*$", re.I)
+FENCE_CMD = re.compile(
+    r"^(\s{0,4})([a-z][a-z0-9_-]*)\s+"
+    r"([a-z][a-z0-9-]*(?:\s+[a-z][a-z0-9-]*)?)\s*$",
+    re.IGNORECASE)
 LINK = re.compile(r"\]\(([^)#\s]+)(#[^)\s]*)?\)")
 ANCHOR = re.compile(r"[^\w -]", re.UNICODE)  # GitHub slugger keeps unicode letters
 
@@ -35,7 +38,7 @@ def _anchorify(h: str) -> str:
 
 
 def _anchors(text: str) -> set[str]:
-    return {_anchorify(m.group(1)) for m in re.finditer(r"^#{1,6}\s+(.+)$", text, re.M)}
+    return {_anchorify(m.group(1)) for m in re.finditer(r"^#{1,6}\s+(.+)$", text, re.MULTILINE)}
 
 
 def check_links(repo: Path, files: list[Path]) -> list[str]:
@@ -86,8 +89,8 @@ def check_status_claims(files: list[Path], real: set[str], cli: str) -> list[str
         fm = re.match(r"^---\n(.*?)\n---", text, re.DOTALL)
         if not fm:
             continue
-        m = re.search(r"^id:\s*(\S+)\s*$", fm.group(1), re.M)
-        s = re.search(r"^status:\s*(\S+)\s*$", fm.group(1), re.M)
+        m = re.search(r"^id:\s*(\S+)\s*$", fm.group(1), re.MULTILINE)
+        s = re.search(r"^status:\s*(\S+)\s*$", fm.group(1), re.MULTILINE)
         if m and s and s.group(1) == "available":
             cmd = m.group(1).split(".", 1)[-1].replace(".", " ")
             if cmd not in real:

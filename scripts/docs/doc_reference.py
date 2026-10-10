@@ -37,10 +37,8 @@ def _syntax(cli: str, cmd: dict) -> str:
 def _args_table(cmd: dict) -> list[str]:
     rows = ["| argument/flag | required | default | description |", "|---|---|---|---|"]
     for arg in cmd.get("arguments", []):
-        rows.append(
-            f"| `{arg['name']}` | {'yes' if arg.get('required', True) else 'no'} | — |"
-            f" {arg.get('help') or '—'} |"
-        )
+        req = "yes" if arg.get("required", True) else "no"
+        rows.append(f"| `{arg['name']}` | {req} | — | {arg.get('help') or '—'} |")
     for opt in cmd.get("options", []):
         flags = "`, `".join(opt["flags"])
         default = opt.get("default")
@@ -51,7 +49,8 @@ def _args_table(cmd: dict) -> list[str]:
         desc = opt.get("help") or "—"
         if choices:
             desc += f" (one of: {', '.join(str(c) for c in choices)})"
-        rows.append(f"| `{flags}` | {'yes' if opt.get('required') else 'no'} | {default} | {desc} |")
+        req = "yes" if opt.get("required") else "no"
+        rows.append(f"| `{flags}` | {req} | {default} | {desc} |")
     return rows
 
 
@@ -72,10 +71,12 @@ def render(inv: dict, cli: str, existing: str | None) -> str:
     out = [
         f"# `{cli}` command reference",
         "",
-        "Generated from the real CLI parser by `doc_inventory.py` +"
-        " `doc_reference.py`. Do not hand-edit generated sections — write"
-        " between `keep:start`/`keep:end` markers. Status vocabulary:"
-        " `available` unless marked otherwise.",
+        (
+            "Generated from the real CLI parser by `doc_inventory.py` +"
+            " `doc_reference.py`. Do not hand-edit generated sections — write"
+            " between `keep:start`/`keep:end` markers. Status vocabulary:"
+            " `available` unless marked otherwise."
+        ),
         "",
     ]
     groups: dict[str, list[dict]] = {}
