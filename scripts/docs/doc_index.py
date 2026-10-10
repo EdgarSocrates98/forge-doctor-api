@@ -63,6 +63,13 @@ _OPERATE_HINTS = (
     "repair", "uninstall", "monitor", "observab",
 )
 
+# Local asset prefixes (ADR 0020 / tests.test_docs_consistency
+# LOCAL_ASSET_PREFIXES): versioned docs never link into these trees,
+# even where parts of them are committed (e.g. `.kiro/settings/`).
+# They stay inventoried for visibility but are not index entry points.
+_LOCAL_ASSET_PREFIXES = (".kiro/", ".claude/agents/",
+                         ".agents/skills/source-command-")
+
 
 def _section_for(row: dict) -> str:
     path = row["path"].lower()
@@ -77,6 +84,8 @@ def build_index(rows: list[dict], forge: str) -> str:
     sections: dict[str, list[dict]] = defaultdict(list)
     for r in rows:
         if r["category"] == "GENERATED" or "VENDORED_UPSTREAM" in r["secondary"]:
+            continue
+        if r["path"].startswith(_LOCAL_ASSET_PREFIXES):
             continue
         sections[_section_for(r)].append(r)
 

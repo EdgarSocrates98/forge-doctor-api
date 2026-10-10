@@ -13,6 +13,7 @@ PACKAGE = ROOT / "src" / "forge_doctor_api"
 _VENDORED = frozenset({
     "_graphstudio.py",
     "ui/i18n.py", "ui/kit.py", "ui/wizard.py", "ui/home.py",
+    "ui/app.py", "ui/screen.py", "ui/tui.py",
 })
 
 

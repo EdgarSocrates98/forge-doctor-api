@@ -34,7 +34,8 @@ def test_no_forbidden_runtime_imports() -> None:
     forbidden = {"socket", "urllib", "requests", "httpx", "subprocess",
                  "winreg", "msvcrt", "fcntl", "termios"}
     vendored = {"_graphstudio.py",
-                "ui/i18n.py", "ui/kit.py", "ui/wizard.py", "ui/home.py"}
+                "ui/i18n.py", "ui/kit.py", "ui/wizard.py", "ui/home.py",
+                "ui/app.py", "ui/screen.py", "ui/tui.py"}
     pkg = ROOT / "src" / "forge_doctor_api"
     for path in sorted(pkg.rglob("*.py")):
         if path.relative_to(pkg).as_posix() in vendored:
