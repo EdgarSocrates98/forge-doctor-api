@@ -178,6 +178,7 @@ def test_hosts_none_e_csv():
     import importlib.util
     import sys
     from pathlib import Path
+
     import pytest
     spec = importlib.util.spec_from_file_location(
         "forge_install_script",
@@ -188,5 +189,5 @@ def test_hosts_none_e_csv():
     assert mod._hosts("all") == mod.HOSTS
     assert mod._hosts("none") == ()
     assert set(mod._hosts("claude,devin")) == {"claude", "devin"}
-    with pytest.raises(Exception):
+    with pytest.raises(mod.kit.InstallError):
         mod._hosts("nope")

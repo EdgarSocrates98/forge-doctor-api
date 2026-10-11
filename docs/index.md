@@ -57,6 +57,13 @@ _Task-oriented guides and workflows._
 
 - [Forge Doctor API — trilha de aprendizado](learn/README.md)
 - [Receita — os findings formam qual sintoma?](learn/recipes/diagnose-explain.md)
+- [Receita — Doctor API vs API Forge: qual usar?](learn/recipes/diferenca-apiforge.md)
+- [Receita — grafo de serviços e blast radius](learn/recipes/graph-blast.md)
+- [Receita — usar o Doctor API pelo seu host de IA (Devin/Claude/Codex)](learn/recipes/mcp-hosts.md)
+- [Receita — inspecionar um contrato OpenAPI](learn/recipes/openapi-contrato.md)
+- [Receita — primeiro uso do Doctor API](learn/recipes/primeiro-uso.md)
+- [Receita — análise passiva de segurança e confiabilidade](learn/recipes/security-reliability.md)
+- [Receita — snapshots, diffs e regressões arquiteturais](learn/recipes/snapshots-history.md)
 
 ## Reference
 
@@ -121,6 +128,11 @@ _Troubleshooting, doctor/repair, observability._
 - [Uninstall — forge-doctor-api](installation/uninstall.md)
 - [Update e repair — forge-doctor-api](installation/update-and-repair.md)
 
+### learn/
+
+- [Receita — instalar o Doctor API num projeto](learn/recipes/instalar-doctor-api.md)
+- [Receita — portal web local do Doctor API](learn/recipes/portal.md)
+
 ## Contribute
 
 _Agent instructions, skills and internal process._
@@ -183,6 +195,7 @@ _Historical, deprecated, generated and evidence docs (preserved, not entry point
 
 - [Accessibility](experience/accessibility.md) `UNKNOWN`
 - [Automation mode](experience/automation-mode.md) `UNKNOWN`
+- [FASE 6 — forge-doctor-api: relatório de experiência](experience/fase6-report.md) `RELEASE_REPORT`
 - [Interactive CLI](experience/interactive-cli.md) `UNKNOWN`
 - [Themes and visual identity](experience/themes.md) `UNKNOWN`
 

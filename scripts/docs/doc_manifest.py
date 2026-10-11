@@ -31,7 +31,7 @@ EXCLUDE_DIRS = {
     ".sparkforge-azure", ".apiforge", ".platformforge", ".forge-doctor-data",
     ".forge-doctor-api", ".pytest-tmp", ".pytest_tmp", "site",
 }
-_EXCLUDE_PREFIXES = (".venv",)  # .venv, .venv-verify, .venv-*
+_EXCLUDE_PREFIXES = (".venv", ".pytest_tmp", ".pytest-tmp")  # .venv, .venv-verify, .venv-*
 
 CATEGORIES = [
     "USER_GUIDE", "GETTING_STARTED", "TUTORIAL", "HOW_TO", "REFERENCE",

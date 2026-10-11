@@ -26,14 +26,37 @@ AGENT_DIRS = ("agents", ".claude/agents", ".devin/agents", ".agents/agents")
 AGENT_SPEC_DIRS = ("agentic/agents",)  # AgentSpec/v1 TOML registries (the-forge)
 
 
+_FOLDED = re.compile(r"^[>|][-+]?$")
+
+
+def _folded_block(fm_text: str, start: int) -> str:
+    """Read the indented lines following a ``key: >-``/``|`` marker."""
+    lines = fm_text.splitlines()[start + 1 :]
+    out = []
+    for line in lines:
+        if line.strip() and not line.startswith((" ", "\t")):
+            break
+        if line.strip():
+            out.append(line.strip())
+    return " ".join(out)
+
+
 def _summary(path: Path) -> str:
     text = path.read_text(encoding="utf-8", errors="replace")
-    fm = re.match(r"^---\n(.*?)\n---", text, re.DOTALL)
+    fm = re.match(r"^---\n(.*?)\n---\n?", text, re.DOTALL)
+    body = text
     if fm:
+        body = text[fm.end() :]
         m = re.search(r"^(?:description|summary):\s*(.+)$", fm.group(1), re.MULTILINE)
         if m:
-            return m.group(1).strip().strip('"').strip("'")
-    for line in text.splitlines():
+            value = m.group(1).strip()
+            if _FOLDED.match(value):
+                line_no = fm.group(1)[: m.start()].count("\n")
+                value = _folded_block(fm.group(1), line_no)
+            value = value.strip('"').strip("'")
+            if value:
+                return value
+    for line in body.splitlines():
         line = line.strip()
         if line and not line.startswith("#") and not line.startswith("---"):
             return line[:160]

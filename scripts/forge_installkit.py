@@ -875,6 +875,18 @@ def apply_install(ctx: InstallContext, *, approved: bool = False) -> dict[str, A
         )
     written = sum(1 for f in files if f.get("action") in ("created", "updated"))
     checks.append({"id": "files-written", "status": "PASS", "detail": f"{written} writes"})
+    if "codex" in ctx.hosts and ctx.scope == "project":
+        # Observed on codex-cli 0.160.0: `codex mcp list` ignores project
+        # `.mcp.json` and `.codex/config.toml` — MCP only enters through
+        # `~/.codex/config.toml` (user scope) or `codex mcp add`.
+        checks.append(
+            {
+                "id": "mcp-scope:codex",
+                "status": "NOT_APPLICABLE",
+                "detail": "codex does not read project .mcp.json; MCP needs "
+                          "--scope user or `codex mcp add`",
+            }
+        )
     receipt = {
         "schema": SCHEMA_RECEIPT,
         "receipt_id": f"sha256:{_sha(_json_bytes({'f': files, 'm': markers}))}",
