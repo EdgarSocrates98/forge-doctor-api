@@ -31,7 +31,7 @@ packages = [{ include = "forge_doctor_api", from = "src" }]
 pytest = ">=8.0"
 ruff = ">=0.6"
 mypy = ">=2.3.1"
-types-PyYAML = ">=6.0"
+types-PyYAML = ">=6.0.12.20260906"
 
 [build-system]
 requires = ["poetry-core>=2.0"]
