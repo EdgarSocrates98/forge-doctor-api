@@ -118,7 +118,35 @@ def _hosts(host: str) -> tuple[str, ...]:
     return tuple(dict.fromkeys(nomes))
 
 
+def _render_human(doc: Any) -> str | None:
+    """Best-effort shared UI kit render — this checkout's ``src/`` first,
+    then any installed dist; ``None`` means fall back to JSON."""
+    src = str(REPO / "src")
+    if src not in sys.path:
+        sys.path.insert(0, src)
+    try:
+        from forge_doctor_api.ui.kit import UIContext, format_status_doc
+    except Exception:
+        return None
+    try:
+        return format_status_doc(doc, ctx=UIContext.detect())
+    except Exception:
+        return None
+
+
 def _emit(doc: Any) -> None:
+    """TTY humans (and TUI-captured runs) get the rendered forge/* doc;
+    pipes, CI and parsers keep JSON."""
+    human = sys.stdout.isatty() or bool(os.environ.get("FORGE_TEXT_OUTPUT"))
+    if human and isinstance(doc, dict) and (
+        str(doc.get("schema", "")).startswith("forge/")
+        or "checks" in doc
+        or "drift" in doc
+    ):
+        text = _render_human(doc)
+        if text is not None:
+            print(text)
+            return
     print(json.dumps(doc, indent=2))
 
 
@@ -168,9 +196,26 @@ def _receipt(operation: str, checks: list[dict[str, Any]],
 def cmd_install(a: argparse.Namespace) -> int:
     if a.profile not in PROFILES:
         raise kit.InstallError(kit.E_PROFILE, f"profile {a.profile!r}")
+    approved = a.yes
+    if not a.yes and not a.dry_run and sys.stdin.isatty() and sys.stdout.isatty():
+        # Interactive approval: render the real plan, confirm once,
+        # apply — one command instead of dry-run + apply.
+        plan_ctx = _ctx(a, _hosts(a.host))
+        with kit.acquire_lock(plan_ctx.state_dir):
+            plan = kit.apply_install(plan_ctx, approved=False)
+        _emit(plan)
+        try:
+            answer = input("Apply this plan? [Y/n] ").strip().lower()
+        except (EOFError, KeyboardInterrupt):
+            answer = "n"
+            print()
+        if answer not in ("", "y", "yes", "s", "sim"):
+            print("declined — nothing written")
+            return 1
+        approved = True
     ctx = _ctx(a, _hosts(a.host))
     with kit.acquire_lock(ctx.state_dir):
-        receipt = kit.apply_install(ctx, approved=a.yes)
+        receipt = kit.apply_install(ctx, approved=approved)
     if not a.dry_run and receipt.get("status") == "completed":
         kit._write_receipt(ctx.state_dir, receipt)
         _register(ctx)
