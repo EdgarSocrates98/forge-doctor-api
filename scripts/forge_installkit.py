@@ -33,7 +33,7 @@ from typing import Any
 _INSTALLKIT_VERSION = "1.0.0"
 # Filled by the vendor step (scripts/installkit/vendor.py) — the sha256 of
 # the canonical source body, so drift checks can compare vendored copies.
-_SOURCE_SHA256 = "7830ed9c28a380e8"
+_SOURCE_SHA256 = "7d960bb98bbf7b1e"
 
 SCHEMA_MANIFEST = "forge/InstallationManifest/v1"
 SCHEMA_RECEIPT = "forge/InstallReceipt/v1"
@@ -962,6 +962,7 @@ def status(ctx: InstallContext) -> dict[str, Any]:
             "missing": [d for d in bad if d["status"] == "missing"],
         },
         "receipts": [r.name for r in receipts],
+        "forge_portal": forge_portal_presence(),
         "status": ("healthy" if not bad else "degraded" if ok else "broken")
         if ledger.entries()
         else "unverified",
@@ -1020,6 +1021,19 @@ def doctor(ctx: InstallContext) -> dict[str, Any]:
                     "repairable": False,
                 }
             )
+    presence = forge_portal_presence()
+    found = presence["state"] == "installed"
+    checks.append(
+        {
+            "id": "forge-portal",
+            "status": "PASS" if found else "NOT_APPLICABLE",
+            "detail": presence["install_root"]
+            or ("vendored assets only — no local forge-portal install found"
+                if not found
+                else presence["manifest"]),
+            "repairable": False,
+        }
+    )
     overall = "healthy"
     if any(c["status"] == "FAIL" for c in checks):
         overall = "degraded" if installed else "broken"
@@ -1296,6 +1310,49 @@ def installed_forges() -> list[dict[str, Any]]:
                 doc["_manifest_path"] = str(f)
                 out.append(doc)
     return out
+
+
+def forge_portal_presence() -> dict[str, Any]:
+    """Whether a local forge-portal exists in an already-defined location:
+    ``FORGE_PORTAL_HOME`` env, ``~/.forge/installations/forge-portal.json``
+    (InstallationManifest registry) or ``~/.forge/installs/forge-portal/``.
+    Never fabricates paths — every reported location exists on disk."""
+    locations: list[dict[str, str]] = []
+
+    env_root = os.environ.get("FORGE_PORTAL_HOME", "").strip()
+    env_ok = bool(env_root) and Path(env_root).is_dir()
+    if env_ok:
+        locations.append({"kind": "env:FORGE_PORTAL_HOME", "path": env_root})
+
+    manifest_path = installations_dir() / "forge-portal.json"
+    install_root: str | None = None
+    installed_at: str | None = None
+    manifest_ok = manifest_path.is_file()
+    if manifest_ok:
+        locations.append({"kind": "registry", "path": str(manifest_path)})
+        doc = _load_json(manifest_path, None)
+        if isinstance(doc, dict):
+            install_root = doc.get("install_root") or None
+            installed_at = doc.get("installed_at") or None
+
+    if install_root and not Path(install_root).is_dir():
+        install_root = None  # manifest points somewhere gone — honest
+    if install_root:
+        locations.append({"kind": "install_root", "path": install_root})
+    elif not manifest_ok:
+        default_root = installs_root() / "forge-portal"
+        if default_root.is_dir():
+            install_root = str(default_root)
+            locations.append({"kind": "install_root", "path": install_root})
+
+    root = install_root or (env_root if env_ok else None)
+    return {
+        "state": "installed" if root or manifest_ok else "vendored",
+        "install_root": root,
+        "manifest": str(manifest_path) if manifest_ok else None,
+        "installed_at": installed_at,
+        "locations": locations,
+    }
 
 
 # --------------------------------------------------------------------------
