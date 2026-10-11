@@ -119,7 +119,7 @@ def run_wizard(
     _COMP_ORDER = ("skills", "agents", "mcp", "tui", "graph-studio")
     _profile_defaults = {
         "minimal": {"mcp", "tui"},
-        "recommended": {"skills", "mcp", "tui", "graph-studio"},
+        "recommended": {"skills", "agents", "mcp", "tui", "graph-studio"},
         "full": {"skills", "agents", "mcp", "tui", "graph-studio"},
     }
     comp_checked = _profile_defaults.get(profile, set())

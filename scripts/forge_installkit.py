@@ -579,7 +579,7 @@ def _host_dirs(host: str, scope: str) -> list[str]:
 def profile_asset_kinds(profile: str) -> tuple[str, ...]:
     return {
         "minimal": ("config", "mcp", "marker", "state"),
-        "recommended": ("config", "mcp", "marker", "state", "skill"),
+        "recommended": ("config", "mcp", "marker", "state", "skill", "agent"),
         "full": ("config", "mcp", "marker", "state", "skill", "agent"),
     }[profile]
 
