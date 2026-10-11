@@ -27,4 +27,4 @@
 
 Hub do ecossistema (descoberta cross-forge): `the-forge/docs/hub/` — install, which-forge, hosts, MCP, troubleshooting.
 
-Índice gerado: [../INDEX.md](../INDEX.md).
+Índice gerado: [../index.md](../index.md).

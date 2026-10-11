@@ -44,7 +44,7 @@ _DYNAMIC_IMPORT_SITES = {
     # Vendored upstream surfaces (byte-parity with the-forge): lazy stdlib
     # imports inside the host-side Studio server and terminal UI kit.
     "_graphstudio.py",
-    "ui/i18n.py", "ui/kit.py", "ui/wizard.py", "ui/home.py",
+    "ui/i18n.py", "ui/kit.py", "ui/wizard.py", "ui/home.py", "ui/tui.py",
 }
 _INTERNAL_PREFIX = "forge_doctor_api."
 
