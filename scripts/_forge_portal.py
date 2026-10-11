@@ -360,6 +360,31 @@ class PortalHandler(BaseHTTPRequestHandler):
             env["data"] = data
         return env
 
+    # -- early rejection ---------------------------------------------------
+    def _reject(self, status: int, payload: dict) -> None:
+        """Send an error after draining any request body still on the wire.
+
+        Responding without consuming the pending POST body leaves unread
+        data in the socket; the kernel then resets the connection and the
+        client never sees the response (WinError 10053 / ECONNRESET).
+        Drain up to a hard ceiling, then close cleanly.
+        """
+        if self.command in ("POST", "PUT", "PATCH"):
+            try:
+                length = int(self.headers.get("Content-Length") or 0)
+            except ValueError:
+                length = 0
+            remaining = min(length, 8 << 20)
+            while remaining > 0:
+                chunk = self.rfile.read(min(remaining, 1 << 16))
+                if not chunk:
+                    break
+                remaining -= len(chunk)
+            self.close_connection = True
+            self._send_json(status, payload, extra_headers={"Connection": "close"})
+            return
+        self._send_json(status, payload)
+
     # -- session -----------------------------------------------------------
     def _session_ok(self) -> bool:
         token = self.headers.get(SESSION_HEADER)
@@ -380,8 +405,22 @@ class PortalHandler(BaseHTTPRequestHandler):
         host = urllib.parse.urlparse(origin).hostname or ""
         return host in ("127.0.0.1", "localhost", "::1")
 
+    def _host_ok(self) -> bool:
+        # DNS-rebinding guard: even with a valid session/origin, a browser
+        # pointed at attacker.example resolved to 127.0.0.1 must not reach
+        # the API or the assets — refuse any non-loopback Host early.
+        raw = (self.headers.get("Host") or "").strip().lower()
+        if raw.startswith("["):
+            host = raw[1:].split("]")[0]
+        else:
+            host = raw.split(":")[0]
+        return host in ("127.0.0.1", "localhost", "::1")
+
     # -- routing -----------------------------------------------------------
     def do_GET(self) -> None:
+        if not self._host_ok():
+            self._reject(403, self._envelope(self._cid(), error=_err("PORTAL-HOST", "host must be loopback")))
+            return
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
         if path.startswith(API_PREFIX + "/"):
@@ -390,9 +429,12 @@ class PortalHandler(BaseHTTPRequestHandler):
             self._static(path, parsed)
 
     def do_POST(self) -> None:
+        if not self._host_ok():
+            self._reject(403, self._envelope(self._cid(), error=_err("PORTAL-HOST", "host must be loopback")))
+            return
         parsed = urllib.parse.urlparse(self.path)
         if not parsed.path.startswith(API_PREFIX + "/"):
-            self._send_json(404, self._envelope(self._cid(), error=_err("PORTAL-NOT-FOUND", "not found")))
+            self._reject(404, self._envelope(self._cid(), error=_err("PORTAL-NOT-FOUND", "not found")))
             return
         self._api("POST", parsed.path, parsed)
 
@@ -405,7 +447,7 @@ class PortalHandler(BaseHTTPRequestHandler):
         rel = path[len(API_PREFIX):] or "/"
 
         if not self._session_ok():
-            self._send_json(
+            self._reject(
                 403,
                 self._envelope(
                     cid,
@@ -423,20 +465,20 @@ class PortalHandler(BaseHTTPRequestHandler):
 
         if method == "POST":
             if not self._origin_ok():
-                self._send_json(
+                self._reject(
                     403,
                     self._envelope(cid, error=_err("PORTAL-ORIGIN", "cross-origin request refused")),
                 )
                 return
             ctype = (self.headers.get("Content-Type") or "").split(";")[0].strip()
             if ctype != "application/json":
-                self._send_json(
+                self._reject(
                     415,
                     self._envelope(cid, error=_err("PORTAL-CONTENT-TYPE", "Content-Type must be application/json")),
                 )
                 return
             if operation.mutating and not self.server.rate_limiter.allow():
-                self._send_json(
+                self._reject(
                     429,
                     self._envelope(
                         cid,
@@ -449,19 +491,9 @@ class PortalHandler(BaseHTTPRequestHandler):
         if method == "POST":
             length = int(self.headers.get("Content-Length") or 0)
             if length > MAX_BODY:
-                # drain up to a hard ceiling so the client can actually
-                # read the 413 (early-close resets the socket on Windows)
-                remaining = min(length, 8 << 20)
-                while remaining > 0:
-                    chunk = self.rfile.read(min(remaining, 1 << 16))
-                    if not chunk:
-                        break
-                    remaining -= len(chunk)
-                self.close_connection = True
-                self._send_json(
+                self._reject(
                     413,
                     self._envelope(cid, error=_err("PORTAL-PAYLOAD-TOO-LARGE", "body exceeds 1 MiB")),
-                    extra_headers={"Connection": "close"},
                 )
                 return
             raw = self.rfile.read(length) if length else b"{}"
