@@ -22,7 +22,7 @@ jobs:
     # annotates the run, without blocking PRs where it cannot.
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/dependency-review-action@v4
+      - uses: actions/dependency-review-action@v5
         continue-on-error: true
 
   quality:
