@@ -17,7 +17,9 @@ from forge_doctor_api.ui.kit import UIContext
 
 # argv[0]s that stream progressively or open external surfaces —
 # those run attached (alt-screen suspended) instead of captured.
-_SUSPEND_VERBS = {"analyze", "judge", "collect", "migrate", "graph", "sdd"}
+_SUSPEND_VERBS = {"analyze", "judge", "collect", "migrate", "graph", "sdd",
+                  "scan", "diagnose", "security", "reliability", "contract",
+                  "fingerprint", "inventory", "snapshot", "lab", "diff"}
 
 
 _LEARN_DOC: dict[str, str] = {
@@ -69,6 +71,13 @@ def entries() -> list[Entry]:
             continue  # quit lives in the app chrome (q)
         if argv == "__wizard__":
             out.append(_wizard_entry())
+        elif argv == "__diff__":
+            out.append(Entry(
+                label=label,
+                provider=lambda: ActionData(
+                    callable=lambda: home._run_diff(
+                        UIContext.detect(force_plain=True)),
+                    title="contract diff", suspend=True)))
         else:
             out.append(Entry(label=label,
                              provider=lambda a=argv, lbl=label: _action_for(lbl, a)))

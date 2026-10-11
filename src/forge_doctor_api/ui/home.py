@@ -21,9 +21,18 @@ CLI_NAME = 'forge-doctor-api'
 CLI_ENTRY = 'forge_doctor_api.cli:main'
 
 _MENU: list[tuple[str, list[str] | None]] = [
-    ('Scan this project', ['scan']),
-    ('Diagnose', ['diagnose']),
-    ('Fingerprint APIs', ['fingerprint']),
+    ('Scan this project', ['scan', '.']),
+    ('Contracts', ['contract', 'inspect', '.']),
+    ('Diff two contract states', "__diff__"),
+    ('Fingerprint APIs', ['fingerprint', '.']),
+    ('Security', ['security', 'inspect', '.']),
+    ('Reliability', ['reliability', 'inspect', '.']),
+    ('Findings (diagnose)', ['diagnose', '.']),
+    ('Evidence inventory', ['inventory', '.']),
+    ('Reports (snapshots)', ['snapshot', 'list']),
+    ('Installation status', ['__script__', 'forge_install.py', 'status']),
+    ('AI hosts', ['__script__', 'forge_hosts.py']),
+    ('MCP verify (real handshake)', ['__script__', 'forge_install.py', 'mcp-verify']),
     ('Graph Studio (browser)', ['graph','.','--ui']),
     ("installation wizard", "__wizard__"),
     ("quit", None),
@@ -31,7 +40,17 @@ _MENU: list[tuple[str, list[str] | None]] = [
 
 
 def _cli_argv(extra: list[str]) -> list[str] | None:
-    """Resolve the real CLI argv: installed launcher else checkout entry."""
+    """Resolve the real CLI argv: installed launcher else checkout entry.
+
+    ``['__script__', name, *args]`` is a checkout-level sentinel: the
+    install/hosts flows live in ``scripts/`` (the package boundary bans
+    subprocess in ``src/``) and run under the current interpreter.
+    """
+    if extra and extra[0] == "__script__":
+        script = _script_root() / "scripts" / extra[1]
+        if not script.is_file():
+            return None
+        return [sys.executable, str(script), *extra[2:]]
     exe = shutil.which(CLI_NAME)
     if exe:
         return [exe, *extra]
@@ -84,6 +103,10 @@ def run_home(*, ctx: UIContext | None = None) -> int:
             _run_wizard(ctx)
             print()
             continue
+        if argv == "__diff__":
+            _run_diff(ctx)
+            print()
+            continue
         resolved = _cli_argv(list(argv))
         if resolved is None:
             print(_c(ctx, "31", "  " + CLI_NAME + " not resolvable — run ./setup.sh"))
@@ -130,3 +153,22 @@ def _run_wizard(ctx: UIContext) -> None:
         doctor_fn=lambda **kw: _script_call("doctor", **kw),
         ctx=ctx,
     )
+
+
+def _run_diff(ctx: UIContext) -> None:
+    """Prompt for old/new contract dirs, then run the real `diff` verb."""
+    from forge_doctor_api.ui.kit import prompt
+
+    old = prompt(t("diff_old", ctx.language), ctx=ctx)
+    if not old:
+        return
+    new = prompt(t("diff_new", ctx.language), ctx=ctx)
+    if not new:
+        return
+    resolved = _cli_argv(["diff", old, new])
+    if resolved is None:
+        print(_c(ctx, "31", "  " + CLI_NAME + " not resolvable — run ./setup.sh"))
+        return
+    print(_c(ctx, "2", "  $ " + " ".join(resolved[:4]) + " …"))
+    rc = _run_argv(resolved)
+    print(_c(ctx, "32" if rc == 0 else "31", f"  exit {rc}"))

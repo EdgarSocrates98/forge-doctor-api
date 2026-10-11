@@ -44,7 +44,7 @@ def test_no_broken_links_in_active_docs(cli: str, forge: str):
     inv = ROOT / "docs" / "knowledge-program" / "inventory.jsonl"
     if not inv.exists():
         pytest.skip("run scripts/docs/doc_manifest.py first")
-    rows = [json.loads(l) for l in inv.read_text("utf-8").splitlines()]
+    rows = [json.loads(line) for line in inv.read_text("utf-8").splitlines()]
     broken: list[dict] = []
     for r in rows:
         path = r["path"]
