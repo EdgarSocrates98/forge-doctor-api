@@ -58,7 +58,6 @@ class DocMeta:
     """Contextual doc metadata for an action (Forge Knowledge §21):
     description, prerequisites, example, risk, expected result and the
     canonical doc — a pointer, never an inlined manual."""
-
     description: str = ""
     prerequisites: str = ""
     example: str = ""
@@ -91,17 +90,11 @@ class _Pane:
     log: list[str] = field(default_factory=list)
 
 
-_HELP = [
-    ("up/dn", "nav"),
-    ("enter", "open/run"),
-    ("r", "refresh"),
-    ("/", "filter"),
-    ("?", "help"),
-    ("q", "back/quit"),
-]
+_HELP = [("up/dn", "nav"), ("enter", "open/run"), ("r", "refresh"),
+         ("/", "filter"), ("?", "help"), ("q", "back/quit")]
 
 
-def _doc_lines(d: ActionData) -> list[str]:
+def _doc_lines(d: "ActionData") -> list[str]:
     """Render DocMeta as compact labelled lines (pointer, not manual)."""
     if d.doc is None:
         return []
@@ -123,16 +116,9 @@ def _doc_lines(d: ActionData) -> list[str]:
 class ForgeApp:
     """Two-pane full-screen app: left nav, right content."""
 
-    def __init__(
-        self,
-        ctx: UIContext,
-        *,
-        forge_id: str,
-        title: str,
-        entries: list[Entry],
-        version: str = "",
-        out: TextIO | None = None,
-    ):
+    def __init__(self, ctx: UIContext, *, forge_id: str, title: str,
+                 entries: list[Entry], version: str = "",
+                 out: TextIO | None = None):
         self.ctx = ctx
         self.forge_id = forge_id
         self.title = title
@@ -154,45 +140,39 @@ class ForgeApp:
         try:
             data = entry.provider()
         except Exception as exc:  # real error state, never a lie
-            data = StateSpec(
-                kind="error",
-                title="provider failed",
-                detail=str(exc) or exc.__class__.__name__,
-                hint="press r to retry",
-            )
+            data = StateSpec(kind="error", title="provider failed",
+                             detail=str(exc) or exc.__class__.__name__,
+                             hint="press r to retry")
         self.pane = _Pane(data=data)
 
     def _visible_entries(self) -> list[tuple[int, Entry]]:
         f = self.filter.lower()
-        return [(i, e) for i, e in enumerate(self.entries) if not f or f in e.label.lower()]
+        return [(i, e) for i, e in enumerate(self.entries)
+                if not f or f in e.label.lower()]
 
     # --------------------------------------------------------- render
 
     def render(self, buf: Buffer) -> None:
         ctx, th = self.ctx, self.theme
-        header(buf, self.forge_id, self.title, theme=th, right=self.version)
+        header(buf, self.forge_id, self.title, theme=th,
+               right=self.version)
         nav_w = max(22, min(34, buf.width // 4))
-        ix, iy, iw, ih = panel(
-            buf, 0, 2, nav_w, buf.height - 5, title="menu", focused=self.focus == "nav", theme=th
-        )
+        ix, iy, iw, ih = panel(buf, 0, 2, nav_w, buf.height - 5,
+                               title="menu", focused=self.focus == "nav",
+                               theme=th)
         vis = self._visible_entries()
         for row, (i, e) in enumerate(vis[:ih]):
             if row >= ih:
                 break
             marker = "> " if i == self.nav_idx else "  "
-            style = th.focus if (i == self.nav_idx and self.focus == "nav" and ctx.color) else ""
+            style = th.focus if (i == self.nav_idx and self.focus == "nav"
+                                 and ctx.color) else ""
             buf.draw(iy + row, ix - 1, marker + e.label, style=style)
         # content pane
-        cx, cy, cw, ch = panel(
-            buf,
-            nav_w,
-            2,
-            buf.width - nav_w,
-            buf.height - 5,
-            title=self.entries[self.nav_idx].label,
-            focused=self.focus == "content",
-            theme=th,
-        )
+        cx, cy, cw, ch = panel(buf, nav_w, 2, buf.width - nav_w,
+                               buf.height - 5,
+                               title=self.entries[self.nav_idx].label,
+                               focused=self.focus == "content", theme=th)
         self._render_content(buf, cx, cy, cw, ch)
         if self.show_help:
             self._render_help(buf)
@@ -211,36 +191,18 @@ class ForgeApp:
         if isinstance(d, TableData):
             if not d.rows:
                 sub = Buffer(buf.ctx, w, h)
-                state_view(
-                    sub,
-                    StateSpec(kind="empty", title="no rows", detail="nothing to show"),
-                    theme=self.theme,
-                )
+                state_view(sub, StateSpec(kind="empty", title="no rows",
+                                          detail="nothing to show"),
+                           theme=self.theme)
                 for row, line in enumerate(sub.render()):
                     buf.draw(y + row, x, line)
                 return
-            table(
-                buf,
-                x + 1,
-                y,
-                w - 2,
-                h,
-                columns=d.columns,
-                rows=d.rows,
-                selected=self.pane.selected,
-                theme=self.theme,
-            )
+            table(buf, x + 1, y, w - 2, h, columns=d.columns, rows=d.rows,
+                  selected=self.pane.selected, theme=self.theme)
             return
-        lines = (
-            d.lines
-            if isinstance(d, TextData)
-            else (
-                [f"action: {d.title}"]
-                + _doc_lines(d)
-                + ["", "press enter to execute"]
-                + self.pane.log
-            )
-        )
+        lines = d.lines if isinstance(d, TextData) else (
+            [f"action: {d.title}"] + _doc_lines(d) +
+            ["", "press enter to execute"] + self.pane.log)
         for i, line in enumerate(lines[:h]):
             buf.draw(y + i, x, line)
 
@@ -350,7 +312,6 @@ class ForgeApp:
         if not (ctx.interactive and ctx.ansi):
             raise NonInteractive("TUI requires an ANSI TTY")
         import os
-
         with Screen(ctx, out=self._out or sys.stdout) as scr:
             size = (0, 0)
             while True:
@@ -362,7 +323,8 @@ class ForgeApp:
                     pass
                 if now != size:
                     size = now
-                    self.ctx = UIContext(**{**ctx.__dict__, "width": size[0], "height": size[1]})
+                    self.ctx = UIContext(**{**ctx.__dict__,
+                                            "width": size[0], "height": size[1]})
                     ctx = self.ctx
                 buf = Buffer(ctx, size[0], size[1])
                 if size[0] < MIN_WIDTH or size[1] < MIN_HEIGHT:
@@ -387,4 +349,3 @@ class ForgeApp:
                                 scr.__enter__()
                         else:
                             self._execute(d)
-        return 0
