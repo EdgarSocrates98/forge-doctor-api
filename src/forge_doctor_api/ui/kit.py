@@ -18,13 +18,11 @@ import re
 import shutil
 import sys
 from dataclasses import dataclass, field
-from typing import TextIO
+from typing import Any, TextIO
 
 from forge_doctor_api.ui.i18n import t
 
-IS_WINDOWS = os.name == "nt"
-
-if IS_WINDOWS:  # pragma: no cover - platform
+if sys.platform == "win32":  # pragma: no cover - platform
     import msvcrt
 else:  # pragma: no cover - platform
     import termios
@@ -128,7 +126,7 @@ _CTRL_C = "ctrl-c"
 
 def _read_key() -> str:
     """Blocking read of one normalized key press."""
-    if IS_WINDOWS:  # pragma: no cover - platform
+    if sys.platform == "win32":  # pragma: no cover - platform
         ch = msvcrt.getwch()
         if ch in ("\x00", "\xe0"):
             code = msvcrt.getwch()
@@ -166,14 +164,14 @@ def _read_key() -> str:
 
 class _RawMode:
     def __enter__(self) -> _RawMode:
-        if not IS_WINDOWS:  # pragma: no cover - platform
+        if sys.platform != "win32":  # pragma: no cover - platform
             self._fd = sys.stdin.fileno()
             self._saved = termios.tcgetattr(self._fd)
             tty.setraw(self._fd)
         return self
 
     def __exit__(self, *exc: object) -> None:
-        if not IS_WINDOWS:  # pragma: no cover - platform
+        if sys.platform != "win32":  # pragma: no cover - platform
             termios.tcsetattr(self._fd, termios.TCSADRAIN, self._saved)
 
 
@@ -210,8 +208,8 @@ def _option_window(ctx: UIContext, n: int, idx: int, extra: int = 0) -> tuple[in
 
 
 def _more_marker(ctx: UIContext, direction: str, count: int) -> str:
-    arrow = ("↑" if direction == "up" else "↓") if ctx.unicode else (
-        "^" if direction == "up" else "v"
+    arrow = (
+        ("↑" if direction == "up" else "↓") if ctx.unicode else ("^" if direction == "up" else "v")
     )
     return _c(ctx, "2", f"    {arrow} {count} more")
 
@@ -241,9 +239,7 @@ def select(
                 f"  {_c(ctx, '2', t('select_hint', ctx.language))}",
                 "",
             ]
-            start, end = _option_window(
-                ctx, len(options), idx, extra=1 if descriptions else 0
-            )
+            start, end = _option_window(ctx, len(options), idx, extra=1 if descriptions else 0)
             if start:
                 out.append(_more_marker(ctx, "up", start))
             for i in range(start, end):
@@ -417,16 +413,35 @@ def status_table(
 # -- forge/* document rendering ----------------------------------------------
 
 _GOOD = {
-    "OK", "PASS", "HEALTHY", "COMPLETED", "INSTALLED", "DETECTED", "READY",
-    "ACTIVE_NOW", "DONE", "SUPPORTED",
+    "OK",
+    "PASS",
+    "HEALTHY",
+    "COMPLETED",
+    "INSTALLED",
+    "DETECTED",
+    "READY",
+    "ACTIVE_NOW",
+    "DONE",
+    "SUPPORTED",
 }
 _BAD = {
-    "FAIL", "FAILED", "BROKEN", "MISSING", "UNSUPPORTED", "REFUSED",
+    "FAIL",
+    "FAILED",
+    "BROKEN",
+    "MISSING",
+    "UNSUPPORTED",
+    "REFUSED",
     "BLOCKED",
 }
 _WARN = {
-    "DEGRADED", "UNVERIFIED", "PLANNED", "SKIPPED", "VENDORED",
-    "NOT_INSTALLED", "PENDING", "MODIFIED",
+    "DEGRADED",
+    "UNVERIFIED",
+    "PLANNED",
+    "SKIPPED",
+    "VENDORED",
+    "NOT_INSTALLED",
+    "PENDING",
+    "MODIFIED",
 }
 
 
@@ -463,7 +478,7 @@ def _kv(ctx: UIContext, label: str, value: object, width: int = 12) -> str | Non
     return f"  {_pad_visible(label, width)} {_ellipsize(ctx, str(value))}"
 
 
-def format_status_doc(doc: dict, *, ctx: UIContext | None = None) -> str:
+def format_status_doc(doc: dict[str, Any], *, ctx: UIContext | None = None) -> str:
     """Render any ``forge/*`` install/health/receipt doc for humans.
 
     Pure — returns the text; callers write it. Honors ``ctx`` color /
@@ -479,18 +494,31 @@ def format_status_doc(doc: dict, *, ctx: UIContext | None = None) -> str:
     out.append(_c(ctx, "2", bar * min(ctx.width - 1, max(10, cell_width(title) + 4))))
 
     meta = [
-        _kv(ctx, t("doc_status", ctx.language), doc.get("status") and
-            state_color(ctx, str(doc["status"]), str(doc["status"]).upper()) or None),
+        _kv(
+            ctx,
+            t("doc_status", ctx.language),
+            doc.get("status")
+            and state_color(ctx, str(doc["status"]), str(doc["status"]).upper())
+            or None,
+        ),
         _kv(ctx, t("doc_target", ctx.language), doc.get("target_root")),
         _kv(ctx, t("doc_scope", ctx.language), doc.get("scope")),
         _kv(ctx, t("doc_version", ctx.language), doc.get("version")),
-        _kv(ctx, t("doc_profile", ctx.language),
-            (doc.get("context") or {}).get("profile") or doc.get("profile")),
+        _kv(
+            ctx,
+            t("doc_profile", ctx.language),
+            (doc.get("context") or {}).get("profile") or doc.get("profile"),
+        ),
         _kv(ctx, t("doc_state_dir", ctx.language), doc.get("state_dir")),
     ]
     if doc.get("ledger_entries") is not None:
-        meta.append(_kv(ctx, t("doc_managed", ctx.language),
-                        f"{doc['ledger_entries']} {t('doc_entries', ctx.language)}"))
+        meta.append(
+            _kv(
+                ctx,
+                t("doc_managed", ctx.language),
+                f"{doc['ledger_entries']} {t('doc_entries', ctx.language)}",
+            )
+        )
     for line in meta:
         if line:
             out.append(line)
@@ -505,7 +533,8 @@ def format_status_doc(doc: dict, *, ctx: UIContext | None = None) -> str:
             detail = str(c.get("detail") or "")
             if c.get("repairable"):
                 detail = (detail + "  " if detail else "") + _c(
-                    ctx, "36", t("doc_repairable", ctx.language))
+                    ctx, "36", t("doc_repairable", ctx.language)
+                )
             line = f"  {icon} {_pad_visible(str(c.get('id', '?')), w_id)}"
             if detail:
                 line += f" {_ellipsize(ctx, detail, ctx.width - w_id - 8)}"
@@ -529,15 +558,16 @@ def format_status_doc(doc: dict, *, ctx: UIContext | None = None) -> str:
         for entry in (modified + missing)[:6]:
             path = entry.get("path") if isinstance(entry, dict) else str(entry)
             kind = entry.get("status") if isinstance(entry, dict) else "?"
-            out.append(f"    {_c(ctx, '2', '·')} {state_color(ctx, str(kind or '?'), str(kind))} "
-                       f"{_ellipsize(ctx, str(path), ctx.width - 12)}")
+            out.append(
+                f"    {_c(ctx, '2', '·')} {state_color(ctx, str(kind or '?'), str(kind))} "
+                f"{_ellipsize(ctx, str(path), ctx.width - 12)}"
+            )
         if len(modified + missing) > 6:
             out.append(_c(ctx, "2", f"    … {len(modified + missing) - 6} more"))
 
     files = doc.get("managed_files") or doc.get("planned_files")
     if files:
-        label = ("doc_managed_files" if doc.get("managed_files") is not None
-                 else "doc_planned_files")
+        label = "doc_managed_files" if doc.get("managed_files") is not None else "doc_planned_files"
         out.append("")
         out.append(_c(ctx, "36", t(label, ctx.language)))
         out.append(f"  {len(files)}")
@@ -567,8 +597,7 @@ def format_status_doc(doc: dict, *, ctx: UIContext | None = None) -> str:
         out.append(f"  {len(ws['members'])} {t('doc_members', ctx.language)}")
         for m in ws.get("members") or []:
             path = m.get("path") if isinstance(m, dict) else str(m)
-            out.append(f"    {_c(ctx, '2', '·')} "
-                       f"{_ellipsize(ctx, str(path), ctx.width - 8)}")
+            out.append(f"    {_c(ctx, '2', '·')} {_ellipsize(ctx, str(path), ctx.width - 8)}")
         for c in ws.get("conflicts") or []:
             member = c.get("member", "?") if isinstance(c, dict) else str(c)
             fid = c.get("forge_id") if isinstance(c, dict) else None
@@ -578,30 +607,37 @@ def format_status_doc(doc: dict, *, ctx: UIContext | None = None) -> str:
                 lbl += f": {decision}"
             out.append(f"    {_c(ctx, '33', '▲')} {_ellipsize(ctx, lbl, ctx.width - 10)}")
         for m in ws.get("unknown_members") or []:
-            out.append(f"    {_c(ctx, '33', '·')} {m} "
-                       f"{_c(ctx, '2', t('doc_unknown_member', ctx.language))}")
+            out.append(
+                f"    {_c(ctx, '33', '·')} {m} "
+                f"{_c(ctx, '2', t('doc_unknown_member', ctx.language))}"
+            )
         for r in ws.get("member_results") or []:
-            out.append(f"    {_c(ctx, '2', '·')} {r.get('member', '?')}: "
-                       f"{state_color(ctx, str(r.get('status', '?')))}")
+            out.append(
+                f"    {_c(ctx, '2', '·')} {r.get('member', '?')}: "
+                f"{state_color(ctx, str(r.get('status', '?')))}"
+            )
 
     verification = doc.get("verification")
     if isinstance(verification, dict) and verification.get("status"):
         out.append("")
         line = f"  {t('doc_verification', ctx.language):<13} "
-        line += state_color(ctx, str(verification["status"]),
-                            str(verification["status"]).upper())
+        line += state_color(ctx, str(verification["status"]), str(verification["status"]).upper())
         out.append(line)
 
     error = doc.get("error")
     if isinstance(error, dict) and (error.get("kind") or error.get("detail")):
         out.append("")
-        out.append(f"  {_c(ctx, '31', t('doc_refused', ctx.language))} "
-                   f"{_ellipsize(ctx, str(error.get('kind', '')))}")
+        out.append(
+            f"  {_c(ctx, '31', t('doc_refused', ctx.language))} "
+            f"{_ellipsize(ctx, str(error.get('kind', '')))}"
+        )
         if error.get("detail"):
             out.append(f"    {_ellipsize(ctx, str(error['detail']), ctx.width - 8)}")
         if error.get("unlock"):
-            out.append(f"    {_c(ctx, '36', t('doc_unlock', ctx.language))} "
-                       f"{_ellipsize(ctx, str(error['unlock']), ctx.width - 12)}")
+            out.append(
+                f"    {_c(ctx, '36', t('doc_unlock', ctx.language))} "
+                f"{_ellipsize(ctx, str(error['unlock']), ctx.width - 12)}"
+            )
 
     if doc.get("repair_hint"):
         out.append("")
@@ -610,7 +646,7 @@ def format_status_doc(doc: dict, *, ctx: UIContext | None = None) -> str:
     return "\n".join(out)
 
 
-def approve_plan(doc: dict, *, ctx: UIContext | None = None) -> bool:
+def approve_plan(doc: dict[str, Any], *, ctx: UIContext | None = None) -> bool:
     """Print a planned install doc and ask to apply it. TTY only."""
     ctx = ctx or UIContext.detect()
     if not ctx.interactive:

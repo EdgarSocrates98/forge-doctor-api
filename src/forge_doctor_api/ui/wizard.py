@@ -131,9 +131,7 @@ def run_wizard(
     )
     if comp_chosen is None:
         return 130
-    components = tuple(
-        sorted(_COMP_ORDER[i] for i in comp_chosen)
-    )
+    components = tuple(sorted(_COMP_ORDER[i] for i in comp_chosen))
 
     # --- hosts ---------------------------------------------------------------
     detected = {
@@ -159,7 +157,7 @@ def run_wizard(
     # --- review (real dry-run plan) ------------------------------------------
     # Contrato explícito: install_fn aceita `components` — wrappers **kw
     # encaminham sem inspeção de assinatura (GAP-002).
-    kwargs: dict = {"scope": scope, "profile": profile, "components": components}
+    kwargs: dict[str, Any] = {"scope": scope, "profile": profile, "components": components}
     try:
         # `none` é opt-out explícito — zero hosts escolhidos nunca vira
         # "all" (GAP-003); csv de subconjunto é contrato válido (GAP-003b).
@@ -187,7 +185,7 @@ def run_wizard(
     )
     if isinstance(planned, list):
         for entry in planned[:10]:
-            path = entry.get("path") if isinstance(entry, dict) else str(entry)
+            path = str(entry.get("path")) if isinstance(entry, dict) else str(entry)
             print(f"    {_c(ctx, '2', path)}")
         if len(planned) > 10:
             print(f"    … {len(planned) - 10} more")
