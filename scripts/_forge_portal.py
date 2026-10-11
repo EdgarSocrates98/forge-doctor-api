@@ -21,6 +21,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import os
 import secrets
 import socket
 import threading
@@ -212,6 +213,66 @@ def workspace_name(root: str | None) -> str | None:
     if not root:
         return None
     return Path(root).name or root
+
+
+# ---------------------------------------------------------------------------
+# forge-portal local presence — already-defined locations only:
+#   FORGE_PORTAL_HOME env, ~/.forge/installations/forge-portal.json
+#   (forge/InstallationManifest/v1 registry), ~/.forge/installs/forge-portal/.
+# Never fabricates paths; every reported location exists on disk.
+
+
+def detect_forge_portal() -> dict[str, Any]:
+    """Whether a local forge-portal install exists in a defined location."""
+    locations: list[dict[str, str]] = []
+
+    env_root = os.environ.get("FORGE_PORTAL_HOME", "").strip()
+    env_ok = bool(env_root) and Path(env_root).is_dir()
+    if env_ok:
+        locations.append({"kind": "env:FORGE_PORTAL_HOME", "path": env_root})
+
+    home = Path(os.environ.get("FORGE_HOME_OVERRIDE") or Path.home())
+    manifest_path = home / ".forge" / "installations" / "forge-portal.json"
+    install_root: str | None = None
+    installed_at: str | None = None
+    manifest_ok = manifest_path.is_file()
+    if manifest_ok:
+        locations.append({"kind": "registry", "path": str(manifest_path)})
+        try:
+            doc = json.loads(manifest_path.read_text(encoding="utf-8"))
+            if isinstance(doc, dict):
+                install_root = doc.get("install_root") or None
+                installed_at = doc.get("installed_at") or None
+        except (OSError, ValueError):
+            pass  # unreadable manifest still proves a registered install
+
+    if install_root and not Path(install_root).is_dir():
+        install_root = None  # manifest points somewhere gone — honest
+    if install_root:
+        locations.append({"kind": "install_root", "path": install_root})
+    elif not manifest_ok:
+        default_root = home / ".forge" / "installs" / "forge-portal"
+        if default_root.is_dir():
+            install_root = str(default_root)
+            locations.append({"kind": "install_root", "path": install_root})
+
+    root = install_root or (env_root if env_ok else None)
+    return {
+        "state": "installed" if root or manifest_ok else "vendored",
+        "install_root": root,
+        "manifest": str(manifest_path) if manifest_ok else None,
+        "installed_at": installed_at,
+        "locations": locations,
+    }
+
+
+def _with_portal_presence(data: Any) -> Any:
+    """Attach local forge-portal presence to health/status payloads."""
+    if not isinstance(data, dict):
+        return data
+    out = dict(data)
+    out["forge_portal"] = detect_forge_portal()
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -660,7 +721,7 @@ def default_operations(adapter: PortalAdapter) -> list[Operation]:
     adapter methods. Forges add mutating + domain ops on top."""
 
     def _get(attr: str, fallback: Any):
-        fn = getattr(adapter, attr, None)
+        fn = getattr(adapter, attr, None) or fallback
 
         def h(ctx: RequestContext) -> Any:
             if fn is None:
@@ -670,11 +731,29 @@ def default_operations(adapter: PortalAdapter) -> list[Operation]:
         return h
 
     return [
-        Operation("GET", "/bootstrap", lambda ctx: {"descriptor": adapter.descriptor(), "health": adapter.health()}),
-        Operation("GET", "/health", _get("health", None)),
+        Operation(
+            "GET",
+            "/bootstrap",
+            lambda ctx: {
+                "descriptor": adapter.descriptor(),
+                "health": _with_portal_presence(adapter.health()),
+            },
+        ),
+        Operation("GET", "/health", _presence_op(_get("health", None))),
         Operation("GET", "/capabilities", lambda ctx: adapter.capabilities()),
-        Operation("GET", "/installation/status", _get("installation_status", adapter.health)),
+        Operation(
+            "GET",
+            "/installation/status",
+            _presence_op(_get("installation_status", adapter.health)),
+        ),
     ]
+
+
+def _presence_op(handler: Callable[[RequestContext], Any]) -> Callable[[RequestContext], Any]:
+    def h(ctx: RequestContext) -> Any:
+        return _with_portal_presence(handler(ctx))
+
+    return h
 
 
 def _wants_ctx(fn: Callable) -> bool:
