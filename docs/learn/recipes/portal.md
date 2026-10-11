@@ -61,3 +61,6 @@ rede. Scan em workspaces grandes segue o custo normal do engine.
 | `PORTAL-PLAN-STALE` | apply sem o `plan_token` do plano | refazer o plan e enviar o token |
 | `PORTAL-HOST-ABSENT` | launch de host não detectado | instalar o host ou escolher outro |
 | skills/agents vazios | capability `unsupported` por desenho | é o comportamento correto |
+| `PORTAL-HOST` 403 | Host não-loopback (rede/túnel/DNS rebinding) | acesse por 127.0.0.1/localhost |
+| `PORTAL-ORIGIN` 403 | POST com Origin fora do loopback | só a UI do portal muta |
+| `PORTAL-RATE-LIMITED` 429 | >10 mutações/min | aguarde a janela; envelope sinaliza retry |
