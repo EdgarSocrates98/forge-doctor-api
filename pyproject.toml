@@ -60,6 +60,8 @@ select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF", "DTZ"]
 # Vendored shared sources — canonical copies in the-forge are the lint target.
 "scripts/forge_installkit.py" = ["ALL"]
 "scripts/forge_bootstrap.py" = ["ALL"]
+# Vendored portal server — canonical copy in forge-portal/portal_core.
+"scripts/_forge_portal.py" = ["ALL"]
 
 [tool.mypy]
 python_version = "3.11"

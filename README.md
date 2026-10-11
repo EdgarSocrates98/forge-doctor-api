@@ -72,6 +72,9 @@ python scripts/forge_install.py install --yes       # apply to a repo
 python scripts/forge_install.py status|doctor|repair
 python scripts/forge_install.py uninstall [--purge]
 python scripts/forge_install.py update|mcp-verify
+
+# Optional local web UI over the same real services (127.0.0.1, session token)
+python scripts/forge_portal.py [--no-browser] [--port N] [--root DIR]
 ```
 
 `theforge install auto` delegates here automatically via the

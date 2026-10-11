@@ -131,6 +131,7 @@ _Troubleshooting, doctor/repair, observability._
 ### learn/
 
 - [Receita — instalar o Doctor API num projeto](learn/recipes/instalar-doctor-api.md)
+- [Receita — portal web local do Doctor API](learn/recipes/portal.md)
 
 ## Contribute
 

@@ -17,6 +17,7 @@
 | "Os findings formam qual sintoma?" | [diagnose-explain](recipes/diagnose-explain.md) |
 | "Primeiro contato com o Doctor API" | [primeiro-uso](recipes/primeiro-uso.md) |
 | "Como instalo num projeto?" | [instalar-doctor-api](recipes/instalar-doctor-api.md) |
+| "Interface web local opcional?" | [portal](recipes/portal.md) |
 | "Inspecionar um openapi.yaml" | [openapi-contrato](recipes/openapi-contrato.md) |
 | "O que essa mudança afeta?" | [graph-blast](recipes/graph-blast.md) |
 | "Segurança/timeout declarado aguenta?" | [security-reliability](recipes/security-reliability.md) |
