@@ -330,7 +330,8 @@ class _RawMode:
 
 
 _ESC = {"\x1b[A": "up", "\x1b[B": "down", "\x1b[C": "right",
-        "\x1b[D": "left", "\x1b[H": "home", "\x1b[F": "end"}
+        "\x1b[D": "left", "\x1b[H": "home", "\x1b[F": "end",
+        "\x1b[5~": "pageup", "\x1b[6~": "pagedown", "\x1b[Z": "backtab"}
 _KEYS = {"\r": "enter", "\n": "enter", " ": "space", "\t": "tab",
          "\x1b": "esc", "\x7f": "backspace", "\x03": "ctrl-c"}
 
@@ -345,7 +346,8 @@ def read_key(timeout: float = 0.05) -> str | None:
         ch = msvcrt.getwch()
         if ch in ("\x00", "\xe0"):  # special key prefix
             return {"H": "up", "P": "down", "M": "right",
-                    "K": "left", "G": "home", "O": "end"}.get(msvcrt.getwch())
+                    "K": "left", "G": "home", "O": "end",
+                    "I": "pageup", "Q": "pagedown"}.get(msvcrt.getwch())
         return _KEYS.get(ch, ch)
     # POSIX — select-based poll
     import select

@@ -88,6 +88,7 @@ class _Pane:
     selected: int = 0
     executing: bool = False
     log: list[str] = field(default_factory=list)
+    scroll: int = 0
 
 
 _HELP = [("up/dn", "nav"), ("enter", "open/run"), ("r", "refresh"),
@@ -129,6 +130,7 @@ class ForgeApp:
         self.focus = "nav"  # nav | content
         self.pane = _Pane()
         self.filter = ""
+        self.filter_active = False
         self.show_help = False
         self._out = out
         self._load()
@@ -158,7 +160,8 @@ class ForgeApp:
                right=self.version)
         nav_w = max(22, min(34, buf.width // 4))
         ix, iy, iw, ih = panel(buf, 0, 2, nav_w, buf.height - 5,
-                               title="menu", focused=self.focus == "nav",
+                               title=f"menu /{self.filter}" if self.filter_active or self.filter else "menu",
+                               focused=self.focus == "nav",
                                theme=th)
         vis = self._visible_entries()
         for row, (i, e) in enumerate(vis[:ih]):
@@ -203,7 +206,7 @@ class ForgeApp:
         lines = d.lines if isinstance(d, TextData) else (
             [f"action: {d.title}"] + _doc_lines(d) +
             ["", "press enter to execute"] + self.pane.log)
-        for i, line in enumerate(lines[:h]):
+        for i, line in enumerate(lines[self.pane.scroll:self.pane.scroll + h]):
             buf.draw(y + i, x, line)
 
     def _render_help(self, buf: Buffer) -> None:
@@ -228,6 +231,8 @@ class ForgeApp:
     def on_key(self, key: str) -> str | None:
         if key == "ctrl-c":
             return "quit"
+        if self.filter_active:
+            return self._filter_key(key)
         if self.show_help:
             self.show_help = False
             return None
@@ -235,15 +240,40 @@ class ForgeApp:
             self.show_help = True
             return None
         if key == "/":
-            self.filter = ""  # placeholder toggles filter line; keep simple
+            self.filter_active = True
             self.focus = "nav"
             return None
-        if key == "tab":
+        if key in ("tab", "backtab"):
             self.focus = "content" if self.focus == "nav" else "nav"
             return None
         if self.focus == "nav":
             return self._nav_key(key)
         return self._content_key(key)
+
+    def _filter_key(self, key: str) -> str | None:
+        if key in ("enter", "tab", "backtab"):
+            self.filter_active = False
+            return None
+        if key == "esc":
+            self.filter = ""
+            self.filter_active = False
+            self._sync_filter_selection()
+            return None
+        if key == "backspace":
+            self.filter = self.filter[:-1]
+            self._sync_filter_selection()
+            return None
+        char = key[5:] if key.startswith("char:") else key
+        if len(char) == 1 and ord(char) >= 32:
+            self.filter += char
+            self._sync_filter_selection()
+        return None
+
+    def _sync_filter_selection(self) -> None:
+        visible = self._visible_entries()
+        if visible and self.nav_idx not in {i for i, _ in visible}:
+            self.nav_idx = visible[0][0]
+            self._load()
 
     def _nav_key(self, key: str) -> str | None:
         vis = self._visible_entries()
@@ -282,11 +312,33 @@ class ForgeApp:
                 self.pane.selected = max(0, self.pane.selected - 1)
             elif key in ("down", "j"):
                 self.pane.selected = min(len(d.rows) - 1, self.pane.selected + 1)
+            elif key == "pageup":
+                self.pane.selected = max(0, self.pane.selected - 10)
+            elif key == "pagedown":
+                self.pane.selected = min(len(d.rows) - 1, self.pane.selected + 10)
+            elif key == "home":
+                self.pane.selected = 0
+            elif key == "end":
+                self.pane.selected = len(d.rows) - 1
             elif key == "enter" and d.on_enter:
                 d.on_enter(d.rows[self.pane.selected])
                 self._load()
         elif isinstance(d, ActionData) and key == "enter":
             return "exec"  # loop decides suspend vs in-place
+        elif isinstance(d, (TextData, ActionData)):
+            line_count = len(d.lines) if isinstance(d, TextData) else len(self.pane.log) + 8
+            if key in ("up", "k"):
+                self.pane.scroll = max(0, self.pane.scroll - 1)
+            elif key in ("down", "j"):
+                self.pane.scroll = min(max(0, line_count - 1), self.pane.scroll + 1)
+            elif key == "pageup":
+                self.pane.scroll = max(0, self.pane.scroll - 10)
+            elif key == "pagedown":
+                self.pane.scroll = min(max(0, line_count - 1), self.pane.scroll + 10)
+            elif key == "home":
+                self.pane.scroll = 0
+            elif key == "end":
+                self.pane.scroll = max(0, line_count - 1)
         return None
 
     def _execute(self, d: ActionData) -> None:
