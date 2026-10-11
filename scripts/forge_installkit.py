@@ -725,6 +725,13 @@ def apply_install(ctx: InstallContext, *, approved: bool = False) -> dict[str, A
     markers: list[dict[str, Any]] = []
     checks: list[dict[str, Any]] = []
     ledger = ctx.ledger or Ledger.load(ctx.state_dir)
+    ledger_before = ledger.path.read_bytes() if ledger.path.exists() else None
+    component_file = components_path(ctx.state_dir) if ctx.options else None
+    component_before = (
+        component_file.read_bytes()
+        if component_file is not None and component_file.exists()
+        else None
+    )
     # §14.3 journal — every write is either a creation (removable) or an
     # overwrite with a pre-state snapshot; on failure the managed half is
     # reverted before the error propagates.
@@ -867,12 +874,31 @@ def apply_install(ctx: InstallContext, *, approved: bool = False) -> dict[str, A
             E_WRITE, f"install failed at write stage; managed writes reverted: {exc}"
         ) from exc
 
-    ledger.save()
-    if ctx.options:
-        ctx.state_dir.mkdir(parents=True, exist_ok=True)
-        _atomic_write(
-            components_path(ctx.state_dir), _json_bytes(dict(ctx.options))
-        )
+    try:
+        ledger.save()
+        if ctx.options:
+            ctx.state_dir.mkdir(parents=True, exist_ok=True)
+            _atomic_write(component_file, _json_bytes(dict(ctx.options)))
+    except InstallError:
+        _rollback_writes(ctx, created, backups)
+        raise
+    except Exception as exc:
+        _rollback_writes(ctx, created, backups)
+        try:
+            if ledger_before is None:
+                ledger.path.unlink(missing_ok=True)
+            else:
+                _atomic_write(ledger.path, ledger_before)
+            if component_file is not None:
+                if component_before is None:
+                    component_file.unlink(missing_ok=True)
+                else:
+                    _atomic_write(component_file, component_before)
+        except OSError:
+            pass
+        raise InstallError(
+            E_WRITE, f"install failed at state stage; managed writes reverted: {exc}"
+        ) from exc
     written = sum(1 for f in files if f.get("action") in ("created", "updated"))
     checks.append({"id": "files-written", "status": "PASS", "detail": f"{written} writes"})
     if "codex" in ctx.hosts and ctx.scope == "project":
