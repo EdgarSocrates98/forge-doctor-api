@@ -22,9 +22,7 @@ from typing import Any, TextIO
 
 from forge_doctor_api.ui.i18n import t
 
-if sys.platform == "win32":  # pragma: no cover - platform
-    import msvcrt
-else:  # pragma: no cover - platform
+if sys.platform != "win32":  # pragma: no cover - platform
     import termios
     import tty
 
@@ -126,7 +124,9 @@ _CTRL_C = "ctrl-c"
 
 def _read_key() -> str:
     """Blocking read of one normalized key press."""
-    if sys.platform == "win32":  # pragma: no cover - platform
+    if sys.platform == "win32":
+        import msvcrt
+
         ch = msvcrt.getwch()
         if ch in ("\x00", "\xe0"):
             code = msvcrt.getwch()
