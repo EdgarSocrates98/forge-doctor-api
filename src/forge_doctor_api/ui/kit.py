@@ -412,3 +412,209 @@ def status_table(
     sys.stdout.write(rendered + "\n")
     sys.stdout.flush()
     return rendered
+
+
+# -- forge/* document rendering ----------------------------------------------
+
+_GOOD = {
+    "OK", "PASS", "HEALTHY", "COMPLETED", "INSTALLED", "DETECTED", "READY",
+    "ACTIVE_NOW", "DONE", "SUPPORTED",
+}
+_BAD = {
+    "FAIL", "FAILED", "BROKEN", "MISSING", "UNSUPPORTED", "REFUSED",
+    "BLOCKED",
+}
+_WARN = {
+    "DEGRADED", "UNVERIFIED", "PLANNED", "SKIPPED", "VENDORED",
+    "NOT_INSTALLED", "PENDING", "MODIFIED",
+}
+
+
+def state_color(ctx: UIContext, state: str, text: str | None = None) -> str:
+    """Color a lifecycle/doctor state; unknown states stay dim."""
+    label = text if text is not None else state
+    s = state.upper()
+    if s in _GOOD:
+        return _c(ctx, "32", label)
+    if s in _BAD:
+        return _c(ctx, "31", label)
+    if s in _WARN:
+        return _c(ctx, "33", label)
+    return _c(ctx, "2", label)
+
+
+def _check_icon(ctx: UIContext, status: str) -> str:
+    s = (status or "").upper()
+    if s in _GOOD:
+        mark = "✓" if ctx.unicode else "v"
+        return _c(ctx, "32", mark)
+    if s in _BAD:
+        mark = "✗" if ctx.unicode else "x"
+        return _c(ctx, "31", mark)
+    if s == "NOT_APPLICABLE":
+        return _c(ctx, "2", "—" if ctx.unicode else "-")
+    mark = "?" if not ctx.unicode else "◇"
+    return _c(ctx, "33", mark)
+
+
+def _kv(ctx: UIContext, label: str, value: object, width: int = 12) -> str | None:
+    if value in (None, "", [], {}):
+        return None
+    return f"  {_pad_visible(label, width)} {_ellipsize(ctx, str(value))}"
+
+
+def format_status_doc(doc: dict, *, ctx: UIContext | None = None) -> str:
+    """Render any ``forge/*`` install/health/receipt doc for humans.
+
+    Pure — returns the text; callers write it. Honors ``ctx`` color /
+    unicode / width so pipes and ``NO_COLOR`` stay clean. Only sections
+    with real data are emitted; unknown statuses render dim, never red.
+    """
+    ctx = ctx or UIContext.detect()
+    out: list[str] = [""]
+    bar = "─" if ctx.unicode else "-"
+    op = doc.get("operation") or doc.get("command") or "status"
+    title = f" {doc.get('forge_id', 'forge')} · {op}".upper()
+    out.append(_c(ctx, "1", title))
+    out.append(_c(ctx, "2", bar * min(ctx.width - 1, max(10, cell_width(title) + 4))))
+
+    meta = [
+        _kv(ctx, t("doc_status", ctx.language), doc.get("status") and
+            state_color(ctx, str(doc["status"]), str(doc["status"]).upper()) or None),
+        _kv(ctx, t("doc_target", ctx.language), doc.get("target_root")),
+        _kv(ctx, t("doc_scope", ctx.language), doc.get("scope")),
+        _kv(ctx, t("doc_version", ctx.language), doc.get("version")),
+        _kv(ctx, t("doc_profile", ctx.language),
+            (doc.get("context") or {}).get("profile") or doc.get("profile")),
+        _kv(ctx, t("doc_state_dir", ctx.language), doc.get("state_dir")),
+    ]
+    if doc.get("ledger_entries") is not None:
+        meta.append(_kv(ctx, t("doc_managed", ctx.language),
+                        f"{doc['ledger_entries']} {t('doc_entries', ctx.language)}"))
+    for line in meta:
+        if line:
+            out.append(line)
+
+    checks = doc.get("checks") or []
+    if checks:
+        out.append("")
+        out.append(_c(ctx, "36", t("doc_checks", ctx.language)))
+        w_id = min(28, max(cell_width(str(c.get("id", ""))) for c in checks) + 1)
+        for c in checks:
+            icon = _check_icon(ctx, str(c.get("status", "")))
+            detail = str(c.get("detail") or "")
+            if c.get("repairable"):
+                detail = (detail + "  " if detail else "") + _c(
+                    ctx, "36", t("doc_repairable", ctx.language))
+            line = f"  {icon} {_pad_visible(str(c.get('id', '?')), w_id)}"
+            if detail:
+                line += f" {_ellipsize(ctx, detail, ctx.width - w_id - 8)}"
+            out.append(line)
+
+    drift = doc.get("drift")
+    if isinstance(drift, dict) and (drift.get("ok") is not None):
+        modified = drift.get("modified") or []
+        missing = drift.get("missing") or []
+        out.append("")
+        out.append(_c(ctx, "36", t("doc_drift", ctx.language)))
+        ok_n = drift.get("ok", 0)
+        mod_lbl = f"{t('doc_modified', ctx.language)} {len(modified)}"
+        miss_lbl = f"{t('doc_missing', ctx.language)} {len(missing)}"
+        line = (
+            f"  {_c(ctx, '32', 'ok ' + str(ok_n))}  "
+            f"{state_color(ctx, 'MODIFIED', mod_lbl)}  "
+            f"{state_color(ctx, 'MISSING', miss_lbl)}"
+        )
+        out.append(line)
+        for entry in (modified + missing)[:6]:
+            path = entry.get("path") if isinstance(entry, dict) else str(entry)
+            kind = entry.get("status") if isinstance(entry, dict) else "?"
+            out.append(f"    {_c(ctx, '2', '·')} {state_color(ctx, str(kind or '?'), str(kind))} "
+                       f"{_ellipsize(ctx, str(path), ctx.width - 12)}")
+        if len(modified + missing) > 6:
+            out.append(_c(ctx, "2", f"    … {len(modified + missing) - 6} more"))
+
+    files = doc.get("managed_files") or doc.get("planned_files")
+    if files:
+        label = ("doc_managed_files" if doc.get("managed_files") is not None
+                 else "doc_planned_files")
+        out.append("")
+        out.append(_c(ctx, "36", t(label, ctx.language)))
+        out.append(f"  {len(files)}")
+        for f in files[:5]:
+            path = f.get("path") if isinstance(f, dict) else str(f)
+            out.append(f"    {_c(ctx, '2', '·')} {_ellipsize(ctx, str(path), ctx.width - 8)}")
+        if len(files) > 5:
+            out.append(_c(ctx, "2", f"    … {len(files) - 5} more"))
+
+    portal = doc.get("forge_portal")
+    if isinstance(portal, dict):
+        out.append("")
+        out.append(_c(ctx, "36", "FORGE PORTAL"))
+        state = str(portal.get("state", "?"))
+        where = portal.get("install_root") or portal.get("manifest") or ""
+        detail = state_color(ctx, state)
+        if where:
+            detail += f"  {_ellipsize(ctx, str(where), ctx.width - 18)}"
+        elif state == "vendored":
+            detail += _c(ctx, "2", f"  {t('doc_portal_vendored', ctx.language)}")
+        out.append(f"  {detail}")
+
+    ws = doc.get("workspace")
+    if isinstance(ws, dict) and ws.get("members"):
+        out.append("")
+        out.append(_c(ctx, "36", t("doc_workspace", ctx.language)))
+        out.append(f"  {len(ws['members'])} {t('doc_members', ctx.language)}")
+        for m in ws.get("members") or []:
+            path = m.get("path") if isinstance(m, dict) else str(m)
+            out.append(f"    {_c(ctx, '2', '·')} "
+                       f"{_ellipsize(ctx, str(path), ctx.width - 8)}")
+        for c in ws.get("conflicts") or []:
+            member = c.get("member", "?") if isinstance(c, dict) else str(c)
+            fid = c.get("forge_id") if isinstance(c, dict) else None
+            decision = c.get("decision") if isinstance(c, dict) else None
+            lbl = f"{member}/{fid}" if fid else str(member)
+            if decision:
+                lbl += f": {decision}"
+            out.append(f"    {_c(ctx, '33', '▲')} {_ellipsize(ctx, lbl, ctx.width - 10)}")
+        for m in ws.get("unknown_members") or []:
+            out.append(f"    {_c(ctx, '33', '·')} {m} "
+                       f"{_c(ctx, '2', t('doc_unknown_member', ctx.language))}")
+        for r in ws.get("member_results") or []:
+            out.append(f"    {_c(ctx, '2', '·')} {r.get('member', '?')}: "
+                       f"{state_color(ctx, str(r.get('status', '?')))}")
+
+    verification = doc.get("verification")
+    if isinstance(verification, dict) and verification.get("status"):
+        out.append("")
+        line = f"  {t('doc_verification', ctx.language):<13} "
+        line += state_color(ctx, str(verification["status"]),
+                            str(verification["status"]).upper())
+        out.append(line)
+
+    error = doc.get("error")
+    if isinstance(error, dict) and (error.get("kind") or error.get("detail")):
+        out.append("")
+        out.append(f"  {_c(ctx, '31', t('doc_refused', ctx.language))} "
+                   f"{_ellipsize(ctx, str(error.get('kind', '')))}")
+        if error.get("detail"):
+            out.append(f"    {_ellipsize(ctx, str(error['detail']), ctx.width - 8)}")
+        if error.get("unlock"):
+            out.append(f"    {_c(ctx, '36', t('doc_unlock', ctx.language))} "
+                       f"{_ellipsize(ctx, str(error['unlock']), ctx.width - 12)}")
+
+    if doc.get("repair_hint"):
+        out.append("")
+        out.append(f"  {_c(ctx, '36', t('doc_repair', ctx.language))}  {doc['repair_hint']}")
+    out.append("")
+    return "\n".join(out)
+
+
+def approve_plan(doc: dict, *, ctx: UIContext | None = None) -> bool:
+    """Print a planned install doc and ask to apply it. TTY only."""
+    ctx = ctx or UIContext.detect()
+    if not ctx.interactive:
+        raise NonInteractive("approve_plan requires a TTY")
+    sys.stdout.write(format_status_doc(doc, ctx=ctx) + "\n")
+    sys.stdout.flush()
+    return confirm(t("apply_q", ctx.language), default=True, ctx=ctx)

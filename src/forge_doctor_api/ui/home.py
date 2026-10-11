@@ -72,8 +72,9 @@ def _cli_argv(extra: list[str]) -> list[str] | None:
 
 
 def _run_argv(argv: list[str]) -> int:
+    env = dict(__import__('os').environ, FORGE_TEXT_OUTPUT="1")
     try:
-        return subprocess.run(argv, check=False).returncode
+        return subprocess.run(argv, check=False, env=env).returncode
     except FileNotFoundError:
         return 127
 
