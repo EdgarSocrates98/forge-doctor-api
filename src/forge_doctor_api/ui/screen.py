@@ -147,6 +147,51 @@ def _clip(text: str, width: int) -> str:
     return "".join(out)
 
 
+def _paint_cells(
+    cells: list[str],
+    styles: list[str],
+    chunk: str,
+    cursor: int,
+    style: str,
+    width: int,
+) -> int:
+    for ch in chunk:
+        cw = cell_width(ch)
+        if cw == 0:
+            if cursor and cells[cursor - 1] != "":
+                cells[cursor - 1] += ch
+            continue
+        if cursor >= width or cursor + cw > width:
+            break
+        cells[cursor] = ch
+        styles[cursor] = style
+        for offset in range(1, cw):
+            cells[cursor + offset] = ""
+            styles[cursor + offset] = style
+        cursor += cw
+    return cursor
+
+
+def _render_cells(ctx: UIContext, cells: list[str], styles: list[str]) -> str:
+    rendered: list[str] = []
+    current_style = ""
+    segment: list[str] = []
+    for ch, style in zip(cells, styles, strict=True):
+        if ch == "":
+            continue
+        if style != current_style:
+            if segment:
+                text = "".join(segment)
+                rendered.append(_c(ctx, current_style, text) if current_style else text)
+                segment.clear()
+            current_style = style
+        segment.append(ch)
+    if segment:
+        text = "".join(segment)
+        rendered.append(_c(ctx, current_style, text) if current_style else text)
+    return "".join(rendered)
+
+
 class Buffer:
     """Fixed-size cell grid. ``draw()`` writes styled spans; ``render()``
     returns a list of finished lines (ANSI when ctx.color)."""
@@ -180,54 +225,32 @@ class Buffer:
             cells = [" "] * self.width
             styles = [""] * self.width
 
-            def paint(chunk: str, cursor: int, style: str) -> int:
-                for ch in chunk:
-                    cw = cell_width(ch)
-                    if cw == 0:
-                        if cursor and cells[cursor - 1] != "":
-                            cells[cursor - 1] += ch
-                        continue
-                    if cursor >= self.width or cursor + cw > self.width:
-                        break
-                    cells[cursor] = ch
-                    styles[cursor] = style
-                    for offset in range(1, cw):
-                        cells[cursor + offset] = ""
-                        styles[cursor + offset] = style
-                    cursor += cw
-                return cursor
-
             for span in spans:
                 cursor = max(0, span.x)
                 active = span.style
                 pos = 0
                 for match in _SGR_RE.finditer(span.text):
-                    cursor = paint(span.text[pos : match.start()], cursor, active)
+                    cursor = _paint_cells(
+                        cells,
+                        styles,
+                        span.text[pos : match.start()],
+                        cursor,
+                        active,
+                        self.width,
+                    )
                     code = match.group(1)
                     active = "" if code == "0" else code
                     pos = match.end()
-                paint(span.text[pos:], cursor, active)
+                _paint_cells(
+                    cells,
+                    styles,
+                    span.text[pos:],
+                    cursor,
+                    active,
+                    self.width,
+                )
 
-            rendered: list[str] = []
-            current_style = ""
-            segment: list[str] = []
-
-            def flush() -> None:
-                if not segment:
-                    return
-                text = "".join(segment)
-                rendered.append(_c(self.ctx, current_style, text) if current_style else text)
-                segment.clear()
-
-            for ch, style in zip(cells, styles, strict=True):
-                if ch == "":
-                    continue
-                if style != current_style:
-                    flush()
-                    current_style = style
-                segment.append(ch)
-            flush()
-            out.append("".join(rendered))
+            out.append(_render_cells(self.ctx, cells, styles))
         return out
 
 

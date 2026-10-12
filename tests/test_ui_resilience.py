@@ -5,14 +5,31 @@ from forge_doctor_api.ui.screen import Buffer, Column, Theme, table
 
 
 def _ctx(width=60, height=16):
-    return UIContext(interactive=False, color=False, unicode=False, width=width, height=height, ansi=False)
+    return UIContext(
+        interactive=False,
+        color=False,
+        unicode=False,
+        width=width,
+        height=height,
+        ansi=False,
+    )
 
 
 def test_narrow_table_keeps_flexible_column_visible():
     buf = Buffer(_ctx(), 31, 10)
-    table(buf, 2, 1, 27, 8,
-          columns=[Column(key="name", title="name", width=28), Column(key="detail", title="detail")],
-          rows=[{"name": "specialist", "detail": "ready"}], theme=Theme())
+    table(
+        buf,
+        2,
+        1,
+        27,
+        8,
+        columns=[
+            Column(key="name", title="name", width=28),
+            Column(key="detail", title="detail"),
+        ],
+        rows=[{"name": "specialist", "detail": "ready"}],
+        theme=Theme(),
+    )
     rendered = "\n".join(buf.render())
     assert "NAME" in rendered and "DETAIL" in rendered and "ready" in rendered
 
@@ -29,9 +46,21 @@ def test_long_navigation_keeps_selected_item_rendered():
 
 def test_suspended_action_runs_without_capture():
     seen = []
-    app = ForgeApp(_ctx(), forge_id="forge-doctor-api", title="t", entries=[
-        Entry(label="go", provider=lambda: ActionData(callable=lambda: seen.append("ran"), title="run", suspend=True))
-    ])
+    app = ForgeApp(
+        _ctx(),
+        forge_id="forge-doctor-api",
+        title="t",
+        entries=[
+            Entry(
+                label="go",
+                provider=lambda: ActionData(
+                    callable=lambda: seen.append("ran"),
+                    title="run",
+                    suspend=True,
+                ),
+            )
+        ],
+    )
     action = app.pane.data
     assert isinstance(action, ActionData)
     app._execute(action, capture=False)
@@ -58,9 +87,11 @@ def test_posix_reader_exits_on_eof_and_normalizes_csi(monkeypatch):
     if screen.os.name == "nt":
         return
     import select as select_module
+
     class ClosedStdin:
         def fileno(self):
             return 0
+
     monkeypatch.setattr(screen.sys, "stdin", ClosedStdin())
     monkeypatch.setattr(select_module, "select", lambda *args: ([0], [], []))
     monkeypatch.setattr(screen.os, "read", lambda *_args: b"")

@@ -376,12 +376,14 @@ class ForgeApp:
                 try:
                     d.on_enter(d.rows[self.pane.selected])
                 except Exception as exc:
-                    self.pane = _Pane(data=StateSpec(
-                        kind="error",
-                        title="row action failed",
-                        detail=str(exc) or exc.__class__.__name__,
-                        hint="press r to retry",
-                    ))
+                    self.pane = _Pane(
+                        data=StateSpec(
+                            kind="error",
+                            title="row action failed",
+                            detail=str(exc) or exc.__class__.__name__,
+                            hint="press r to retry",
+                        )
+                    )
                 else:
                     self._load()
         elif isinstance(d, ActionData) and key == "enter":
@@ -430,13 +432,14 @@ class ForgeApp:
         ctx = self.ctx
         if not (ctx.interactive and ctx.ansi):
             raise NonInteractive("TUI requires an ANSI TTY")
-        import os
-
         with Screen(ctx, out=self._out or sys.stdout) as scr:
             size = (0, 0)
             while True:
                 now = (ctx.width, ctx.height)
-                now = terminal_size(stream=self._out or sys.stdout, fallback=(ctx.width, ctx.height))
+                now = terminal_size(
+                    stream=self._out or sys.stdout,
+                    fallback=(ctx.width, ctx.height),
+                )
                 if now != size:
                     size = now
                     self.ctx = UIContext(**{**ctx.__dict__, "width": size[0], "height": size[1]})

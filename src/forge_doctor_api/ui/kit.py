@@ -74,7 +74,11 @@ class UIContext:
         )
 
 
-def terminal_size(*, stream: TextIO | None = None, fallback: tuple[int, int] = (80, 24)) -> tuple[int, int]:
+def terminal_size(
+    *,
+    stream: TextIO | None = None,
+    fallback: tuple[int, int] = (80, 24),
+) -> tuple[int, int]:
     """Return usable terminal cells, preferring active stream and clamping bad probes."""
     try:
         if stream is not None:
