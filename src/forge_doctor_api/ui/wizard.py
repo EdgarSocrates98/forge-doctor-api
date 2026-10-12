@@ -35,6 +35,12 @@ _PROFILE_LABELS = {
     "minimal": "Economy",
     "full": "Full",
 }
+_GATEWAY_PROFILES = ("economy", "balanced", "deep")
+_GATEWAY_LABELS = {
+    "economy": "Economy (lowest context cost)",
+    "balanced": "Balanced (recommended)",
+    "deep": "Deep (maximum verification)",
+}
 _SCOPE_LABELS = {
     "project": "Current repository",
     "workspace": "Entire workspace",
@@ -105,6 +111,16 @@ def run_wizard(
         return 130
     profile = _PROFILES[idx]
 
+    # --- execution profile --------------------------------------------------
+    idx = select(
+        i18n.t("install_gateway_profile_q", ctx.language),
+        [_GATEWAY_LABELS[p] for p in _GATEWAY_PROFILES],
+        ctx=ctx,
+    )
+    if idx is None:
+        return 130
+    gateway_profile = _GATEWAY_PROFILES[idx]
+
     # --- optional components ---------------------------------------------------
     # The profile decides the default; the operator can narrow or extend it.
     # "graph-studio"/"tui" are runtime flags persisted to components.json —
@@ -157,7 +173,12 @@ def run_wizard(
     # --- review (real dry-run plan) ------------------------------------------
     # Contrato explícito: install_fn aceita `components` — wrappers **kw
     # encaminham sem inspeção de assinatura (GAP-002).
-    kwargs: dict[str, Any] = {"scope": scope, "profile": profile, "components": components}
+    kwargs: dict[str, Any] = {
+        "scope": scope,
+        "profile": profile,
+        "gateway_profile": gateway_profile,
+        "components": components,
+    }
     try:
         # `none` é opt-out explícito — zero hosts escolhidos nunca vira
         # "all" (GAP-003); csv de subconjunto é contrato válido (GAP-003b).
@@ -175,6 +196,7 @@ def run_wizard(
                 [
                     ("scope", scope),
                     ("profile", profile),
+                    ("execution", gateway_profile),
                     ("components", ", ".join(components) or "none"),
                     ("hosts", host_arg or "none"),
                     ("managed writes", str(len(planned) if isinstance(planned, list) else planned)),
@@ -204,7 +226,10 @@ def run_wizard(
     # --- verify --------------------------------------------------------------
     if doctor_fn is not None and status == "completed":
         health = doctor_fn(scope=scope)
-        hstatus = (health.get("status") or health.get("health") or {}).get("status", "unknown")
+        raw_health = health.get("status") or health.get("health") or "unknown"
+        hstatus = raw_health
+        if isinstance(raw_health, dict):
+            hstatus = raw_health.get("status", "unknown")
         color = "32" if hstatus in ("healthy", "PASS") else "33"
         print(f"  {i18n.t('health', ctx.language)}: {_c(ctx, color, str(hstatus))}")
 
