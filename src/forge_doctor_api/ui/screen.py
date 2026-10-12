@@ -35,6 +35,7 @@ from forge_doctor_api.ui.kit import (
     _ellipsize,
     _pad_visible,
     cell_width,
+    terminal_size,
 )
 
 MIN_WIDTH = 60
@@ -136,13 +137,14 @@ class Buffer:
 
     def __init__(self, ctx: UIContext, width: int, height: int):
         self.ctx = ctx
-        self.width = width
-        self.height = height
-        self._rows: list[list[_Span]] = [[] for _ in range(height)]
+        self.width = max(1, width)
+        self.height = max(1, height)
+        self._rows: list[list[_Span]] = [[] for _ in range(self.height)]
 
     def draw(self, y: int, x: int, text: str, *, style: str = "") -> None:
         if not (0 <= y < self.height) or x >= self.width:
             return
+        x = max(0, x)
         clipped = _clip(text, self.width - x)
         if not clipped:
             return
@@ -275,6 +277,39 @@ class Column:
     width: int | None = None  # None = flexible
 
 
+def _column_widths(width: int, columns: list[Column]) -> list[int]:
+    """Fit fixed and flexible columns inside viewport, preserving every column."""
+    if not columns:
+        return []
+    gaps = 2 * (len(columns) - 1)
+    budget = max(len(columns), width - gaps)
+    fixed = [i for i, column in enumerate(columns) if column.width is not None]
+    flexible = [i for i, column in enumerate(columns) if column.width is None]
+    widths = [1] * len(columns)
+    flex_min = 8 if budget >= (len(flexible) * 8 + len(fixed)) else 1
+    fixed_budget = max(0, budget - len(flexible) * flex_min)
+    desired = [max(1, int(columns[i].width or 1)) for i in fixed]
+    desired_total = sum(desired)
+    if fixed:
+        if desired_total <= fixed_budget:
+            for i, value in zip(fixed, desired, strict=True):
+                widths[i] = value
+        else:
+            remaining = fixed_budget
+            for pos, (i, value) in enumerate(zip(fixed, desired, strict=True)):
+                slots_left = len(fixed) - pos
+                share = min(value, max(1, remaining - (slots_left - 1)))
+                widths[i] = share
+                remaining -= share
+    remaining = max(0, budget - sum(widths[i] for i in fixed))
+    for pos, i in enumerate(flexible):
+        slots_left = len(flexible) - pos
+        share = max(1, remaining // slots_left) if remaining else 1
+        widths[i] = share
+        remaining = max(0, remaining - share)
+    return widths
+
+
 def table(
     buf: Buffer,
     x: int,
@@ -289,10 +324,7 @@ def table(
 ) -> None:
     """Selectable table: fixed columns, flexible last column, scrolls."""
     ctx = buf.ctx
-    fixed = sum(c.width for c in columns if c.width) + 2 * (len(columns) - 1)
-    flex = [c for c in columns if c.width is None]
-    flex_w = max(8, (w - fixed) // max(1, len(flex))) if flex else 0
-    widths = [c.width or flex_w for c in columns]
+    widths = _column_widths(w, columns)
     # header
     cx = x
     for c, cw in zip(columns, widths, strict=True):
@@ -413,7 +445,7 @@ def read_key(timeout: float = 0.05) -> str | None:
                 "O": "end",
                 "I": "pageup",
                 "Q": "pagedown",
-            }.get(msvcrt.getwch())
+            }.get(msvcrt.getwch(), "other")
         return _KEYS.get(ch, ch)
     # POSIX — select-based poll
     import select
@@ -421,8 +453,35 @@ def read_key(timeout: float = 0.05) -> str | None:
     r, _, _ = select.select([sys.stdin], [], [], timeout)
     if not r:
         return None
-    ch = os.read(sys.stdin.fileno(), 8).decode(errors="replace")
-    return _ESC.get(ch) or _KEYS.get(ch) or ch
+    try:
+        ch = os.read(sys.stdin.fileno(), 1).decode(errors="replace")
+    except OSError:
+        return "ctrl-d"
+    if not ch:
+        return "ctrl-d"
+    if ch != "\x1b":
+        return _KEYS.get(ch) or ch
+    seq = ch
+    deadline = time.monotonic() + min(0.06, max(timeout, 0.0) + 0.01)
+    while len(seq) < 8:
+        remain = max(0.0, deadline - time.monotonic())
+        if not remain:
+            break
+        ready, _, _ = select.select([sys.stdin], [], [], remain)
+        if not ready:
+            break
+        try:
+            part = os.read(sys.stdin.fileno(), 1).decode(errors="replace")
+        except OSError:
+            break
+        if not part:
+            break
+        seq += part
+        if seq in _ESC:
+            return _ESC[seq]
+        if part.isalpha() or part == "~":
+            break
+    return _ESC.get(seq, "esc")
 
 
 # ---------------------------------------------------------------- loop
@@ -461,11 +520,7 @@ def run_loop(
         while True:
             now = (ctx.width, ctx.height)
             # refresh size every tick (SIGWINCH arrives between polls)
-            try:
-                sz = os.get_terminal_size()
-                now = (sz.columns, sz.lines)
-            except OSError:
-                pass
+            now = terminal_size(fallback=(ctx.width, ctx.height))
             if now != size:
                 size = now
                 ctx = UIContext(**{**ctx.__dict__, "width": size[0], "height": size[1]})
@@ -478,7 +533,7 @@ def run_loop(
             key = read_key()
             if key is None:
                 continue
-            if key == "ctrl-c" or (key in ("q", "esc") and on_key is None):
+            if key in ("ctrl-c", "ctrl-d") or (key in ("q", "esc") and on_key is None):
                 return result
             action = on_key(key) if on_key else None
             if action == "quit":

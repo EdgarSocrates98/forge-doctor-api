@@ -62,16 +62,30 @@ class UIContext:
         no_color = bool(os.environ.get("NO_COLOR")) or not ansi
         encoding = (sys.stdout.encoding or "").lower()
         uni = "utf" in encoding
-        size = shutil.get_terminal_size((80, 24))
+        size = terminal_size()
         return UIContext(
             interactive=interactive,
             color=not no_color,
             unicode=uni,
-            width=size.columns,
-            height=size.lines,
+            width=size[0],
+            height=size[1],
             ansi=ansi,
             language=language or lang(),
         )
+
+
+def terminal_size(*, stream: TextIO | None = None, fallback: tuple[int, int] = (80, 24)) -> tuple[int, int]:
+    """Return usable terminal cells, preferring active stream and clamping bad probes."""
+    try:
+        if stream is not None:
+            size = os.get_terminal_size(stream.fileno())
+            raw = (size.columns, size.lines)
+        else:
+            size = shutil.get_terminal_size(fallback)
+            raw = (size.columns, size.lines)
+    except (AttributeError, OSError, ValueError):
+        raw = fallback
+    return max(1, int(raw[0])), max(1, int(raw[1]))
 
 
 def _c(ctx: UIContext, code: str, text: str) -> str:
@@ -99,7 +113,9 @@ def _pad_visible(text: str, width: int) -> str:
 
 
 def _ellipsize(ctx: UIContext, text: str, width: int | None = None) -> str:
-    w = min(width or ctx.width - 2, ctx.width - 2)
+    w = min(width if width is not None else ctx.width - 2, ctx.width - 2)
+    if w <= 0:
+        return ""
     if cell_width(text) <= w:
         return text
     out, used = [], 0
@@ -141,6 +157,8 @@ def _read_key() -> str:
             return _CTRL_C
         return f"char:{ch}"
     ch = sys.stdin.read(1)  # pragma: no cover - platform
+    if not ch:  # pragma: no cover - platform
+        return "ctrl-d"
     if ch == "\x1b":  # pragma: no cover - platform
         # A bare Esc must not block: the CSI suffix may never arrive. Poll
         # briefly for "[A"-style sequences; timeout means it was just Esc.
