@@ -22,6 +22,28 @@ product summary instead — automation never hits an interactive prompt.
 | Space | toggle (multi-select) |
 | q / Esc | cancel or quit |
 | Ctrl+C | cancel immediately |
+| Ctrl+K | open command palette |
+
+## Product polish and terminal behavior
+
+The full-screen experience keeps the same real CLI actions while reducing
+navigation cost:
+
+- `Ctrl+K` opens a searchable command palette. Type part of an action, move
+  with ↑/↓ or `j`/`k`, and press Enter to open it.
+- The footer prioritizes shortcuts and drops lower-priority hints when the
+  terminal is narrow, so key labels never push content off-screen.
+- Long-running, interactive, browser, host, graph, install, and verification
+  actions suspend the alternate screen and stream in the user's terminal.
+- Captured actions have a bounded 300-second timeout and return a clear exit
+  code with a direct-run hint instead of leaving the TUI apparently frozen.
+- Terminal setup rolls back cursor/alternate-screen state if raw mode cannot
+  start, preserving the user's shell even on partial failures.
+
+The automated suite covers 60×16 and wider viewports, palette navigation,
+timeout feedback, resize handling, EOF, and ANSI-free rendering. External
+PTY/ConPTY and screen-reader validation remain explicitly unverified in this
+environment.
 
 ## What the menu runs
 

@@ -278,13 +278,9 @@ def panel(
         return x, y, w, h
     cap = f" {title} " if title else ""
     top = (
-        tl + hh * (w - 2 - cell_width(cap)) + cap
-        if False
-        else (
-            tl + cap + hh * max(0, w - 2 - cell_width(cap)) + tr
-            if cell_width(cap) <= w - 2
-            else tl + hh * (w - 2) + tr
-        )
+        tl + cap + hh * max(0, w - 2 - cell_width(cap)) + tr
+        if cell_width(cap) <= w - 2
+        else tl + hh * (w - 2) + tr
     )
     buf.draw(y, x, top, style=border_style)
     for row in range(1, h - 1):
@@ -298,8 +294,21 @@ def key_bar(buf: Buffer, bindings: Iterable[tuple[str, str]], *, theme: Theme) -
     """Footer line: ``key action · key action``."""
     y = buf.height - 1
     buf.hline(y - 1, style="2")
-    parts = " · ".join(f"{_c(buf.ctx, '1' if buf.ctx.color else '', k)} {v}" for k, v in bindings)
-    buf.draw(y, 1, re.sub(r"\x1b\[[0-9;]*m", "", parts) if not buf.ctx.color else parts)
+    all_bindings = list(bindings)
+    max_width = max(1, buf.width - 2)
+
+    def plain(parts: list[tuple[str, str]]) -> str:
+        return " · ".join(f"{key} {label}" for key, label in parts)
+
+    visible = all_bindings[:]
+    while len(visible) > 1 and cell_width(plain(visible + [("...", "more")])) > max_width:
+        visible.pop()
+    if len(visible) < len(all_bindings):
+        visible.append(("...", "more"))
+    text = " · ".join(
+        f"{_c(buf.ctx, '1', key) if buf.ctx.color else key} {label}" for key, label in visible
+    )
+    buf.draw(y, 1, re.sub(r"\x1b\[[0-9;]*m", "", text) if not buf.ctx.color else text)
 
 
 def header(buf: Buffer, forge: str, screen: str, *, theme: Theme, right: str = "") -> None:
@@ -311,6 +320,7 @@ def header(buf: Buffer, forge: str, screen: str, *, theme: Theme, right: str = "
     left = _c(ctx, theme.accent, brand) + _c(ctx, "dim", title) if ctx.color else brand + title
     buf.draw(0, 0, left)
     if right:
+        right = _ellipsize(ctx, right, buf.width - 2)
         buf.draw(0, max(0, buf.width - cell_width(right) - 1), right, style="dim")
     buf.hline(1, style=theme.accent)
 
@@ -452,8 +462,13 @@ class Screen:
         out = self.out
         out.write("\x1b[?1049h\x1b[?25l\x1b[2J\x1b[H")
         out.flush()
-        self._raw = _RawMode().__enter__() if os.name != "nt" else None
-        self._entered = True
+        try:
+            self._raw = _RawMode().__enter__() if os.name != "nt" else None
+            self._entered = True
+        except Exception:
+            out.write("\x1b[?25h\x1b[?1049l")
+            out.flush()
+            raise
         return self
 
     def __exit__(self, *exc) -> bool:
@@ -511,6 +526,7 @@ _KEYS = {
     "\x1b": "esc",
     "\x7f": "backspace",
     "\x03": "ctrl-c",
+    "\x0b": "ctrl-k",
 }
 
 
@@ -608,7 +624,7 @@ def run_loop(
         while True:
             now = (ctx.width, ctx.height)
             # refresh size every tick (SIGWINCH arrives between polls)
-            now = terminal_size(fallback=(ctx.width, ctx.height))
+            now = terminal_size(stream=out, fallback=(ctx.width, ctx.height))
             if now != size:
                 size = now
                 ctx = UIContext(**{**ctx.__dict__, "width": size[0], "height": size[1]})
