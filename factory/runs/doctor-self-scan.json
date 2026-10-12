@@ -1,5 +1,5 @@
 {
-  "analysis_rev": "8ebe3d17d97d94c539930a3daa95d28cf41e661080e1b478485d80346133f554",
+  "analysis_rev": "766f0f7da0c3d8849575c72dc76ccecdc8388b9f74c213f53e674475184546b1",
   "analysis_stats": [],
   "cache": {
     "counts": [
@@ -28846,6 +28846,33 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/logs/refs/heads/codex/onboarding-router-2026-10-12",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/logs/refs/heads/codex/prompt-evo-correcoes-2026-10-11",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/logs/refs/heads/codex/rui-terminal-resilience-2026-10-12",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/logs/refs/heads/feat/agentic-orchestration",
         "unreadable": false,
         "vendored": true
@@ -29026,7 +29053,7 @@
           "unknown"
         ],
         "markers": [],
-        "path": ".git/logs/refs/remotes/origin/feat/agentic-orchestration",
+        "path": ".git/logs/refs/remotes/origin/codex/onboarding-router-2026-10-12",
         "unreadable": false,
         "vendored": true
       },
@@ -29035,7 +29062,7 @@
           "unknown"
         ],
         "markers": [],
-        "path": ".git/logs/refs/remotes/origin/feat/cli-tui-install-ux",
+        "path": ".git/logs/refs/remotes/origin/codex/prompt-evo-correcoes-2026-10-11",
         "unreadable": false,
         "vendored": true
       },
@@ -29044,7 +29071,7 @@
           "unknown"
         ],
         "markers": [],
-        "path": ".git/logs/refs/remotes/origin/feat/command-rationale",
+        "path": ".git/logs/refs/remotes/origin/codex/rui-cli-tui-product-polish-2026-10-12",
         "unreadable": false,
         "vendored": true
       },
@@ -29053,169 +29080,7 @@
           "unknown"
         ],
         "markers": [],
-        "path": ".git/logs/refs/remotes/origin/feat/docs-evolution",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "unknown"
-        ],
-        "markers": [],
-        "path": ".git/logs/refs/remotes/origin/feat/dx-docs",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "unknown"
-        ],
-        "markers": [],
-        "path": ".git/logs/refs/remotes/origin/feat/experience-3",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "unknown"
-        ],
-        "markers": [],
-        "path": ".git/logs/refs/remotes/origin/feat/forge-experience",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "unknown"
-        ],
-        "markers": [],
-        "path": ".git/logs/refs/remotes/origin/feat/forge-portal",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "unknown"
-        ],
-        "markers": [],
-        "path": ".git/logs/refs/remotes/origin/feat/forge-portal-presence",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "unknown"
-        ],
-        "markers": [],
-        "path": ".git/logs/refs/remotes/origin/feat/graph-studio",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "unknown"
-        ],
-        "markers": [],
-        "path": ".git/logs/refs/remotes/origin/feat/graph-studio-docs",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "unknown"
-        ],
-        "markers": [],
-        "path": ".git/logs/refs/remotes/origin/feat/knowledge-experience",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "unknown"
-        ],
-        "markers": [],
-        "path": ".git/logs/refs/remotes/origin/feat/portal-feel",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "unknown"
-        ],
-        "markers": [],
-        "path": ".git/logs/refs/remotes/origin/feat/portal-hardening",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "unknown"
-        ],
-        "markers": [],
-        "path": ".git/logs/refs/remotes/origin/feat/portal-ux-polish",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "unknown"
-        ],
-        "markers": [],
-        "path": ".git/logs/refs/remotes/origin/feat/tui-quality",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "unknown"
-        ],
-        "markers": [],
-        "path": ".git/logs/refs/remotes/origin/fix/ci3-gates",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "unknown"
-        ],
-        "markers": [],
-        "path": ".git/logs/refs/remotes/origin/fix/install-python-314",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "unknown"
-        ],
-        "markers": [],
-        "path": ".git/logs/refs/remotes/origin/fix/install-suite-green",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "unknown"
-        ],
-        "markers": [],
-        "path": ".git/logs/refs/remotes/origin/fix/lint-hardening",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "unknown"
-        ],
-        "markers": [],
-        "path": ".git/logs/refs/remotes/origin/fix/stdio-utf8",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "unknown"
-        ],
-        "markers": [],
-        "path": ".git/logs/refs/remotes/origin/fix/test-suite-remediation",
+        "path": ".git/logs/refs/remotes/origin/codex/rui-terminal-resilience-2026-10-12",
         "unreadable": false,
         "vendored": true
       },
@@ -29305,6 +29170,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/02/f9d2f663db38b5073aa04393d30bc3435855e8",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/03/3a632bca96b7e3e358c612a56b3ce74ae3675b",
         "unreadable": false,
         "vendored": true
@@ -29386,6 +29260,24 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/04/9999944e066910a6d7a46be239be2672a2c90a",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/04/9c7b50388e3f1e77ebaef5d7d4e496a5b352fb",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/04/fb339dcf5560c6b7bfd8064c9ad8badfe538e3",
         "unreadable": false,
         "vendored": true
@@ -29405,6 +29297,15 @@
         ],
         "markers": [],
         "path": ".git/objects/05/9a7c11571e6a07aa00176e642778bec72821e0",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/05/bcb46148cec082a28dfd674a6271a6eceebf22",
         "unreadable": false,
         "vendored": true
       },
@@ -29458,6 +29359,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/06/fa9b32654be9e476828573682a06eace7815be",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/06/fbf10e8da5b4358e683c547b641d4fb40360bb",
         "unreadable": false,
         "vendored": true
@@ -29477,6 +29387,15 @@
         ],
         "markers": [],
         "path": ".git/objects/08/cbf771d1b456c518aa8326764efe9b0301626e",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/08/e572e8b2db27709a8c8444a74722febd9067ec",
         "unreadable": false,
         "vendored": true
       },
@@ -29566,7 +29485,34 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/0c/ae00f5ba2dfb10905cd1243c0ca5d5d59dbf44",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/0c/e56019493204a0bf563dbadf4c0f6067c621dc",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/0d/174774997dca51d193110e764e2e4375a23f5d",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/0d/9a2161cff19b04eb19e72b6a4053c5e09b1650",
         "unreadable": false,
         "vendored": true
       },
@@ -29638,7 +29584,25 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/0f/45c196ff636b933537f639a934c3c35166efa9",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/0f/d3435a807454adfe5d6041f8625e9a85f12c00",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/0f/d6937bd4ef3ad05c24af22500de8e652e149f8",
         "unreadable": false,
         "vendored": true
       },
@@ -29755,6 +29719,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/15/bd86c4b90d7de6782711ce1ab47067ceb09de0",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/15/d020af1eab06389630eae9059d41976c49cd93",
         "unreadable": false,
         "vendored": true
@@ -29765,6 +29738,24 @@
         ],
         "markers": [],
         "path": ".git/objects/15/f17e493bb9709a9d5b6db16490069370937157",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/16/1e423cc092672a93760b91403fc4729c6f6a64",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/16/5dfd1e9e639c475da8527cb45da530af745b88",
         "unreadable": false,
         "vendored": true
       },
@@ -29791,6 +29782,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/16/e98a0063520c9ebf1d2cf6abbd02782838a509",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/16/fe9eb6f407af854a307bfb0c983ea41a2fd2e3",
         "unreadable": false,
         "vendored": true
@@ -29801,6 +29801,24 @@
         ],
         "markers": [],
         "path": ".git/objects/17/442d876b074c55e466731a6d580c024856f2a2",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/18/3ffc3fe3bf03c7f5e75d7bdc35868ddc2e2c19",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/18/a1dcd6ac854f45b70e5a078be474a51d910f61",
         "unreadable": false,
         "vendored": true
       },
@@ -29828,6 +29846,15 @@
         ],
         "markers": [],
         "path": ".git/objects/1a/3d731ba6d6a14eebaa0073dc77f6711d0658e6",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/1a/4e3056b3fa460ed53c4edf2908243f3f04990c",
         "unreadable": false,
         "vendored": true
       },
@@ -29944,6 +29971,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/1d/edc7c0a35c455b7098ce58b2d12a9433f19e8f",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/1e/2400087f8d2e1c18bf931e3db77c9fd2cf94a6",
         "unreadable": false,
         "vendored": true
@@ -30017,6 +30053,15 @@
         ],
         "markers": [],
         "path": ".git/objects/1f/a8f564765f3aaba31339adb7131b81c29aad74",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/1f/b654960f9ba34e678cd644e2beeaaaa53b1f85",
         "unreadable": false,
         "vendored": true
       },
@@ -30160,7 +30205,43 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/25/0862e90ee532d406b25365cd62aa2a98616d24",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/25/72650ccd943a36afb538073d05b08ef6d63303",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/25/9ebd9955b5f52f44a5fa3e45c6f57f74d478d5",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/25/a1c5cd0acd38a84e59c0d1400ad191887662ef",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/25/ae713e3f5dd699037a1e01ada529189827ece4",
         "unreadable": false,
         "vendored": true
       },
@@ -30187,6 +30268,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/26/43793ad26e92cbdaa877d15505f5ead1eb2a5f",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/26/56411eb25952193c31f7a1807e1a6ba953ba2c",
         "unreadable": false,
         "vendored": true
@@ -30197,6 +30287,15 @@
         ],
         "markers": [],
         "path": ".git/objects/26/5fe44c0edd1582195ffcc84a1ffb9cb437dfc1",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/26/b183c025a3d8c0264c3ca4b50b6051c70b582f",
         "unreadable": false,
         "vendored": true
       },
@@ -30242,6 +30341,15 @@
         ],
         "markers": [],
         "path": ".git/objects/28/527b96e9436d9be2f7087cd0e55822155f5b35",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/28/f38a5ced7e6ff664c276e763983c2835c58211",
         "unreadable": false,
         "vendored": true
       },
@@ -30322,6 +30430,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/2a/9bb351e87c108eb69f0bc0e0d83c35b5ecf1f8",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/2a/d1b0a2aaebd6e099d07eab6fcf40c749a9da0b",
         "unreadable": false,
         "vendored": true
@@ -30332,6 +30449,15 @@
         ],
         "markers": [],
         "path": ".git/objects/2b/9c975ecb3a07c09377ae5f6c69e2648e1323fa",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/2c/0d08c8fb778646bfa957f3f9991eb3fd429795",
         "unreadable": false,
         "vendored": true
       },
@@ -30403,6 +30529,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/2e/082272237a54a61eb412e994ff3415a6cf7da6",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/2e/8c56cb198e7d02d982767576f034365a7f33ac",
         "unreadable": false,
         "vendored": true
@@ -30439,6 +30574,24 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/2f/2e02e823a52e9f2918ef45d464be234935a8df",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/2f/53d9a1bf84b97ae8370214624fdd8e05a69b5c",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/2f/8976c25c5f97f3c6ddf00d6b72e46899b6cce7",
         "unreadable": false,
         "vendored": true
@@ -30466,6 +30619,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/30/148f9357330fb1e24c5766a7927a0e667d1011",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/30/8728fb6f981c0d07bd0ac5242c6cd5d87ebc74",
         "unreadable": false,
         "vendored": true
@@ -30484,6 +30646,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/30/d218862da2dc7959e5429a92a514a176374cf8",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/31/86957b0d7ec8ce785000351c6ad45916b12e4e",
         "unreadable": false,
         "vendored": true
@@ -30494,6 +30665,15 @@
         ],
         "markers": [],
         "path": ".git/objects/31/9dcf08c9dcc5a1d5c5bcb35e45816e21ac0119",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/31/b8a7999c16588bdec3bfa6dd180ef9ec682d52",
         "unreadable": false,
         "vendored": true
       },
@@ -30565,7 +30745,34 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/35/94a50441ed1b0e1501f7158172ec9fc800c24f",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/35/a254754957329acdfcd509a1509bb94f15e264",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/35/c547f2b26fb34f6f7c7cd3a0b108368c31a7d0",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/35/defd4753214cdd644603d269a30bfd8ab23946",
         "unreadable": false,
         "vendored": true
       },
@@ -30610,6 +30817,33 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/36/f9e24900a9b626bae6af6774aaa1a2b9b3eee4",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/37/60b7243d356e527df4889fe8c2c259a2e35e8f",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/37/bfb6aee989cd88296b344bd95ef7af7560e877",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/37/c863206b837af9cb7c886e398f004e5a779c44",
         "unreadable": false,
         "vendored": true
@@ -30629,6 +30863,15 @@
         ],
         "markers": [],
         "path": ".git/objects/37/f3a3435e3e6b9886db576eef90e8f4a3c2b56e",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/38/3596c4a5158d52db06555c226c4bed7a3bf166",
         "unreadable": false,
         "vendored": true
       },
@@ -30673,7 +30916,25 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/39/2e1dcd2916c28a91c6babebad157330a21acca",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/39/99686b0f76fcfc71f29ac67c2e502cf148f2bb",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/39/cc4b355342ead3f769a0118642b3c5a52483de",
         "unreadable": false,
         "vendored": true
       },
@@ -30736,6 +30997,33 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/3a/dd5ff3f4563a99f14fc8ed1082f9bfea116ee2",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/3a/ec5daae55f9c382ec1b40438f90e046a127130",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/3b/193e822aa637624bdca083ca73ecf8cb45bb67",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/3b/3b466455c2995c65f6c353d20c95adbbcf45d5",
         "unreadable": false,
         "vendored": true
@@ -30755,6 +31043,15 @@
         ],
         "markers": [],
         "path": ".git/objects/3b/460493d14717a683ce540d1724303094a6f3a0",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/3c/20b268c025602b932c8cbd7a570213dc7310e3",
         "unreadable": false,
         "vendored": true
       },
@@ -30853,6 +31150,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/3d/86a2e02b012ebff47c4d692cee3e5960ddb91f",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/3d/dbec1869069108369bb8cab457cfc66a2a049f",
         "unreadable": false,
         "vendored": true
@@ -30880,7 +31186,25 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/3e/581e2bce842428e43d7f21ebb9504755ca0693",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/3e/5f3bb7e530fa6a91affe710d5edc70bbe4338b",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/3f/688bda329c65fdefbcf0bfdb7232d18feda0db",
         "unreadable": false,
         "vendored": true
       },
@@ -30943,7 +31267,25 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/41/092c2976b36288fe709e58a7f5e8a41e72e2e1",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/41/3dd6d3243732a90dd9d8769a3ab64dccf31f71",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/41/e092e81e8f569de5701956aae2a1972899babe",
         "unreadable": false,
         "vendored": true
       },
@@ -31105,7 +31447,25 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/45/89377e6570384248bf662dd60e4fbae0146fae",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/45/aa64a184c1a2bc3a13fff277dd651f0353ba07",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/45/ec97c74f17b4f6f156135c1b7821f120b3efe3",
         "unreadable": false,
         "vendored": true
       },
@@ -31159,6 +31519,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/47/c7d8dfb9ad4e429f5f1f2575d940da260fe7f8",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/48/2d37363ea4ce245221a75fb26ba9a1f50acda9",
         "unreadable": false,
         "vendored": true
@@ -31195,7 +31564,34 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/48/a45bd68440bf640ac8d96fa7a4ad6142f275d5",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/48/f31f78e42d285c2f7dc907278e4302cd86f4a7",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/48/f8d04b8bb447a6e45d1f20aee3fa85457c6d9a",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/49/62eafce5cf57d640b29dc8b629bd8a2146558a",
         "unreadable": false,
         "vendored": true
       },
@@ -31295,6 +31691,24 @@
         ],
         "markers": [],
         "path": ".git/objects/4b/b9b782c42f3d8806eb8c2e30fd97febcf26cc8",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/4b/edd912e3729f2b158bd25af04a55b4b25075ab",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/4c/01953c5e2cb439ba474b2bb8dec7f9e24b5fda",
         "unreadable": false,
         "vendored": true
       },
@@ -31492,6 +31906,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/55/8fcb57c3b51451c140a359c415808cea5ee6e2",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/55/cd0d2db08502628d82d1823d5bc14da4b3b361",
         "unreadable": false,
         "vendored": true
@@ -31519,6 +31942,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/56/8fc3226368658add4d28d7538059938dfccfc5",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/57/614f9c967596fad0a3989bec2b1deff33034f6",
         "unreadable": false,
         "vendored": true
@@ -31529,6 +31961,15 @@
         ],
         "markers": [],
         "path": ".git/objects/57/928a21744a689e0021c855b83ab5e586bcc4c0",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/57/933016e5be7b7d69d4c4468ec1eeab625134cd",
         "unreadable": false,
         "vendored": true
       },
@@ -31681,6 +32122,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/5b/875867c25ba16355d706d0798ac2c1c64ccf02",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/5c/bee2a2a6dd7553b6256646a1024c9897cdf083",
         "unreadable": false,
         "vendored": true
@@ -31717,6 +32167,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/60/a2642482678b7d00c001310074e9111f47b23a",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/60/ed358c9f7a3bbf5b12a6c333c0f34e6c75ce1e",
         "unreadable": false,
         "vendored": true
@@ -31744,6 +32203,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/62/98c0f4710eff2ca4e86eae19b512e095b7336b",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/62/a98bca6a76147e7e0f9b40817949eb5539161f",
         "unreadable": false,
         "vendored": true
@@ -31754,6 +32222,15 @@
         ],
         "markers": [],
         "path": ".git/objects/62/d9cd1bce6d9a6a69acbc63687823d4c5991f2e",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/63/82a532d38a1f879d6ee59879a301ad84a8391c",
         "unreadable": false,
         "vendored": true
       },
@@ -31781,6 +32258,15 @@
         ],
         "markers": [],
         "path": ".git/objects/64/9fb178253185a8955bac46fbcd4a06c3298fa0",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/64/a3c854ad7ede5a747359ccceca4322c0a6a480",
         "unreadable": false,
         "vendored": true
       },
@@ -31897,6 +32383,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/67/e0747506ad948ed54dc1813bad3fd7bec1e555",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/68/2489ce23272dfe0f195a7c1bfd3a23a4f47ad8",
         "unreadable": false,
         "vendored": true
@@ -31933,6 +32428,33 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/69/f2dc3e3a7f415fb1ab32a28a09fdc7af26daec",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/6a/c9fa62491fd0389b1de93ebf071edd6f271a11",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/6a/d30eaceeaee69fffee2043232bfe0752043933",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/6b/1e14bd04c33b93c580da4504faceadaa197d30",
         "unreadable": false,
         "vendored": true
@@ -31943,6 +32465,15 @@
         ],
         "markers": [],
         "path": ".git/objects/6b/f300dca5870af15199a1060829dbff90b1d122",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/6b/fa9b89ca343e9178f041618578c836d9e2606a",
         "unreadable": false,
         "vendored": true
       },
@@ -31987,6 +32518,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/6c/f4524a097877becf9108bc8766d23ea68b9d08",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/6d/d70533374496a76b80f813f167c6ed64459847",
         "unreadable": false,
         "vendored": true
@@ -32014,6 +32554,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/6e/7bdcdf2fab33087fefa7a55eed22db8a085145",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/6e/9a79a4f826814f8bc0892ee89c69834714b501",
         "unreadable": false,
         "vendored": true
@@ -32023,7 +32572,25 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/6f/524b2e1d46662aefa02a9cc2d001dbbba3165e",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/6f/6c03ab8c942befcc50ef3df086aa46973deb36",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/6f/f1f7c2cb43271338a450b9d32d738353125750",
         "unreadable": false,
         "vendored": true
       },
@@ -32068,6 +32635,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/70/cefa169a16f4772d0f5f9e184d02dd5faa9c0d",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/70/eaefa3b094ccc4570dd041db24c8ad0b7389fd",
         "unreadable": false,
         "vendored": true
@@ -32095,6 +32671,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/71/8cd3b6b7f256aa4dc4e973cfafa1b389a66190",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/71/cd67ca6e860b2a0961b49aaaff57fbfdf98a89",
         "unreadable": false,
         "vendored": true
@@ -32105,6 +32690,15 @@
         ],
         "markers": [],
         "path": ".git/objects/71/e26d3a2bdac913e14a69036939108fbe6bc382",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/72/0f58c05e813661bc413422ca97117967da04b8",
         "unreadable": false,
         "vendored": true
       },
@@ -32141,6 +32735,15 @@
         ],
         "markers": [],
         "path": ".git/objects/73/12e3765e1be39ff69499a1b53cb5716566413d",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/73/5343d0ace1c18f765a185d6e62699c89433c4e",
         "unreadable": false,
         "vendored": true
       },
@@ -32186,6 +32789,15 @@
         ],
         "markers": [],
         "path": ".git/objects/74/72b8b26ba3011df717c59e00b6e87984fe48f5",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/74/ee9da34abc2b4ecfd7504484c1f1043c24d89c",
         "unreadable": false,
         "vendored": true
       },
@@ -32266,6 +32878,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/76/a3c47ba365c40810b6d7a160eff36908c0a904",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/76/d26e1f933519191797d174568bf4d6171df4b7",
         "unreadable": false,
         "vendored": true
@@ -32312,6 +32933,15 @@
         ],
         "markers": [],
         "path": ".git/objects/77/5bd75569289ebed6a287e8e9215e0315f3ea01",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/77/73963a7e851b37afbb0f54137115282a46b388",
         "unreadable": false,
         "vendored": true
       },
@@ -32383,7 +33013,25 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/78/cc005e96d7c2da0ff2a998b9c3e9f9d9922882",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/78/cf61d8e6da641796751a64d22bd1f642f67ea7",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/79/056bc8fabf4ab0811d9c3f9ff010b201349b7f",
         "unreadable": false,
         "vendored": true
       },
@@ -32428,7 +33076,34 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/79/707358360d0a0443fd29f76c9f257e6436d99b",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/79/7be34c16ded24afe12a1576dfba17fc1873f13",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/79/86375fa528eac56a744a5409ab3b7b23839c56",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/79/e1cff1c182b8918a15ca1de32b918c275a47d3",
         "unreadable": false,
         "vendored": true
       },
@@ -32456,6 +33131,15 @@
         ],
         "markers": [],
         "path": ".git/objects/7b/2658741784165fedbd10c28b5a19d739df2015",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/7b/787eb0753bd114fa8389f60f6b536d8f37121b",
         "unreadable": false,
         "vendored": true
       },
@@ -32527,6 +33211,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/7e/03e916859a96565eba32e5a7a2193e6a872ae5",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/7e/b87d119c9bb4fbd599637c7e4c06e5d917507b",
         "unreadable": false,
         "vendored": true
@@ -32537,6 +33230,15 @@
         ],
         "markers": [],
         "path": ".git/objects/7e/bbabef3570f6d5f56ebfc9598507a6386bdd9d",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/7f/09922cca5503a3ec09dda13d3c2091d73ca883",
         "unreadable": false,
         "vendored": true
       },
@@ -32563,6 +33265,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/80/51312679745ed29325f473cfeec46f6ec87a59",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/80/d7827afe49028681b5d7a5d0e6a9a406380393",
         "unreadable": false,
         "vendored": true
@@ -32573,6 +33284,15 @@
         ],
         "markers": [],
         "path": ".git/objects/81/34adad0977800f8d499ff059f59b7fb8605fdb",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/82/06d330be03410810c8e10fe40d7e05fbd18626",
         "unreadable": false,
         "vendored": true
       },
@@ -32600,6 +33320,15 @@
         ],
         "markers": [],
         "path": ".git/objects/82/4df1c12abe057b7d16e33c0a671d4ee1cdf5b5",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/82/72234f6d0c3dc0fcd12b4020f1304eaf60a781",
         "unreadable": false,
         "vendored": true
       },
@@ -32662,6 +33391,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/83/9eb2fb871bca0ce8e028021695c326d7b9b31a",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/83/b71c835a867192d7adb53ab06aeeb485ad5a6a",
         "unreadable": false,
         "vendored": true
@@ -32672,6 +33410,15 @@
         ],
         "markers": [],
         "path": ".git/objects/83/f4f095d32a74d48b70e7bb5ac7e580ac091222",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/84/65ef61741174e4be560b1b268d609f144268a6",
         "unreadable": false,
         "vendored": true
       },
@@ -32744,6 +33491,15 @@
         ],
         "markers": [],
         "path": ".git/objects/86/847f54f1ae1c17f6d1d25abe6392a4b45fb6b3",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/86/f87340a01933647c42f94e903fbeced0d88b82",
         "unreadable": false,
         "vendored": true
       },
@@ -32833,7 +33589,25 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/88/f32a821516c4bacabe6717e973a90ebe9a15c6",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/89/3ba2c3427172eb3aac058822a597ac1d07135d",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/89/3f5e6851483d6424974e164bb116c02ac2a13c",
         "unreadable": false,
         "vendored": true
       },
@@ -32887,7 +33661,25 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/8a/ba55467987f523a8c9787a303ac448eacfe73f",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/8b/8ceed934d62a32dd40a1f2cd02fa4de4f886c1",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/8b/a0d3cd45d8551c34727da6c3dd980091e9535b",
         "unreadable": false,
         "vendored": true
       },
@@ -32915,6 +33707,15 @@
         ],
         "markers": [],
         "path": ".git/objects/8c/477265366d0b3452d71f064bcc88db101e911d",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/8c/b436bc02583751f5b8b94974a8622f2abd64c9",
         "unreadable": false,
         "vendored": true
       },
@@ -33076,6 +33877,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/92/1d4d7b303e2c6f65c192e577e60eda064c0048",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/92/262082cc4c6f216407df2fa6721235e2ee10fd",
         "unreadable": false,
         "vendored": true
@@ -33095,6 +33905,15 @@
         ],
         "markers": [],
         "path": ".git/objects/92/ba1c6229d0d0f60f10d921c5aac46b556391d7",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/92/bba63beb3c41c4cba5d082b7fc0ccc35d475ca",
         "unreadable": false,
         "vendored": true
       },
@@ -33139,6 +33958,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/95/4e08c603fd6dd1e59b6707b07b424c305cdd8e",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/95/abe77a132b975e52c2f49f9616859fc7fe2baf",
         "unreadable": false,
         "vendored": true
@@ -33166,6 +33994,33 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/96/0c333ac6a8b749f7298c3f756aee1695f70f23",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/96/8a5336a56a619db1cfec0c65ef82c1ff7ae9ca",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/96/b43d2b413c690909e7cd0f65e0cfa91f5af7b8",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/96/ee3e1fb9b2ed855cd376473b55d1bb4aa31cbf",
         "unreadable": false,
         "vendored": true
@@ -33184,7 +34039,25 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/97/3389a8a5feb7aef098d163286e0e421204b1f4",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/97/ce50c5886924f5457fa947c78e46ff03a28abc",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/98/02417df01ea084849af22674aea430067577ca",
         "unreadable": false,
         "vendored": true
       },
@@ -33202,7 +34075,25 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/98/d92e53647cb2f97a67daab378a8fb7f62e903f",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/99/8c767635dafebaf08d2e036dd4848faa87d62b",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/99/99862450a8eb438175e0b26016b70e252cb78f",
         "unreadable": false,
         "vendored": true
       },
@@ -33310,6 +34201,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/9c/a51272faf27eaa58b2d99816cbb2633c97cbdb",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/9c/be2dad5f24c4638274ed864c38e704863a0b2a",
         "unreadable": false,
         "vendored": true
@@ -33346,6 +34246,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/9d/77b6f810c680aaf2f33bdce6a40d71d968e0d6",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/9d/8b53831d8c925ca50b7530afed7fd601c32ed6",
         "unreadable": false,
         "vendored": true
@@ -33365,6 +34274,15 @@
         ],
         "markers": [],
         "path": ".git/objects/9e/4001b6ed354f8949884aec3b045c9b3bde167b",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/9e/5c3a6da34493eb15ae0bf6a60705d36554f517",
         "unreadable": false,
         "vendored": true
       },
@@ -33410,6 +34328,15 @@
         ],
         "markers": [],
         "path": ".git/objects/9f/05b88ffd347f0f8cb82e06c771d0af16a4e1bc",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/9f/41c4aaee61ae0adb6f50c0a8cc7580ad51ec22",
         "unreadable": false,
         "vendored": true
       },
@@ -33472,6 +34399,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/a1/29c0852d1396b9b7fc9397c52bb95aff35a691",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/a1/392509f4a06ce8d8eaaeddc9ed2be303c38faf",
         "unreadable": false,
         "vendored": true
@@ -33482,6 +34418,15 @@
         ],
         "markers": [],
         "path": ".git/objects/a1/826fb324834211ec84df5702a9c98d577a50d8",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/a1/8b496e3581d89181dcd88cc1d0198968fe50e3",
         "unreadable": false,
         "vendored": true
       },
@@ -33545,6 +34490,24 @@
         ],
         "markers": [],
         "path": ".git/objects/a3/abb8099e0651aa6376a39c2d1a565a1915c6bb",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/a4/0867d0082626b08f26c4be251ea2a7d4b81a2e",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/a4/1f187f633690f95826cfdc9a0e2b32895c1aa9",
         "unreadable": false,
         "vendored": true
       },
@@ -33634,6 +34597,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/a6/dd8b25f43e7c626cca87e0dd0030f50adeef91",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/a7/648f375f164fe36dc98444549e32e6b6a181ef",
         "unreadable": false,
         "vendored": true
@@ -33715,6 +34687,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/a8/9fb6c775778d35bd20aa0bba68ad32ba614f32",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/a8/b9a89f23a19ed956bcd5fdb0595d8091384a73",
         "unreadable": false,
         "vendored": true
@@ -33752,6 +34733,15 @@
         ],
         "markers": [],
         "path": ".git/objects/a9/66d5d8cc2061950148260a81e03540fe1b7b5a",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/a9/6a779438850d9c85f075aeb863bc49834922ab",
         "unreadable": false,
         "vendored": true
       },
@@ -33805,6 +34795,24 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/aa/5090b1c4df294cedc89df1ac92e3c98314da9f",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/aa/8bd5612e572b04a42ee87731db610128e12771",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/ab/181bd0a3e69fb60c9b34529dd6a3fef6e4db45",
         "unreadable": false,
         "vendored": true
@@ -33824,6 +34832,24 @@
         ],
         "markers": [],
         "path": ".git/objects/ab/7c7e1f6832619cfb3c2720122c2d33da050f7f",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/ab/858fac11f5b29dacedde24593a906cbb43add0",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/ac/0294d07ab415c89b657aa96ab614791c93f985",
         "unreadable": false,
         "vendored": true
       },
@@ -33904,6 +34930,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/ad/5e51c2d7f5a9cb83dab569bd5e2757bb75468a",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/ad/81878bffd1f00b8354be5a14beeb1b62d3174e",
         "unreadable": false,
         "vendored": true
@@ -33923,6 +34958,15 @@
         ],
         "markers": [],
         "path": ".git/objects/ae/340bba702bf0af046a64c123ee56a42e56d331",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/ae/beb301f861869e024de170f4a0054be8439ab9",
         "unreadable": false,
         "vendored": true
       },
@@ -33958,6 +35002,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/af/62be76b5accdb5ab7b4f18a94cebadf7e78360",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/af/9bc1d4b58e6aeab24dfab9d10d3cce0af7a4c1",
         "unreadable": false,
         "vendored": true
@@ -33968,6 +35021,15 @@
         ],
         "markers": [],
         "path": ".git/objects/af/a625c11e690010071d53669406f8ec789a7252",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/af/ce9356db00695ef881f8c30df6548840fce9f5",
         "unreadable": false,
         "vendored": true
       },
@@ -34030,6 +35092,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/b1/9a41fedb5fa412b6fe1354c7bde07c86cdd449",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/b2/8e532c32398c073036d7bfe59d1f0c92479d27",
         "unreadable": false,
         "vendored": true
@@ -34075,7 +35146,25 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/b4/2409fd81f993e134d12f589287da2036975398",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/b4/6f317dd6712cc245df525ee6a1d028a453e740",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/b4/a5f61544efd359c6500c5675f971bf10b3e42b",
         "unreadable": false,
         "vendored": true
       },
@@ -34120,6 +35209,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/b5/af956e12b57bd7b5de2ea82b5397171c0b4b73",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/b5/d0a7450eb26570c5fff5ce0d6113014542dc94",
         "unreadable": false,
         "vendored": true
@@ -34129,7 +35227,34 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/b5/d963d7d4f3d161ab85cc01d82f5a97a7df00e6",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/b6/7738ce101b2613ad46fb0d0bcb316f05170e49",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/b6/9249946c7d05a71dca5c328830c27c4c6429b8",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/b6/c02aa8144c3f34087ccd5ff8bbcae4ca14346d",
         "unreadable": false,
         "vendored": true
       },
@@ -34156,7 +35281,25 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/b8/2916f9b31e114577c64eaa7a0e2854a2bbd736",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/b8/9429c920c59dea55cd891ce3288006cf219a9b",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/b9/1ddf8c34c4798dee7578a7427af6fc3ecccf52",
         "unreadable": false,
         "vendored": true
       },
@@ -34174,7 +35317,25 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/b9/7d56cc60ba9956a034753fc95654c714efc883",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/b9/92d2e78120e9ce7a044b8e945c2322c92852b3",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/b9/c4e78554d5799386fc2030c8ee88f352aec449",
         "unreadable": false,
         "vendored": true
       },
@@ -34210,6 +35371,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/ba/caa95764bb25d34406663eabd961814d13a377",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/ba/e3d18630af2270591ee71f7ca475b1524925f7",
         "unreadable": false,
         "vendored": true
@@ -34228,6 +35398,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/bb/240f50313002d7846df6549e8a60838686546a",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/bb/760dd5f65726d9fa69afa65ca92aea0cfad2dc",
         "unreadable": false,
         "vendored": true
@@ -34238,6 +35417,15 @@
         ],
         "markers": [],
         "path": ".git/objects/bb/e5a8aeaeee444faddcddd69688d36f31515738",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/bc/82664961771fbd50537ce71134da472ef1279f",
         "unreadable": false,
         "vendored": true
       },
@@ -34273,7 +35461,34 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/be/5d965e3e17b2e974cba6be1dfb9f483719e6a9",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/be/6e1379b53b85562ae30911acf99c765075c0ab",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/be/7c86e171faaba675e100cf7d583af6ce1b7403",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/be/eeba13aadc1a852752bb3955d00c784668ab82",
         "unreadable": false,
         "vendored": true
       },
@@ -34300,6 +35515,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/bf/f17fe01a344b6aa7a849770d929171e02c1858",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/c0/201499dc8c7f8af78ddd5ac945666826ae7014",
         "unreadable": false,
         "vendored": true
@@ -34310,6 +35534,15 @@
         ],
         "markers": [],
         "path": ".git/objects/c0/69870ae4e267077194398704478cf6f97b5ea4",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/c0/85cfc11e77680bc60d6200613612ac3e6e613c",
         "unreadable": false,
         "vendored": true
       },
@@ -34390,6 +35623,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/c5/23c05b8eb5d064452d590a20eaf0d42abe86c4",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/c6/5b9ca76aa51cc46890dbfaf6098f74e960b454",
         "unreadable": false,
         "vendored": true
@@ -34399,7 +35641,34 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/c6/886f4613457ae790ced4c24ff8bb2ffcef2a8e",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/c6/a669287f79ed7e89ceed6ac62539c065c3bcf7",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/c6/edf0aed064bb9886efc6e29da08f403e0d4d6d",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/c7/2ebd286f51cb3d9c8730e72513adc8f0819b42",
         "unreadable": false,
         "vendored": true
       },
@@ -34426,7 +35695,25 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/c7/4efc800cbcc44ac455cd7a014ad01d98327d82",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/c7/6f5f04f6750ef1feb987bff24ac5eeaba1a1e7",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/c8/d09f9d604a255ced00d2c0ee91ffa7d8c89f2f",
         "unreadable": false,
         "vendored": true
       },
@@ -34498,6 +35785,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/ca/6e509d0b1f2f8946187ee60396dbf56de690fc",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/ca/a1459d3561755b4f4acf01ab1c00edd6d78845",
         "unreadable": false,
         "vendored": true
@@ -34561,6 +35857,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/cb/5a88c3953ccd405a3bc8009ae0079b284a2231",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/cc/033f6021c7daf37bf59d81505caed355c29111",
         "unreadable": false,
         "vendored": true
@@ -34606,6 +35911,24 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/cd/4a329b1d58a5fb2e189cba6bfcd82d1fc2df9e",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/cd/512be7e440a5b2ca002dd1bf722edf1d0b6f07",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/cd/915fb1c3feabb537c29b5017683d2d56125640",
         "unreadable": false,
         "vendored": true
@@ -34625,6 +35948,15 @@
         ],
         "markers": [],
         "path": ".git/objects/cd/e87c81035f81e3db8ca18a9282aa63aff7e79c",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/cd/f29b1726464b033d579abfe97ece77e1bce751",
         "unreadable": false,
         "vendored": true
       },
@@ -34696,6 +36028,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/cf/f0651c509e404f6bd3461bd60ecfd5e232dd7a",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/cf/ffef346951cebf42baa72d20e2d9c8cc82ff28",
         "unreadable": false,
         "vendored": true
@@ -34724,6 +36065,15 @@
         ],
         "markers": [],
         "path": ".git/objects/d1/270be9665a180ebe495e19f19c350517dfa90d",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/d1/526c506afbbba6d6aa8ccea968ba6669243f96",
         "unreadable": false,
         "vendored": true
       },
@@ -34822,7 +36172,25 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/d4/80b5f7c8e07cc7cae341d98eef5700632a5cb1",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/d5/49fb555968d10556598e724d9b00f0f78dfdc4",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/d5/c43ebd93c1eba8390343f7beeae4b18c17bd84",
         "unreadable": false,
         "vendored": true
       },
@@ -34858,6 +36226,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/d8/95d538f6682f51a926577214e22140649b6cd0",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/d8/c45a25e9f55e1df9a686b36a642d8fd5e27493",
         "unreadable": false,
         "vendored": true
@@ -34867,7 +36244,25 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/d8/db5242a6be8904fa061d03200af2f9ce20edab",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/d8/f5f377e22088dea63ffe7378d88cef5ac37d6f",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/d9/0c36184d45bd869ea9ba8f85fb97233654afc2",
         "unreadable": false,
         "vendored": true
       },
@@ -34886,6 +36281,24 @@
         ],
         "markers": [],
         "path": ".git/objects/da/2301571c1e5a45434f2b3c3fe87e523e2a88ea",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/da/24930a82aca90f2aaf5107050a62d8a71c468e",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/da/2d26a05fc71e41024b37ee9dce3ff9215d9426",
         "unreadable": false,
         "vendored": true
       },
@@ -34930,7 +36343,25 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/da/b0e6d3ee24963dc7895a236c985f4091bad609",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/da/fe21dbe394cc4fbc2960f53323749e18356a0e",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/db/173f054bc0b4a05aca7f2f84e4aa0c5dcaeb48",
         "unreadable": false,
         "vendored": true
       },
@@ -34949,6 +36380,24 @@
         ],
         "markers": [],
         "path": ".git/objects/db/2cb646a57b3243f3d47308925a1cb4deaec4c5",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/db/5b440e66450a581b6d35d76f2fa46ab4837c79",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/db/acdc0aa462483bf0abf174c21e3d072d8554bb",
         "unreadable": false,
         "vendored": true
       },
@@ -34984,6 +36433,24 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/dc/18fc302930b02d69ca50c6ee347f4b305ad64a",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/dc/375fa1d9895ea3c9a5611be7e2153a54f64bdb",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/dc/830ec5d975fc4ab9960c5577968be05ed49200",
         "unreadable": false,
         "vendored": true
@@ -34994,6 +36461,15 @@
         ],
         "markers": [],
         "path": ".git/objects/dc/99dbcabe64ad2cc216a59a665caf03741bb0b1",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/dc/9e805a8e2fad3520c1c56d59c7970c7cb331de",
         "unreadable": false,
         "vendored": true
       },
@@ -35074,6 +36550,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/de/1b389e1c4bd5607fdf5423c73a3388919b41d9",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/de/edebcd728b13ecbca08fcdf0bbb8f919998171",
         "unreadable": false,
         "vendored": true
@@ -35110,6 +36595,24 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/df/d88711870c2f7c3cec61264934d5a62bb3ef1e",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/e0/08ddd086ea5ee55d6defb3663e96367911593d",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/e0/26e4a3fac5b052db704db47efcc02f56c29fa8",
         "unreadable": false,
         "vendored": true
@@ -35128,7 +36631,25 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/e1/17ecf78cc90ce85529b4901840eaa1034571c3",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/e1/4dddb8efda2027d26760353bfc175ca645cda5",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/e1/76a9dbbc4068f5df0590c91e26b939327ca682",
         "unreadable": false,
         "vendored": true
       },
@@ -35191,6 +36712,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/e4/06e9be2fb705e775df730d8f4414c523fc4545",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/e4/29ec490d80eab3f1e2a32b108b969f8f7668cf",
         "unreadable": false,
         "vendored": true
@@ -35227,7 +36757,34 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/e4/c555bf16b3ffb3e873771e151ed3583fc7fa8f",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/e4/d0a2284ac5b0d4958d50e184b98d3d5f22ea57",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/e4/f847e1eda783606944744392ecf30564500fc5",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/e5/2a46eb08119def314f00bcf70f54c93ed4b826",
         "unreadable": false,
         "vendored": true
       },
@@ -35317,7 +36874,25 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/e8/c20f7a7f9c3c5d9c501116e0f24499a454112f",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/e8/c4bece973f55aca0f74e1aad22d2366b852c04",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/e9/0e89b1767201073b68ff68598e84c5c850cf9c",
         "unreadable": false,
         "vendored": true
       },
@@ -35380,7 +36955,25 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/ea/ae39f17d4ac2a0201dfaef8b309e98c193b25f",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/ea/e4c5e3eab5c9540174d8341ce125da8ff87aca",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/eb/5fa15aec878898d5bd79376ad7331a2b6160b0",
         "unreadable": false,
         "vendored": true
       },
@@ -35533,6 +37126,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/ef/c51f125b1af247c2e68e98f4abaeb66bac2b6f",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/ef/d398ac28c197b71e550b09c58e118d66e0bbb0",
         "unreadable": false,
         "vendored": true
@@ -35570,6 +37172,15 @@
         ],
         "markers": [],
         "path": ".git/objects/f1/ab8a984545e073115ec7713b044b3a5061fbcf",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/f1/c0bd62ad56386684e569b82a490e77be7a90a6",
         "unreadable": false,
         "vendored": true
       },
@@ -35686,6 +37297,24 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/f4/3e2aa58de17ad46c9b02a1cd628b28bb1fcba0",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/f4/a4dabb06c185e38494b0574023a168c7a944fb",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/f4/a54f4b4002d24bb8fceed663ea5e8a47c81fda",
         "unreadable": false,
         "vendored": true
@@ -35731,6 +37360,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/f6/864722f404caab9de97265cfa9625636270e36",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/f6/a343244aa939ff965a1b3e4ef5615c6749afc2",
         "unreadable": false,
         "vendored": true
@@ -35749,6 +37387,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/f6/e14992d5229144ae7b639194839b6c0b7111da",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/f7/198f48c1e87c9f9c45999c04693e183b3c2fea",
         "unreadable": false,
         "vendored": true
@@ -35759,6 +37406,15 @@
         ],
         "markers": [],
         "path": ".git/objects/f7/2ecd79b352bc73642175bc008518bb5a14f26a",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/f7/e69405ee59e0caab0ddba3ec4ad4a7be6d91eb",
         "unreadable": false,
         "vendored": true
       },
@@ -35893,6 +37549,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/fd/d38b2276822a968f3f8120cb6fc323b83a01cb",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/fd/dab51c1cdb33d6d95f4f4ea2f73b15667dccf8",
         "unreadable": false,
         "vendored": true
@@ -35920,7 +37585,34 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/fe/8909240845bac11e1038382b91665ea3a374dd",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/fe/cbfaa2087c7f5b254f97844cbf4a1c2cff4735",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/ff/27b5321f340aeaf59855095f65a60167f0c40e",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/ff/5bc3d2dc265d1a17aedb6cccb8b0261895e14f",
         "unreadable": false,
         "vendored": true
       },
@@ -35939,6 +37631,33 @@
         ],
         "markers": [],
         "path": ".git/objects/ff/85c48d00ea71a2ec947423aaee071dec8a5808",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/ff/cbf4dd84b47641b6a5a8d2865f4870f0895d9c",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/info/commit-graphs/commit-graph-chain",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/info/commit-graphs/graph-fbe9b18443c2c6de6819d8ac1f95e28f3c72fa07.graph",
         "unreadable": false,
         "vendored": true
       },
@@ -35983,6 +37702,33 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/refs/heads/codex/onboarding-router-2026-10-12",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/refs/heads/codex/prompt-evo-correcoes-2026-10-11",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/refs/heads/codex/rui-terminal-resilience-2026-10-12",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/refs/heads/fix/ci3-gates",
         "unreadable": false,
         "vendored": true
@@ -36010,7 +37756,34 @@
           "unknown"
         ],
         "markers": [],
-        "path": ".git/refs/remotes/origin/fix/ci3-gates",
+        "path": ".git/refs/remotes/origin/codex/onboarding-router-2026-10-12",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/refs/remotes/origin/codex/prompt-evo-correcoes-2026-10-11",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/refs/remotes/origin/codex/rui-cli-tui-product-polish-2026-10-12",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/refs/remotes/origin/codex/rui-terminal-resilience-2026-10-12",
         "unreadable": false,
         "vendored": true
       },
@@ -36261,169 +38034,10 @@
       },
       {
         "classes": [
-          "client",
-          "source"
-        ],
-        "markers": [
-          "python"
-        ],
-        "path": ".pytest-tmp/test_conformance_clean_still_p0/app.py",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
           "config"
-        ],
-        "markers": [
-          "build-manifest"
-        ],
-        "path": ".pytest-tmp/test_manifest_json_roundtrip_s0/demo/pyproject.toml",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "config"
-        ],
-        "markers": [
-          "build-manifest"
-        ],
-        "path": ".pytest-tmp/test_matrix_duplicate_id_confl0/a/pyproject.toml",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "config"
-        ],
-        "markers": [
-          "build-manifest"
-        ],
-        "path": ".pytest-tmp/test_matrix_duplicate_id_confl0/b/pyproject.toml",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "config"
-        ],
-        "markers": [
-          "build-manifest"
-        ],
-        "path": ".pytest-tmp/test_matrix_import_failure_typ0/ghost/pyproject.toml",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "config"
-        ],
-        "markers": [
-          "build-manifest"
-        ],
-        "path": ".pytest-tmp/test_matrix_incompatible_docto0/future/pyproject.toml",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "config"
-        ],
-        "markers": [
-          "build-manifest"
-        ],
-        "path": ".pytest-tmp/test_matrix_invalid_manifest_r0/bad/pyproject.toml",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "config"
-        ],
-        "markers": [
-          "build-manifest"
-        ],
-        "path": ".pytest-tmp/test_matrix_success0/demo/pyproject.toml",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "client",
-          "source"
-        ],
-        "markers": [
-          "python"
-        ],
-        "path": ".pytest-tmp/test_plugin_commands_do_not_mu0/app.py",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "config"
-        ],
-        "markers": [
-          "build-manifest"
-        ],
-        "path": ".pytest-tmp/test_plugin_commands_do_not_mu0/plugins/demo-local/pyproject.toml",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "client",
-          "source"
-        ],
-        "markers": [
-          "python"
-        ],
-        "path": ".pytest-tmp/test_plugin_commands_run_with_0/app.py",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "config"
-        ],
-        "markers": [
-          "build-manifest"
-        ],
-        "path": ".pytest-tmp/test_plugin_commands_run_with_0/plugins/demo-local/pyproject.toml",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "config",
-          "contract"
-        ],
-        "markers": [
-          "openapi"
-        ],
-        "path": ".pytest-tmp/test_readme_quickstart_command0/api.yaml",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "config",
-          "contract"
-        ],
-        "markers": [
-          "openapi"
-        ],
-        "path": ".pytest-tmp/test_readme_quickstart_command0/baseline/api.yaml",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "unknown"
         ],
         "markers": [],
-        "path": ".pytest-tmp/test_readme_quickstart_command0/results.sarif",
+        "path": ".pytest-tmp/test_install_plan_then_apply_r0/consumer/.forge-doctor-api/install/install-ledger.json",
         "unreadable": false,
         "vendored": true
       },
@@ -36431,10 +38045,47 @@
         "classes": [
           "config"
         ],
-        "markers": [
-          "build-manifest"
+        "markers": [],
+        "path": ".pytest-tmp/test_install_plan_then_apply_r0/consumer/.forge-doctor-api/install/receipts/install-20261012T120230Z.json",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "config"
         ],
-        "path": ".pytest-tmp/test_untrusted_listed_but_neve0/plugins/shady/pyproject.toml",
+        "markers": [],
+        "path": ".pytest-tmp/test_install_plan_then_apply_r0/consumer/.mcp.json",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "documentation"
+        ],
+        "markers": [],
+        "path": ".pytest-tmp/test_install_plan_then_apply_r0/consumer/AGENTS.md",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "config"
+        ],
+        "markers": [],
+        "path": ".pytest-tmp/test_install_plan_then_apply_r0/home/.forge/installations/forge-doctor-api.json",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "config",
+          "contract"
+        ],
+        "markers": [
+          "openapi"
+        ],
+        "path": ".pytest-tmp/test_tasks_scan_executes_real_0/consumer/api.yaml",
         "unreadable": false,
         "vendored": true
       },
@@ -36678,6 +38329,15 @@
         ],
         "markers": [],
         "path": ".ruff_cache/0.16.0/3687337321369409478",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".ruff_cache/0.16.0/4167598827299430403",
         "unreadable": false,
         "vendored": true
       },
@@ -106556,7 +108216,7 @@
         "markers": [
           "javascript"
         ],
-        "path": "portal/assets/chunk-BblEYzyZ.js",
+        "path": "portal/assets/chunk--nBiLM2l.js",
         "unreadable": false,
         "vendored": false
       },
@@ -106568,7 +108228,7 @@
         "markers": [
           "javascript"
         ],
-        "path": "portal/assets/chunk-CVdNUKEr.js",
+        "path": "portal/assets/chunk-3XybeXUr.js",
         "unreadable": false,
         "vendored": false
       },
@@ -106580,7 +108240,7 @@
         "markers": [
           "javascript"
         ],
-        "path": "portal/assets/chunk-CZu8hk1w.js",
+        "path": "portal/assets/chunk-B1IbIl8y.js",
         "unreadable": false,
         "vendored": false
       },
@@ -106592,7 +108252,7 @@
         "markers": [
           "javascript"
         ],
-        "path": "portal/assets/chunk-Co7GaK73.js",
+        "path": "portal/assets/chunk-BBRX6GaQ.js",
         "unreadable": false,
         "vendored": false
       },
@@ -106604,7 +108264,7 @@
         "markers": [
           "javascript"
         ],
-        "path": "portal/assets/chunk-Cs2AxetJ.js",
+        "path": "portal/assets/chunk-BLBsSwM_.js",
         "unreadable": false,
         "vendored": false
       },
@@ -106616,7 +108276,7 @@
         "markers": [
           "javascript"
         ],
-        "path": "portal/assets/chunk-D3M1uW32.js",
+        "path": "portal/assets/chunk-BP8kZd9w.js",
         "unreadable": false,
         "vendored": false
       },
@@ -106628,7 +108288,7 @@
         "markers": [
           "javascript"
         ],
-        "path": "portal/assets/chunk-D7bJi_Jh.js",
+        "path": "portal/assets/chunk-BRELoMYi.js",
         "unreadable": false,
         "vendored": false
       },
@@ -106640,7 +108300,7 @@
         "markers": [
           "javascript"
         ],
-        "path": "portal/assets/chunk-DNbZDbyz.js",
+        "path": "portal/assets/chunk-BynB7Q86.js",
         "unreadable": false,
         "vendored": false
       },
@@ -106652,7 +108312,7 @@
         "markers": [
           "javascript"
         ],
-        "path": "portal/assets/chunk-DNulU_UF.js",
+        "path": "portal/assets/chunk-C-E45Jmm.js",
         "unreadable": false,
         "vendored": false
       },
@@ -106664,7 +108324,7 @@
         "markers": [
           "javascript"
         ],
-        "path": "portal/assets/chunk-DUOGBnfE.js",
+        "path": "portal/assets/chunk-CKmGDDBy.js",
         "unreadable": false,
         "vendored": false
       },
@@ -106676,7 +108336,7 @@
         "markers": [
           "javascript"
         ],
-        "path": "portal/assets/chunk-DlKveQew.js",
+        "path": "portal/assets/chunk-CeAXdVfD.js",
         "unreadable": false,
         "vendored": false
       },
@@ -106688,7 +108348,7 @@
         "markers": [
           "javascript"
         ],
-        "path": "portal/assets/chunk-Dmgychqn.js",
+        "path": "portal/assets/chunk-CsefyDbt.js",
         "unreadable": false,
         "vendored": false
       },
@@ -106700,7 +108360,7 @@
         "markers": [
           "javascript"
         ],
-        "path": "portal/assets/chunk-Dz_vuzBb.js",
+        "path": "portal/assets/chunk-CtJiiadC.js",
         "unreadable": false,
         "vendored": false
       },
@@ -106712,7 +108372,7 @@
         "markers": [
           "javascript"
         ],
-        "path": "portal/assets/chunk-F_YlXjV1.js",
+        "path": "portal/assets/chunk-CzGAJxIH.js",
         "unreadable": false,
         "vendored": false
       },
@@ -106724,7 +108384,7 @@
         "markers": [
           "javascript"
         ],
-        "path": "portal/assets/chunk-ZL7yYXh9.js",
+        "path": "portal/assets/chunk-DfkWL8FD.js",
         "unreadable": false,
         "vendored": false
       },
@@ -106736,7 +108396,7 @@
         "markers": [
           "javascript"
         ],
-        "path": "portal/assets/chunk-jnpjvbcX.js",
+        "path": "portal/assets/chunk-Dy-H92j-.js",
         "unreadable": false,
         "vendored": false
       },
@@ -106748,7 +108408,7 @@
         "markers": [
           "javascript"
         ],
-        "path": "portal/assets/chunk-keGqddxh.js",
+        "path": "portal/assets/chunk-FxTfQ5_W.js",
         "unreadable": false,
         "vendored": false
       },
@@ -106760,7 +108420,19 @@
         "markers": [
           "javascript"
         ],
-        "path": "portal/assets/chunk-qnBQe_OP.js",
+        "path": "portal/assets/chunk-HtwTw7Al.js",
+        "unreadable": false,
+        "vendored": false
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "javascript"
+        ],
+        "path": "portal/assets/chunk-Nnt8IBB7.js",
         "unreadable": false,
         "vendored": false
       },
@@ -106790,7 +108462,7 @@
         "markers": [
           "javascript"
         ],
-        "path": "portal/assets/main-WNALGRW3.js",
+        "path": "portal/assets/main-WGCWO64V.js",
         "unreadable": false,
         "vendored": false
       },
@@ -112012,6 +113684,15 @@
       },
       {
         "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": "src/forge_doctor_api/integrations/__pycache__/__init__.cpython-314.pyc",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
           "client",
           "source"
         ],
@@ -112126,6 +113807,15 @@
       },
       {
         "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": "src/forge_doctor_api/knowledge/asyncapi/__pycache__/__init__.cpython-314.pyc",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
           "config"
         ],
         "markers": [],
@@ -112156,6 +113846,15 @@
         "path": "src/forge_doctor_api/knowledge/frameworks/__init__.py",
         "unreadable": false,
         "vendored": false
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": "src/forge_doctor_api/knowledge/frameworks/__pycache__/__init__.cpython-314.pyc",
+        "unreadable": false,
+        "vendored": true
       },
       {
         "classes": [
@@ -112204,6 +113903,15 @@
         "path": "src/forge_doctor_api/knowledge/gateways/__init__.py",
         "unreadable": false,
         "vendored": false
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": "src/forge_doctor_api/knowledge/gateways/__pycache__/__init__.cpython-314.pyc",
+        "unreadable": false,
+        "vendored": true
       },
       {
         "classes": [
@@ -112274,6 +113982,15 @@
       },
       {
         "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": "src/forge_doctor_api/knowledge/graphql/__pycache__/__init__.cpython-314.pyc",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
           "config"
         ],
         "markers": [],
@@ -112292,6 +114009,15 @@
         "path": "src/forge_doctor_api/knowledge/grpc/__init__.py",
         "unreadable": false,
         "vendored": false
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": "src/forge_doctor_api/knowledge/grpc/__pycache__/__init__.cpython-314.pyc",
+        "unreadable": false,
+        "vendored": true
       },
       {
         "classes": [
@@ -112316,6 +114042,15 @@
       },
       {
         "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": "src/forge_doctor_api/knowledge/http/__pycache__/__init__.cpython-314.pyc",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
           "config"
         ],
         "markers": [],
@@ -112334,6 +114069,15 @@
         "path": "src/forge_doctor_api/knowledge/jsonschema/__init__.py",
         "unreadable": false,
         "vendored": false
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": "src/forge_doctor_api/knowledge/jsonschema/__pycache__/__init__.cpython-314.pyc",
+        "unreadable": false,
+        "vendored": true
       },
       {
         "classes": [
@@ -112394,6 +114138,15 @@
       },
       {
         "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": "src/forge_doctor_api/knowledge/openapi/__pycache__/__init__.cpython-314.pyc",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
           "config"
         ],
         "markers": [],
@@ -112412,6 +114165,15 @@
         "path": "src/forge_doctor_api/knowledge/security/__init__.py",
         "unreadable": false,
         "vendored": false
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": "src/forge_doctor_api/knowledge/security/__pycache__/__init__.cpython-314.pyc",
+        "unreadable": false,
+        "vendored": true
       },
       {
         "classes": [
@@ -114281,6 +116043,15 @@
       },
       {
         "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": "src/forge_doctor_api/ui/__pycache__/wizard.cpython-314.pyc",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
           "client",
           "source"
         ],
@@ -116085,6 +117856,24 @@
         ],
         "markers": [],
         "path": "tests/__pycache__/test_twin.cpython-314-pytest-8.3.4.pyc",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": "tests/__pycache__/test_ui_resilience.cpython-312-pytest-9.1.1.pyc",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": "tests/__pycache__/test_ui_resilience.cpython-314-pytest-8.3.4.pyc",
         "unreadable": false,
         "vendored": true
       },
@@ -118752,6 +120541,18 @@
         "markers": [
           "python"
         ],
+        "path": "tests/test_ui_resilience.py",
+        "unreadable": false,
+        "vendored": false
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
         "path": "tests/test_ui_tui.py",
         "unreadable": false,
         "vendored": false
@@ -120186,7 +121987,7 @@
       {
         "allocated_bytes": null,
         "analyzer": "routes",
-        "artifacts": 421,
+        "artifacts": 423,
         "duration_ms": null,
         "findings": 0,
         "ran": true,
@@ -120195,7 +121996,7 @@
       {
         "allocated_bytes": null,
         "analyzer": "clients",
-        "artifacts": 427,
+        "artifacts": 429,
         "duration_ms": null,
         "findings": 0,
         "ran": true,
@@ -120204,7 +122005,7 @@
       {
         "allocated_bytes": null,
         "analyzer": "security",
-        "artifacts": 809,
+        "artifacts": 811,
         "duration_ms": null,
         "findings": 111,
         "ran": true,
@@ -120345,7 +122146,7 @@
     {
       "missing": "literal URL for the client call",
       "resolution": "the call uses a computed or interpolated URL",
-      "subject": "portal/assets/main-WNALGRW3.js:5"
+      "subject": "portal/assets/main-WGCWO64V.js:5"
     },
     {
       "missing": "declared cache fields (ttl, key, invalidation, stale_policy)",
