@@ -204,6 +204,9 @@ class PortalAdapter:
             "updated_at": None,
         }
 
+    def account_environment(self) -> dict[str, Any]:
+        return detect_account_environment(self)
+
 
 def portal_version() -> str:
     return "1.0.0"
@@ -213,6 +216,71 @@ def workspace_name(root: str | None) -> str | None:
     if not root:
         return None
     return Path(root).name or root
+
+
+def _environment_prefix(forge_id: str) -> str:
+    """Map forge id to portable account-variable prefix."""
+    import re
+
+    return re.sub(r"[^A-Z0-9]+", "_", forge_id.upper()).strip("_")
+
+
+def detect_account_environment(adapter: PortalAdapter) -> dict[str, Any]:
+    """Validate installer-owned account variables without reading secrets.
+
+    Values are paths published by ``install.*``. The portal reports presence
+    and filesystem validity only; it never scans or echoes arbitrary env vars.
+    """
+    prefix = _environment_prefix(adapter.forge_id)
+    specs = (
+        ("HOME", "directory", True),
+        ("INSTALL_ROOT", "directory", True),
+        ("VENV", "directory", True),
+        ("PYTHON", "file", True),
+        ("CLI", "file", True),
+        ("LAUNCHER", "file", False),
+    )
+    variables: list[dict[str, Any]] = []
+    required_present = True
+    required_valid = True
+    any_present = False
+    for suffix, kind, required in specs:
+        name = f"{prefix}_{suffix}"
+        raw = os.environ.get(name, "").strip()
+        present = bool(raw)
+        any_present = any_present or present
+        path = Path(raw).expanduser() if present else None
+        valid = bool(path and (path.is_dir() if kind == "directory" else path.is_file()))
+        if required:
+            required_present = required_present and present
+            required_valid = required_valid and valid
+        variables.append(
+            {
+                "name": name,
+                "required": required,
+                "present": present,
+                "valid": valid if present else None,
+                "kind": kind,
+                "path": raw if present else None,
+            }
+        )
+    if required_present and required_valid:
+        state = "READY"
+    elif any_present and required_valid:
+        state = "PARTIAL"
+    elif any_present:
+        state = "INVALID"
+    else:
+        state = "MISSING"
+    return {
+        "schema": "forge/InstallEnvironment/v1",
+        "scope": "user",
+        "forge_id": adapter.forge_id,
+        "prefix": prefix,
+        "state": state,
+        "variables": variables,
+        "windows_aliases": os.name == "nt",
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -769,14 +837,18 @@ def default_operations(adapter: PortalAdapter) -> list[Operation]:
             lambda ctx: {
                 "descriptor": adapter.descriptor(),
                 "health": _with_portal_presence(adapter.health()),
+                "account_environment": adapter.account_environment(),
             },
         ),
-        Operation("GET", "/health", _presence_op(_get("health", None))),
+        Operation("GET", "/health", _environment_presence_op(_presence_op(_get("health", None)), adapter)),
+        Operation("GET", "/environment", lambda ctx: adapter.account_environment()),
         Operation("GET", "/capabilities", lambda ctx: adapter.capabilities()),
         Operation(
             "GET",
             "/installation/status",
-            _presence_op(_get("installation_status", adapter.health)),
+            _environment_presence_op(
+                _presence_op(_get("installation_status", adapter.health)), adapter
+            ),
         ),
     ]
 
@@ -784,6 +856,19 @@ def default_operations(adapter: PortalAdapter) -> list[Operation]:
 def _presence_op(handler: Callable[[RequestContext], Any]) -> Callable[[RequestContext], Any]:
     def h(ctx: RequestContext) -> Any:
         return _with_portal_presence(handler(ctx))
+
+    return h
+
+
+def _environment_presence_op(
+    handler: Callable[[RequestContext], Any], adapter: PortalAdapter
+) -> Callable[[RequestContext], Any]:
+    def h(ctx: RequestContext) -> Any:
+        data = handler(ctx)
+        if isinstance(data, dict):
+            data = dict(data)
+            data["account_environment"] = adapter.account_environment()
+        return data
 
     return h
 

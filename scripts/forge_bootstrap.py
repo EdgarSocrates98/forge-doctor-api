@@ -688,11 +688,14 @@ def run(argv: list[str] | None = None) -> int:
         planned_venv = venv_dir or (install_root / ".venv")
         planned_shim = shim or (shim_dir() / cfg["cli"])
         environment = environment_contract(cfg, repo, install_root, planned_venv, planned_shim)
-        if args.persist_env and not args.dry_run:
-            environment = stage(
-                "persist-environment",
-                lambda: persist_environment(environment, shim, log),
-            )
+        if args.persist_env:
+            if args.dry_run:
+                report["stages"].append({"stage": "persist-environment", "status": "planned"})
+            else:
+                environment = stage(
+                    "persist-environment",
+                    lambda: persist_environment(environment, shim, log),
+                )
         report["environment"] = environment
         sm = stage("smoke", lambda: smoke(cfg["cli"], venv_dir, ["--version"], log))
         version = (sm or {}).get("version", cfg.get("version", "0.0.0"))
