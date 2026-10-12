@@ -13,6 +13,7 @@ without side effects; nothing is written before the explicit confirm.
 from __future__ import annotations
 
 import json
+import importlib
 import shutil
 import sys
 from typing import Any
@@ -262,7 +263,16 @@ def run_setup_wizard(
     out_json: bool = False,
 ) -> int:
     """Family onboarding over the same real plan/approval/apply wizard."""
-    from theforge.install import service
+    try:
+        service = importlib.import_module("theforge.install.service")
+    except ModuleNotFoundError as exc:
+        if exc.name == "theforge" or (exc.name or "").startswith("theforge."):
+            print(
+                "family onboarding unavailable: install The Forge separately; "
+                "native Doctor API commands remain available"
+            )
+            return 2
+        raise
 
     return run_wizard(
         forge_name="the-forge family",
