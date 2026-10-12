@@ -127,7 +127,7 @@ def _script_root() -> Path:
 def _script_call(op: str, **kw) -> dict:
     """Call the real ``scripts/forge_install.py`` and parse its JSON receipt."""
     argv = [sys.executable, str(_script_root() / "scripts" / "forge_install.py"), op]
-    for key in ("scope", "host", "profile"):
+    for key in ("scope", "host", "profile", "gateway_profile"):
         if kw.get(key) is not None:
             argv += [f"--{key}", str(kw[key])]
     if kw.get("components"):

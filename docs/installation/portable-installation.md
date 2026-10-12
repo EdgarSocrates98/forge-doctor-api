@@ -8,6 +8,7 @@ python <forge-doctor-api checkout>/scripts/forge_install.py install --yes --root
 python <forge-doctor-api checkout>/scripts/forge_install.py install --root . --dry-run                # planeja sem escrever
 python <forge-doctor-api checkout>/scripts/forge_install.py install --yes --root . --profile minimal  # só CLI+MCP+marker
 python <forge-doctor-api checkout>/scripts/forge_install.py install --yes --root . --profile full     # skills + agents + todos os hosts
+python <forge-doctor-api checkout>/scripts/forge_install.py install --yes --root . --gateway-profile economy  # menor custo
 ```
 
 O que acontece: assets gerenciados vão para `.agents/`, `.claude/`,
@@ -17,3 +18,7 @@ entrada gerenciada; `AGENTS.md` recebe um bloco delimitado
 
 Perfis: `minimal` (essencial) · `recommended` (workflow completo, padrão)
 · `full` (teto de disclosure — não é autorização extra).
+
+Perfis de execução: `economy` reduz custo e contexto; `balanced` é padrão;
+`deep` amplia capacidade para tarefas difíceis. Valor fica no recibo e é
+preservado quando instalação chega por roteamento do The Forge.
