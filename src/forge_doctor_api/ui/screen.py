@@ -35,6 +35,7 @@ from forge_doctor_api.ui.kit import (
     _ellipsize,
     _pad_visible,
     cell_width,
+    terminal_size,
 )
 
 MIN_WIDTH = 60
@@ -114,14 +115,31 @@ def state_icon(ctx: UIContext, state: str) -> str:
 
 @dataclass(kw_only=True)
 class _Span:
+    x: int
     text: str
     style: str = ""  # ANSI SGR code, "" = plain
 
 
+_SGR_RE = re.compile(r"\x1b\[([0-9;]*)m")
+
+
 def _clip(text: str, width: int) -> str:
     """Hard cell-width clip — canvas chrome never gets an ellipsis marker."""
-    out, used = [], 0
-    for ch in text:
+    if width <= 0:
+        return ""
+    out: list[str] = []
+    used, pos = 0, 0
+    for match in _SGR_RE.finditer(text):
+        chunk = text[pos : match.start()]
+        for ch in chunk:
+            cw = cell_width(ch)
+            if used + cw > width:
+                return "".join(out) + "\x1b[0m" if out else ""
+            out.append(ch)
+            used += cw
+        out.append(match.group(0))
+        pos = match.end()
+    for ch in text[pos:]:
         cw = cell_width(ch)
         if used + cw > width:
             break
@@ -130,23 +148,69 @@ def _clip(text: str, width: int) -> str:
     return "".join(out)
 
 
+def _paint_cells(
+    cells: list[str],
+    styles: list[str],
+    chunk: str,
+    cursor: int,
+    style: str,
+    width: int,
+) -> int:
+    for ch in chunk:
+        cw = cell_width(ch)
+        if cw == 0:
+            if cursor and cells[cursor - 1] != "":
+                cells[cursor - 1] += ch
+            continue
+        if cursor >= width or cursor + cw > width:
+            break
+        cells[cursor] = ch
+        styles[cursor] = style
+        for offset in range(1, cw):
+            cells[cursor + offset] = ""
+            styles[cursor + offset] = style
+        cursor += cw
+    return cursor
+
+
+def _render_cells(ctx: UIContext, cells: list[str], styles: list[str]) -> str:
+    rendered: list[str] = []
+    current_style = ""
+    segment: list[str] = []
+    for ch, style in zip(cells, styles, strict=True):
+        if ch == "":
+            continue
+        if style != current_style:
+            if segment:
+                text = "".join(segment)
+                rendered.append(_c(ctx, current_style, text) if current_style else text)
+                segment.clear()
+            current_style = style
+        segment.append(ch)
+    if segment:
+        text = "".join(segment)
+        rendered.append(_c(ctx, current_style, text) if current_style else text)
+    return "".join(rendered)
+
+
 class Buffer:
     """Fixed-size cell grid. ``draw()`` writes styled spans; ``render()``
     returns a list of finished lines (ANSI when ctx.color)."""
 
     def __init__(self, ctx: UIContext, width: int, height: int):
         self.ctx = ctx
-        self.width = width
-        self.height = height
-        self._rows: list[list[_Span]] = [[] for _ in range(height)]
+        self.width = max(1, width)
+        self.height = max(1, height)
+        self._rows: list[list[_Span]] = [[] for _ in range(self.height)]
 
     def draw(self, y: int, x: int, text: str, *, style: str = "") -> None:
         if not (0 <= y < self.height) or x >= self.width:
             return
+        x = max(0, x)
         clipped = _clip(text, self.width - x)
         if not clipped:
             return
-        self._rows[y].append(_Span(text=" " * x + clipped, style=style))
+        self._rows[y].append(_Span(x=x, text=clipped, style=style))
 
     def hline(self, y: int, x: int = 0, w: int | None = None, *, style: str = "") -> None:
         b = box(self.ctx)
@@ -159,9 +223,35 @@ class Buffer:
             if not spans:
                 out.append("")
                 continue
-            # later draws overlay earlier: sort by x implicit in draw order
-            line = "".join(_c(self.ctx, s.style, s.text) if s.style else s.text for s in spans)
-            out.append(line[: self.width * 4])  # ansi-safe bound; clips at SGR
+            cells = [" "] * self.width
+            styles = [""] * self.width
+
+            for span in spans:
+                cursor = max(0, span.x)
+                active = span.style
+                pos = 0
+                for match in _SGR_RE.finditer(span.text):
+                    cursor = _paint_cells(
+                        cells,
+                        styles,
+                        span.text[pos : match.start()],
+                        cursor,
+                        active,
+                        self.width,
+                    )
+                    code = match.group(1)
+                    active = "" if code == "0" else code
+                    pos = match.end()
+                _paint_cells(
+                    cells,
+                    styles,
+                    span.text[pos:],
+                    cursor,
+                    active,
+                    self.width,
+                )
+
+            out.append(_render_cells(self.ctx, cells, styles))
         return out
 
 
@@ -275,6 +365,39 @@ class Column:
     width: int | None = None  # None = flexible
 
 
+def _column_widths(width: int, columns: list[Column]) -> list[int]:
+    """Fit fixed and flexible columns inside viewport, preserving every column."""
+    if not columns:
+        return []
+    gaps = 2 * (len(columns) - 1)
+    budget = max(len(columns), width - gaps)
+    fixed = [i for i, column in enumerate(columns) if column.width is not None]
+    flexible = [i for i, column in enumerate(columns) if column.width is None]
+    widths = [1] * len(columns)
+    flex_min = 8 if budget >= (len(flexible) * 8 + len(fixed)) else 1
+    fixed_budget = max(0, budget - len(flexible) * flex_min)
+    desired = [max(1, int(columns[i].width or 1)) for i in fixed]
+    desired_total = sum(desired)
+    if fixed:
+        if desired_total <= fixed_budget:
+            for i, value in zip(fixed, desired, strict=True):
+                widths[i] = value
+        else:
+            remaining = fixed_budget
+            for pos, (i, value) in enumerate(zip(fixed, desired, strict=True)):
+                slots_left = len(fixed) - pos
+                share = min(value, max(1, remaining - (slots_left - 1)))
+                widths[i] = share
+                remaining -= share
+    remaining = max(0, budget - sum(widths[i] for i in fixed))
+    for pos, i in enumerate(flexible):
+        slots_left = len(flexible) - pos
+        share = max(1, remaining // slots_left) if remaining else 1
+        widths[i] = share
+        remaining = max(0, remaining - share)
+    return widths
+
+
 def table(
     buf: Buffer,
     x: int,
@@ -289,10 +412,7 @@ def table(
 ) -> None:
     """Selectable table: fixed columns, flexible last column, scrolls."""
     ctx = buf.ctx
-    fixed = sum(c.width for c in columns if c.width) + 2 * (len(columns) - 1)
-    flex = [c for c in columns if c.width is None]
-    flex_w = max(8, (w - fixed) // max(1, len(flex))) if flex else 0
-    widths = [c.width or flex_w for c in columns]
+    widths = _column_widths(w, columns)
     # header
     cx = x
     for c, cw in zip(columns, widths, strict=True):
@@ -413,7 +533,7 @@ def read_key(timeout: float = 0.05) -> str | None:
                 "O": "end",
                 "I": "pageup",
                 "Q": "pagedown",
-            }.get(msvcrt.getwch())
+            }.get(msvcrt.getwch(), "other")
         return _KEYS.get(ch, ch)
     # POSIX — select-based poll
     import select
@@ -421,8 +541,35 @@ def read_key(timeout: float = 0.05) -> str | None:
     r, _, _ = select.select([sys.stdin], [], [], timeout)
     if not r:
         return None
-    ch = os.read(sys.stdin.fileno(), 8).decode(errors="replace")
-    return _ESC.get(ch) or _KEYS.get(ch) or ch
+    try:
+        ch = os.read(sys.stdin.fileno(), 1).decode(errors="replace")
+    except OSError:
+        return "ctrl-d"
+    if not ch:
+        return "ctrl-d"
+    if ch != "\x1b":
+        return _KEYS.get(ch) or ch
+    seq = ch
+    deadline = time.monotonic() + min(0.06, max(timeout, 0.0) + 0.01)
+    while len(seq) < 8:
+        remain = max(0.0, deadline - time.monotonic())
+        if not remain:
+            break
+        ready, _, _ = select.select([sys.stdin], [], [], remain)
+        if not ready:
+            break
+        try:
+            part = os.read(sys.stdin.fileno(), 1).decode(errors="replace")
+        except OSError:
+            break
+        if not part:
+            break
+        seq += part
+        if seq in _ESC:
+            return _ESC[seq]
+        if part.isalpha() or part == "~":
+            break
+    return _ESC.get(seq, "esc")
 
 
 # ---------------------------------------------------------------- loop
@@ -461,11 +608,7 @@ def run_loop(
         while True:
             now = (ctx.width, ctx.height)
             # refresh size every tick (SIGWINCH arrives between polls)
-            try:
-                sz = os.get_terminal_size()
-                now = (sz.columns, sz.lines)
-            except OSError:
-                pass
+            now = terminal_size(fallback=(ctx.width, ctx.height))
             if now != size:
                 size = now
                 ctx = UIContext(**{**ctx.__dict__, "width": size[0], "height": size[1]})
@@ -478,7 +621,7 @@ def run_loop(
             key = read_key()
             if key is None:
                 continue
-            if key == "ctrl-c" or (key in ("q", "esc") and on_key is None):
+            if key in ("ctrl-c", "ctrl-d") or (key in ("q", "esc") and on_key is None):
                 return result
             action = on_key(key) if on_key else None
             if action == "quit":
