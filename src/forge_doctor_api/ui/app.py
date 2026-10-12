@@ -202,7 +202,7 @@ class ForgeApp:
             2,
             buf.width - nav_w,
             buf.height - 5,
-            title=self.entries[self.nav_idx].label,
+            title=self.entries[self.nav_idx].label if self.entries else "menu",
             focused=self.focus == "content",
             theme=th,
         )

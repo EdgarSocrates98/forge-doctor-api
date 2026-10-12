@@ -36,3 +36,10 @@ def test_suspended_action_runs_without_capture():
     app._execute(action, capture=False)
     assert seen == ["ran"]
     assert "attached terminal" in "\n".join(app.pane.log)
+
+
+def test_empty_menu_renders_empty_state():
+    app = ForgeApp(_ctx(), forge_id="forge-doctor-api", title="t", entries=[])
+    buf = Buffer(_ctx(), 60, 16)
+    app.render(buf)
+    assert "no menu entries" in "\n".join(buf.render())
