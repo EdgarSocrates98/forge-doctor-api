@@ -73,6 +73,7 @@ def run_wizard(
     hosts_available: tuple[str, ...] = _ALL_HOSTS,
     ctx: UIContext | None = None,
     out_json: bool = False,
+    family: bool = False,
 ) -> int:
     """Interactive install wizard. Returns exit code.
 
@@ -89,6 +90,10 @@ def run_wizard(
     for label, val in env_rows:
         print(f"    {label:<14} {_c(ctx, '32' if val in ('OK', 'Available') else '2', val)}")
     print()
+    if family:
+        print(_c(ctx, "36", "  family mode: The Forge + registered specialist forges"))
+        print(_c(ctx, "2", "  one real plan, one approval, each forge keeps its own installer"))
+        print()
 
     # --- scope ---------------------------------------------------------------
     scopes = ["project", "workspace", "user"]
@@ -133,12 +138,22 @@ def run_wizard(
         "graph-studio": "Graph Studio",
     }
     _COMP_ORDER = ("skills", "agents", "mcp", "tui", "graph-studio")
+    _COMP_DETAILS = {
+        "skills": "host-discoverable skills and progressive capability guidance",
+        "agents": "specialists, subagents and declared agent instructions",
+        "mcp": "MCP configuration and governed server entry points",
+        "tui": "the terminal command center runtime",
+        "graph-studio": "federated graph views and local graph navigation",
+    }
     _profile_defaults = {
         "minimal": {"mcp", "tui"},
         "recommended": {"skills", "agents", "mcp", "tui", "graph-studio"},
         "full": {"skills", "agents", "mcp", "tui", "graph-studio"},
     }
     comp_checked = _profile_defaults.get(profile, set())
+    print(_c(ctx, "2", "  component choices (economy loads optional knowledge/evals on demand):"))
+    for component in _COMP_ORDER:
+        print(f"    {component:<13} {_COMP_DETAILS[component]}")
     comp_chosen = multi_select(
         i18n.t("install_components_q", ctx.language),
         [_COMP_LABELS[c] for c in _COMP_ORDER],
@@ -197,6 +212,7 @@ def run_wizard(
                     ("scope", scope),
                     ("profile", profile),
                     ("execution", gateway_profile),
+                    ("mode", "family" if family else "this forge"),
                     ("components", ", ".join(components) or "none"),
                     ("hosts", host_arg or "none"),
                     ("managed writes", str(len(planned) if isinstance(planned, list) else planned)),
@@ -233,4 +249,26 @@ def run_wizard(
         color = "32" if hstatus in ("healthy", "PASS") else "33"
         print(f"  {i18n.t('health', ctx.language)}: {_c(ctx, color, str(hstatus))}")
 
+    if status == "completed":
+        print("  next: theforge specialists status · theforge doctor · theforge portal")
+
     return 0 if status == "completed" else 1
+
+
+def run_setup_wizard(
+    *,
+    root: Any = None,
+    ctx: UIContext | None = None,
+    out_json: bool = False,
+) -> int:
+    """Family onboarding over the same real plan/approval/apply wizard."""
+    from theforge.install import service
+
+    return run_wizard(
+        forge_name="the-forge family",
+        install_fn=lambda **kw: service.install_auto(root=root, **kw),
+        doctor_fn=lambda **kw: service.doctor(root=root, **kw),
+        ctx=ctx,
+        out_json=out_json,
+        family=True,
+    )
