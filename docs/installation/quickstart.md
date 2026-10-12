@@ -5,7 +5,7 @@ Três comandos:
 ```bash
 git clone <forge-doctor-api repo>
 cd forge-doctor-api
-./setup.sh        # Windows: .\setup.ps1
+./install.sh      # Windows: .\install.ps1 — account runtime + editable CLI
 ```
 
 Depois, dentro de qualquer projeto:
@@ -26,4 +26,4 @@ python scripts/forge_install.py status
 python scripts/forge_install.py doctor
 ```
 
-Problemas? → [troubleshooting.md](troubleshooting.md)
+Detalhes: [account-installation.md](account-installation.md). Problemas? → [troubleshooting.md](troubleshooting.md)

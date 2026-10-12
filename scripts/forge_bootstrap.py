@@ -27,6 +27,8 @@ import hashlib
 import json
 import os
 import platform
+import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -35,12 +37,15 @@ import venv
 from pathlib import Path
 from typing import Any
 
-_BOOTSTRAP_VERSION = "1.0.0"
+_BOOTSTRAP_VERSION = "1.1.0"
 SCHEMA_MANIFEST = "forge/InstallationManifest/v1"
 SCHEMA_RECEIPT = "forge/InstallReceipt/v1"
 FORGE_HOME = ".forge"
 INSTALLATIONS = "installations"
 INSTALLS = "installs"
+ENV_SCHEMA = "forge/InstallEnvironment/v1"
+ENV_DIR_NAME = "forjas"
+ENV_FILE_NAME = "env.sh"
 
 
 class Refusal(Exception):
@@ -87,6 +92,16 @@ def _venv_python(v: Path) -> Path:
 
 def _venv_bin(v: Path) -> Path:
     return v / ("Scripts" if os.name == "nt" else "bin")
+
+
+def _cli_executable(cli: str, venv: Path) -> Path:
+    """Return real venv entrypoint, not a PATH-dependent alias."""
+    bindir = _venv_bin(venv)
+    for name in (cli + (".exe" if os.name == "nt" else ""), cli):
+        candidate = bindir / name
+        if candidate.exists():
+            return candidate
+    return bindir / (cli + (".exe" if os.name == "nt" else ""))
 
 
 def _run(cmd: list[str], timeout: int = 300, **kw) -> subprocess.CompletedProcess:
@@ -246,10 +261,13 @@ def find_python(spec: str, explicit: str | None, allow_download: bool, log) -> s
 
 
 def create_venv(root: Path, python: str, log) -> Path:
-    venv_dir = root / "venv"
-    if venv_dir.exists() and _venv_python(venv_dir).exists():
-        log(f"reusing venv {venv_dir}")
-        return venv_dir
+    # `.venv` is the public convention. Keep reading legacy `venv` so
+    # existing account installs remain upgradeable without migration.
+    for candidate in (root / ".venv", root / "venv"):
+        if candidate.exists() and _venv_python(candidate).exists():
+            log(f"reusing venv {candidate}")
+            return candidate
+    venv_dir = root / ".venv"
     log(f"creating venv {venv_dir} with {python}")
     builder = venv.EnvBuilder(with_pip=True, upgrade_deps=False)
     if os.path.basename(python) not in ("python", "python3"):
@@ -271,26 +289,29 @@ def install_package(
     dependence after install); falls back to ``pip install`` which may hit
     the network for deps — allowed and reported, never silent."""
     pip = [str(_venv_python(venv)), "-m", "pip"]
-    # Build a wheel first so the installed artifact is immutable.
-    log("building wheel from checkout")
-    r = _run(
-        pip + ["wheel", str(repo), "-w", str(repo / ".forge-wheels"), "--no-deps"], timeout=600
-    )
+    # Editable mode does not need a wheel. Avoid creating build artifacts in
+    # the source checkout and keep project/workspace directories clean.
+    whl_dir = venv.parent / ".wheels"
     whl = None
-    whl_dir = repo / ".forge-wheels"
-    if r.returncode == 0 and whl_dir.is_dir():
-        wheels = sorted(whl_dir.glob("*.whl"))
-        whl = wheels[-1] if wheels else None
-    target = str(whl) if whl else str(repo)
-    if whl:
-        log(f"installing wheel {whl.name}")
+    if editable:
+        target = str(repo)
+        log("installing editable checkout")
     else:
-        log(f"wheel build unavailable; installing from checkout (deps may resolve over network)")
+        log("building wheel from checkout")
+        r = _run(pip + ["wheel", str(repo), "-w", str(whl_dir), "--no-deps"], timeout=600)
+        if r.returncode == 0 and whl_dir.is_dir():
+            wheels = sorted(whl_dir.glob("*.whl"))
+            whl = wheels[-1] if wheels else None
+        target = str(whl) if whl else str(repo)
+        if whl:
+            log(f"installing wheel {whl.name}")
+        else:
+            log("wheel build unavailable; installing from checkout (deps may resolve over network)")
     req = target if not extras else f"{target}[{','.join(extras)}]"
     cmd = pip + ["install", "--upgrade"]
     if editable:
         cmd.append("-e")
-    cmd.append(req if not editable else str(repo))
+    cmd.append(req)
     r = _run(cmd, timeout=900)
     if r.returncode != 0:
         offline_hint = (
@@ -312,9 +333,7 @@ def write_launcher(cli: str, venv: Path, no_launcher: bool, log) -> Path | None:
     if no_launcher:
         return None
     bindir = _venv_bin(venv)
-    real = bindir / (cli + (".exe" if os.name == "nt" else ""))
-    if not real.exists():
-        real = bindir / cli
+    real = _cli_executable(cli, venv)
     if not real.exists():
         raise Refusal(
             "FORGE-INSTALL-CLI-MISSING", f"{cli} not in {bindir} — package script entry missing?"
@@ -333,6 +352,146 @@ def write_launcher(cli: str, venv: Path, no_launcher: bool, log) -> Path | None:
     return path
 
 
+# --------------------------------------------------------------------------
+# account-scoped environment
+# --------------------------------------------------------------------------
+
+
+def env_prefix(forge_id: str) -> str:
+    """Stable shell-safe prefix; e.g. spark-forge-aws -> SPARK_FORGE_AWS."""
+    return re.sub(r"[^A-Z0-9]+", "_", forge_id.upper()).strip("_")
+
+
+def environment_contract(
+    cfg: dict[str, Any], repo: Path, install_root: Path, venv: Path, shim: Path | None
+) -> dict[str, Any]:
+    prefix = env_prefix(str(cfg["forge_id"]))
+    real_cli = _cli_executable(str(cfg["cli"]), venv)
+    values = {
+        f"{prefix}_HOME": str(repo.resolve()),
+        f"{prefix}_INSTALL_ROOT": str(install_root.resolve()),
+        f"{prefix}_VENV": str(venv.resolve()),
+        f"{prefix}_PYTHON": str(_venv_python(venv).resolve()),
+        f"{prefix}_CLI": str(real_cli.resolve()),
+    }
+    if shim:
+        values[f"{prefix}_LAUNCHER"] = str(shim.resolve())
+    aliases = {name.replace("_", "-"): value for name, value in values.items()}
+    return {
+        "schema": ENV_SCHEMA,
+        "scope": "user",
+        "prefix": prefix,
+        "variables": values,
+        "windows_aliases": aliases if os.name == "nt" else {},
+    }
+
+
+def _posix_env_paths() -> tuple[Path, Path]:
+    config_home = Path(os.environ.get("XDG_CONFIG_HOME") or (Path.home() / ".config"))
+    env_file = config_home / ENV_DIR_NAME / ENV_FILE_NAME
+    shell = Path(os.environ.get("SHELL", "/bin/sh")).name
+    rc_name = {"bash": ".bashrc", "zsh": ".zshrc"}.get(shell, ".profile")
+    return env_file, Path.home() / rc_name
+
+
+def _persist_windows(
+    values: dict[str, str], aliases: dict[str, str], shim: Path | None
+) -> str | None:
+    import winreg
+
+    all_values = {**values, **aliases}
+    user_path = None
+    with winreg.CreateKeyEx(
+        winreg.HKEY_CURRENT_USER, r"Environment", 0, winreg.KEY_SET_VALUE
+    ) as key:
+        for name, value in all_values.items():
+            winreg.SetValueEx(key, name, 0, winreg.REG_SZ, value)
+        if shim:
+            current = (
+                winreg.QueryValueEx(key, "Path")[0] if _registry_has_value(key, "Path") else ""
+            )
+            parts = [p for p in current.split(os.pathsep) if p]
+            if str(shim) not in parts:
+                parts.append(str(shim))
+                winreg.SetValueEx(key, "Path", 0, winreg.REG_EXPAND_SZ, os.pathsep.join(parts))
+            user_path = os.pathsep.join(parts)
+    for name, value in all_values.items():
+        os.environ[name] = value
+    if user_path is not None:
+        current_process_path = os.environ.get("PATH", "")
+        if str(shim) not in current_process_path.split(os.pathsep):
+            os.environ["PATH"] = str(shim) + os.pathsep + current_process_path
+    return None
+
+
+def _registry_has_value(key: Any, name: str) -> bool:
+    try:
+        key.QueryValueEx(name)
+    except FileNotFoundError:
+        return False
+    return True
+
+
+def _persist_posix(values: dict[str, str], shim: Path | None) -> str:
+    env_file, rc_file = _posix_env_paths()
+    marker_start = "# >>> forjas account environment >>>"
+    marker_end = "# <<< forjas account environment <<<"
+    lines = [marker_start]
+    for name, value in sorted(values.items()):
+        lines.append(f"export {name}={shlex.quote(value)}")
+    if shim:
+        quoted = shlex.quote(str(shim))
+        lines.extend(
+            [
+                f"case :${{PATH:-}}: in *:{quoted}:*) ;; *) export PATH={quoted}:${{PATH:-}} ;; esac",
+            ]
+        )
+    lines.append(marker_end)
+    block = "\n".join(lines) + "\n"
+    env_file.parent.mkdir(parents=True, exist_ok=True)
+    existing = env_file.read_text(encoding="utf-8") if env_file.exists() else ""
+    pattern = re.compile(rf"{re.escape(marker_start)}.*?{re.escape(marker_end)}\n?", re.DOTALL)
+    # A Windows checkout path may contain backslashes; use callable
+    # replacement so ``re`` never interprets them as replacement escapes.
+    rendered = (
+        pattern.sub(lambda _match: block, existing)
+        if pattern.search(existing)
+        else block + existing
+    )
+    _atomic_write(env_file, rendered.encode("utf-8"))
+    env_file.chmod(0o600)
+
+    source = shlex.quote(str(env_file))
+    init_line = f"[ -f {source} ] && . {source}  # forjas-account-environment"
+    rc = rc_file.read_text(encoding="utf-8") if rc_file.exists() else ""
+    if "# forjas-account-environment" not in rc:
+        rc_file.parent.mkdir(parents=True, exist_ok=True)
+        rc = rc.rstrip("\n") + ("\n" if rc else "") + init_line + "\n"
+        _atomic_write(rc_file, rc.encode("utf-8"))
+    for name, value in values.items():
+        os.environ[name] = value
+    if shim:
+        current = os.environ.get("PATH", "")
+        if str(shim) not in current.split(os.pathsep):
+            os.environ["PATH"] = str(shim) + os.pathsep + current
+    return str(env_file)
+
+
+def persist_environment(environment: dict[str, Any], shim: Path | None, log) -> dict[str, Any]:
+    values = dict(environment["variables"])
+    if os.name == "nt":
+        _persist_windows(values, dict(environment.get("windows_aliases") or {}), shim)
+        environment["persistence"] = "HKCU\\Environment"
+        environment["shell_init"] = None
+        log("account environment written to HKCU\\Environment")
+    else:
+        env_file = _persist_posix(values, shim)
+        environment["persistence"] = "shell-init"
+        environment["shell_init"] = env_file
+        log(f"account environment written to {env_file}")
+    return environment
+
+
 def register(
     cfg: dict,
     install_root: Path,
@@ -343,6 +502,7 @@ def register(
     mcp_cmd: list[str],
     mcp_name: str | None,
     hosts: dict,
+    environment: dict[str, Any] | None = None,
 ) -> Path:
     doc = {
         "schema": SCHEMA_MANIFEST,
@@ -364,6 +524,8 @@ def register(
         "installed_by": {"agent": "forge_bootstrap", "version": _BOOTSTRAP_VERSION},
         "hosts": hosts,
     }
+    if environment:
+        doc["environment"] = environment
     if shim:
         doc["cli"]["shim"] = str(shim)
     if mcp_name:
@@ -412,9 +574,7 @@ def detect_hosts() -> dict[str, Any]:
 
 
 def smoke(cli: str, venv: Path, version_cmd: list[str], log) -> dict[str, str]:
-    exe = _venv_bin(venv) / (cli + (".exe" if os.name == "nt" else ""))
-    if not exe.exists():
-        exe = _venv_bin(venv) / cli
+    exe = _cli_executable(cli, venv)
     try:
         r = _run([str(exe)] + version_cmd, timeout=30)
         ok = r.returncode == 0
@@ -443,6 +603,11 @@ def run(argv: list[str] | None = None) -> int:
     ap.add_argument("--python", default=None)
     ap.add_argument(
         "--editable", action="store_true", help="pip install -e (dev mode; ties CLI to checkout)"
+    )
+    ap.add_argument(
+        "--persist-env",
+        action="store_true",
+        help="publish account-scoped HOME/VENV/PYTHON/CLI variables",
     )
     ap.add_argument("--extras", default="", help="comma-separated extras")
     ap.add_argument("--no-launcher", action="store_true")
@@ -473,7 +638,7 @@ def run(argv: list[str] | None = None) -> int:
     extras = [e.strip() for e in args.extras.split(",") if e.strip()] or cfg.get("extras", [])
     install_root = (
         Path(args.install_dir) if args.install_dir else forge_home() / INSTALLS / cfg["forge_id"]
-    )
+    ).resolve()
     source = {
         "kind": "git-checkout",
         "path": str(repo),
@@ -529,6 +694,18 @@ def run(argv: list[str] | None = None) -> int:
         shim = stage(
             "write-launcher", lambda: write_launcher(cfg["cli"], venv_dir, args.no_launcher, log)
         )
+        planned_venv = venv_dir or (install_root / ".venv")
+        planned_shim = shim or (shim_dir() / cfg["cli"])
+        environment = environment_contract(cfg, repo, install_root, planned_venv, planned_shim)
+        if args.persist_env:
+            if args.dry_run:
+                report["stages"].append({"stage": "persist-environment", "status": "planned"})
+            else:
+                environment = stage(
+                    "persist-environment",
+                    lambda: persist_environment(environment, shim, log),
+                )
+        report["environment"] = environment
         sm = stage("smoke", lambda: smoke(cfg["cli"], venv_dir, ["--version"], log))
         version = (sm or {}).get("version", cfg.get("version", "0.0.0"))
         stage(
@@ -543,6 +720,7 @@ def run(argv: list[str] | None = None) -> int:
                 cfg.get("mcp_command", []),
                 cfg.get("mcp_server_name"),
                 hosts,
+                environment,
             ),
         )
         if sm and sm.get("status") != "PASS":
