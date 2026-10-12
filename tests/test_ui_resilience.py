@@ -1,3 +1,4 @@
+from forge_doctor_api.ui import screen
 from forge_doctor_api.ui.app import ActionData, Entry, ForgeApp, TextData
 from forge_doctor_api.ui.kit import UIContext
 from forge_doctor_api.ui.screen import Buffer, Column, Theme, table
@@ -51,3 +52,19 @@ def test_buffer_viewport_matrix_stays_bounded():
         buf.draw(0, 0, "left")
         buf.draw(0, width - 5, "right")
         assert len(buf.render()[0]) <= width
+
+
+def test_posix_reader_exits_on_eof_and_normalizes_csi(monkeypatch):
+    if screen.os.name == "nt":
+        return
+    import select as select_module
+    class ClosedStdin:
+        def fileno(self):
+            return 0
+    monkeypatch.setattr(screen.sys, "stdin", ClosedStdin())
+    monkeypatch.setattr(select_module, "select", lambda *args: ([0], [], []))
+    monkeypatch.setattr(screen.os, "read", lambda *_args: b"")
+    assert screen.read_key(0) == "ctrl-d"
+    chunks = iter((b"\x1b", b"[", b"A"))
+    monkeypatch.setattr(screen.os, "read", lambda *_args: next(chunks))
+    assert screen.read_key(0) == "up"
