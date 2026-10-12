@@ -16,13 +16,12 @@ from __future__ import annotations
 
 import io
 import sys
-import traceback
 from collections.abc import Callable
 from contextlib import redirect_stderr, redirect_stdout
 from dataclasses import dataclass, field
 from typing import TextIO
 
-from forge_doctor_api.ui.kit import NonInteractive, UIContext, terminal_size
+from forge_doctor_api.ui.kit import NonInteractive, UIContext, _ellipsize, terminal_size
 from forge_doctor_api.ui.screen import (
     MIN_HEIGHT,
     MIN_WIDTH,
@@ -93,10 +92,9 @@ class _Pane:
 
 
 _HELP = [
-    ("up/dn", "nav"),
+    ("ctrl-k", "commands"),
+    ("up/dn", "navigate"),
     ("enter", "open/run"),
-    ("r", "refresh"),
-    ("/", "filter"),
     ("?", "help"),
     ("q", "back/quit"),
 ]
@@ -145,6 +143,9 @@ class ForgeApp:
         self.pane = _Pane()
         self.filter = ""
         self.filter_active = False
+        self.palette_active = False
+        self.palette_query = ""
+        self.palette_idx = 0
         self.show_help = False
         self._out = out
         self._load()
@@ -209,6 +210,8 @@ class ForgeApp:
         self._render_content(buf, cx, cy, cw, ch)
         if self.show_help:
             self._render_help(buf)
+        if self.palette_active:
+            self._render_palette(buf)
         key_bar(buf, _HELP, theme=th)
 
     def _render_content(self, buf: Buffer, x: int, y: int, w: int, h: int) -> None:
@@ -244,15 +247,11 @@ class ForgeApp:
                 theme=self.theme,
             )
             return
+        action_hint = "running..." if self.pane.executing else "press enter to execute"
         lines = (
             d.lines
             if isinstance(d, TextData)
-            else (
-                [f"action: {d.title}"]
-                + _doc_lines(d)
-                + ["", "press enter to execute"]
-                + self.pane.log
-            )
+            else ([f"action: {d.title}"] + _doc_lines(d) + ["", action_hint] + self.pane.log)
         )
         for i, line in enumerate(lines[self.pane.scroll : self.pane.scroll + h]):
             buf.draw(y + i, x, line)
@@ -265,6 +264,7 @@ class ForgeApp:
             "up / k · down / j      move",
             "enter                  open / run / select",
             "tab                    switch pane",
+            "ctrl-k                 command palette",
             "r                      refresh real data",
             "/                      filter menu",
             "?                      this help",
@@ -279,6 +279,14 @@ class ForgeApp:
     def on_key(self, key: str) -> str | None:
         if key in ("ctrl-c", "ctrl-d"):
             return "quit"
+        if key == "ctrl-k":
+            self.palette_active = not self.palette_active
+            self.palette_query = ""
+            self.palette_idx = 0
+            self.show_help = False
+            return None
+        if self.palette_active:
+            return self._palette_key(key)
         if self.filter_active:
             return self._filter_key(key)
         if self.show_help:
@@ -297,6 +305,57 @@ class ForgeApp:
         if self.focus == "nav":
             return self._nav_key(key)
         return self._content_key(key)
+
+    def _palette_matches(self) -> list[tuple[int, Entry]]:
+        query = self.palette_query.lower().strip()
+        return [
+            (i, entry)
+            for i, entry in enumerate(self.entries)
+            if not query or query in entry.label.lower()
+        ]
+
+    def _render_palette(self, buf: Buffer) -> None:
+        width = min(72, max(24, buf.width - 4))
+        height = min(14, max(6, buf.height - 4))
+        x0, y0 = (buf.width - width) // 2, (buf.height - height) // 2
+        ix, iy, iw, ih = panel(
+            buf, x0, y0, width, height, title="commands", focused=True, theme=self.theme
+        )
+        matches = self._palette_matches()
+        if not matches:
+            buf.draw(iy, ix, "no matching commands", style="dim")
+            return
+        self.palette_idx = min(self.palette_idx, len(matches) - 1)
+        start = min(max(0, self.palette_idx - ih + 1), max(0, len(matches) - ih))
+        for row, (_, entry) in enumerate(matches[start : start + ih]):
+            selected = start + row == self.palette_idx
+            line = f"{'>' if selected else ' '} {_ellipsize(self.ctx, entry.label, iw - 3)}"
+            buf.draw(iy + row, ix, line, style=self.theme.focus if selected else "")
+
+    def _palette_key(self, key: str) -> str | None:
+        matches = self._palette_matches()
+        if key in ("esc", "ctrl-k"):
+            self.palette_active = False
+            self.palette_query = ""
+        elif key in ("up", "k") and matches:
+            self.palette_idx = (self.palette_idx - 1) % len(matches)
+        elif key in ("down", "j") and matches:
+            self.palette_idx = (self.palette_idx + 1) % len(matches)
+        elif key == "enter" and matches:
+            self.nav_idx = matches[self.palette_idx][0]
+            self._load()
+            self.focus = "content"
+            self.palette_active = False
+            self.palette_query = ""
+        elif key == "backspace":
+            self.palette_query = self.palette_query[:-1]
+            self.palette_idx = 0
+        else:
+            char = key[5:] if key.startswith("char:") else key
+            if len(char) == 1 and ord(char) >= 32:
+                self.palette_query += char
+                self.palette_idx = 0
+        return None
 
     def _filter_key(self, key: str) -> str | None:
         if key in ("enter", "tab", "backtab"):
@@ -414,8 +473,9 @@ class ForgeApp:
                     result = d.callable()
             else:
                 result = d.callable()
-        except Exception:
-            self.pane.log += ["", "FAILED:", traceback.format_exc(limit=3)]
+        except Exception as exc:
+            detail = str(exc) or exc.__class__.__name__
+            self.pane.log += ["", f"FAILED: {detail}", "press r to retry"]
             return
         out = sink.getvalue() if capture else ""
         if capture:
