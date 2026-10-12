@@ -298,9 +298,7 @@ def install_package(
         log("installing editable checkout")
     else:
         log("building wheel from checkout")
-        r = _run(
-            pip + ["wheel", str(repo), "-w", str(whl_dir), "--no-deps"], timeout=600
-        )
+        r = _run(pip + ["wheel", str(repo), "-w", str(whl_dir), "--no-deps"], timeout=600)
         if r.returncode == 0 and whl_dir.is_dir():
             wheels = sorted(whl_dir.glob("*.whl"))
             whl = wheels[-1] if wheels else None
@@ -396,16 +394,22 @@ def _posix_env_paths() -> tuple[Path, Path]:
     return env_file, Path.home() / rc_name
 
 
-def _persist_windows(values: dict[str, str], aliases: dict[str, str], shim: Path | None) -> str | None:
+def _persist_windows(
+    values: dict[str, str], aliases: dict[str, str], shim: Path | None
+) -> str | None:
     import winreg
 
     all_values = {**values, **aliases}
     user_path = None
-    with winreg.CreateKeyEx(winreg.HKEY_CURRENT_USER, r"Environment", 0, winreg.KEY_SET_VALUE) as key:
+    with winreg.CreateKeyEx(
+        winreg.HKEY_CURRENT_USER, r"Environment", 0, winreg.KEY_SET_VALUE
+    ) as key:
         for name, value in all_values.items():
             winreg.SetValueEx(key, name, 0, winreg.REG_SZ, value)
         if shim:
-            current = winreg.QueryValueEx(key, "Path")[0] if _registry_has_value(key, "Path") else ""
+            current = (
+                winreg.QueryValueEx(key, "Path")[0] if _registry_has_value(key, "Path") else ""
+            )
             parts = [p for p in current.split(os.pathsep) if p]
             if str(shim) not in parts:
                 parts.append(str(shim))
@@ -446,12 +450,14 @@ def _persist_posix(values: dict[str, str], shim: Path | None) -> str:
     block = "\n".join(lines) + "\n"
     env_file.parent.mkdir(parents=True, exist_ok=True)
     existing = env_file.read_text(encoding="utf-8") if env_file.exists() else ""
-    pattern = re.compile(
-        rf"{re.escape(marker_start)}.*?{re.escape(marker_end)}\n?", re.DOTALL
-    )
+    pattern = re.compile(rf"{re.escape(marker_start)}.*?{re.escape(marker_end)}\n?", re.DOTALL)
     # A Windows checkout path may contain backslashes; use callable
     # replacement so ``re`` never interprets them as replacement escapes.
-    rendered = pattern.sub(lambda _match: block, existing) if pattern.search(existing) else block + existing
+    rendered = (
+        pattern.sub(lambda _match: block, existing)
+        if pattern.search(existing)
+        else block + existing
+    )
     _atomic_write(env_file, rendered.encode("utf-8"))
     env_file.chmod(0o600)
 
