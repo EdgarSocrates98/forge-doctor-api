@@ -449,7 +449,10 @@ def _persist_posix(values: dict[str, str], shim: Path | None) -> str:
     pattern = re.compile(
         rf"{re.escape(marker_start)}.*?{re.escape(marker_end)}\n?", re.DOTALL
     )
-    _atomic_write(env_file, pattern.sub(block, existing).encode("utf-8"))
+    # A Windows checkout path may contain backslashes; use callable
+    # replacement so ``re`` never interprets them as replacement escapes.
+    rendered = pattern.sub(lambda _match: block, existing) if pattern.search(existing) else block + existing
+    _atomic_write(env_file, rendered.encode("utf-8"))
     env_file.chmod(0o600)
 
     source = shlex.quote(str(env_file))
