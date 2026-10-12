@@ -56,6 +56,7 @@ except Exception:  # checkout without install — read pyproject
 FORGE_ID = "forge-doctor-api"
 STATE_DIR = ".forge-doctor-api/install"
 PROFILES = ("minimal", "recommended", "full")
+GATEWAY_PROFILES = ("economy", "balanced", "deep")
 SCOPES = ("project", "workspace", "user")
 HOSTS = ("claude", "devin", "codex", "copilot")
 
@@ -91,16 +92,19 @@ def _ctx(args: argparse.Namespace, hosts: tuple[str, ...]) -> kit.InstallContext
     spec = _spec()
     target = kit.resolve_scope(spec, args.scope, Path.cwd(),
                                Path(args.root) if args.root else None)
+    gateway_profile = getattr(args, "gateway_profile", "balanced")
+    options = kit.component_options(
+        getattr(args, "profile", "recommended"),
+        tuple(c.strip() for c in args.components.split(",") if c.strip())
+        if getattr(args, "components", None) else None,
+    )
+    options["execution_profile"] = gateway_profile
     return kit.InstallContext(
         spec=spec, scope=args.scope, root=target,
         state_dir=kit.state_dir_for(spec, args.scope, target),
         profile=getattr(args, "profile", "recommended"),
         hosts=hosts, dry_run=getattr(args, "dry_run", False),
-        options=kit.component_options(
-            getattr(args, "profile", "recommended"),
-            tuple(c.strip() for c in args.components.split(",") if c.strip())
-            if getattr(args, "components", None) else None,
-        ))
+        options=options)
 
 
 def _hosts(host: str) -> tuple[str, ...]:
@@ -196,6 +200,11 @@ def _receipt(operation: str, checks: list[dict[str, Any]],
 def cmd_install(a: argparse.Namespace) -> int:
     if a.profile not in PROFILES:
         raise kit.InstallError(kit.E_PROFILE, f"profile {a.profile!r}")
+    if a.gateway_profile not in GATEWAY_PROFILES:
+        raise kit.InstallError(
+            kit.E_PROFILE,
+            f"gateway_profile {a.gateway_profile!r}; {GATEWAY_PROFILES}",
+        )
     approved = a.yes
     if not a.yes and not a.dry_run and sys.stdin.isatty() and sys.stdout.isatty():
         # Interactive approval: render the real plan, confirm once,
@@ -342,6 +351,9 @@ def main(argv: list[str] | None = None) -> int:
     _base(p)
     p.add_argument("--host", default="all")
     p.add_argument("--profile", choices=PROFILES, default="recommended")
+    p.add_argument("--gateway-profile", choices=GATEWAY_PROFILES,
+                   default="balanced", dest="gateway_profile",
+                   help="execution profile: economy|balanced|deep")
     p.add_argument("--components", default=None,
                    help="optional components csv: skills,agents,mcp,tui,graph-studio")
     p.add_argument("--yes", "-y", action="store_true")
