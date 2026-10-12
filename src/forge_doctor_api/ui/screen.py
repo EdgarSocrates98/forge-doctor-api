@@ -127,7 +127,8 @@ def _clip(text: str, width: int) -> str:
     """Hard cell-width clip — canvas chrome never gets an ellipsis marker."""
     if width <= 0:
         return ""
-    out, used, pos = [], 0, 0
+    out: list[str] = []
+    used, pos = 0, 0
     for match in _SGR_RE.finditer(text):
         chunk = text[pos : match.start()]
         for ch in chunk:
