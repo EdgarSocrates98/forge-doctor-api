@@ -115,14 +115,30 @@ def state_icon(ctx: UIContext, state: str) -> str:
 
 @dataclass(kw_only=True)
 class _Span:
+    x: int
     text: str
     style: str = ""  # ANSI SGR code, "" = plain
 
 
+_SGR_RE = re.compile(r"\x1b\[([0-9;]*)m")
+
+
 def _clip(text: str, width: int) -> str:
     """Hard cell-width clip — canvas chrome never gets an ellipsis marker."""
-    out, used = [], 0
-    for ch in text:
+    if width <= 0:
+        return ""
+    out, used, pos = [], 0, 0
+    for match in _SGR_RE.finditer(text):
+        chunk = text[pos : match.start()]
+        for ch in chunk:
+            cw = cell_width(ch)
+            if used + cw > width:
+                return "".join(out) + "\x1b[0m" if out else ""
+            out.append(ch)
+            used += cw
+        out.append(match.group(0))
+        pos = match.end()
+    for ch in text[pos:]:
         cw = cell_width(ch)
         if used + cw > width:
             break
@@ -148,7 +164,7 @@ class Buffer:
         clipped = _clip(text, self.width - x)
         if not clipped:
             return
-        self._rows[y].append(_Span(text=" " * x + clipped, style=style))
+        self._rows[y].append(_Span(x=x, text=clipped, style=style))
 
     def hline(self, y: int, x: int = 0, w: int | None = None, *, style: str = "") -> None:
         b = box(self.ctx)
@@ -161,9 +177,57 @@ class Buffer:
             if not spans:
                 out.append("")
                 continue
-            # later draws overlay earlier: sort by x implicit in draw order
-            line = "".join(_c(self.ctx, s.style, s.text) if s.style else s.text for s in spans)
-            out.append(line[: self.width * 4])  # ansi-safe bound; clips at SGR
+            cells = [" "] * self.width
+            styles = [""] * self.width
+
+            def paint(chunk: str, cursor: int, style: str) -> int:
+                for ch in chunk:
+                    cw = cell_width(ch)
+                    if cw == 0:
+                        if cursor and cells[cursor - 1] != "":
+                            cells[cursor - 1] += ch
+                        continue
+                    if cursor >= self.width or cursor + cw > self.width:
+                        break
+                    cells[cursor] = ch
+                    styles[cursor] = style
+                    for offset in range(1, cw):
+                        cells[cursor + offset] = ""
+                        styles[cursor + offset] = style
+                    cursor += cw
+                return cursor
+
+            for span in spans:
+                cursor = max(0, span.x)
+                active = span.style
+                pos = 0
+                for match in _SGR_RE.finditer(span.text):
+                    cursor = paint(span.text[pos : match.start()], cursor, active)
+                    code = match.group(1)
+                    active = "" if code == "0" else code
+                    pos = match.end()
+                paint(span.text[pos:], cursor, active)
+
+            rendered: list[str] = []
+            current_style = ""
+            segment: list[str] = []
+
+            def flush() -> None:
+                if not segment:
+                    return
+                text = "".join(segment)
+                rendered.append(_c(self.ctx, current_style, text) if current_style else text)
+                segment.clear()
+
+            for ch, style in zip(cells, styles, strict=True):
+                if ch == "":
+                    continue
+                if style != current_style:
+                    flush()
+                    current_style = style
+                segment.append(ch)
+            flush()
+            out.append("".join(rendered))
         return out
 
 

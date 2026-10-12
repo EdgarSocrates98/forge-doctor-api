@@ -43,3 +43,11 @@ def test_empty_menu_renders_empty_state():
     buf = Buffer(_ctx(), 60, 16)
     app.render(buf)
     assert "no menu entries" in "\n".join(buf.render())
+
+
+def test_buffer_viewport_matrix_stays_bounded():
+    for width, height in ((60, 16), (80, 24), (100, 30), (120, 40), (160, 50)):
+        buf = Buffer(_ctx(width, height), width, height)
+        buf.draw(0, 0, "left")
+        buf.draw(0, width - 5, "right")
+        assert len(buf.render()[0]) <= width
