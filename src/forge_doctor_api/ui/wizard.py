@@ -269,7 +269,7 @@ def run_setup_wizard(
         if exc.name == "theforge" or (exc.name or "").startswith("theforge."):
             print(
                 "family onboarding unavailable: install The Forge separately; "
-                "native Forge commands remain available"
+                "native Doctor API commands remain available"
             )
             return 2
         raise
