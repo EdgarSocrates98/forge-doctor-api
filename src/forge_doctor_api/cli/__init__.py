@@ -790,12 +790,27 @@ def graph(
         bool, typer.Option("--no-browser", help="Serve without opening a browser (SSH).")
     ] = False,
     port: Annotated[int, typer.Option("--port", help="Port to bind (default ephemeral).")] = 0,
+    out: Annotated[
+        Path | None,
+        typer.Option(
+            "--out",
+            help=(
+                "Write canonical ServiceGraph JSON. Defaults to "
+                "TARGET/.forge-doctor-api/graph/service-graph.json."
+            ),
+        ),
+    ] = None,
 ) -> None:
     """Show the service graph built from contract + implementation + client evidence (§161)."""
     path = Path(target).resolve()
     if not path.is_dir():
         _stderr.print(f"cannot read path: {target}")
         raise typer.Exit(code=2)
+
+    service_graph = build_service_graph(path)
+    graph_out = (out or path / ".forge-doctor-api" / "graph" / "service-graph.json").resolve()
+    _write_graph_json(service_graph.to_dict(), graph_out)
+
     if view or ui:
         from forge_doctor_api.graphview import build_view
 
@@ -823,7 +838,6 @@ def graph(
             )
         typer.echo(json.dumps(gv.to_dict(), indent=2, sort_keys=True))
         return
-    service_graph = build_service_graph(path)
     if json_out:
         typer.echo(json.dumps(service_graph.to_dict(), indent=2, sort_keys=True))
         return
@@ -839,6 +853,18 @@ def graph(
     _console.print("relationships:")
     for kind in sorted(rel_kinds):
         _console.print(f"  {kind}: {rel_kinds[kind]}")
+    _stderr.print(f"graph written: {graph_out}")
+
+
+def _write_graph_json(payload: dict[str, Any], output: Path) -> None:
+    """Persist graph atomically so readers never observe a partial snapshot."""
+    output.parent.mkdir(parents=True, exist_ok=True)
+    temporary = output.with_name(f".{output.name}.tmp")
+    temporary.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    temporary.replace(output)
 
 
 def _merge_graph(target_graph: ServiceGraph, other: ServiceGraph) -> None:

@@ -117,12 +117,16 @@ and comment changes (§180). Used by `BackwardCompatibilityBaseline`.
 
 
 ```text
-forge-doctor-api graph TARGET [--json] [--view] [--ui] [--no-browser] [--port N]
+forge-doctor-api graph TARGET [--json] [--out FILE] [--view] [--ui] [--no-browser] [--port N]
 ```
 
 Merged service graph: contract entities, discovered routes, and client
 call sites in one `ServiceGraph`. Console prints entity/edge counts;
 `--json` emits the graph.
+
+Every graph run also records the canonical `ServiceGraph` JSON. The default
+location is `TARGET/.forge-doctor-api/graph/service-graph.json`; `--out` selects
+another path. The write is atomic.
 
 - `--view` — emit the `ForgeGraphView/v1` projection (Graph Studio
   producer contract) instead of the console summary.

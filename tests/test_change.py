@@ -474,6 +474,9 @@ def test_cli_graph(tmp_path: Path) -> None:
     result = runner.invoke(app, ["graph", str(tmp_path / "proj")])
     assert result.exit_code == 0
     assert "entities:" in result.output
+    graph_path = tmp_path / "proj" / ".forge-doctor-api" / "graph" / "service-graph.json"
+    assert graph_path.is_file()
+    assert json.loads(graph_path.read_text(encoding="utf-8"))["entities"]
     result = runner.invoke(app, ["graph", str(tmp_path / "proj"), "--json"])
     payload = json.loads(result.output)
     assert payload["entities"]
