@@ -16,6 +16,7 @@ import importlib
 import json
 import shutil
 import sys
+from pathlib import Path
 from typing import Any
 
 from forge_doctor_api.ui import i18n
@@ -47,6 +48,28 @@ _SCOPE_LABELS = {
     "workspace": "Entire workspace",
     "user": "My user account",
 }
+
+
+def _has_vcs_root(start: Path) -> bool:
+    """Return whether current directory belongs to a supported project root."""
+    return any(
+        (candidate / ".git").exists() or (candidate / "forge.json").is_file()
+        for candidate in (start, *start.parents)
+    )
+
+
+def _scope_choices(ctx: UIContext) -> list[str]:
+    """Hide repository-only choice when operator is in a fresh directory."""
+    scopes = ["project", "workspace", "user"]
+    if not _has_vcs_root(Path.cwd()):
+        print(_c(
+            ctx,
+            "33",
+            "  No repository detected; choose Entire workspace to use this directory "
+            "or My user account.",
+        ))
+        scopes.remove("project")
+    return scopes
 
 
 def env_check_rows() -> list[tuple[str, str]]:
@@ -97,7 +120,7 @@ def run_wizard(
         print()
 
     # --- scope ---------------------------------------------------------------
-    scopes = ["project", "workspace", "user"]
+    scopes = _scope_choices(ctx)
     idx = select(
         i18n.t("install_scope_q", ctx.language),
         [_SCOPE_LABELS[s] for s in scopes],

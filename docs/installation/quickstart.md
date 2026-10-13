@@ -19,6 +19,9 @@ python <forge-doctor-api checkout>/scripts/forge_install.py install --yes --root
 Pronto. Abra seu AI host (Devin, Claude, Codex ou Copilot) — as skills do
 forge-doctor-api já estão instaladas.
 
+Em diretório vazio, o onboarding usa `Entire workspace` (ou `My user account`)
+e não oferece `Current repository`, que exige VCS.
+
 ## Verificar
 
 ```bash

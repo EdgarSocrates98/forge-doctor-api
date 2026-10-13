@@ -1,4 +1,6 @@
 import sys
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from forge_doctor_api.ui import screen, tui, wizard
 from forge_doctor_api.ui.app import ActionData, Entry, ForgeApp, TextData
@@ -21,6 +23,15 @@ def _ctx(width=60, height=16):
         height=height,
         ansi=False,
     )
+
+
+def test_fresh_directory_hides_repository_scope(monkeypatch, capsys):
+    original = Path.cwd()
+    with TemporaryDirectory() as fresh:
+        monkeypatch.chdir(fresh)
+        assert wizard._scope_choices(_ctx()) == ["workspace", "user"]
+        monkeypatch.chdir(original)
+    assert "No repository detected" in capsys.readouterr().out
 
 
 def test_narrow_table_keeps_flexible_column_visible():
