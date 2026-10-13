@@ -1,0 +1,6 @@
+source_repo: "https://github.com/OAI/learn.openapis.org"
+upstream_path: "examples/v3.0/callback-example.yaml"
+upstream_ref: "bbb743ed3b7c5ed76b6e6ba9b302af38f3956c44"
+license: "CC-BY-4.0"
+sha256: "c9695b830c457df0b2f7e62f91b270be5628f239947926e279ccca895b950c0f"
+extracted_at_note: "verbatim excerpt fetched at the pinned upstream ref"

@@ -1,0 +1,11 @@
+_format_version: "3.0"
+services:
+  - name: orders
+    url: http://orders.internal:8080
+routes:
+  - name: orders-get
+    paths: [/orders]
+    service: orders
+plugins:
+  - name: rate-limiting
+    config: {minute: 100}

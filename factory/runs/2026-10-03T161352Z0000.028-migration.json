@@ -1,0 +1,15 @@
+{
+  "agent": "codex",
+  "command": [
+    "codex",
+    "exec",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\028-migration.implement.codex.md)"
+  ],
+  "created_at": "2026-10-03T16:13:52+00:00",
+  "id": "028-migration",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\028-migration.implement.codex.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\028-migration.md",
+  "spec_sha256": "309b312cb320740428b07413ffbd9109cf6ea5b0c26edc2748826d5d452ee36f",
+  "status": "planned",
+  "title": "Migration intelligence \u2014 portability classification and path analysis"
+}

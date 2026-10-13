@@ -1,0 +1,10 @@
+# §99 golden repo: a clean, attributed FastAPI service.
+run: [openapi, security, reliability]
+expected_entities:
+  - getUser
+  - createUser
+expected_findings: []
+forbidden_findings:
+  - OAS*        # clean contract — no OpenAPI check findings
+forbidden_entities: []
+expected_clients: []

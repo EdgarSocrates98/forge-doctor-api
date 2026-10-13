@@ -1,0 +1,14 @@
+# §98 rest domain: implementation-side route evidence (no contract).
+# Route extraction is real evidence; nothing to flag.
+run: [openapi]
+expected_entities:
+  - endpoint:GET /items/{item_id}
+  - endpoint:POST /items
+  - operation:app.get_item
+expected_edges:
+  - EXPOSES
+expected_findings: []
+forbidden_findings:
+  - OAS*
+forbidden_entities:
+  - endpoint:DELETE

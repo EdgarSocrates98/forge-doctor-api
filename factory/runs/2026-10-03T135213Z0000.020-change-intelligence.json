@@ -1,0 +1,15 @@
+{
+  "agent": "codex",
+  "command": [
+    "codex",
+    "exec",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\020-change-intelligence.implement.codex.md)"
+  ],
+  "created_at": "2026-10-03T13:52:13+00:00",
+  "id": "020-change-intelligence",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\020-change-intelligence.implement.codex.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\020-change-intelligence.md",
+  "spec_sha256": "82358503f2718bbd5f5073fae1f7a2ad0f782d890995146e8df09ce58b6e496d",
+  "status": "planned",
+  "title": "Change intelligence \u2014 semantic change events, PR intel, blast radius"
+}

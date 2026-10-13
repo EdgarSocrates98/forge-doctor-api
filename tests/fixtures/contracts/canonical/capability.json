@@ -1,0 +1,9 @@
+{
+  "contract_version": "forge-contracts/1",
+  "id": "openapi-contract",
+  "domain": "api",
+  "status": "supported",
+  "confidence": "high",
+  "evidence_refs": ["api.yaml:L1"],
+  "x-forge-api": {"surface": "contract"}
+}

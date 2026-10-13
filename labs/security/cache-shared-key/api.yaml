@@ -1,0 +1,37 @@
+openapi: "3.0.3"
+info:
+  title: Pets API
+  version: "1.0"
+  x-owner: pets-team
+paths:
+  /pets:
+    get:
+      operationId: listPets
+      summary: list pets
+      tags: [pets]
+      security:
+        - apiKey: []
+      responses:
+        '200':
+          description: the pets
+          headers:
+            Cache-Control:
+              schema: {type: string}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items: {type: array}
+    post:
+      operationId: createPet
+      summary: create a pet
+      tags: [pets]
+      security:
+        - apiKey: []
+      responses:
+        '201':
+          description: created
+components:
+  securitySchemes:
+    apiKey: {type: apiKey, in: header, name: X-Key}

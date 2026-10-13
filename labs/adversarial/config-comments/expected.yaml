@@ -1,0 +1,7 @@
+# spec 079 adversarial: comments and string literals that *look like*
+# reliability config must not create policies or findings.
+run: [reliability]
+expected_findings: []
+forbidden_findings:
+  - RELAPI*
+  - APIREL*

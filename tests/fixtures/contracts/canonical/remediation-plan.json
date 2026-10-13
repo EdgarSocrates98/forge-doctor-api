@@ -1,0 +1,11 @@
+{
+  "contract_version": "forge-contracts/1",
+  "id": "fix-oas009-pets",
+  "check_id": "OAS009",
+  "problem": "GET /pets lacks a description",
+  "targets": ["api.yaml"],
+  "actions": ["add description to get /pets"],
+  "risks": ["none"],
+  "requires_approval": false,
+  "x-note": "canonical fixture marker"
+}

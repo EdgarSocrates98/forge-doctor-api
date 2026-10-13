@@ -1,0 +1,45 @@
+{
+  "artifacts": [
+    {
+      "filename": "forge_doctor_api-0.2.0-py3-none-any.whl",
+      "sha256": "8a3d393d15fc9a086e3c7b7ddc23a7b070f28bfe792d16fb6028391a2d0bf0b5"
+    },
+    {
+      "filename": "forge_doctor_api-0.2.0.tar.gz",
+      "sha256": "e0f247a7b1653b0dc1b5fd19cd8e0dbaab554deda3bcb7287b9c9e7721fc9adb"
+    },
+    {
+      "filename": "SHA256SUMS",
+      "sha256": "7a6d34eceb71888a6db817b2ba0f11ac5855cc24c6a7b69d4587f03a6396d9a9"
+    }
+  ],
+  "cli_command_count": 28,
+  "contract_family": "forge-contracts",
+  "contract_version": "1",
+  "dirty_tree": true,
+  "forge_protocol_version": 2,
+  "git_head": "ee4e608da635fa10dc13c195397ecd3e14339953",
+  "manifest_version": 1,
+  "mcp_tool_count": 17,
+  "package": "forge-doctor-api",
+  "python_classified": [
+    "3.11",
+    "3.12",
+    "3.13"
+  ],
+  "python_requires": ">=3.11",
+  "rc": true,
+  "schema_ids": [
+    "capability",
+    "diagnostic-manifest",
+    "entity",
+    "evidence",
+    "finding",
+    "handoff",
+    "migration-plan",
+    "relationship",
+    "remediation-plan",
+    "unknown-fact"
+  ],
+  "version": "0.2.0"
+}

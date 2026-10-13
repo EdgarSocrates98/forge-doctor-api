@@ -1,0 +1,41 @@
+# §77 gateway->gateway migration: canonical capability -> per-platform name.
+pack: gateway-capability-map
+domain: gateways
+edition: "2026.10"
+maturity: detection
+entries:
+  canonical:
+    fields:
+      map:
+        rate-limiting:
+          aws-api-gateway: throttling
+          azure-apim: rate-limit
+          kong: rate-limiting
+          nginx: rate-limiting
+          envoy: rate-limiting
+        cors:
+          aws-api-gateway: cors
+          azure-apim: cors
+          kong: cors
+          nginx: cors
+          envoy: cors
+        auth:
+          aws-api-gateway: authorizers
+          azure-apim: validate-jwt
+          kong: auth-plugins
+          nginx: auth-jwt
+          envoy: ext-authz
+        mtls:
+          aws-api-gateway: mutual-tls
+          azure-apim: client-certificates
+          kong: mtls-auth
+          nginx: ssl-verify-client
+          envoy: downstream-tls
+        request-validation:
+          aws-api-gateway: request-validation
+          azure-apim: validation-policies
+          envoy: request-validation
+    provenance:
+      source: https://docs.konghq.com/ + https://docs.aws.amazon.com/apigateway/ + https://learn.microsoft.com/azure/api-management/ + https://nginx.org/ + https://www.envoyproxy.io/
+      source_version: "2026"
+      last_verified: "2026-09-30"

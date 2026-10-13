@@ -1,0 +1,6 @@
+source_repo: https://github.com/grpc/grpc
+upstream_path: examples/protos/route_guide.proto
+upstream_ref: 093085cc925e0d5aa6e92bc29e917f9bdc00add2
+license: Apache-2.0
+sha256: 5379accb8d9156b3a992f6d7a1633441f80ec849a8fbce22c1b263677942fbcf
+extracted_at_note: verbatim excerpt fetched at the pinned upstream ref

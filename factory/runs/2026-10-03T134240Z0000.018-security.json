@@ -1,0 +1,15 @@
+{
+  "agent": "codex",
+  "command": [
+    "codex",
+    "exec",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\018-security.implement.codex.md)"
+  ],
+  "created_at": "2026-10-03T13:42:40+00:00",
+  "id": "018-security",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\018-security.implement.codex.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\018-security.md",
+  "spec_sha256": "b53da152ae47829584624ed596e1235b52ac6e472a3edc9a0e442bdff605f86f",
+  "status": "planned",
+  "title": "Security intelligence \u2014 OWASP API Top 10 passive analysis"
+}

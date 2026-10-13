@@ -1,0 +1,9 @@
+# duplicate services: same title/ops in two dirs — dedupe, flag dup opId.
+provenance: {source: handwritten-duplicate-svc-fixture, retrieved: "2026-10"}
+run: [openapi]
+expected_entities:
+  - listInvoices
+expected_findings:
+  - OAS003   # duplicate operationId across documents
+  - OAS010
+  - OAS020

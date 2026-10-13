@@ -1,0 +1,17 @@
+# Express depth: auth module + authenticate() call, registry DI
+# (app.set / req.app.get / locals), err-first middleware + its
+# registration + an inline error handler are positive; no validator
+# module is imported so validation must surface as UNKNOWN.
+run: [frameworks]
+expected_entities:
+  - "capability:express:auth-module:passport"
+  - "capability:express:auth-middleware:passport.authenticate()"
+  - "capability:express:error-middleware:errHandler(err,...)"
+  - "capability:express:error-middleware-registration:errHandler"
+  - "capability:express:inline-error-middleware"
+  - 'capability:express:app-registry:app.set("db")'
+  - "capability:express:app-registry:locals.cache"
+  - 'capability:express:registry-read:req.app.get("db")'
+expected_issues:
+  - "express validation:static validation evidence"
+  - "express schemas:static schemas evidence"

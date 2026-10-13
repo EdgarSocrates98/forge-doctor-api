@@ -1,0 +1,6 @@
+# Corpus slices are provenance-pinned: sha256 records cover canonical
+# LF bytes, so checkouts must materialize them with LF endings on every
+# platform.
+tests/fixtures/oss/**      text eol=lf
+tests/fixtures/oss-negative/** text eol=lf
+labs/**                    text eol=lf

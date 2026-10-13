@@ -1,0 +1,3 @@
+grpc:
+  timeout: "2s"
+  healthCheck: true

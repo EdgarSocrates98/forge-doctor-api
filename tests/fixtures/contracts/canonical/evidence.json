@@ -1,0 +1,8 @@
+{
+  "contract_version": "forge-contracts/1",
+  "ref": "api.yaml:L42",
+  "kind": "static",
+  "source": "forge-doctor-api",
+  "detail": "GET /pets operationId listPets",
+  "x-note": "canonical fixture marker"
+}

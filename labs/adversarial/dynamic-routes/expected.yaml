@@ -1,0 +1,7 @@
+# §100: dynamic routes — FastAPI attribution is fine (real markers),
+# but the dynamic path must not fabricate a route entity.
+forbidden_entities:
+  - /computed
+  - ROUTE
+expected_findings: []
+forbidden_findings: []

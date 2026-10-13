@@ -1,0 +1,13 @@
+User:
+  type: object
+  x-owner: identity-team
+  properties:
+    friend:
+      $ref: '#/User'
+    group:
+      $ref: group.yaml#/Group
+Node:
+  type: object
+  properties:
+    next:
+      $ref: '#/Node'

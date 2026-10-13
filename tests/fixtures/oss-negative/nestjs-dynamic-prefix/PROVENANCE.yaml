@@ -1,0 +1,7 @@
+origin: 'authored adversarial case derived from nestjs/nest sample/01-cats-app (MIT
+  @ 35142c3eca8edaaf6abc5984d915da2fbd458aa2): @Controller path bound to an env-driven
+  constant instead of a literal'
+domain: nestjs
+sha256: 63337e6d960cd45da5fb1dd2bfa7bf805eb310b8ba1fbdec53cc153abf130491
+extracted_at_note: authored adversarial slice; provenance documents the real upstream
+  it imitates

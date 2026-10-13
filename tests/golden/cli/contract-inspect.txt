@@ -1,0 +1,4 @@
+Usage: forge-doctor-api contract inspect [OPTIONS] {target} Inspect an API contract: documents,
+operations, schemas, servers, refs. Metadata surface only — never emits schema bodies or payloads.
+Arguments * target <str> Contract file or directory. [required] Options --json JSON output. --help
+Show this message and exit.

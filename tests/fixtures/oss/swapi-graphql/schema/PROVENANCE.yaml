@@ -1,0 +1,6 @@
+source_repo: https://github.com/graphql/swapi-graphql
+upstream_path: schema.graphql
+upstream_ref: 8c0bf5868f11fe84942548180751fceeb36bd606
+license: MIT
+sha256: ebc4d09b21e2aec2735d6f0d3c812fc017cd49a44900dd3ae34f49f6f8c25133
+extracted_at_note: verbatim excerpt fetched at the pinned upstream ref

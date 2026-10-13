@@ -1,0 +1,6 @@
+source_repo: "https://github.com/OAI/learn.openapis.org"
+upstream_path: "examples/v3.0/api-with-examples.yaml"
+upstream_ref: "bbb743ed3b7c5ed76b6e6ba9b302af38f3956c44"
+license: "CC-BY-4.0"
+sha256: "2b8d39097f8d0800b3d9b94f784348ea6d046a82c2b78e83b737874c938e63b9"
+extracted_at_note: "verbatim excerpt fetched at the pinned upstream ref"

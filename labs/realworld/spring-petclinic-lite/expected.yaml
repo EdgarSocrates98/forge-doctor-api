@@ -1,0 +1,7 @@
+# spring-petclinic-style controller: class prefix + method routes.
+provenance: {source: spring-petclinic-derived-minimal, retrieved: "2026-10"}
+run: [openapi]
+expected_entities:
+  - /pets/{petId}
+  - /pets/{petId}/edit
+  - /pets/owners/{ownerId}

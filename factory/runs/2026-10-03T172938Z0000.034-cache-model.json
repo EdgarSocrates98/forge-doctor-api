@@ -1,0 +1,15 @@
+{
+  "agent": "claude",
+  "command": [
+    "claude",
+    "-p",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\034-cache-model.implement.claude.md)"
+  ],
+  "created_at": "2026-10-03T17:29:38+00:00",
+  "id": "034-cache-model",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\034-cache-model.implement.claude.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\034-cache-model.md",
+  "spec_sha256": "737cbce25c6baf19a4a4648730ff8f379214b883a348fa47d021d073aa17d8c5",
+  "status": "planned",
+  "title": "CachePolicy model, layer taxonomy, invalidation-risk candidates"
+}

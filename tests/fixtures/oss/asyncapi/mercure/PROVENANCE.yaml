@@ -1,0 +1,6 @@
+source_repo: https://github.com/asyncapi/spec
+upstream_path: examples/mercure-asyncapi.yml
+upstream_ref: 1dd65fd2c1ed13f06365c1e870c61cdc82d8a981
+license: Apache-2.0
+sha256: 0dd4bea20c823a166400e31af220caca1507e1bd9f4c6350a9252bf1e63eb7d2
+extracted_at_note: verbatim excerpt fetched at the pinned upstream ref

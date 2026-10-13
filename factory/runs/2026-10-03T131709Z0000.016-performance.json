@@ -1,0 +1,15 @@
+{
+  "agent": "codex",
+  "command": [
+    "codex",
+    "exec",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\016-performance.implement.codex.md)"
+  ],
+  "created_at": "2026-10-03T13:17:09+00:00",
+  "id": "016-performance",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\016-performance.implement.codex.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\016-performance.md",
+  "spec_sha256": "62f44f83b9a81cd5e095dd1df48cf002bb701b64ae29737b9dcb0391cabda157",
+  "status": "planned",
+  "title": "Performance intelligence \u2014 baselines, regressions, capacity, experiments"
+}

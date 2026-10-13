@@ -1,0 +1,30 @@
+openapi: "3.0.3"
+info:
+  title: Payments API
+  version: "1.0"
+  x-owner: payments-team
+paths:
+  /charges:
+    post:
+      operationId: createCharge
+      summary: create a charge - no idempotency evidence
+      tags: [payments]
+      security:
+        - apiKey: []
+      responses:
+        '201':
+          description: created
+  /refunds:
+    post:
+      operationId: createRefund
+      summary: create a refund - declares an idempotency key
+      tags: [payments]
+      security:
+        - apiKey: []
+      x-idempotency-key: Idempotency-Key
+      responses:
+        '201':
+          description: created
+components:
+  securitySchemes:
+    apiKey: {type: apiKey, in: header, name: X-Key}

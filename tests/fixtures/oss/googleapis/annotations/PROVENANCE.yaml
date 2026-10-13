@@ -1,0 +1,6 @@
+source_repo: "https://github.com/googleapis/googleapis"
+upstream_path: "google/api/annotations.proto"
+upstream_ref: "03a91044136a014466d4293eb1fe91f2b02075d2"
+license: "Apache-2.0"
+sha256: "e79ea741cb605a65e78ca322174764a4af9fde1962c1631e12b84c4934ba9a6c"
+extracted_at_note: "verbatim excerpt fetched at the pinned upstream ref"

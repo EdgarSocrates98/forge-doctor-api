@@ -1,0 +1,9 @@
+{
+  "contract_version": "forge-contracts/1",
+  "subject": "client:python:orders",
+  "kind": "evidence",
+  "reason": "client calls resolved but response models unread",
+  "source": "forge-doctor-api",
+  "detail": "parsed via ast; dynamic base_url unresolvable statically",
+  "x-forge-api": {"impact": "potential"}
+}

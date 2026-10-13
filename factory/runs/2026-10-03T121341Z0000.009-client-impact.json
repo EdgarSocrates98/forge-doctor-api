@@ -1,0 +1,15 @@
+{
+  "agent": "codex",
+  "command": [
+    "codex",
+    "exec",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\009-client-impact.implement.codex.md)"
+  ],
+  "created_at": "2026-10-03T12:13:41+00:00",
+  "id": "009-client-impact",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\009-client-impact.implement.codex.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\009-client-impact.md",
+  "spec_sha256": "b78219d8a97667eef02e555c718b043d3b2d207b5a3bda7e4ab242da7f2101c1",
+  "status": "planned",
+  "title": "ApiClientModel and basic client impact analysis"
+}

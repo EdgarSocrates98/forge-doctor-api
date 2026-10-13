@@ -1,0 +1,8 @@
+_format_version: "3.0"
+
+services:
+  - name: orphan-svc
+    host: backend.internal
+
+consumers:
+  - username: nightingale

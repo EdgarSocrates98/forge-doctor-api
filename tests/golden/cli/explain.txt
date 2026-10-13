@@ -1,0 +1,4 @@
+Usage: forge-doctor-api explain [OPTIONS] {target} {finding} §166 render the evidence chain + rule
+rationale for a finding. Arguments * target <str> Directory the finding came from. [required] *
+finding <str> Finding id or subject token to explain. [required] Options --json JSON output. --help
+Show this message and exit.

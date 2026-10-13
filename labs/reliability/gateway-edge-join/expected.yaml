@@ -1,0 +1,19 @@
+# spec 079: Kong `retries: 3` on the declared route target plus the
+# service's own retry_policy -> edge join kong->payments-service with
+# the computed amplification bound (3 x 3 = 9), per-hop evidence named.
+run: [gateway, reliability]
+hops: [kong, payments-service]
+expected_findings:
+  - APIREL001   # edge amplification bound 9 attempts
+  - RELAPI001   # flat amplification across declared scopes
+  - RELAPI002   # retried scopes without idempotency evidence
+  - RELAPI004   # timeouts without deadline-propagation evidence
+  - RELAPI005   # retries with no circuit breaker
+  - RELAPI006   # no health-check evidence
+  - RELAPI007   # no graceful-shutdown evidence
+expected_description_contains:
+  - "9 attempts"
+  - kong.yaml
+  - app.yaml
+forbidden_description_contains:
+  - confirmed

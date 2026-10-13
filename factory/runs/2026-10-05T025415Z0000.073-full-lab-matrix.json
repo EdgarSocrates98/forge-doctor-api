@@ -1,0 +1,15 @@
+{
+  "agent": "claude",
+  "command": [
+    "claude",
+    "-p",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\073-full-lab-matrix.implement.claude.md)"
+  ],
+  "created_at": "2026-10-05T02:54:15+00:00",
+  "id": "073-full-lab-matrix",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\073-full-lab-matrix.implement.claude.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\073-full-lab-matrix.md",
+  "spec_sha256": "6c556863b7c7be9c3aa27f47ab5e91890e6ed44fe07d74be4d191aa71c931b02",
+  "status": "planned",
+  "title": "Full-lab capability matrix \u2014 supported/unsupported/skipped metrics"
+}

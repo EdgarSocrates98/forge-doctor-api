@@ -1,0 +1,10 @@
+# §103 real-world corpus: monorepo — two services, two contracts.
+provenance: {source: handwritten-monorepo-fixture, retrieved: "2026-10"}
+run: [openapi]
+expected_entities:
+  - listOrders
+  - getUser
+expected_findings:
+  - OAS010   # public API without security requirement
+  - OAS013   # /orders/{id} + /users/{id} share templated shape
+  - OAS020   # no tags/domain ownership evidence

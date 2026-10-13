@@ -1,0 +1,6 @@
+origin: "authored adversarial case in decK declarative format (Kong/deck @ 94ccecd61a5ddea4040e0082cd09170a9b107a5a,\
+  \ Apache-2.0): services with no routes and a bare consumer \u2014 partial config"
+domain: kong
+sha256: 8fc1ce090ee95829353a4174ec2ef6e6a85be6a574a375ed5838347eddbcdae5
+extracted_at_note: authored adversarial slice; provenance documents the real upstream
+  it imitates

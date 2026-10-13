@@ -1,0 +1,7 @@
+# Random Kubernetes manifest that happens to be named openapi.yml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openapi
+data:
+  paths: "/var/lib"

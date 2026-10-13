@@ -1,0 +1,6 @@
+source_repo: https://github.com/istio/istio
+upstream_path: samples/bookinfo/networking/virtual-service-all-v1.yaml
+upstream_ref: b9159ca3e5d56b05f69f3a58d687b8767d5639dd
+license: Apache-2.0
+sha256: d0538009109cc1e764c964fab4f7008bfd3dc7f868af7f06f578ee21e16fcabc
+extracted_at_note: verbatim excerpt fetched at the pinned upstream ref

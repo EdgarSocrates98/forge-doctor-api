@@ -1,0 +1,15 @@
+{
+  "agent": "codex",
+  "command": [
+    "codex",
+    "exec",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\017-reliability.implement.codex.md)"
+  ],
+  "created_at": "2026-10-03T13:30:12+00:00",
+  "id": "017-reliability",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\017-reliability.implement.codex.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\017-reliability.md",
+  "spec_sha256": "a3572871cb6fc65e63245344b375f4d1ccd7812f9cfb5e0a7b57b990e52a487a",
+  "status": "planned",
+  "title": "Reliability model \u2014 timeouts, retries, idempotency, circuit breakers, SLO"
+}

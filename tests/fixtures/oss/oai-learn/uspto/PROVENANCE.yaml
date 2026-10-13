@@ -1,0 +1,6 @@
+source_repo: "https://github.com/OAI/learn.openapis.org"
+upstream_path: "examples/v3.0/uspto.yaml"
+upstream_ref: "bbb743ed3b7c5ed76b6e6ba9b302af38f3956c44"
+license: "CC-BY-4.0"
+sha256: "29d32d0a0710b0acac434807e018ebd9cc192ad604fefdcf51422833b5963642"
+extracted_at_note: "verbatim excerpt fetched at the pinned upstream ref"

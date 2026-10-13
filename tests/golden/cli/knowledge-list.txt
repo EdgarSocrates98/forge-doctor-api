@@ -1,0 +1,4 @@
+Usage: forge-doctor-api knowledge list [OPTIONS] [dirs]... List pack manifests with lifecycle
+status. Precedence: explicit dirs > project .forge-doctor/knowledge > builtin. Arguments dirs <str>
+Pack dirs, highest precedence first. Options --target <str> Project dir for .forge-doctor/knowledge.
+[default: .] --help Show this message and exit.

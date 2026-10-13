@@ -1,0 +1,15 @@
+{
+  "agent": "claude",
+  "command": [
+    "claude",
+    "-p",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\033-iac-kubernetes.implement.claude.md)"
+  ],
+  "created_at": "2026-10-03T17:28:52+00:00",
+  "id": "033-iac-kubernetes",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\033-iac-kubernetes.implement.claude.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\033-iac-kubernetes.md",
+  "spec_sha256": "96555ef61e87360fa052e167a057c3a69a2dbdc002f4b750b474c7b390023548",
+  "status": "planned",
+  "title": "IaC + Kubernetes evidence \u2014 resource detection and Ingress\u2192ops chain"
+}

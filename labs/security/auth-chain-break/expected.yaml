@@ -1,0 +1,12 @@
+# §229/spec-079: contract declares apiKey on getOrder but the FastAPI
+# route carries no Security() evidence - declared-but-unenforced auth
+# chain break. Never "confirmed"; candidate wording only.
+run: [openapi, security]
+expected_findings:
+  - APISEC001   # object-id param without object-level authz evidence
+  - APISEC013   # auth chain break: declared-but-unenforced
+expected_description_contains:
+  - chain break
+forbidden_description_contains:
+  - confirmed
+  - vulnerability confirmed

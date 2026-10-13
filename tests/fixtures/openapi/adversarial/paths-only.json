@@ -1,0 +1,1 @@
+{"paths": {"/users": {"get": {"responses": {"200": {"description": "ok"}}}}}, "info": {"title": "x"}}

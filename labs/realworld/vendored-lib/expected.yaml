@@ -1,0 +1,6 @@
+# vendored code: name similarity alone must not create routes/clients.
+provenance: {source: handwritten-vendored-fixture, retrieved: "2026-10"}
+run: [openapi, clients]
+expected_findings: []
+forbidden_entities:
+  - operation:

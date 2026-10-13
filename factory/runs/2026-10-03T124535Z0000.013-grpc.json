@@ -1,0 +1,15 @@
+{
+  "agent": "claude",
+  "command": [
+    "claude",
+    "-p",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\013-grpc.implement.claude.md)"
+  ],
+  "created_at": "2026-10-03T12:45:35+00:00",
+  "id": "013-grpc",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\013-grpc.implement.claude.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\013-grpc.md",
+  "spec_sha256": "dd5c1c0bde7705e9ca466049752cff76aa82aaf8fbfc24bd23e4e1b8e4010ad1",
+  "status": "planned",
+  "title": "gRPC/proto model, compatibility, and reliability checks"
+}

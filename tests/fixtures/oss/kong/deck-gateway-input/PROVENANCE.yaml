@@ -1,0 +1,6 @@
+source_repo: https://github.com/Kong/deck
+upstream_path: kong2tf/testdata/kong-gateway-input.yaml
+upstream_ref: 94ccecd61a5ddea4040e0082cd09170a9b107a5a
+license: Apache-2.0
+sha256: cdf13c381ea00ace704c2e7e9a24b575025a69e019ca02430e7bcb240208f9ae
+extracted_at_note: verbatim excerpt fetched at the pinned upstream ref

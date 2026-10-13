@@ -1,0 +1,15 @@
+{
+  "agent": "claude",
+  "command": [
+    "claude",
+    "-p",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\085-real-oss-corpus-depth.implement.claude.md)"
+  ],
+  "created_at": "2026-10-05T17:57:28+00:00",
+  "id": "085-real-oss-corpus-depth",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\085-real-oss-corpus-depth.implement.claude.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\085-real-oss-corpus-depth.md",
+  "spec_sha256": "6880e6ce3cf27d9e05bc09516f4db6c20d31e6f410b34fed40efe8b8c1e939ea",
+  "status": "planned",
+  "title": "Real OSS corpus depth \u2014 >=30 provenance slices, per-domain negatives, ground truth"
+}

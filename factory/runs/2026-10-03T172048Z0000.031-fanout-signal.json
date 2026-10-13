@@ -1,0 +1,15 @@
+{
+  "agent": "codex",
+  "command": [
+    "codex",
+    "exec",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\031-fanout-signal.implement.codex.md)"
+  ],
+  "created_at": "2026-10-03T17:20:48+00:00",
+  "id": "031-fanout-signal",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\031-fanout-signal.implement.codex.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\031-fanout-signal.md",
+  "spec_sha256": "d5c6329cfaed3de22a8f169c317f5ce0f1c8d1e2a46f6808663c53c1cee92092",
+  "status": "planned",
+  "title": "FanoutSignal \u2014 static candidate + runtime-confirmed fanout model"
+}

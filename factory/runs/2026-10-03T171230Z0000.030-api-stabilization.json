@@ -1,0 +1,15 @@
+{
+  "agent": "codex",
+  "command": [
+    "codex",
+    "exec",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\030-api-stabilization.implement.codex.md)"
+  ],
+  "created_at": "2026-10-03T17:12:30+00:00",
+  "id": "030-api-stabilization",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\030-api-stabilization.implement.codex.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\030-api-stabilization.md",
+  "spec_sha256": "53ee9bdbdea359afa6a5f587ab51eca9c9099e3580ccfa74663bfbedaafa9526",
+  "status": "planned",
+  "title": "Release stabilization \u2014 outputs, CI gate, hermetic guarantees, packaging"
+}

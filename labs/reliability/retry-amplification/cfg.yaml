@@ -1,0 +1,10 @@
+# §228 third demo target: gateway retry=3 + service retry=3 on a
+# non-idempotent payment operation.
+retries:
+  - scope: gateway
+    max_attempts: 3
+  - scope: payments-service
+    max_attempts: 3
+timeouts:
+  - scope: payments-service
+    timeout_ms: 5000

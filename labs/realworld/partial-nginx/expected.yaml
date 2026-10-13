@@ -1,0 +1,4 @@
+# partial nginx: declared upstream resolves; undeclared -> unknown, no edge.
+provenance: {source: nginx-conf-fixture, retrieved: "2026-10"}
+run: [openapi]
+expected_findings: []

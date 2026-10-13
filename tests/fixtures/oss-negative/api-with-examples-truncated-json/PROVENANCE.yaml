@@ -1,0 +1,4 @@
+origin: "OAI/learn.openapis.org examples/v3.0/api-with-examples.json @ bbb743ed3b7c5ed76b6e6ba9b302af38f3956c44, CC-BY-4.0"
+domain: "openapi"
+sha256: "ff24fefcb84594666342de1455b00a542b4ee81f125ee4b88b5a9701e9f7427c"
+extracted_at_note: "first 900 bytes of the verbatim JSON slice"

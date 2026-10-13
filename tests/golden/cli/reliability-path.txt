@@ -1,0 +1,5 @@
+Usage: forge-doctor-api reliability path [OPTIONS] {target} Reliability along an explicit call path
+(§164, §228). Arguments * target <str> Directory with config artifacts. [required] Options --hop
+<str> Hop name in call order; repeatable. --policy <str> Inline declared retry: scope=max_attempts;
+repeatable. --timeout <str> Inline declared timeout: scope=ms; repeatable. --json JSON output.
+--help Show this message and exit.

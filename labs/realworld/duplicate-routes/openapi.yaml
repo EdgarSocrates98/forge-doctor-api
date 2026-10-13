@@ -1,0 +1,11 @@
+openapi: 3.0.3
+info: {title: Dup, version: "1.0"}
+paths:
+  /a/{id}:
+    get:
+      operationId: getA
+      responses: {"200": {description: ok}}
+  /a/{name}:
+    get:
+      operationId: getAByName
+      responses: {"200": {description: ok}}

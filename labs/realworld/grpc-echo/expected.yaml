@@ -1,0 +1,5 @@
+# grpc service: unary + streaming methods detected; no deadline -> GRPC001.
+provenance: {source: grpc-echo-example-derived, retrieved: "2026-10"}
+run: [grpc]
+expected_findings:
+  - GRPC001

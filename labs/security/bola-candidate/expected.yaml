@@ -1,0 +1,13 @@
+# §229 fourth demo target: public object-id endpoint, no authz
+# evidence -> BOLA *candidate* wording, never "confirmed".
+run: [openapi, security]
+expected_findings:
+  - APISEC001   # BOLA risk candidate
+  - APISEC011   # no security evidence at any level -> UNKNOWN (spec 061)
+  - OAS010      # public API without security requirement (candidate)
+  - OAS020      # no tags/domain ownership evidence (candidate)
+expected_description_contains:
+  - BOLA
+forbidden_description_contains:
+  - confirmed
+  - vulnerability confirmed

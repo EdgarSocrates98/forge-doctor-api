@@ -1,0 +1,6 @@
+# §100/§101: a yaml file named openapi.yml without markers is NOT a
+# contract — the detector rejects it silently; no findings, no issues.
+expected_findings: []
+forbidden_findings:
+  - OAS*
+expected_issues: []

@@ -1,0 +1,6 @@
+source_repo: "https://github.com/OAI/learn.openapis.org"
+upstream_path: "examples/v3.0/petstore-expanded.yaml"
+upstream_ref: "bbb743ed3b7c5ed76b6e6ba9b302af38f3956c44"
+license: "CC-BY-4.0"
+sha256: "abc68d08c674c8f0415aaeeb87c4203d5dd7257cdb79ac7ccb0446d1c5b9a7c2"
+extracted_at_note: "verbatim excerpt fetched at the pinned upstream ref"

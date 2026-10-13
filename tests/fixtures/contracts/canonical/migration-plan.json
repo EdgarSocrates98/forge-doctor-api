@@ -1,0 +1,11 @@
+{
+  "contract_version": "forge-contracts/1",
+  "id": "mig-oas2-to-3",
+  "source": "swagger 2.0",
+  "target": "openapi 3.1",
+  "kind": "format_change",
+  "readiness": "partial",
+  "steps": ["rewrite host/basePath into servers", "convert definitions to components"],
+  "risks": ["nullable semantics differ between 2.0 and 3.1"],
+  "x-note": "canonical fixture marker"
+}

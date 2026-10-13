@@ -1,0 +1,11 @@
+openapi: 3.0.3
+info: {title: Orders API, version: "1.0"}
+paths:
+  /orders:
+    get:
+      operationId: listOrders
+      responses: {"200": {description: ok}}
+  /orders/{id}:
+    get:
+      operationId: getOrder
+      responses: {"200": {description: ok}}

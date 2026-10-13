@@ -1,0 +1,9 @@
+{
+  "contract_version": "forge-contracts/1",
+  "src": "service:runtime:orders",
+  "dst": "operation:openapi:get /orders",
+  "kind": "exposes",
+  "evidence_kind": "static",
+  "attrs": {"confidence": "high"},
+  "x-forge-api": {"evidence_ids": ["ev-0042"]}
+}

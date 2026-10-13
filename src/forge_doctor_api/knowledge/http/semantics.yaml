@@ -1,0 +1,27 @@
+# §126/§128 HTTP semantics basics — bundled, never fetched.
+pack: http-semantics
+domain: http
+edition: "2026.10"
+maturity: detection
+entries:
+  methods:
+    fields:
+      safe: [get, head, options, trace]
+      idempotent: [get, put, delete, head, options, trace]
+      body_on_request: [post, put, patch, query]
+    provenance:
+      source: https://www.rfc-editor.org/rfc/rfc9110
+      source_version: "RFC9110"
+      last_verified: "2026-09-15"
+      effective_since: "2022-06-06"
+  status-classes:
+    fields:
+      "1xx": informational
+      "2xx": successful
+      "3xx": redirection
+      "4xx": client-error
+      "5xx": server-error
+    provenance:
+      source: https://www.rfc-editor.org/rfc/rfc9110
+      source_version: "RFC9110"
+      last_verified: "2026-09-15"

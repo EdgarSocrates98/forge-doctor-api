@@ -1,0 +1,8 @@
+# §100: @GetMapping strings in a text file — no framework, no routes.
+expected_findings: []
+forbidden_entities:
+  - endpoint:
+  - operation:spring
+  - UserController
+forbidden_findings:
+  - APISEC*

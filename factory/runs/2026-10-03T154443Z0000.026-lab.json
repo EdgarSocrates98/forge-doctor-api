@@ -1,0 +1,15 @@
+{
+  "agent": "codex",
+  "command": [
+    "codex",
+    "exec",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\026-lab.implement.codex.md)"
+  ],
+  "created_at": "2026-10-03T15:44:43+00:00",
+  "id": "026-lab",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\026-lab.implement.codex.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\026-lab.md",
+  "spec_sha256": "2be0846d282fdd68e7e0c07b6091fe24d9dd5822b2c08cf4023113e64e25267f",
+  "status": "planned",
+  "title": "Forge Lab \u2014 golden repos, adversarial corpus, ground truth, precision tracking"
+}

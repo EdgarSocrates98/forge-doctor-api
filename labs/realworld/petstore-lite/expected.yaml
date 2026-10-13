@@ -1,0 +1,11 @@
+# canonical petstore-style contract: refs resolve, ops observed.
+provenance: {source: swagger-petstore-derived-minimal, retrieved: "2026-10"}
+run: [openapi]
+expected_entities:
+  - listPets
+  - createPet
+  - showPet
+  - Pet
+expected_findings:
+  - OAS010
+  - OAS020

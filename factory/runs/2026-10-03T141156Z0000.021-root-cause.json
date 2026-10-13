@@ -1,0 +1,15 @@
+{
+  "agent": "codex",
+  "command": [
+    "codex",
+    "exec",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\021-root-cause.implement.codex.md)"
+  ],
+  "created_at": "2026-10-03T14:11:56+00:00",
+  "id": "021-root-cause",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\021-root-cause.implement.codex.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\021-root-cause.md",
+  "spec_sha256": "96f114d9b3605893518c67f027fc0de13c042f2c6bdcd8fc5428250283335d96",
+  "status": "planned",
+  "title": "Root cause engine \u2014 cascading failure analysis and diagnose CLI"
+}

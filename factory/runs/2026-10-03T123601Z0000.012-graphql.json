@@ -1,0 +1,15 @@
+{
+  "agent": "claude",
+  "command": [
+    "claude",
+    "-p",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\012-graphql.implement.claude.md)"
+  ],
+  "created_at": "2026-10-03T12:36:01+00:00",
+  "id": "012-graphql",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\012-graphql.implement.claude.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\012-graphql.md",
+  "spec_sha256": "1848cd075e8797609dd2a497c413696d53db8d6dea2c864ee80c10159a1ebb3e",
+  "status": "planned",
+  "title": "GraphQL model, checks, and query-shape analysis"
+}

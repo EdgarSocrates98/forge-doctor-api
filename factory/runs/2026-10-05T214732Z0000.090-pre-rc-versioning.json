@@ -1,0 +1,15 @@
+{
+  "agent": "codex",
+  "command": [
+    "codex",
+    "exec",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\090-pre-rc-versioning.implement.codex.md)"
+  ],
+  "created_at": "2026-10-05T21:47:32+00:00",
+  "id": "090-pre-rc-versioning",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\090-pre-rc-versioning.implement.codex.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\090-pre-rc-versioning.md",
+  "spec_sha256": "ce59314cbf0468606dea84e7f941950d268e598bd2858c3d61a9644ce972a254",
+  "status": "planned",
+  "title": "Pre-RC versioning \u2014 decision doc, docs-as-contract expansion, readiness scorecard"
+}

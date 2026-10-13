@@ -1,0 +1,8 @@
+_format_version: "3.0"
+services:
+  - name: payments-service
+    host: payments.internal
+    retries: 3
+    connect_timeout: 2000
+    routes:
+      - paths: [/pay]

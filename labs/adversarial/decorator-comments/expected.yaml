@@ -1,0 +1,11 @@
+# §100: decorator-like text in comments — no framework attribution,
+# no route entities, no findings.
+expected_findings: []
+forbidden_findings:
+  - OAS*
+  - APISEC*
+forbidden_entities:
+  - endpoint:
+  - operation:fastapi
+forbidden_edges:
+  - EXPOSES

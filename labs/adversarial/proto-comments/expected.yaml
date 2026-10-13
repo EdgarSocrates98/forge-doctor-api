@@ -1,0 +1,6 @@
+# §100: proto-looking text inside comments is not a .proto document.
+expected_findings: []
+forbidden_findings:
+  - GRPC*
+forbidden_entities:
+  - PaymentService

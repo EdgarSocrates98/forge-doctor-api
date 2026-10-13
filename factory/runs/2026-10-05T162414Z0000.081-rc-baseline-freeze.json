@@ -1,0 +1,15 @@
+{
+  "agent": "claude",
+  "command": [
+    "claude",
+    "-p",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\081-rc-baseline-freeze.implement.claude.md)"
+  ],
+  "created_at": "2026-10-05T16:24:14+00:00",
+  "id": "081-rc-baseline-freeze",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\081-rc-baseline-freeze.implement.claude.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\081-rc-baseline-freeze.md",
+  "spec_sha256": "1c7738700911e4647d88f9c4cdf766bf32b5bb890cc21503004eec1b9455d86a",
+  "status": "planned",
+  "title": "RC baseline freeze \u2014 stability classes, public surface inventory, baseline artifact"
+}

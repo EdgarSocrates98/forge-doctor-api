@@ -1,0 +1,78 @@
+{
+  "capabilities": [
+    {
+      "contract_version": "forge-contracts/1",
+      "domain": "dbt",
+      "evidence_refs": [],
+      "id": "dbt.manifest.parse",
+      "status": "supported"
+    }
+  ],
+  "contract_version": "forge-contracts/1",
+  "entities": [
+    {
+      "attrs": {},
+      "contract_version": "forge-contracts/1",
+      "domain": "dbt",
+      "id": "model.orders",
+      "identifier": "",
+      "kind": "model",
+      "name": ""
+    }
+  ],
+  "findings": [
+    {
+      "category": "quality",
+      "check_id": "FD-DBT-042",
+      "contract_version": "forge-contracts/1",
+      "message": "Model orders has no tests declared",
+      "severity": "warning",
+      "tags": [],
+      "title": "Model without tests"
+    }
+  ],
+  "plans": [
+    {
+      "actions": [],
+      "check_id": "FD-DBT-042",
+      "contract_version": "forge-contracts/1",
+      "id": "rp-1",
+      "problem": "Model without tests",
+      "requires_approval": false,
+      "risks": [],
+      "targets": []
+    }
+  ],
+  "project": {
+    "domains": [
+      "dbt"
+    ],
+    "name": "demo-shop",
+    "root": "E:/demo"
+  },
+  "relationships": [
+    {
+      "attrs": {},
+      "contract_version": "forge-contracts/1",
+      "dst": "source.raw_orders",
+      "kind": "depends-on",
+      "src": "model.orders"
+    }
+  ],
+  "summary": {
+    "findings": 1,
+    "verdict": "pass-with-warnings"
+  },
+  "tool": {
+    "name": "forge-doctor-data",
+    "version": "0.9.0"
+  },
+  "unknowns": [
+    {
+      "contract_version": "forge-contracts/1",
+      "kind": "unknown-domain",
+      "reason": "no collector",
+      "subject": "dagster.assets"
+    }
+  ]
+}

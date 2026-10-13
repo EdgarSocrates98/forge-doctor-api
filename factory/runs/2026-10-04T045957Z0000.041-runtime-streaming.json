@@ -1,0 +1,15 @@
+{
+  "agent": "claude",
+  "command": [
+    "claude",
+    "-p",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\041-runtime-streaming.implement.claude.md)"
+  ],
+  "created_at": "2026-10-04T04:59:57+00:00",
+  "id": "041-runtime-streaming",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\041-runtime-streaming.implement.claude.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\041-runtime-streaming.md",
+  "spec_sha256": "9f231002d6bf94d85615c83c477fd7ea51ec3c72a438c70a0ce73b31811383d0",
+  "status": "planned",
+  "title": "Runtime streaming core \u2014 bounded TraceAssembler, no full-dataset retention"
+}

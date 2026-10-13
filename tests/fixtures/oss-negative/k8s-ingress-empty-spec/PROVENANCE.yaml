@@ -1,0 +1,7 @@
+origin: "authored adversarial case in kubernetes docs style (kubernetes/website @\
+  \ 1c7aa9955e884879397ed15de88605f05eb61d1f, CC-BY-4.0): Ingress with an empty spec\
+  \ \u2014 no rules to evaluate"
+domain: k8s-ingress
+sha256: 224d465a8dcf989e541293384891b422df3843f9c8a3ad293fa9b345da051d49
+extracted_at_note: authored adversarial slice; provenance documents the real upstream
+  it imitates

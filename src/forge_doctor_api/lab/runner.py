@@ -1,0 +1,299 @@
+"""§98-§101, §199 scenario runner — pipelines over a fixture tree.
+
+Every analyzer's strong-marker detection gate decides what it sees;
+weak-marker files simply produce nothing (§101). `expected.yaml` is
+excluded from the observed file set. `run:` restricts which pipelines
+execute; empty means the default deterministic set.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field, replace
+from datetime import date
+from pathlib import Path
+
+from forge_doctor_api.analyzers.asyncapi.parser import load_asyncapi_project
+from forge_doctor_api.analyzers.cache.graph import build_cache_graph
+from forge_doctor_api.analyzers.cache.scan import load_cache_model
+from forge_doctor_api.analyzers.clients.model import ApiClientModel
+from forge_doctor_api.analyzers.clients.scan import scan_clients
+from forge_doctor_api.analyzers.gateway import load_gateway_models
+from forge_doctor_api.analyzers.gateway.model import (
+    GatewayModel,
+    ServiceMeshModel,
+)
+from forge_doctor_api.analyzers.graphql.parser import load_graphql_project
+from forge_doctor_api.analyzers.grpc.parser import load_grpc_project
+from forge_doctor_api.analyzers.openapi.graph import contract_graph
+from forge_doctor_api.analyzers.openapi.model import (
+    IssueCode,
+    OpenApiProjectModel,
+)
+from forge_doctor_api.analyzers.openapi.parser import load_openapi_project
+from forge_doctor_api.analyzers.routes import available_adapters
+from forge_doctor_api.analyzers.routes.graph import scan_graph
+from forge_doctor_api.analyzers.routes.model import RouteScan
+from forge_doctor_api.analyzers.runtime.loader import load_runtime_project
+from forge_doctor_api.analyzers.version import detect_version_model
+from forge_doctor_api.checks.apisec.engine import run_security_checks
+from forge_doctor_api.checks.asyncapi.engine import run_async_checks
+from forge_doctor_api.checks.client.engine import client_impact
+from forge_doctor_api.checks.compat.catalog import CompatibilityClass
+from forge_doctor_api.checks.compat.engine import diff_models
+from forge_doctor_api.checks.graphql.engine import run_graphql_checks
+from forge_doctor_api.checks.grpc.engine import run_grpc_checks
+from forge_doctor_api.checks.oas.engine import run_openapi_checks
+from forge_doctor_api.checks.observability.engine import run_observability_checks
+from forge_doctor_api.checks.perf.engine import run_perf_checks
+from forge_doctor_api.checks.relapi.engine import (
+    run_depth_checks,
+    run_reliability_checks,
+)
+from forge_doctor_api.core.context import ContextError, ProjectContext
+from forge_doctor_api.core.graph import ServiceGraph
+from forge_doctor_api.core.models import Finding
+from forge_doctor_api.lab.model import LabScenario
+from forge_doctor_api.policy import (
+    RuleContext,
+    evaluate_policies,
+    load_policies,
+    resolve_ownership,
+)
+from forge_doctor_api.reliability import load_reliability_model
+from forge_doctor_api.reliability.config import gateway_edge_policies
+from forge_doctor_api.security import load_security_model
+
+_DEFAULT_RUN = (
+    "openapi", "security", "reliability", "clients", "runtime",
+    "graphql", "grpc", "asyncapi", "policy",
+)
+
+_PARSE_FAILURE_CODES = frozenset({
+    IssueCode.MALFORMED, IssueCode.UNREADABLE, IssueCode.DUPLICATE_KEY,
+    IssueCode.INVALID_REF, IssueCode.MISSING_REF_TARGET,
+})
+
+
+@dataclass(kw_only=True)
+class LabObservations:
+    """Everything a scenario produced, normalized for comparison."""
+
+    findings: list[Finding] = field(default_factory=list)
+    entities: list[str] = field(default_factory=list)
+    edges: list[str] = field(default_factory=list)
+    clients: list[str] = field(default_factory=list)
+    breaking: list[str] = field(default_factory=list)
+    runtime_signals: list[str] = field(default_factory=list)
+    issues: list[str] = field(default_factory=list)
+    # spec-058 measurement fields
+    sample_size: int = 0
+    unknowns: int = 0
+    parse_failures: int = 0
+    unsupported: int = 0
+    elapsed_ms: int = 0
+    peak_bytes: int = 0
+
+
+def _sub_ctx(ctx: ProjectContext, sub: str | None) -> ProjectContext:
+    if sub is None or sub == ".":
+        return ctx
+    return ProjectContext.from_root(ctx.resolve(sub), clock=ctx.clock)
+
+
+def _route_scans(ctx: ProjectContext) -> tuple[ServiceGraph, ...]:
+    """Framework route scans (spec 050 adapters) for entity checks."""
+    files = list(ctx.iter_files())
+    graphs: list[ServiceGraph] = []
+    try:
+        adapters = available_adapters(ctx, files)
+    except (ContextError, OSError, ValueError):
+        return ()
+    for adapter in adapters:
+        try:
+            scan = adapter.discover_routes(
+                ctx, service=ctx.root.name, files=files)
+        except (ContextError, OSError, ValueError):
+            continue
+        if scan.routes:
+            graphs.append(scan_graph(scan))
+    return tuple(graphs)
+
+
+def run_scenario(context: ProjectContext, scenario: LabScenario) -> LabObservations:
+    """Run the scenario's pipelines and collect observations."""
+    ctx = _sub_ctx(context, scenario.path)
+    files = [
+        f for f in ctx.iter_files()
+        if Path(f).name not in ("expected.yaml", "expected.yml")
+    ]
+    run = set(scenario.run) if scenario.run else set(_DEFAULT_RUN)
+    obs = LabObservations(sample_size=len(files))
+
+    openapi: OpenApiProjectModel | None = None
+    if run & {"openapi", "security", "diff", "policy", "cache"}:
+        openapi = load_openapi_project(ctx)
+        obs.issues.extend(f"{i.code}:{i.message}" for i in openapi.issues)
+        obs.parse_failures += sum(
+            1 for i in openapi.issues
+            if i.code in _PARSE_FAILURE_CODES)
+        obs.unsupported += sum(
+            1 for i in openapi.issues
+            if i.code is IssueCode.UNSUPPORTED_VERSION)
+        obs.unknowns += sum(
+            1 for i in openapi.issues
+            if i.code in (IssueCode.MISSING_REF_TARGET,
+                          IssueCode.INVALID_REF))
+    if "openapi" in run and openapi is not None:
+        obs.findings.extend(run_openapi_checks(openapi))
+        graph = contract_graph(openapi)
+        obs.entities.extend(f"{e.kind}:{e.name}" for e in graph.entities())
+        obs.edges.extend(
+            f"{r.kind}:{r.source_id}->{r.target_id}" for r in graph.relationships()
+        )
+        for route_graph in _route_scans(ctx):
+            obs.entities.extend(f"{e.kind}:{e.name}" for e in route_graph.entities())
+            obs.edges.extend(
+                f"{r.kind}:{r.source_id}->{r.target_id}"
+                for r in route_graph.relationships()
+            )
+
+    clients: ApiClientModel | None = None
+    if "clients" in run or scenario.diff_old:
+        clients = scan_clients(ctx, files)
+        obs.clients.extend(clients.clients)
+        obs.issues.extend(f"{u.subject}:{u.missing}" for u in clients.unknowns)
+        obs.unknowns += len(clients.unknowns)
+
+    security = None
+    if "security" in run or "policy" in run:
+        lab_routes: RouteScan | None = None
+        scans = [
+            adapter.discover_routes(ctx, ctx.root.name, files)
+            for adapter in available_adapters(ctx, files)
+        ]
+        if any(s.routes for s in scans):
+            lab_routes = RouteScan(
+                service=ctx.root.name,
+                routes=tuple(sorted(
+                    {r for s in scans for r in s.routes},
+                    key=lambda r: (r.method, r.path, r.handler))),
+            )
+        security = load_security_model(
+            ctx, files, openapi=openapi, routes=lab_routes)
+    if "security" in run and openapi is not None and security is not None:
+        obs.findings.extend(run_security_checks(security, openapi))
+
+    chain_edges: list[tuple[str, str]] = []
+    gateways: tuple[GatewayModel, ...] = ()
+    meshes: tuple[ServiceMeshModel, ...] = ()
+    if "gateway" in run:
+        gateways, meshes, gw_unknowns = load_gateway_models(ctx, files)
+        obs.issues.extend(
+            f"{u.subject}:{u.missing}" for u in gw_unknowns)
+        obs.unknowns += len(gw_unknowns)
+        chain_edges.extend(
+            (gw.dialect.value, rt.service)
+            for gw in gateways for rt in gw.routes if rt.service)
+
+    reliability = None
+    if "reliability" in run or "policy" in run:
+        reliability = load_reliability_model(ctx, files, openapi=openapi)
+        if gateways or meshes:
+            extra_r, extra_t = gateway_edge_policies(gateways, meshes)
+            if extra_r or extra_t:
+                reliability = replace(
+                    reliability,
+                    retry_policies=tuple(sorted(
+                        (*reliability.retry_policies, *extra_r),
+                        key=lambda r: r.scope)),
+                    timeouts=tuple(sorted(
+                        (*reliability.timeouts, *extra_t),
+                        key=lambda t: t.scope)))
+    if "reliability" in run and reliability is not None:
+        obs.findings.extend(
+            run_reliability_checks(
+                reliability, tuple(scenario.hops) or None,
+                operations=(
+                    openapi.operations if openapi is not None else None))
+        )
+        # Declared hop chains + resolved gateway route targets feed the
+        # edge-level depth checks - evidenced edges only (spec 079).
+        edges = tuple(chain_edges) + tuple(
+            zip(scenario.hops, scenario.hops[1:], strict=False))
+        if edges:
+            obs.findings.extend(run_depth_checks(reliability, edges))
+
+    if "cache" in run:
+        cache = load_cache_model(ctx, files, openapi=openapi)
+        obs.unknowns += len(cache.unknowns)
+        obs.issues.extend(
+            f"{u.subject}:{u.missing}" for u in cache.unknowns)
+        if openapi is not None:
+            _cg, cache_findings = build_cache_graph(cache, openapi)
+            obs.findings.extend(cache_findings)
+
+    if "runtime" in run:
+        rt = load_runtime_project(ctx, files, keep_spans=False)
+        obs.findings.extend(run_observability_checks(rt.observability))
+        obs.findings.extend(run_perf_checks(rt.executions))
+        obs.runtime_signals.extend(sorted(rt.observability.signals))
+
+    if "graphql" in run:
+        gql = load_graphql_project(ctx, files)
+        if gql.documents:
+            obs.findings.extend(run_graphql_checks(gql))
+    if "grpc" in run:
+        grpc = load_grpc_project(ctx, files)
+        if grpc.files:
+            obs.findings.extend(run_grpc_checks(grpc))
+    if "asyncapi" in run:
+        async_model = load_asyncapi_project(ctx)
+        if async_model.documents:
+            obs.findings.extend(run_async_checks(async_model))
+    if "frameworks" in run:
+        for adapter in available_adapters(ctx, files):
+            surfaces = (
+                adapter.discover_auth, adapter.discover_dependencies,
+                adapter.discover_error_handlers, adapter.discover_schemas,
+                adapter.discover_validation)
+            for surface in surfaces:
+                res = surface(ctx, files)
+                obs.entities.extend(
+                    f"capability:{adapter.framework}:{i.kind}:{i.label}"
+                    for i in res.items)
+                obs.issues.extend(
+                    f"{u.subject}:{u.missing}" for u in res.unknowns)
+                obs.unknowns += len(res.unknowns)
+
+    if "policy" in run:
+        policy_set = load_policies(ctx, files)
+        today = (
+            date.fromisoformat(scenario.today)
+            if scenario.today
+            else date.min
+        )
+        rule_ctx = RuleContext(
+            openapi=openapi,
+            security=security,
+            reliability=reliability,
+            version=detect_version_model(openapi) if openapi else None,
+            ownership=resolve_ownership(ctx, files, openapi),
+        )
+        obs.findings.extend(evaluate_policies(policy_set, rule_ctx, today))
+
+    if scenario.diff_old and scenario.diff_new:
+        old_model = load_openapi_project(_sub_ctx(ctx, scenario.diff_old))
+        new_model = load_openapi_project(_sub_ctx(ctx, scenario.diff_new))
+        diff = diff_models(old_model, new_model)
+        obs.breaking.extend(
+            c.subject for c in diff.changes
+            if c.classification is not CompatibilityClass.NON_BREAKING
+        )
+        if clients is not None:
+            obs.findings.extend(client_impact(diff, clients, old_model).findings)
+
+    obs.findings.sort(key=lambda f: (f.id, f.description))
+    obs.entities.sort()
+    obs.edges.sort()
+    obs.clients = sorted(set(obs.clients))
+    return obs

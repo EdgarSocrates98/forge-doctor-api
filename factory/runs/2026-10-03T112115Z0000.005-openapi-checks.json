@@ -1,0 +1,15 @@
+{
+  "agent": "claude",
+  "command": [
+    "claude",
+    "-p",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\005-openapi-checks.implement.claude.md)"
+  ],
+  "created_at": "2026-10-03T11:21:15+00:00",
+  "id": "005-openapi-checks",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\005-openapi-checks.implement.claude.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\005-openapi-checks.md",
+  "spec_sha256": "0198193a99cf7d8f484bda8b01df92840ca138d96c961a9e3a761d9b5c41cdb6",
+  "status": "planned",
+  "title": "OAS### check suite"
+}

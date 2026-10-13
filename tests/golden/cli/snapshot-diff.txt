@@ -1,0 +1,3 @@
+Usage: forge-doctor-api snapshot diff [OPTIONS] {a} {b} Delta context between two snapshots
+(spec-049 delta). Arguments * a <str> Snapshot id/label (older). [required] * b <str> Snapshot
+id/label (newer). [required] Options --target <str> [default: .] --help Show this message and exit.

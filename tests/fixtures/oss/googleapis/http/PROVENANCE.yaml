@@ -1,0 +1,6 @@
+source_repo: "https://github.com/googleapis/googleapis"
+upstream_path: "google/api/http.proto"
+upstream_ref: "03a91044136a014466d4293eb1fe91f2b02075d2"
+license: "Apache-2.0"
+sha256: "ead99129aa15dd5f6233942030c72eec33bc0d7b1c7c260dc143293ef66c5b78"
+extracted_at_note: "verbatim excerpt fetched at the pinned upstream ref"

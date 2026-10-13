@@ -1,0 +1,4 @@
+# partial gateway config: kong service/route/plugin declared.
+provenance: {source: kong-declarative-fixture, retrieved: "2026-10"}
+run: [openapi]
+expected_findings: []

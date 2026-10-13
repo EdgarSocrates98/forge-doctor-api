@@ -1,0 +1,26 @@
+openapi: "3.0.3"
+info:
+  title: Users API
+  version: "1.1"
+paths:
+  /users/{id}:
+    get:
+      operationId: getUser
+      summary: fetch a user
+      security:
+        - apiKey: []
+      responses:
+        '200':
+          description: the user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+components:
+  securitySchemes:
+    apiKey: {type: apiKey, in: header, name: X-Key}
+  schemas:
+    User:
+      type: object
+      properties:
+        id: {type: string}

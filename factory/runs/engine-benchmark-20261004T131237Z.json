@@ -1,0 +1,3723 @@
+{
+  "all_equivalent": true,
+  "benchmark": "engine-cold-warm",
+  "env": {
+    "cpu_count": 6,
+    "platform": "Windows-11-10.0.26300-SP0",
+    "python": "3.14.6",
+    "ram_bytes": null,
+    "tool_version": "0.1.0"
+  },
+  "recorded_at": "2026-10-04T13:12:37+00:00",
+  "results": {
+    "lab:ambiguous-express": {
+      "cold": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.7,
+            "artifacts": 1,
+            "duration_ms": 3.99,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "clients": {
+            "allocated_kb": 0.5,
+            "artifacts": 1,
+            "duration_ms": 0.76,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.07,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "migration": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 0.7,
+            "artifacts": 0,
+            "duration_ms": 2.86,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.3,
+            "artifacts": 0,
+            "duration_ms": 0.09,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 1.1,
+            "artifacts": 1,
+            "duration_ms": 19.77,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "routes": {
+            "allocated_kb": 272.7,
+            "artifacts": 1,
+            "duration_ms": 116.17,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "security": {
+            "allocated_kb": 1.4,
+            "artifacts": 2,
+            "duration_ms": 59.4,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.188,
+        "findings": 0,
+        "peak_mb": 1.18,
+        "unknowns": 0,
+        "wall_s": 0.489
+      },
+      "equivalent": true,
+      "populate": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.7,
+            "artifacts": 1,
+            "duration_ms": 1.71,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "clients": {
+            "allocated_kb": 0.4,
+            "artifacts": 1,
+            "duration_ms": 0.99,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.06,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "migration": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 5.5,
+            "artifacts": 0,
+            "duration_ms": 2.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.3,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 1.1,
+            "artifacts": 1,
+            "duration_ms": 4.99,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "routes": {
+            "allocated_kb": 13.0,
+            "artifacts": 1,
+            "duration_ms": 7.05,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "security": {
+            "allocated_kb": 1.4,
+            "artifacts": 2,
+            "duration_ms": 2.14,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.172,
+        "findings": 0,
+        "peak_mb": 1.18,
+        "unknowns": 0,
+        "wall_s": 0.329
+      },
+      "warm": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.6,
+            "artifacts": 1,
+            "duration_ms": 1.89,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "clients": {
+            "allocated_kb": 0.5,
+            "artifacts": 1,
+            "duration_ms": 6.59,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.06,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "migration": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 2.8,
+            "artifacts": 0,
+            "duration_ms": 29.35,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.3,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 1.0,
+            "artifacts": 1,
+            "duration_ms": 8.88,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "routes": {
+            "allocated_kb": 11.1,
+            "artifacts": 1,
+            "duration_ms": 20.48,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "security": {
+            "allocated_kb": 1.4,
+            "artifacts": 2,
+            "duration_ms": 2.46,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.156,
+        "findings": 0,
+        "peak_mb": 1.18,
+        "unknowns": 0,
+        "wall_s": 0.29
+      },
+      "warm_speedup_x": 1.69
+    },
+    "lab:duplicate-routes": {
+      "cold": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 45.1,
+            "artifacts": 2,
+            "duration_ms": 13.33,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "migration": {
+            "allocated_kb": 82.7,
+            "artifacts": 0,
+            "duration_ms": 29.34,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 21.1,
+            "artifacts": 1,
+            "duration_ms": 7.58,
+            "findings": 5,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.3,
+            "artifacts": 0,
+            "duration_ms": 0.04,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 1.5,
+            "artifacts": 2,
+            "duration_ms": 13.89,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "security": {
+            "allocated_kb": 6.3,
+            "artifacts": 2,
+            "duration_ms": 7.62,
+            "findings": 2,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.3,
+            "artifacts": 0,
+            "duration_ms": 0.13,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.234,
+        "findings": 7,
+        "peak_mb": 1.18,
+        "unknowns": 0,
+        "wall_s": 0.324
+      },
+      "equivalent": true,
+      "populate": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.8,
+            "artifacts": 2,
+            "duration_ms": 6.81,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "migration": {
+            "allocated_kb": 1.0,
+            "artifacts": 0,
+            "duration_ms": 0.19,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 12.9,
+            "artifacts": 1,
+            "duration_ms": 14.39,
+            "findings": 5,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.3,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 0.9,
+            "artifacts": 2,
+            "duration_ms": 11.09,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "security": {
+            "allocated_kb": 6.3,
+            "artifacts": 2,
+            "duration_ms": 15.78,
+            "findings": 2,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.3,
+            "artifacts": 0,
+            "duration_ms": 0.13,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.125,
+        "findings": 7,
+        "peak_mb": 1.18,
+        "unknowns": 0,
+        "wall_s": 0.515
+      },
+      "warm": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.8,
+            "artifacts": 2,
+            "duration_ms": 7.4,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "migration": {
+            "allocated_kb": 1.0,
+            "artifacts": 0,
+            "duration_ms": 0.22,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 14.0,
+            "artifacts": 1,
+            "duration_ms": 67.07,
+            "findings": 5,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.3,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 0.8,
+            "artifacts": 2,
+            "duration_ms": 8.18,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "security": {
+            "allocated_kb": 5.5,
+            "artifacts": 2,
+            "duration_ms": 8.21,
+            "findings": 2,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.3,
+            "artifacts": 0,
+            "duration_ms": 0.13,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.203,
+        "findings": 7,
+        "peak_mb": 1.18,
+        "unknowns": 0,
+        "wall_s": 0.373
+      },
+      "warm_speedup_x": 0.87
+    },
+    "lab:duplicate-services": {
+      "cold": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.8,
+            "artifacts": 3,
+            "duration_ms": 18.63,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "migration": {
+            "allocated_kb": 0.6,
+            "artifacts": 0,
+            "duration_ms": 0.17,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 10.9,
+            "artifacts": 2,
+            "duration_ms": 10.79,
+            "findings": 5,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.3,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 0.9,
+            "artifacts": 3,
+            "duration_ms": 20.11,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "security": {
+            "allocated_kb": 5.5,
+            "artifacts": 3,
+            "duration_ms": 10.79,
+            "findings": 2,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.3,
+            "artifacts": 0,
+            "duration_ms": 0.12,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.172,
+        "findings": 7,
+        "peak_mb": 1.18,
+        "unknowns": 0,
+        "wall_s": 0.306
+      },
+      "equivalent": true,
+      "populate": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.8,
+            "artifacts": 3,
+            "duration_ms": 8.7,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "migration": {
+            "allocated_kb": 0.6,
+            "artifacts": 0,
+            "duration_ms": 0.16,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 11.5,
+            "artifacts": 2,
+            "duration_ms": 18.33,
+            "findings": 5,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.3,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 0.9,
+            "artifacts": 3,
+            "duration_ms": 20.57,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "security": {
+            "allocated_kb": 5.9,
+            "artifacts": 3,
+            "duration_ms": 11.17,
+            "findings": 2,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.3,
+            "artifacts": 0,
+            "duration_ms": 0.12,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.172,
+        "findings": 7,
+        "peak_mb": 1.18,
+        "unknowns": 0,
+        "wall_s": 0.343
+      },
+      "warm": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.7,
+            "artifacts": 3,
+            "duration_ms": 10.98,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "migration": {
+            "allocated_kb": 0.6,
+            "artifacts": 0,
+            "duration_ms": 0.29,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 14.3,
+            "artifacts": 2,
+            "duration_ms": 23.9,
+            "findings": 5,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.2,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 0.8,
+            "artifacts": 3,
+            "duration_ms": 22.41,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "security": {
+            "allocated_kb": 5.3,
+            "artifacts": 3,
+            "duration_ms": 50.65,
+            "findings": 2,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.2,
+            "artifacts": 0,
+            "duration_ms": 0.13,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.156,
+        "findings": 7,
+        "peak_mb": 1.18,
+        "unknowns": 0,
+        "wall_s": 0.48
+      },
+      "warm_speedup_x": 0.64
+    },
+    "lab:dynamic-flask": {
+      "cold": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.5,
+            "artifacts": 1,
+            "duration_ms": 2.19,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "clients": {
+            "allocated_kb": 0.4,
+            "artifacts": 1,
+            "duration_ms": 1.12,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "migration": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 0.2,
+            "artifacts": 0,
+            "duration_ms": 0.79,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.2,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 0.8,
+            "artifacts": 1,
+            "duration_ms": 4.27,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "routes": {
+            "allocated_kb": 0.5,
+            "artifacts": 1,
+            "duration_ms": 1.47,
+            "findings": 0,
+            "unknowns": 1
+          },
+          "security": {
+            "allocated_kb": 1.9,
+            "artifacts": 2,
+            "duration_ms": 2.63,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.141,
+        "findings": 0,
+        "peak_mb": 1.18,
+        "unknowns": 1,
+        "wall_s": 0.438
+      },
+      "equivalent": true,
+      "populate": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.5,
+            "artifacts": 1,
+            "duration_ms": 9.1,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "clients": {
+            "allocated_kb": 0.3,
+            "artifacts": 1,
+            "duration_ms": 1.22,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "migration": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 1.0,
+            "artifacts": 0,
+            "duration_ms": 4.32,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.2,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 0.7,
+            "artifacts": 1,
+            "duration_ms": 58.65,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "routes": {
+            "allocated_kb": 0.4,
+            "artifacts": 1,
+            "duration_ms": 1.75,
+            "findings": 0,
+            "unknowns": 1
+          },
+          "security": {
+            "allocated_kb": 2.0,
+            "artifacts": 2,
+            "duration_ms": 3.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.109,
+        "findings": 0,
+        "peak_mb": 1.18,
+        "unknowns": 1,
+        "wall_s": 0.377
+      },
+      "warm": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.3,
+            "artifacts": 1,
+            "duration_ms": 5.7,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "clients": {
+            "allocated_kb": 0.3,
+            "artifacts": 1,
+            "duration_ms": 1.23,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "migration": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 2.7,
+            "artifacts": 0,
+            "duration_ms": 45.93,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.2,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 0.6,
+            "artifacts": 1,
+            "duration_ms": 2.93,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "routes": {
+            "allocated_kb": 0.4,
+            "artifacts": 1,
+            "duration_ms": 3.14,
+            "findings": 0,
+            "unknowns": 1
+          },
+          "security": {
+            "allocated_kb": 1.6,
+            "artifacts": 2,
+            "duration_ms": 8.3,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.078,
+        "findings": 0,
+        "peak_mb": 1.18,
+        "unknowns": 1,
+        "wall_s": 0.328
+      },
+      "warm_speedup_x": 1.34
+    },
+    "lab:dynamic-nest": {
+      "cold": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.6,
+            "artifacts": 1,
+            "duration_ms": 4.89,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "clients": {
+            "allocated_kb": 0.4,
+            "artifacts": 1,
+            "duration_ms": 1.05,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "migration": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 0.2,
+            "artifacts": 0,
+            "duration_ms": 0.17,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.2,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 0.9,
+            "artifacts": 1,
+            "duration_ms": 3.67,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "routes": {
+            "allocated_kb": 1.2,
+            "artifacts": 1,
+            "duration_ms": 2.25,
+            "findings": 0,
+            "unknowns": 1
+          },
+          "security": {
+            "allocated_kb": 1.4,
+            "artifacts": 2,
+            "duration_ms": 2.13,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.109,
+        "findings": 0,
+        "peak_mb": 1.18,
+        "unknowns": 1,
+        "wall_s": 0.293
+      },
+      "equivalent": true,
+      "populate": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.5,
+            "artifacts": 1,
+            "duration_ms": 3.71,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "clients": {
+            "allocated_kb": 0.4,
+            "artifacts": 1,
+            "duration_ms": 1.01,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "migration": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 1.0,
+            "artifacts": 0,
+            "duration_ms": 1.71,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.2,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 0.8,
+            "artifacts": 1,
+            "duration_ms": 2.77,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "routes": {
+            "allocated_kb": 1.4,
+            "artifacts": 1,
+            "duration_ms": 3.71,
+            "findings": 0,
+            "unknowns": 1
+          },
+          "security": {
+            "allocated_kb": 1.3,
+            "artifacts": 2,
+            "duration_ms": 2.25,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.109,
+        "findings": 0,
+        "peak_mb": 1.18,
+        "unknowns": 1,
+        "wall_s": 0.24
+      },
+      "warm": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.3,
+            "artifacts": 1,
+            "duration_ms": 1.73,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "clients": {
+            "allocated_kb": 0.4,
+            "artifacts": 1,
+            "duration_ms": 0.64,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "migration": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 2.7,
+            "artifacts": 0,
+            "duration_ms": 6.24,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.2,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 0.5,
+            "artifacts": 1,
+            "duration_ms": 4.11,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "routes": {
+            "allocated_kb": 1.2,
+            "artifacts": 1,
+            "duration_ms": 1.77,
+            "findings": 0,
+            "unknowns": 1
+          },
+          "security": {
+            "allocated_kb": 1.1,
+            "artifacts": 2,
+            "duration_ms": 5.25,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.01,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.219,
+        "findings": 0,
+        "peak_mb": 1.18,
+        "unknowns": 1,
+        "wall_s": 0.259
+      },
+      "warm_speedup_x": 1.13
+    },
+    "lab:envoy-partial": {
+      "cold": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.4,
+            "artifacts": 2,
+            "duration_ms": 37.89,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "gateway": {
+            "allocated_kb": 2.3,
+            "artifacts": 2,
+            "duration_ms": 13.53,
+            "findings": 0,
+            "unknowns": 2
+          },
+          "migration": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 0.2,
+            "artifacts": 0,
+            "duration_ms": 0.17,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.2,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 1.1,
+            "artifacts": 2,
+            "duration_ms": 31.22,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "security": {
+            "allocated_kb": 5.7,
+            "artifacts": 2,
+            "duration_ms": 37.23,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.156,
+        "findings": 0,
+        "peak_mb": 1.18,
+        "unknowns": 2,
+        "wall_s": 0.363
+      },
+      "equivalent": true,
+      "populate": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.4,
+            "artifacts": 2,
+            "duration_ms": 15.67,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "gateway": {
+            "allocated_kb": 2.2,
+            "artifacts": 2,
+            "duration_ms": 12.89,
+            "findings": 0,
+            "unknowns": 2
+          },
+          "migration": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 1.0,
+            "artifacts": 0,
+            "duration_ms": 1.63,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.2,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 1.0,
+            "artifacts": 2,
+            "duration_ms": 32.39,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "security": {
+            "allocated_kb": 5.7,
+            "artifacts": 2,
+            "duration_ms": 17.78,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.172,
+        "findings": 0,
+        "peak_mb": 1.18,
+        "unknowns": 2,
+        "wall_s": 0.359
+      },
+      "warm": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.4,
+            "artifacts": 2,
+            "duration_ms": 16.08,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "gateway": {
+            "allocated_kb": 2.1,
+            "artifacts": 2,
+            "duration_ms": 73.0,
+            "findings": 0,
+            "unknowns": 2
+          },
+          "migration": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 2.5,
+            "artifacts": 0,
+            "duration_ms": 7.3,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.2,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 1.0,
+            "artifacts": 2,
+            "duration_ms": 58.66,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "security": {
+            "allocated_kb": 4.6,
+            "artifacts": 2,
+            "duration_ms": 14.58,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.141,
+        "findings": 0,
+        "peak_mb": 1.18,
+        "unknowns": 2,
+        "wall_s": 0.59
+      },
+      "warm_speedup_x": 0.62
+    },
+    "lab:generated-client-gen": {
+      "cold": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.6,
+            "artifacts": 1,
+            "duration_ms": 1.84,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "clients": {
+            "allocated_kb": 2.4,
+            "artifacts": 1,
+            "duration_ms": 1.81,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "migration": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 0.2,
+            "artifacts": 0,
+            "duration_ms": 0.16,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.2,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 0.9,
+            "artifacts": 1,
+            "duration_ms": 48.48,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "routes": {
+            "allocated_kb": 0.5,
+            "artifacts": 1,
+            "duration_ms": 1.26,
+            "findings": 0,
+            "unknowns": 1
+          },
+          "security": {
+            "allocated_kb": 1.9,
+            "artifacts": 2,
+            "duration_ms": 3.46,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.094,
+        "findings": 0,
+        "peak_mb": 1.18,
+        "unknowns": 1,
+        "wall_s": 0.277
+      },
+      "equivalent": true,
+      "populate": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.6,
+            "artifacts": 1,
+            "duration_ms": 3.51,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "clients": {
+            "allocated_kb": 2.4,
+            "artifacts": 1,
+            "duration_ms": 1.9,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "migration": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 1.0,
+            "artifacts": 0,
+            "duration_ms": 4.78,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.2,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 0.9,
+            "artifacts": 1,
+            "duration_ms": 5.45,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "routes": {
+            "allocated_kb": 0.4,
+            "artifacts": 1,
+            "duration_ms": 1.21,
+            "findings": 0,
+            "unknowns": 1
+          },
+          "security": {
+            "allocated_kb": 2.0,
+            "artifacts": 2,
+            "duration_ms": 11.51,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.125,
+        "findings": 0,
+        "peak_mb": 1.18,
+        "unknowns": 1,
+        "wall_s": 0.307
+      },
+      "warm": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.3,
+            "artifacts": 1,
+            "duration_ms": 1.84,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "clients": {
+            "allocated_kb": 2.4,
+            "artifacts": 1,
+            "duration_ms": 8.68,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "migration": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 2.7,
+            "artifacts": 0,
+            "duration_ms": 4.9,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.1,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 0.6,
+            "artifacts": 1,
+            "duration_ms": 2.95,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "routes": {
+            "allocated_kb": 0.4,
+            "artifacts": 1,
+            "duration_ms": 42.89,
+            "findings": 0,
+            "unknowns": 1
+          },
+          "security": {
+            "allocated_kb": 1.9,
+            "artifacts": 2,
+            "duration_ms": 4.53,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.094,
+        "findings": 0,
+        "peak_mb": 1.18,
+        "unknowns": 1,
+        "wall_s": 0.441
+      },
+      "warm_speedup_x": 0.63
+    },
+    "lab:grpc-echo": {
+      "cold": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.5,
+            "artifacts": 1,
+            "duration_ms": 1.58,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "grpc": {
+            "allocated_kb": 5.8,
+            "artifacts": 1,
+            "duration_ms": 2.0,
+            "findings": 2,
+            "unknowns": 0
+          },
+          "migration": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 0.2,
+            "artifacts": 0,
+            "duration_ms": 0.17,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.1,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 0.8,
+            "artifacts": 1,
+            "duration_ms": 4.39,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "security": {
+            "allocated_kb": 1.9,
+            "artifacts": 1,
+            "duration_ms": 1.96,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.8,
+            "artifacts": 0,
+            "duration_ms": 0.21,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.078,
+        "findings": 2,
+        "peak_mb": 1.18,
+        "unknowns": 0,
+        "wall_s": 0.364
+      },
+      "equivalent": true,
+      "populate": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.5,
+            "artifacts": 1,
+            "duration_ms": 1.88,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "grpc": {
+            "allocated_kb": 5.3,
+            "artifacts": 1,
+            "duration_ms": 1.81,
+            "findings": 2,
+            "unknowns": 0
+          },
+          "migration": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 1.0,
+            "artifacts": 0,
+            "duration_ms": 1.68,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.1,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 0.8,
+            "artifacts": 1,
+            "duration_ms": 2.72,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "security": {
+            "allocated_kb": 2.1,
+            "artifacts": 1,
+            "duration_ms": 2.06,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.8,
+            "artifacts": 0,
+            "duration_ms": 0.22,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.125,
+        "findings": 2,
+        "peak_mb": 1.18,
+        "unknowns": 0,
+        "wall_s": 0.245
+      },
+      "warm": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.2,
+            "artifacts": 1,
+            "duration_ms": 1.82,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "grpc": {
+            "allocated_kb": 5.1,
+            "artifacts": 1,
+            "duration_ms": 3.58,
+            "findings": 2,
+            "unknowns": 0
+          },
+          "migration": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 2.5,
+            "artifacts": 0,
+            "duration_ms": 4.09,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.1,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 0.5,
+            "artifacts": 1,
+            "duration_ms": 4.97,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "security": {
+            "allocated_kb": 1.8,
+            "artifacts": 1,
+            "duration_ms": 3.23,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.7,
+            "artifacts": 0,
+            "duration_ms": 0.2,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.141,
+        "findings": 2,
+        "peak_mb": 1.18,
+        "unknowns": 0,
+        "wall_s": 0.296
+      },
+      "warm_speedup_x": 1.23
+    },
+    "lab:mixed-lang": {
+      "cold": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.5,
+            "artifacts": 1,
+            "duration_ms": 1.77,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "clients": {
+            "allocated_kb": 0.2,
+            "artifacts": 1,
+            "duration_ms": 1.27,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.06,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "migration": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 0.2,
+            "artifacts": 0,
+            "duration_ms": 0.17,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.1,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 0.9,
+            "artifacts": 1,
+            "duration_ms": 7.12,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "routes": {
+            "allocated_kb": 8.7,
+            "artifacts": 2,
+            "duration_ms": 5.22,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "security": {
+            "allocated_kb": 1.4,
+            "artifacts": 3,
+            "duration_ms": 2.9,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.141,
+        "findings": 0,
+        "peak_mb": 1.18,
+        "unknowns": 0,
+        "wall_s": 0.345
+      },
+      "equivalent": true,
+      "populate": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.4,
+            "artifacts": 1,
+            "duration_ms": 1.59,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "clients": {
+            "allocated_kb": 0.1,
+            "artifacts": 1,
+            "duration_ms": 1.56,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.05,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "migration": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 1.0,
+            "artifacts": 0,
+            "duration_ms": 2.01,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.1,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 0.9,
+            "artifacts": 1,
+            "duration_ms": 4.8,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "routes": {
+            "allocated_kb": 8.6,
+            "artifacts": 2,
+            "duration_ms": 13.02,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "security": {
+            "allocated_kb": 1.3,
+            "artifacts": 3,
+            "duration_ms": 5.15,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.141,
+        "findings": 0,
+        "peak_mb": 1.18,
+        "unknowns": 0,
+        "wall_s": 0.372
+      },
+      "warm": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.4,
+            "artifacts": 1,
+            "duration_ms": 1.93,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "clients": {
+            "allocated_kb": 0.3,
+            "artifacts": 1,
+            "duration_ms": 1.11,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.06,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "migration": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 2.7,
+            "artifacts": 0,
+            "duration_ms": 3.81,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.1,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 0.8,
+            "artifacts": 1,
+            "duration_ms": 3.74,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "routes": {
+            "allocated_kb": 8.2,
+            "artifacts": 2,
+            "duration_ms": 6.27,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "security": {
+            "allocated_kb": 1.3,
+            "artifacts": 3,
+            "duration_ms": 2.63,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.141,
+        "findings": 0,
+        "peak_mb": 1.18,
+        "unknowns": 0,
+        "wall_s": 0.335
+      },
+      "warm_speedup_x": 1.03
+    },
+    "lab:monorepo-orders": {
+      "cold": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.5,
+            "artifacts": 3,
+            "duration_ms": 50.54,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "migration": {
+            "allocated_kb": 1.1,
+            "artifacts": 0,
+            "duration_ms": 0.19,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 14.1,
+            "artifacts": 2,
+            "duration_ms": 16.01,
+            "findings": 7,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.1,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 0.8,
+            "artifacts": 3,
+            "duration_ms": 21.47,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "security": {
+            "allocated_kb": 7.0,
+            "artifacts": 3,
+            "duration_ms": 14.44,
+            "findings": 3,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.2,
+            "artifacts": 0,
+            "duration_ms": 0.12,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.203,
+        "findings": 10,
+        "peak_mb": 1.18,
+        "unknowns": 0,
+        "wall_s": 0.428
+      },
+      "equivalent": true,
+      "populate": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.5,
+            "artifacts": 3,
+            "duration_ms": 15.55,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "migration": {
+            "allocated_kb": 1.0,
+            "artifacts": 0,
+            "duration_ms": 0.23,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 14.4,
+            "artifacts": 2,
+            "duration_ms": 19.16,
+            "findings": 7,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.1,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 0.8,
+            "artifacts": 3,
+            "duration_ms": 25.33,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "security": {
+            "allocated_kb": 7.1,
+            "artifacts": 3,
+            "duration_ms": 41.45,
+            "findings": 3,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.2,
+            "artifacts": 0,
+            "duration_ms": 0.14,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.172,
+        "findings": 10,
+        "peak_mb": 1.18,
+        "unknowns": 0,
+        "wall_s": 0.392
+      },
+      "warm": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.6,
+            "artifacts": 3,
+            "duration_ms": 9.81,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "migration": {
+            "allocated_kb": 0.9,
+            "artifacts": 0,
+            "duration_ms": 0.2,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 18.4,
+            "artifacts": 2,
+            "duration_ms": 148.47,
+            "findings": 7,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.1,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 0.7,
+            "artifacts": 3,
+            "duration_ms": 52.83,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "security": {
+            "allocated_kb": 6.4,
+            "artifacts": 3,
+            "duration_ms": 47.51,
+            "findings": 3,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.2,
+            "artifacts": 0,
+            "duration_ms": 0.12,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.219,
+        "findings": 10,
+        "peak_mb": 1.18,
+        "unknowns": 0,
+        "wall_s": 0.495
+      },
+      "warm_speedup_x": 0.86
+    },
+    "lab:partial-kong": {
+      "cold": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.3,
+            "artifacts": 2,
+            "duration_ms": 4.74,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "gateway": {
+            "allocated_kb": 2.0,
+            "artifacts": 2,
+            "duration_ms": 6.17,
+            "findings": 0,
+            "unknowns": 2
+          },
+          "migration": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 0.2,
+            "artifacts": 0,
+            "duration_ms": 0.23,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.1,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 0.9,
+            "artifacts": 2,
+            "duration_ms": 9.02,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "security": {
+            "allocated_kb": 2.4,
+            "artifacts": 2,
+            "duration_ms": 4.99,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.094,
+        "findings": 0,
+        "peak_mb": 1.18,
+        "unknowns": 2,
+        "wall_s": 0.339
+      },
+      "equivalent": true,
+      "populate": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.2,
+            "artifacts": 2,
+            "duration_ms": 21.93,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "gateway": {
+            "allocated_kb": 1.9,
+            "artifacts": 2,
+            "duration_ms": 15.04,
+            "findings": 0,
+            "unknowns": 2
+          },
+          "migration": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 1.0,
+            "artifacts": 0,
+            "duration_ms": 4.56,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.1,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 0.8,
+            "artifacts": 2,
+            "duration_ms": 8.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "security": {
+            "allocated_kb": 2.6,
+            "artifacts": 2,
+            "duration_ms": 5.22,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.141,
+        "findings": 0,
+        "peak_mb": 1.18,
+        "unknowns": 2,
+        "wall_s": 0.348
+      },
+      "warm": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.3,
+            "artifacts": 2,
+            "duration_ms": 7.28,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "gateway": {
+            "allocated_kb": 1.9,
+            "artifacts": 2,
+            "duration_ms": 5.79,
+            "findings": 0,
+            "unknowns": 2
+          },
+          "migration": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 2.5,
+            "artifacts": 0,
+            "duration_ms": 90.64,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.1,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 0.6,
+            "artifacts": 2,
+            "duration_ms": 8.86,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "security": {
+            "allocated_kb": 1.8,
+            "artifacts": 2,
+            "duration_ms": 5.64,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.125,
+        "findings": 0,
+        "peak_mb": 1.18,
+        "unknowns": 2,
+        "wall_s": 0.421
+      },
+      "warm_speedup_x": 0.81
+    },
+    "lab:partial-nginx": {
+      "cold": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.4,
+            "artifacts": 1,
+            "duration_ms": 1.53,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "gateway": {
+            "allocated_kb": 3.5,
+            "artifacts": 1,
+            "duration_ms": 1.25,
+            "findings": 0,
+            "unknowns": 1
+          },
+          "migration": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 0.2,
+            "artifacts": 0,
+            "duration_ms": 0.16,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.1,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 0.8,
+            "artifacts": 1,
+            "duration_ms": 5.09,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "security": {
+            "allocated_kb": 1.9,
+            "artifacts": 1,
+            "duration_ms": 1.97,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.156,
+        "findings": 0,
+        "peak_mb": 1.18,
+        "unknowns": 1,
+        "wall_s": 0.289
+      },
+      "equivalent": true,
+      "populate": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.4,
+            "artifacts": 1,
+            "duration_ms": 1.83,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "gateway": {
+            "allocated_kb": 2.6,
+            "artifacts": 1,
+            "duration_ms": 2.93,
+            "findings": 0,
+            "unknowns": 1
+          },
+          "migration": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 1.0,
+            "artifacts": 0,
+            "duration_ms": 2.71,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.1,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 0.8,
+            "artifacts": 1,
+            "duration_ms": 3.26,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "security": {
+            "allocated_kb": 2.0,
+            "artifacts": 1,
+            "duration_ms": 3.88,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.141,
+        "findings": 0,
+        "peak_mb": 1.18,
+        "unknowns": 1,
+        "wall_s": 0.324
+      },
+      "warm": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.2,
+            "artifacts": 1,
+            "duration_ms": 1.6,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "gateway": {
+            "allocated_kb": 2.4,
+            "artifacts": 1,
+            "duration_ms": 0.96,
+            "findings": 0,
+            "unknowns": 1
+          },
+          "migration": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 2.5,
+            "artifacts": 0,
+            "duration_ms": 31.95,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.1,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 0.5,
+            "artifacts": 1,
+            "duration_ms": 5.17,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "security": {
+            "allocated_kb": 1.7,
+            "artifacts": 1,
+            "duration_ms": 2.93,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.172,
+        "findings": 0,
+        "peak_mb": 1.18,
+        "unknowns": 1,
+        "wall_s": 0.356
+      },
+      "warm_speedup_x": 0.81
+    },
+    "lab:petstore-lite": {
+      "cold": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.5,
+            "artifacts": 2,
+            "duration_ms": 13.89,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "migration": {
+            "allocated_kb": 0.8,
+            "artifacts": 0,
+            "duration_ms": 0.26,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 19.5,
+            "artifacts": 1,
+            "duration_ms": 20.15,
+            "findings": 4,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.1,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 0.7,
+            "artifacts": 2,
+            "duration_ms": 22.89,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "security": {
+            "allocated_kb": 8.3,
+            "artifacts": 2,
+            "duration_ms": 65.82,
+            "findings": 4,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.2,
+            "artifacts": 0,
+            "duration_ms": 0.17,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.172,
+        "findings": 8,
+        "peak_mb": 1.18,
+        "unknowns": 0,
+        "wall_s": 0.492
+      },
+      "equivalent": true,
+      "populate": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.5,
+            "artifacts": 2,
+            "duration_ms": 25.19,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "migration": {
+            "allocated_kb": 0.7,
+            "artifacts": 0,
+            "duration_ms": 0.45,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 19.8,
+            "artifacts": 1,
+            "duration_ms": 78.86,
+            "findings": 4,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.1,
+            "artifacts": 0,
+            "duration_ms": 0.06,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 0.7,
+            "artifacts": 2,
+            "duration_ms": 65.49,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "security": {
+            "allocated_kb": 8.5,
+            "artifacts": 2,
+            "duration_ms": 19.07,
+            "findings": 4,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.2,
+            "artifacts": 0,
+            "duration_ms": 0.34,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.172,
+        "findings": 8,
+        "peak_mb": 1.18,
+        "unknowns": 0,
+        "wall_s": 0.488
+      },
+      "warm": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.4,
+            "artifacts": 2,
+            "duration_ms": 41.19,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "migration": {
+            "allocated_kb": 0.7,
+            "artifacts": 0,
+            "duration_ms": 0.21,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 22.2,
+            "artifacts": 1,
+            "duration_ms": 58.44,
+            "findings": 4,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.1,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 0.6,
+            "artifacts": 2,
+            "duration_ms": 30.74,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "security": {
+            "allocated_kb": 10.3,
+            "artifacts": 2,
+            "duration_ms": 57.4,
+            "findings": 4,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.2,
+            "artifacts": 0,
+            "duration_ms": 0.13,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.219,
+        "findings": 8,
+        "peak_mb": 1.18,
+        "unknowns": 0,
+        "wall_s": 0.472
+      },
+      "warm_speedup_x": 1.04
+    },
+    "lab:spring-petclinic-lite": {
+      "cold": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.4,
+            "artifacts": 1,
+            "duration_ms": 2.61,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "migration": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 0.2,
+            "artifacts": 0,
+            "duration_ms": 0.16,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.1,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 0.8,
+            "artifacts": 1,
+            "duration_ms": 8.19,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "routes": {
+            "allocated_kb": 9.5,
+            "artifacts": 1,
+            "duration_ms": 4.79,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "security": {
+            "allocated_kb": 1.1,
+            "artifacts": 2,
+            "duration_ms": 2.66,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.094,
+        "findings": 0,
+        "peak_mb": 1.18,
+        "unknowns": 0,
+        "wall_s": 0.38
+      },
+      "equivalent": true,
+      "populate": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.4,
+            "artifacts": 1,
+            "duration_ms": 2.76,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "migration": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 1.0,
+            "artifacts": 0,
+            "duration_ms": 2.16,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.1,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 0.8,
+            "artifacts": 1,
+            "duration_ms": 2.87,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "routes": {
+            "allocated_kb": 9.3,
+            "artifacts": 1,
+            "duration_ms": 6.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "security": {
+            "allocated_kb": 1.3,
+            "artifacts": 2,
+            "duration_ms": 2.27,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.141,
+        "findings": 0,
+        "peak_mb": 1.18,
+        "unknowns": 0,
+        "wall_s": 0.325
+      },
+      "warm": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.4,
+            "artifacts": 1,
+            "duration_ms": 3.76,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "migration": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 2.5,
+            "artifacts": 0,
+            "duration_ms": 5.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.1,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 0.7,
+            "artifacts": 1,
+            "duration_ms": 2.77,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "routes": {
+            "allocated_kb": 9.1,
+            "artifacts": 1,
+            "duration_ms": 3.14,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "security": {
+            "allocated_kb": 1.2,
+            "artifacts": 2,
+            "duration_ms": 2.29,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.141,
+        "findings": 0,
+        "peak_mb": 1.18,
+        "unknowns": 0,
+        "wall_s": 0.333
+      },
+      "warm_speedup_x": 1.14
+    },
+    "lab:vendored-lib": {
+      "cold": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.5,
+            "artifacts": 1,
+            "duration_ms": 1.76,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "clients": {
+            "allocated_kb": 0.2,
+            "artifacts": 1,
+            "duration_ms": 4.92,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "migration": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 0.2,
+            "artifacts": 0,
+            "duration_ms": 0.18,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.1,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 1.0,
+            "artifacts": 1,
+            "duration_ms": 3.76,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "routes": {
+            "allocated_kb": 0.4,
+            "artifacts": 1,
+            "duration_ms": 3.59,
+            "findings": 0,
+            "unknowns": 1
+          },
+          "security": {
+            "allocated_kb": 1.8,
+            "artifacts": 2,
+            "duration_ms": 5.66,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.125,
+        "findings": 0,
+        "peak_mb": 1.18,
+        "unknowns": 1,
+        "wall_s": 0.276
+      },
+      "equivalent": true,
+      "populate": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.6,
+            "artifacts": 1,
+            "duration_ms": 2.02,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "clients": {
+            "allocated_kb": 0.2,
+            "artifacts": 1,
+            "duration_ms": 1.08,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "migration": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 1.0,
+            "artifacts": 0,
+            "duration_ms": 2.21,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.1,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 1.0,
+            "artifacts": 1,
+            "duration_ms": 5.23,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "routes": {
+            "allocated_kb": 0.4,
+            "artifacts": 1,
+            "duration_ms": 2.39,
+            "findings": 0,
+            "unknowns": 1
+          },
+          "security": {
+            "allocated_kb": 1.9,
+            "artifacts": 2,
+            "duration_ms": 3.94,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.156,
+        "findings": 0,
+        "peak_mb": 1.18,
+        "unknowns": 1,
+        "wall_s": 0.311
+      },
+      "warm": {
+        "analyzers": {
+          "cache": {
+            "allocated_kb": 0.2,
+            "artifacts": 1,
+            "duration_ms": 13.78,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "clients": {
+            "allocated_kb": 0.2,
+            "artifacts": 1,
+            "duration_ms": 1.2,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "fanout": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "migration": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 2.7,
+            "artifacts": 0,
+            "duration_ms": 6.99,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.1,
+            "artifacts": 0,
+            "duration_ms": 0.03,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 0.6,
+            "artifacts": 1,
+            "duration_ms": 5.96,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "routes": {
+            "allocated_kb": 0.4,
+            "artifacts": 1,
+            "duration_ms": 1.27,
+            "findings": 0,
+            "unknowns": 1
+          },
+          "security": {
+            "allocated_kb": 1.5,
+            "artifacts": 2,
+            "duration_ms": 2.97,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 0.0,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 0.125,
+        "findings": 0,
+        "peak_mb": 1.18,
+        "unknowns": 1,
+        "wall_s": 0.285
+      },
+      "warm_speedup_x": 0.97
+    },
+    "self": {
+      "cold": {
+        "analyzers": {
+          "asyncapi": {
+            "allocated_kb": 16.8,
+            "artifacts": 2,
+            "duration_ms": 47.9,
+            "findings": 1,
+            "unknowns": 0
+          },
+          "cache": {
+            "allocated_kb": 1.9,
+            "artifacts": 218,
+            "duration_ms": 5640.75,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "clients": {
+            "allocated_kb": 2.1,
+            "artifacts": 313,
+            "duration_ms": 12119.49,
+            "findings": 0,
+            "unknowns": 1
+          },
+          "fanout": {
+            "allocated_kb": 0.6,
+            "artifacts": 0,
+            "duration_ms": 0.31,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "gateway": {
+            "allocated_kb": 7.1,
+            "artifacts": 10,
+            "duration_ms": 84.05,
+            "findings": 0,
+            "unknowns": 7
+          },
+          "graphql": {
+            "allocated_kb": 7948.0,
+            "artifacts": 2,
+            "duration_ms": 1776.24,
+            "findings": 2,
+            "unknowns": 0
+          },
+          "grpc": {
+            "allocated_kb": 16.9,
+            "artifacts": 3,
+            "duration_ms": 23.83,
+            "findings": 6,
+            "unknowns": 0
+          },
+          "iac": {
+            "allocated_kb": 0.6,
+            "artifacts": 1,
+            "duration_ms": 2.16,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "migration": {
+            "allocated_kb": 5.6,
+            "artifacts": 0,
+            "duration_ms": 1.9,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 286.1,
+            "artifacts": 27,
+            "duration_ms": 490.37,
+            "findings": 69,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.1,
+            "artifacts": 0,
+            "duration_ms": 1.24,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 10.8,
+            "artifacts": 218,
+            "duration_ms": 6447.39,
+            "findings": 6,
+            "unknowns": 0
+          },
+          "routes": {
+            "allocated_kb": 277.6,
+            "artifacts": 317,
+            "duration_ms": 13009.85,
+            "findings": 0,
+            "unknowns": 3
+          },
+          "runtime": {
+            "allocated_kb": 41.8,
+            "artifacts": 2,
+            "duration_ms": 154.98,
+            "findings": 3,
+            "unknowns": 0
+          },
+          "security": {
+            "allocated_kb": 130.0,
+            "artifacts": 535,
+            "duration_ms": 6311.27,
+            "findings": 5,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 2.7,
+            "artifacts": 0,
+            "duration_ms": 0.61,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 28.469,
+        "findings": 130,
+        "peak_mb": 16.57,
+        "unknowns": 19,
+        "wall_s": 59.961
+      },
+      "equivalent": true,
+      "populate": {
+        "analyzers": {
+          "asyncapi": {
+            "allocated_kb": -107.8,
+            "artifacts": 2,
+            "duration_ms": 12.75,
+            "findings": 1,
+            "unknowns": 0
+          },
+          "cache": {
+            "allocated_kb": 3.2,
+            "artifacts": 218,
+            "duration_ms": 4607.82,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "clients": {
+            "allocated_kb": 11.2,
+            "artifacts": 313,
+            "duration_ms": 10572.08,
+            "findings": 0,
+            "unknowns": 1
+          },
+          "fanout": {
+            "allocated_kb": 0.6,
+            "artifacts": 0,
+            "duration_ms": 0.38,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "gateway": {
+            "allocated_kb": 6.5,
+            "artifacts": 10,
+            "duration_ms": 72.8,
+            "findings": 0,
+            "unknowns": 7
+          },
+          "graphql": {
+            "allocated_kb": 158.8,
+            "artifacts": 2,
+            "duration_ms": 57.76,
+            "findings": 2,
+            "unknowns": 0
+          },
+          "grpc": {
+            "allocated_kb": 13.7,
+            "artifacts": 3,
+            "duration_ms": 23.08,
+            "findings": 6,
+            "unknowns": 0
+          },
+          "iac": {
+            "allocated_kb": 0.3,
+            "artifacts": 1,
+            "duration_ms": 5.39,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "migration": {
+            "allocated_kb": 5.4,
+            "artifacts": 0,
+            "duration_ms": 2.05,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 272.5,
+            "artifacts": 27,
+            "duration_ms": 725.87,
+            "findings": 69,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.1,
+            "artifacts": 0,
+            "duration_ms": 1.41,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 9.9,
+            "artifacts": 218,
+            "duration_ms": 5356.1,
+            "findings": 6,
+            "unknowns": 0
+          },
+          "routes": {
+            "allocated_kb": 63.7,
+            "artifacts": 317,
+            "duration_ms": 11137.44,
+            "findings": 0,
+            "unknowns": 3
+          },
+          "runtime": {
+            "allocated_kb": 40.9,
+            "artifacts": 2,
+            "duration_ms": 136.21,
+            "findings": 3,
+            "unknowns": 0
+          },
+          "security": {
+            "allocated_kb": 119.0,
+            "artifacts": 535,
+            "duration_ms": 5817.42,
+            "findings": 5,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 2.4,
+            "artifacts": 0,
+            "duration_ms": 1.16,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 30.922,
+        "findings": 130,
+        "peak_mb": 8.38,
+        "unknowns": 19,
+        "wall_s": 51.547
+      },
+      "warm": {
+        "analyzers": {
+          "asyncapi": {
+            "allocated_kb": -101.8,
+            "artifacts": 2,
+            "duration_ms": 15.85,
+            "findings": 1,
+            "unknowns": 0
+          },
+          "cache": {
+            "allocated_kb": -3.4,
+            "artifacts": 218,
+            "duration_ms": 3985.63,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "clients": {
+            "allocated_kb": 6.6,
+            "artifacts": 313,
+            "duration_ms": 10089.4,
+            "findings": 0,
+            "unknowns": 1
+          },
+          "fanout": {
+            "allocated_kb": 0.5,
+            "artifacts": 0,
+            "duration_ms": 0.47,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "gateway": {
+            "allocated_kb": 7.1,
+            "artifacts": 10,
+            "duration_ms": 112.76,
+            "findings": 0,
+            "unknowns": 7
+          },
+          "graphql": {
+            "allocated_kb": 153.2,
+            "artifacts": 2,
+            "duration_ms": 16.69,
+            "findings": 2,
+            "unknowns": 0
+          },
+          "grpc": {
+            "allocated_kb": 12.8,
+            "artifacts": 3,
+            "duration_ms": 8.69,
+            "findings": 6,
+            "unknowns": 0
+          },
+          "iac": {
+            "allocated_kb": 0.6,
+            "artifacts": 1,
+            "duration_ms": 7.17,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "migration": {
+            "allocated_kb": 5.3,
+            "artifacts": 0,
+            "duration_ms": 8.01,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "openapi": {
+            "allocated_kb": 290.9,
+            "artifacts": 27,
+            "duration_ms": 579.58,
+            "findings": 69,
+            "unknowns": 0
+          },
+          "policy": {
+            "allocated_kb": 0.0,
+            "artifacts": 0,
+            "duration_ms": 1.4,
+            "findings": 0,
+            "unknowns": 0
+          },
+          "reliability": {
+            "allocated_kb": 9.7,
+            "artifacts": 218,
+            "duration_ms": 4590.11,
+            "findings": 6,
+            "unknowns": 0
+          },
+          "routes": {
+            "allocated_kb": 78.6,
+            "artifacts": 317,
+            "duration_ms": 9238.07,
+            "findings": 0,
+            "unknowns": 3
+          },
+          "runtime": {
+            "allocated_kb": 49.9,
+            "artifacts": 2,
+            "duration_ms": 441.05,
+            "findings": 3,
+            "unknowns": 0
+          },
+          "security": {
+            "allocated_kb": 124.0,
+            "artifacts": 535,
+            "duration_ms": 5068.22,
+            "findings": 5,
+            "unknowns": 0
+          },
+          "version": {
+            "allocated_kb": 1.6,
+            "artifacts": 0,
+            "duration_ms": 0.71,
+            "findings": 0,
+            "unknowns": 0
+          }
+        },
+        "cpu_s": 30.25,
+        "findings": 130,
+        "peak_mb": 8.5,
+        "unknowns": 19,
+        "wall_s": 44.491
+      },
+      "warm_speedup_x": 1.35
+    }
+  }
+}

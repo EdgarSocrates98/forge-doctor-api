@@ -1,0 +1,17 @@
+openapi: 3.0.3
+info:
+  title: Remote
+  version: 1.0.0
+paths: {}
+components:
+  schemas:
+    Http:
+      $ref: http://example.com/schemas.yaml#/Pet
+    Https:
+      $ref: https://example.com/schemas.yaml#/Pet
+    Urn:
+      $ref: urn:example:pet
+    File:
+      $ref: file:///etc/passwd
+    Absolute:
+      $ref: /etc/openapi.yaml

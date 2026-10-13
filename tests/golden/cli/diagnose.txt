@@ -1,0 +1,4 @@
+Usage: forge-doctor-api diagnose [OPTIONS] {target} §165 cluster findings into symptom/candidate
+causes/affected services/unknowns. Arguments * target <str> Directory with current-state evidence
+(contract + config + runtime artifacts). [required] Options --before <str> Prior-state directory for
+the change diff. --json JSON output. --help Show this message and exit.

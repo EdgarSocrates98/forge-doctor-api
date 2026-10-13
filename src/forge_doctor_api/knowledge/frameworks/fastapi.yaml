@@ -1,0 +1,17 @@
+# §130 capability pack: FastAPI — platform -> known capabilities.
+pack: fastapi-capabilities
+domain: frameworks
+edition: "2026.10"
+maturity: checks
+entries:
+  fastapi:
+    fields:
+      platform: fastapi
+      language: python
+      capabilities: [openapi, openapi-3x, webhooks, dependency-injection]
+      native_openapi: true
+      route_style: decorator
+    provenance:
+      source: https://fastapi.tiangolo.com/
+      source_version: "0.115"
+      last_verified: "2026-09-15"

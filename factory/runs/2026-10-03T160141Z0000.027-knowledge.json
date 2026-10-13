@@ -1,0 +1,15 @@
+{
+  "agent": "codex",
+  "command": [
+    "codex",
+    "exec",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\027-knowledge.implement.codex.md)"
+  ],
+  "created_at": "2026-10-03T16:01:41+00:00",
+  "id": "027-knowledge",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\027-knowledge.implement.codex.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\027-knowledge.md",
+  "spec_sha256": "8d413193ab34a9c4b3aae6095b14fab59cbe4eaef8d9be976c25d264d652a63c",
+  "status": "planned",
+  "title": "Knowledge packs, provenance, capability packs, plugin SDK trust boundary"
+}

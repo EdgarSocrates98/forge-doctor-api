@@ -1,0 +1,17 @@
+openapi: "3.0.3"
+info: {title: Refs, version: "1.0"}
+security: [{apiKey: []}]
+paths:
+  /items:
+    get:
+      operationId: listItems
+      tags: [items]
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Missing'}
+components:
+  securitySchemes:
+    apiKey: {type: apiKey, in: header, name: X-Key}

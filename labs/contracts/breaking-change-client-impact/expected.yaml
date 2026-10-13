@@ -1,0 +1,13 @@
+# §226 first demo target: breaking change + client impact.
+run: [clients]
+diff: {old: before, new: after}
+expected_findings:
+  - CLIENT001   # confirmed impact — the removed field is consumed
+expected_breaking:
+  - getUser
+expected_clients:
+  - frontend-service
+expected_description_contains:
+  - email       # the removed response field is named in the finding
+forbidden_description_contains:
+  - "confirmed vulnerability"

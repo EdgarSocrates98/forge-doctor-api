@@ -1,0 +1,4 @@
+# gRPC service config evidence: deadlines + health checks declared.
+grpc:
+  timeout: "2s"
+  healthCheck: true

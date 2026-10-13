@@ -1,0 +1,6 @@
+# dynamic framework config: no static routes -> nothing invented.
+provenance: {source: nestjs-dynamic-module-fixture, retrieved: "2026-10"}
+run: [openapi]
+expected_findings: []
+forbidden_entities:
+  - operation:nestjs

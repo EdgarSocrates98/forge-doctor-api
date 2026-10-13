@@ -1,0 +1,4 @@
+# envoy partial: declared cluster resolves; undeclared cluster -> unknown.
+provenance: {source: envoy-static-config-fixture, retrieved: "2026-10"}
+run: [openapi]
+expected_findings: []

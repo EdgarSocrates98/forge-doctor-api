@@ -1,0 +1,7 @@
+{
+  "schema": "forge/DocDivergence/v1",
+  "cli": "forge-doctor-api",
+  "documented_missing": [],
+  "undocumented_commands": [],
+  "generated_at": "2026-10-11T00:49:11Z"
+}

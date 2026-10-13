@@ -1,0 +1,15 @@
+{
+  "agent": "claude",
+  "command": [
+    "claude",
+    "-p",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\074-forge-contracts-conformance.implement.claude.md)"
+  ],
+  "created_at": "2026-10-05T03:01:39+00:00",
+  "id": "074-forge-contracts-conformance",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\074-forge-contracts-conformance.implement.claude.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\074-forge-contracts-conformance.md",
+  "spec_sha256": "5d5a6c42c8179b2f16c1de9917ae15a68564a422f6b1542fcf90724e14a54068",
+  "status": "planned",
+  "title": "forge-contracts/1 wire conformance \u2014 shared vocabulary adapter"
+}

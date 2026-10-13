@@ -1,0 +1,8 @@
+# Adversarial: dynamic/non-literal express paths -> unknowns, never
+# routes; comment/string content can never route.
+expected_findings: []
+forbidden_entities:
+  - endpoint:
+  - operation:express
+forbidden_findings:
+  - APISEC*

@@ -1,0 +1,17 @@
+# §130 capability pack: Spring — platform -> known capabilities.
+pack: spring-capabilities
+domain: frameworks
+edition: "2026.10"
+maturity: detection
+entries:
+  spring:
+    fields:
+      platform: spring
+      language: java
+      capabilities: [actuator-health, resilience4j]
+      native_openapi: false   # via springdoc, not the framework itself
+      route_style: annotation
+    provenance:
+      source: https://spring.io/projects/spring-boot
+      source_version: "3.x"
+      last_verified: "2026-09-15"

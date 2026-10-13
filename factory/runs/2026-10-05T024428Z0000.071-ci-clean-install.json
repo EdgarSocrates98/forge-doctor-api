@@ -1,0 +1,15 @@
+{
+  "agent": "claude",
+  "command": [
+    "claude",
+    "-p",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\071-ci-clean-install.implement.claude.md)"
+  ],
+  "created_at": "2026-10-05T02:44:28+00:00",
+  "id": "071-ci-clean-install",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\071-ci-clean-install.implement.claude.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\071-ci-clean-install.md",
+  "spec_sha256": "f02a7ea7ff97c34c29e4d09dc76e7bf9d1072465a119143f51d415e04552c909",
+  "status": "planned",
+  "title": "CI & clean-install equivalence \u2014 minimal/full install matrix"
+}

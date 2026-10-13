@@ -1,0 +1,8 @@
+# Adversarial: mapping annotations inside comments/strings must never
+# become routes — no endpoints, no operations, no findings.
+expected_findings: []
+forbidden_entities:
+  - endpoint:
+  - operation:spring
+forbidden_findings:
+  - APISEC*

@@ -1,0 +1,15 @@
+{
+  "agent": "codex",
+  "command": [
+    "codex",
+    "exec",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\019-digital-twin.implement.codex.md)"
+  ],
+  "created_at": "2026-10-03T13:48:16+00:00",
+  "id": "019-digital-twin",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\019-digital-twin.implement.codex.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\019-digital-twin.md",
+  "spec_sha256": "e3a79b00b4097ef61d3f55d04bec768fc031be146fb509db1c0021e8834147bc",
+  "status": "planned",
+  "title": "API Digital Twin \u2014 five-state model and twin drift"
+}

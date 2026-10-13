@@ -1,0 +1,70 @@
+{
+  "blast-radius": {
+    "why": "blast radius: operação mudada -> clients -> serviços -> caminhos de negócio",
+    "when": "antes de mudar uma operação: medir quem quebra"
+  },
+  "contract": {
+    "why": "inspeciona, diffs e checa contratos de API",
+    "when": "trabalhar contratos: inspeção, diff, check"
+  },
+  "diagnose": {
+    "why": "agrupa findings em sintoma/causas candidatas/serviços afetados/unknowns",
+    "when": "transformar um scan em hipóteses organizadas"
+  },
+  "diff": {
+    "why": "diff semântico de contrato: eventos de mudança tipados + resumo opcional para PR",
+    "when": "comparar duas versões de contrato com breaking/risky tipados"
+  },
+  "explain": {
+    "why": "renderiza a cadeia de evidência + racional da regra de um finding",
+    "when": "entender por que um finding disparou"
+  },
+  "fingerprint": {
+    "why": "imprime o fingerprint semântico de um contrato",
+    "when": "identificar/ancorar um contrato pelo seu fingerprint"
+  },
+  "graph": {
+    "why": "mostra o grafo de serviços construído de contrato+implementação+evidência de client",
+    "when": "navegar relações de serviço com evidência"
+  },
+  "inventory": {
+    "why": "inventário: serviços, APIs, operações, protocolos, owners",
+    "when": "primeiro mapa de um estate de APIs"
+  },
+  "knowledge": {
+    "why": "manifestos de knowledge-pack, compat e precedência",
+    "when": "consultar fontes versionadas e sua precedência"
+  },
+  "lab": {
+    "why": "Forge Lab: roda todos os cenários + relatório de precisão por família",
+    "when": "validar a ferramenta offline contra ground truth"
+  },
+  "mcp": {
+    "why": "serve o Doctor via MCP (requer o extra `mcp`)",
+    "when": "integrar o doctor a hosts via MCP"
+  },
+  "plugins": {
+    "why": "manifestos de plugin, registry e conformance",
+    "when": "inspecionar/validar plugins externos"
+  },
+  "reliability": {
+    "why": "análise de confiabilidade",
+    "when": "avaliar resiliência/SLO com evidência"
+  },
+  "runtime": {
+    "why": "analisa evidência de runtime exportada",
+    "when": "trabalhar dumps de runtime offline"
+  },
+  "scan": {
+    "why": "scan completo: todos os pipelines determinísticos + gate opcional",
+    "when": "primeira passada num repo — produz findings"
+  },
+  "security": {
+    "why": "análise de segurança passiva",
+    "when": "revisar postura de segurança declarada sem tocar o serviço"
+  },
+  "snapshot": {
+    "why": "snapshots temporais + regressões arquiteturais",
+    "when": "comparar o estado da arquitetura ao longo do tempo"
+  }
+}

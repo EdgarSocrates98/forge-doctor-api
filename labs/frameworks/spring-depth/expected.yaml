@@ -1,0 +1,13 @@
+# Spring depth: @PreAuthorize auth expression, @Autowired injection,
+# @RestControllerAdvice + @ExceptionHandler error contract,
+# @RequestBody DTO type evidence are positive; no Bean-Validation
+# idioms — validation must surface as UNKNOWN.
+run: [frameworks]
+expected_entities:
+  - "capability:spring:auth-expression:@PreAuthorize"
+  - "capability:spring:injection:@Autowired"
+  - "capability:spring:advice-class:@RestControllerAdvice"
+  - "capability:spring:error-handler:@ExceptionHandler"
+  - "capability:spring:request-schema-type:PetCreateDto"
+expected_issues:
+  - "spring validation:static validation evidence"

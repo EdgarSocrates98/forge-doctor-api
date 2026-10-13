@@ -1,0 +1,14 @@
+asyncapi: "3.0.0"
+info:
+  title: Events
+  version: "1.0"
+channels:
+  bareChannel:
+    address: bare.topic
+operations:
+  onBare:
+    action: receive
+    channel:
+      $ref: '#/channels/bareChannel'
+    bindings:
+      amqp: {is: routingKey}

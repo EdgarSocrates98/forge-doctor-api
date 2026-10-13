@@ -1,0 +1,15 @@
+openapi: "3.0.3"
+info: {title: Node Items API, version: "1.0", x-owner: items-team}
+paths:
+  /items/{id}:
+    get:
+      operationId: getItem
+      tags: [items]
+      security: [{apiKey: []}]
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string}}
+      responses:
+        '200': {description: ok}
+components:
+  securitySchemes:
+    apiKey: {type: apiKey, in: header, name: X-Key}

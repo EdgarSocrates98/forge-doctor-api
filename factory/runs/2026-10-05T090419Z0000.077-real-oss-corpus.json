@@ -1,0 +1,15 @@
+{
+  "agent": "claude",
+  "command": [
+    "claude",
+    "-p",
+    "$(cat E:\\projetos\\forge-doctor-api\\factory\\prompts\\077-real-oss-corpus.implement.claude.md)"
+  ],
+  "created_at": "2026-10-05T09:04:19+00:00",
+  "id": "077-real-oss-corpus",
+  "prompt_path": "E:\\projetos\\forge-doctor-api\\factory\\prompts\\077-real-oss-corpus.implement.claude.md",
+  "spec_path": "E:\\projetos\\forge-doctor-api\\factory\\specs\\active\\077-real-oss-corpus.md",
+  "spec_sha256": "17f042f90196b00847cfd5f7018b3e0e19a2927251e7d6679481ca85b601ac23",
+  "status": "planned",
+  "title": "Real OSS API corpus \u2014 provenance manifest + negative cases"
+}

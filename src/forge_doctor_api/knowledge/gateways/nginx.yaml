@@ -1,0 +1,15 @@
+# §130 capability pack: NGINX — gateway -> known capabilities.
+pack: nginx-capabilities
+domain: gateways
+edition: "2026.10"
+maturity: detection
+entries:
+  nginx:
+    fields:
+      platform: nginx
+      capabilities: [rate-limiting, timeouts, health-check, mtls]
+      config_surface: nginx.conf
+    provenance:
+      source: https://nginx.org/en/docs/
+      source_version: "1.x"
+      last_verified: "2026-09-15"

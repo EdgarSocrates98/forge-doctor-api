@@ -1,0 +1,6 @@
+TODO: this is what Spring would look like
+@GetMapping("/users")
+public User getUser(@PathVariable String id) { ... }
+
+@RestController
+class Fake {}

@@ -1,0 +1,47 @@
+{
+  "schema": "forge/SpecialistAgenticManifest/v1",
+  "provider": "forge-doctor-api",
+  "version": "0.2.0",
+  "cli": "forge-doctor-api",
+  "cli_entry": "forge_doctor_api.cli:main",
+  "workflows": [
+    {
+      "id": "scan",
+      "mode": "DIAGNOSTIC_ONLY",
+      "command": [
+        "{cli}",
+        "scan",
+        "{target}"
+      ],
+      "description": "Independent API diagnostic",
+      "read_only": true
+    },
+    {
+      "id": "diagnose",
+      "mode": "DIAGNOSTIC_ONLY",
+      "command": [
+        "{cli}",
+        "diagnose",
+        "{target}"
+      ],
+      "description": "Contract/reliability diagnosis",
+      "read_only": true
+    }
+  ],
+  "skills": [],
+  "agents": [],
+  "coordinators": [],
+  "mcp_command": [
+    "{cli}",
+    "mcp"
+  ],
+  "host_adapters": [
+    "claude",
+    "devin",
+    "codex",
+    "copilot"
+  ],
+  "requires_network": false,
+  "requires_credentials": false,
+  "read_only_default": true
+}

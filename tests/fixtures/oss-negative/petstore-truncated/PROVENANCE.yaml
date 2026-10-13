@@ -1,0 +1,4 @@
+origin: "oai-learn/petstore (OAI/learn.openapis.org examples/v3.0/petstore.yaml @ bbb743ed3b7c5ed76b6e6ba9b302af38f3956c44, CC-BY-4.0)"
+domain: "openapi"
+sha256: "212e8460a2717b295635ca31d3337253971de235dd01a844e14739cc2e01cd73"
+extracted_at_note: "first 1200 bytes of the verbatim slice (mid-document cut)"

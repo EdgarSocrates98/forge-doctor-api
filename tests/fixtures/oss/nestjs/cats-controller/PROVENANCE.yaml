@@ -1,0 +1,6 @@
+source_repo: https://github.com/nestjs/nest
+upstream_path: sample/01-cats-app/src/cats/cats.controller.ts
+upstream_ref: 35142c3eca8edaaf6abc5984d915da2fbd458aa2
+license: MIT
+sha256: 5d4d18608b14e15110b270ab997b4bc1a7dcae9a86185ca3e46f07db0ef19f98
+extracted_at_note: verbatim excerpt fetched at the pinned upstream ref
