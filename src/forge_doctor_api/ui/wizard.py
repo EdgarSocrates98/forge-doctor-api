@@ -12,8 +12,8 @@ without side effects; nothing is written before the explicit confirm.
 
 from __future__ import annotations
 
-import json
 import importlib
+import json
 import shutil
 import sys
 from typing import Any
