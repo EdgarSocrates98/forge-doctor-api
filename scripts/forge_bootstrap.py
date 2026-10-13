@@ -402,7 +402,10 @@ def _persist_windows(
     all_values = {**values, **aliases}
     user_path = None
     with winreg.CreateKeyEx(
-        winreg.HKEY_CURRENT_USER, r"Environment", 0, winreg.KEY_SET_VALUE
+        winreg.HKEY_CURRENT_USER,
+        r"Environment",
+        0,
+        winreg.KEY_SET_VALUE | winreg.KEY_QUERY_VALUE,
     ) as key:
         for name, value in all_values.items():
             winreg.SetValueEx(key, name, 0, winreg.REG_SZ, value)
@@ -425,8 +428,10 @@ def _persist_windows(
 
 
 def _registry_has_value(key: Any, name: str) -> bool:
+    import winreg
+
     try:
-        key.QueryValueEx(name)
+        winreg.QueryValueEx(key, name)
     except FileNotFoundError:
         return False
     return True
