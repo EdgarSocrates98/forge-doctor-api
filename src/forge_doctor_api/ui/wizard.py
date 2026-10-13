@@ -12,8 +12,8 @@ without side effects; nothing is written before the explicit confirm.
 
 from __future__ import annotations
 
-import json
 import importlib
+import json
 import shutil
 import sys
 from typing import Any
@@ -269,7 +269,7 @@ def run_setup_wizard(
         if exc.name == "theforge" or (exc.name or "").startswith("theforge."):
             print(
                 "family onboarding unavailable: install The Forge separately; "
-                "native Doctor API commands remain available"
+                "native Forge commands remain available"
             )
             return 2
         raise
