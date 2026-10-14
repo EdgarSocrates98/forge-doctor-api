@@ -389,9 +389,41 @@ def environment_contract(
 def _posix_env_paths() -> tuple[Path, Path]:
     config_home = Path(os.environ.get("XDG_CONFIG_HOME") or (Path.home() / ".config"))
     env_file = config_home / ENV_DIR_NAME / ENV_FILE_NAME
-    shell = Path(os.environ.get("SHELL", "/bin/sh")).name
+    shell = Path(os.environ.get("SHELL", "/bin/sh")).name.lower().removesuffix(".exe")
     rc_name = {"bash": ".bashrc", "zsh": ".zshrc"}.get(shell, ".profile")
     return env_file, Path.home() / rc_name
+
+
+def _is_git_bash() -> bool:
+    """Return whether Windows Python was launched from MSYS2/Git Bash.
+
+    Git Bash starts native Windows Python with ``os.name == 'nt'``.  Treating
+    that process as plain Windows loses the shell-local environment file, so
+    installs look successful but the next Bash command cannot see variables.
+    ``MSYSTEM`` is the strongest signal; ``OSTYPE`` covers older Git Bash
+    launchers and keeps the check independent of the exact MSYS profile.
+    """
+    if os.name != "nt":
+        return False
+    system = os.environ.get("MSYSTEM", "").lower()
+    ostype = os.environ.get("OSTYPE", "").lower()
+    return bool(system) or ostype.startswith(("msys", "mingw", "ucrt", "cygwin"))
+
+
+def _shell_path(value: str) -> str:
+    """Render a native path usable by the current Git Bash shell."""
+    if not _is_git_bash():
+        return value
+    converter = shutil.which("cygpath")
+    if converter:
+        try:
+            converted = _run([converter, "-u", value], timeout=10)
+        except OSError:
+            converted = None
+        if converted and converted.returncode == 0 and converted.stdout.strip():
+            return converted.stdout.strip()
+    # Git Bash accepts forward-slash native paths when cygpath is unavailable.
+    return value.replace("\\", "/")
 
 
 def _persist_windows(
@@ -437,7 +469,9 @@ def _registry_has_value(key: Any, name: str) -> bool:
     return True
 
 
-def _persist_posix(values: dict[str, str], shim: Path | None) -> str:
+def _persist_posix(
+    values: dict[str, str], shim: Path | None, shell_shim: str | None = None
+) -> str:
     env_file, rc_file = _posix_env_paths()
     marker_start = "# >>> forjas account environment >>>"
     marker_end = "# <<< forjas account environment <<<"
@@ -445,7 +479,8 @@ def _persist_posix(values: dict[str, str], shim: Path | None) -> str:
     for name, value in sorted(values.items()):
         lines.append(f"export {name}={shlex.quote(value)}")
     if shim:
-        quoted = shlex.quote(str(shim))
+        path_entry = shell_shim or str(shim)
+        quoted = shlex.quote(path_entry)
         lines.extend(
             [
                 f"case :${{PATH:-}}: in *:{quoted}:*) ;; *) export PATH={quoted}:${{PATH:-}} ;; esac",
@@ -477,8 +512,9 @@ def _persist_posix(values: dict[str, str], shim: Path | None) -> str:
         os.environ[name] = value
     if shim:
         current = os.environ.get("PATH", "")
-        if str(shim) not in current.split(os.pathsep):
-            os.environ["PATH"] = str(shim) + os.pathsep + current
+        path_entry = shell_shim or str(shim)
+        if path_entry not in current.split(os.pathsep):
+            os.environ["PATH"] = path_entry + os.pathsep + current
     return str(env_file)
 
 
@@ -486,9 +522,16 @@ def persist_environment(environment: dict[str, Any], shim: Path | None, log) -> 
     values = dict(environment["variables"])
     if os.name == "nt":
         _persist_windows(values, dict(environment.get("windows_aliases") or {}), shim)
-        environment["persistence"] = "HKCU\\Environment"
-        environment["shell_init"] = None
-        log("account environment written to HKCU\\Environment")
+        if _is_git_bash():
+            env_file = _persist_posix(values, shim, _shell_path(str(shim)) if shim else None)
+            environment["persistence"] = "HKCU\\Environment + Git Bash shell-init"
+            environment["shell_init"] = env_file
+            environment["shell"] = "git-bash"
+            log("account environment written to HKCU\\Environment and Git Bash shell-init")
+        else:
+            environment["persistence"] = "HKCU\\Environment"
+            environment["shell_init"] = None
+            log("account environment written to HKCU\\Environment")
     else:
         env_file = _persist_posix(values, shim)
         environment["persistence"] = "shell-init"
@@ -761,6 +804,9 @@ def _path_guidance() -> str | None:
     d = str(shim_dir())
     if d in os.environ.get("PATH", "").split(os.pathsep):
         return None
+    if _is_git_bash():
+        env_file, _ = _posix_env_paths()
+        return f"source {shlex.quote(str(env_file))}  # reload Git Bash environment"
     if os.name == "nt":
         return f'setx PATH "%PATH%;{d}"  # open a new terminal after'
     sh = Path(os.environ.get("SHELL", "/bin/sh")).name
