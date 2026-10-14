@@ -163,10 +163,13 @@ def test_help_golden_snapshot(entry) -> None:
     if entry.path == "graph":
         # Accept snapshots generated before graph persistence moved from the
         # legacy flat filename to the canonical graph/service-graph.json path.
-        legacy = ".forge-doctor-api/graph.json"
-        canonical = ".forge-doctor-api/graph/service-graph.json"
-        actual = actual.replace(legacy, canonical)
-        expected = expected.replace(legacy, canonical)
+        def canonicalize_graph_path(value: str) -> str:
+            if "service-graph.json" not in value:
+                return value.replace("graph.json", "graph/service-graph.json")
+            return value
+
+        actual = canonicalize_graph_path(actual)
+        expected = canonicalize_graph_path(expected)
     assert actual == expected, (
         f"`{entry.path} --help` drifted from golden snapshot; "
         "if intentional, run `python tests/golden/_regen.py` and review "
