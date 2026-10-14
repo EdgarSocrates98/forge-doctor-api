@@ -415,6 +415,17 @@
           "choices": null,
           "positional": false,
           "help": "Port to bind (default ephemeral)."
+        },
+        {
+          "name": "out",
+          "flags": [
+            "--out"
+          ],
+          "required": false,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Write canonical ServiceGraph JSON. Defaults to TARGET/.forge-doctor-api/graph/service-graph.json."
         }
       ]
     },

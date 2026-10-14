@@ -253,7 +253,7 @@ _free notes — errors, examples, next steps (hand-written, preserved)_
 **Syntax**
 
 ```text
-forge-doctor-api graph <target> [json_out] [view] [ui] [no_browser] [port]
+forge-doctor-api graph <target> [json_out] [view] [ui] [no_browser] [port] [out]
 ```
 
 | argument/flag | required | default | description |
@@ -264,6 +264,7 @@ forge-doctor-api graph <target> [json_out] [view] [ui] [no_browser] [port]
 | `ui` | no | — | Open the local Graph Studio explorer. |
 | `no_browser` | no | — | Serve without opening a browser (SSH). |
 | `port` | no | — | Port to bind (default ephemeral). |
+| `out` | no | — | Write canonical ServiceGraph JSON. Defaults to TARGET/.forge-doctor-api/graph/service-graph.json. |
 
 <!-- keep:start -->
 _free notes — errors, examples, next steps (hand-written, preserved)_
