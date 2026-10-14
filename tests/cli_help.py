@@ -73,7 +73,7 @@ def normalized_help(*argv: str) -> str:
         tokens.extend(line.split())
     canonical = "\n".join(textwrap.wrap(" ".join(tokens), 100)) + "\n"
     # Rich may truncate this long path on Linux even with a pinned width.
-    return _TRUNCATED_GRAPH_PATH_RE.sub("service-graph.json", canonical)
+    return _TRUNCATED_GRAPH_PATH_RE.sub("service-graph.json.", canonical)
 
 
 def assert_option(command: str, *argv: str, option: str) -> str:
