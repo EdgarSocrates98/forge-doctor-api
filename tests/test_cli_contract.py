@@ -160,16 +160,6 @@ def test_help_golden_snapshot(entry) -> None:
             f"missing golden snapshot created: {golden.name} — "
             "review and commit it")
     expected = golden.read_text(encoding="utf-8")
-    if entry.path == "graph":
-        # Accept snapshots generated before graph persistence moved from the
-        # legacy flat filename to the canonical graph/service-graph.json path.
-        def canonicalize_graph_path(value: str) -> str:
-            if "service-graph.json" not in value:
-                return value.replace("graph.json", "graph/service-graph.json")
-            return value
-
-        actual = canonicalize_graph_path(actual)
-        expected = canonicalize_graph_path(expected)
     assert actual == expected, (
         f"`{entry.path} --help` drifted from golden snapshot; "
         "if intentional, run `python tests/golden/_regen.py` and review "

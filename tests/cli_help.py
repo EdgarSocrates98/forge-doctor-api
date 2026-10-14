@@ -19,7 +19,7 @@ from forge_doctor_api.cli import app
 
 _ANSI_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
 _HELP_ENV = {
-    "COLUMNS": "200",
+    "COLUMNS": "400",
     "TERM": "dumb",
     "NO_COLOR": "1",
 }
@@ -27,7 +27,7 @@ _HELP_ENV = {
 # typer reads TERMINAL_WIDTH once at import into MAX_WIDTH; patching the
 # module attribute is the only in-process way to pin render width —
 # COLUMNS alone is not honored on every platform's auto-detect path.
-_PINNED_WIDTH = 200
+_PINNED_WIDTH = 400
 
 
 def help_text(*argv: str) -> str:
