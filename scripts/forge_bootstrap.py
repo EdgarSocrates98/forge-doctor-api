@@ -407,7 +407,9 @@ def _is_git_bash() -> bool:
         return False
     system = os.environ.get("MSYSTEM", "").lower()
     ostype = os.environ.get("OSTYPE", "").lower()
-    return bool(system) or ostype.startswith(("msys", "mingw", "ucrt", "cygwin"))
+    return system.startswith(("msys", "mingw", "ucrt", "cygwin")) or ostype.startswith(
+        ("msys", "mingw", "ucrt", "cygwin")
+    )
 
 
 def _shell_path(value: str) -> str:

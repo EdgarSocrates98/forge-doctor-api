@@ -32,7 +32,10 @@ for candidate in python3 python py; do
   fi
 done
 if [ -z "$PY" ]; then
-  echo "install: no python on PATH (need >=3.10)" >&2; exit 2
+  echo "install: no python on PATH (need >=3.10)" >&2
+  cd "$_forge_original_dir"
+  if [ "$_forge_is_sourced" -eq 1 ]; then return 2; fi
+  exit 2
 fi
 ARGS=(--editable --persist-env --allow-download "$@")
 if "$PY" "${PY_ARGS[@]}" scripts/forge_bootstrap.py "${ARGS[@]}"; then

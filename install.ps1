@@ -1,6 +1,7 @@
 # Forge account install — editable runtime + user-scoped environment.
 # Persists HKCU variables and can refresh current session when dot-sourced.
 $ErrorActionPreference = "Stop"
+$isDotSourced = $MyInvocation.InvocationName -eq "."
 $oldLocation = Get-Location
 try {
     Set-Location -LiteralPath $PSScriptRoot
@@ -43,4 +44,5 @@ try {
 } finally {
     Set-Location $oldLocation
 }
+if ($isDotSourced) { return $status }
 exit $status
