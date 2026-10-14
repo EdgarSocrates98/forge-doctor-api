@@ -471,9 +471,7 @@ def _registry_has_value(key: Any, name: str) -> bool:
     return True
 
 
-def _persist_posix(
-    values: dict[str, str], shim: Path | None, shell_shim: str | None = None
-) -> str:
+def _persist_posix(values: dict[str, str], shim: Path | None, shell_shim: str | None = None) -> str:
     env_file, rc_file = _posix_env_paths()
     marker_start = "# >>> forjas account environment >>>"
     marker_end = "# <<< forjas account environment <<<"
