@@ -480,6 +480,14 @@ def test_cli_graph(tmp_path: Path) -> None:
     result = runner.invoke(app, ["graph", str(tmp_path / "proj"), "--json"])
     payload = json.loads(result.output)
     assert payload["entities"]
+    explicit = tmp_path / "exports" / "graph.json"
+    result = runner.invoke(
+        app,
+        ["graph", str(tmp_path / "proj"), "--json", "--out", str(explicit)],
+    )
+    assert result.exit_code == 0
+    assert explicit.is_file()
+    assert json.loads(explicit.read_text(encoding="utf-8"))["entities"]
 
 
 def test_cli_diff_malformed_input(tmp_path: Path) -> None:
