@@ -109602,7 +109602,7 @@
         "markers": [
           "javascript"
         ],
-        "path": "portal/assets/main-L7XHZOOV.js",
+        "path": "portal/assets/main-DY2S4CAW.js",
         "unreadable": false,
         "vendored": false
       },
@@ -123295,7 +123295,7 @@
     {
       "missing": "literal URL for the client call",
       "resolution": "the call uses a computed or interpolated URL",
-      "subject": "portal/assets/main-L7XHZOOV.js:5"
+      "subject": "portal/assets/main-DY2S4CAW.js:5"
     },
     {
       "missing": "declared cache fields (ttl, key, invalidation, stale_policy)",
