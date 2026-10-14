@@ -18,6 +18,7 @@ from typer.testing import CliRunner
 from forge_doctor_api.cli import app
 
 _ANSI_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
+_TRUNCATED_GRAPH_PATH_RE = re.compile(r"service-graph\.js…")
 _HELP_ENV = {
     "COLUMNS": "400",
     "TERM": "dumb",
@@ -70,7 +71,9 @@ def normalized_help(*argv: str) -> str:
         if not line:
             continue
         tokens.extend(line.split())
-    return "\n".join(textwrap.wrap(" ".join(tokens), 100)) + "\n"
+    canonical = "\n".join(textwrap.wrap(" ".join(tokens), 100)) + "\n"
+    # Rich may truncate this long path on Linux even with a pinned width.
+    return _TRUNCATED_GRAPH_PATH_RE.sub("service-graph.json", canonical)
 
 
 def assert_option(command: str, *argv: str, option: str) -> str:
