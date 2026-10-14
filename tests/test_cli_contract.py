@@ -163,8 +163,8 @@ def test_help_golden_snapshot(entry) -> None:
     if entry.path == "graph":
         # Accept snapshots generated before graph persistence moved from the
         # legacy flat filename to the canonical graph/service-graph.json path.
-        legacy = "TARGET/.forge-doctor-api/graph.json"
-        canonical = "TARGET/.forge-doctor-api/graph/service-graph.json"
+        legacy = ".forge-doctor-api/graph.json"
+        canonical = ".forge-doctor-api/graph/service-graph.json"
         actual = actual.replace(legacy, canonical)
         expected = expected.replace(legacy, canonical)
     assert actual == expected, (
