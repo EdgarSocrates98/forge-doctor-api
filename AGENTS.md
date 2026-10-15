@@ -35,6 +35,8 @@ forge-doctor-api lab         # corpus precision/recall (expected: all pass)
 ## Loop Factory
 
 - `factory/specs/inbox → active` via `loop-factory dispatch --stage`
-  (binary lives in `../Loop-Factory/bin/loop-factory`).
+  (binary lives in `../Loop-Factory/bin/loop-factory`; **not currently
+  in the workspace** — clone Loop-Factory beside this repo or move specs
+  manually between `inbox/`/`active/` until then).
 - Review before `loop-factory archive <id> --accepted`; run records in
   `factory/runs/`, checklist in `factory/quality-gate.md`.

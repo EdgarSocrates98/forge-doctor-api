@@ -9,3 +9,7 @@ dist/
 .ruff_cache/
 
 uv.lock
+
+# Environment stubs/secrets — never commit filled .env files
+.env
+.env.*

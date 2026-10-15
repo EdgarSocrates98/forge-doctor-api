@@ -62,12 +62,14 @@ def _scope_choices(ctx: UIContext) -> list[str]:
     """Hide repository-only choice when operator is in a fresh directory."""
     scopes = ["project", "workspace", "user"]
     if not _has_vcs_root(Path.cwd()):
-        print(_c(
-            ctx,
-            "33",
-            "  No repository detected; choose Entire workspace to use this directory "
-            "or My user account.",
-        ))
+        print(
+            _c(
+                ctx,
+                "33",
+                "  No repository detected; choose Entire workspace to use this directory "
+                "or My user account.",
+            )
+        )
         scopes.remove("project")
     return scopes
 
@@ -292,7 +294,7 @@ def run_setup_wizard(
         if exc.name == "theforge" or (exc.name or "").startswith("theforge."):
             print(
                 "family onboarding unavailable: install The Forge separately; "
-                "native Doctor API commands remain available"
+                "native Forge commands remain available"
             )
             return 2
         raise
