@@ -1,7 +1,7 @@
 ---
 id: cyc9-09
 title: scenarios-doctor-api
-status: active
+status: done
 created: 2026-10-15
 owner: forge-doctor-api
 scope: repo
