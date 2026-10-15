@@ -4,20 +4,20 @@ over labs/ ground-truth scenario families and emits forge/BenchmarkResult/v1.
 
 Deterministic, offline, stdlib-only.
 """
+
 from __future__ import annotations
 
 import argparse
 import json
+import re as _re
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 FORGE = "forge-doctor-api"
 SUITE = "forge-doctor-api-lab"
 
-
-import re as _re
 
 def _slug(s: object) -> str:
     return _re.sub(r"[^a-z0-9-]+", "-", str(s).lower()).strip("-") or "scenario"
@@ -77,7 +77,7 @@ def main() -> int:
         )
 
     receipt = {
-        "created_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "created_at": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "external": False,
         "suite": SUITE,
         "forge": FORGE,
