@@ -15,5 +15,23 @@
   "install_command": [
     "{python}",
     "{checkout}/scripts/forge_install.py"
-  ]
+  ],
+  "lab": {
+    "command": [
+      "{python}",
+      "scripts/lab/forge_doctor_api_lab.py",
+      "--checkout",
+      "{checkout}",
+      "--mode",
+      "{mode}",
+      "--result-out",
+      "{receipt}"
+    ],
+    "receipt": ".forge/lab-result.json",
+    "modes": [
+      "A"
+    ],
+    "suite": "forge-doctor-api-lab",
+    "timeout_s": 300
+  }
 }
