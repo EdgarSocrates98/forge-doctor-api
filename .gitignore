@@ -14,3 +14,5 @@ uv.lock
 .env
 .env.*
 graphify-out/
+factory/runs/*
+.forge/
