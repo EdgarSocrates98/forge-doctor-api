@@ -5,6 +5,7 @@ description = "Deterministic, offline-first, evidence-first API architecture int
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [{ name = "Edgar Sócrates Caria" }]
+license = { text = "MIT" }
 classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
