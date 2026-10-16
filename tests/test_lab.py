@@ -108,6 +108,16 @@ def test_ground_truth_parses_all_fields(tmp_path: Path) -> None:
     assert s.expected.forbidden_description_contains == ("confirmed",)
 
 
+def test_discovery_skips_dot_directories(tmp_path: Path) -> None:
+    root = _write(tmp_path, {
+        "labs/a/first/expected.yaml": "expected_findings: []",
+        ".pytest-tmp/run0/labs/b/second/expected.yaml": "expected_findings: []",
+        ".hidden/expected.yaml": "expected_findings: []",
+    })
+    scenarios = discover_scenarios(ProjectContext.from_root(root))
+    assert [s.path for s in scenarios] == ["labs/a/first"]
+
+
 def test_unparseable_expected_yields_empty_scenario(tmp_path: Path) -> None:
     root = _write(tmp_path / "labs", {
         "d/s/expected.yaml": "{unclosed",
