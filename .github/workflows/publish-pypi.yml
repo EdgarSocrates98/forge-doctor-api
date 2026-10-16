@@ -14,7 +14,7 @@ permissions:
 jobs:
   pypi:
     # Disabled until the PyPI trusted publisher exists — flip `if: false` to enable.
-    if: false
+    if: true
     runs-on: ubuntu-latest
     permissions:
       id-token: write        # OIDC token for PyPI trusted publishing
