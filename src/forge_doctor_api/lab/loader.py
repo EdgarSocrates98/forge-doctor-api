@@ -106,6 +106,8 @@ def discover_scenarios(context: ProjectContext) -> tuple[LabScenario, ...]:
     """Find every `expected.yaml` under the root — sorted, deterministic."""
     out: list[LabScenario] = []
     for rel in context.iter_files():
+        if any(part.startswith(".") for part in rel.split("/")):
+            continue
         name = rel.rsplit("/", 1)[-1]
         if name in _EXPECTED_NAMES:
             out.append(_scenario(context, rel))
