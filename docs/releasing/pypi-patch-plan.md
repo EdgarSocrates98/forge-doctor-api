@@ -14,7 +14,7 @@ execute, not for this PR.
 
 | Signal | Value |
 |---|---|
-| PyPI published | `forge-doctor-api 0.2.0` (only release) |
+| PyPI published | `forge-doctor-api==0.2.0` (only release) |
 | `pyproject.toml` | `0.2.0` — aligned |
 | Git tag / GitHub release | `v0.2.0` — aligned |
 | `requires-python` | `>=3.11` |
