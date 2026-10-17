@@ -145,9 +145,7 @@ class TestRepoUrlResolver:
             ],
             check=True,
         )
-        subprocess.run(
-            ["git", "-C", str(repo), "tag", "release/1.0"], check=True
-        )
+        subprocess.run(["git", "-C", str(repo), "tag", "release/1.0"], check=True)
         # without the tag the longest existing path could win; with it the
         # real ref must decide the boundary.
         url = f"{self.BASE}/blob/release/1.0/AGENTS.md"
