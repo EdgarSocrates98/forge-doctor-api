@@ -56,13 +56,17 @@ def main() -> int:
         results.append(
             {
                 "scenario_id": _slug(r.get("name", "unknown")),
-                "verdict": "pass" if r.get("passed") else "fail",
+                "verdict": "skipped"
+                if r.get("skipped")
+                else ("pass" if r.get("passed") else "fail"),
                 "duration_ms": int(r.get("elapsed_ms", elapsed)),
-                "detail": "",
+                "detail": str(r.get("skip_reason", "") or ""),
                 "evidence_ref": str(r.get("domain", "")) or "",
                 "judge": None,
                 "metrics": {
-                    "success": m("measured", 1.0 if r.get("passed") else 0.0, "ratio"),
+                    "success": m("measured", 1.0 if r.get("passed") else 0.0, "ratio")
+                    if not r.get("skipped")
+                    else m("not_available"),
                     "precision": m("measured", precision, "ratio")
                     if precision is not None
                     else m("not_available"),
