@@ -75,11 +75,36 @@ def test_every_command_documented() -> None:
     assert missing == [], f"commands missing from docs/cli.md: {missing}"
 
 
+def _group_options() -> dict[str, tuple[str, ...]]:
+    """Options declared on command *groups* — a Typer group callback's
+    params surface on `group --help`, never on the leaf inventory, and
+    they are still part of the documented contract."""
+    import typer.main
+
+    from forge_doctor_api.cli import app
+    from forge_doctor_api.cli.catalog import _options
+
+    root = typer.main.get_command(app)
+    out: dict[str, tuple[str, ...]] = {}
+
+    def walk(group: object, prefix: str = "") -> None:
+        opts = _options(group)
+        if prefix.strip() and opts:
+            out[prefix.strip()] = opts
+        for name, cmd in getattr(group, "commands", {}).items():
+            if hasattr(cmd, "commands"):
+                walk(cmd, f"{prefix}{name} ")
+
+    walk(root)
+    return out
+
+
 def test_documented_options_exist() -> None:
     """Every `--flag` named under a section must belong to a command
     that section documents."""
     sections = _doc_sections()
     inventory = command_inventory()
+    group_opts = _group_options()
 
     def heading_cmds(heading: str) -> set[str]:
         names = {
@@ -90,6 +115,7 @@ def test_documented_options_exist() -> None:
         for e in inventory:
             if e.path in names:
                 opts.update(e.options)
+        opts.update(group_opts.get(heading, ()))
         return opts
 
     bad: list[str] = []

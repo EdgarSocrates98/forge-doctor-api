@@ -60,6 +60,14 @@ STABILITY: dict[str, CommandStability] = {
     "plugins list": CommandStability.EXPERIMENTAL,
     "plugins inspect": CommandStability.EXPERIMENTAL,
     "plugins verify": CommandStability.EXPERIMENTAL,
+    # cyc11.2 P2-002 — wheel-carried forge/* install lifecycle; the
+    # receipts are contract-frozen but the CLI surface is new in 0.2.0.
+    "install status": CommandStability.EXPERIMENTAL,
+    "install doctor": CommandStability.EXPERIMENTAL,
+    "install repair": CommandStability.EXPERIMENTAL,
+    "install uninstall": CommandStability.EXPERIMENTAL,
+    "install update": CommandStability.EXPERIMENTAL,
+    "install mcp-verify": CommandStability.EXPERIMENTAL,
 }
 
 

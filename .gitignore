@@ -16,3 +16,4 @@ uv.lock
 graphify-out/
 factory/runs/*
 .forge/
+docs/INDEX.md

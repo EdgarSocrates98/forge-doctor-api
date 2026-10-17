@@ -1,0 +1,4 @@
+Usage: forge-doctor-api install uninstall [OPTIONS] Remove ledger-owned assets only; user content is
+preserved. Options --scope <str> project|workspace|user. [default: project] --root <path> Target
+root (default: VCS root or cwd). --purge Also remove the forge state dir. --dry-run Plan only —
+writes nothing. --help Show this message and exit.

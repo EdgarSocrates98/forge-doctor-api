@@ -27,6 +27,11 @@
     "why": "mostra o grafo de serviços construído de contrato+implementação+evidência de client",
     "when": "navegar relações de serviço com evidência"
   },
+  "install": {
+    "why": "ciclo de vida forge/* v1 na wheel — install/status/doctor/repair/uninstall/update/mcp-verify",
+    "when": "instalar, reparar ou remover a forja num projeto/workspace — o caminho que forge-cli --native delega",
+    "when_not": "diagnosticar o projeto alvo — use scan/diagnose; o install só gerencia assets da própria forja"
+  },
   "inventory": {
     "why": "inventário: serviços, APIs, operações, protocolos, owners",
     "when": "primeiro mapa de um estate de APIs"

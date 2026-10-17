@@ -2,16 +2,17 @@
 """Forge Doctor API — portable install lifecycle (forge/* contract v1).
 
 This script is the *checkout-level* adapter for the portable installation
-contract. It is deliberately NOT a ``forge-doctor-api`` CLI verb:
+contract — the entrypoint that works in a bare source tree before any
+wheel exists. Since cyc11.2 (ADR-0006, recorded RC exception) the same
+``forge/*`` lifecycle is also a wheel-carried public CLI —
+``forge-doctor-api install`` / ``python -m forge_doctor_api install`` —
+backed by the byte-identical vendored engine
+``forge_doctor_api._installkit`` (the scripts copy stays the canonical
+checkout vendored copy; ``test_package_carries_install_surface`` guards
+parity).
 
-- The package boundary (``tests/test_boundary.py``) bans ``os``,
-  ``subprocess`` and ``shutil`` imports across ``src/`` — the install
-  engine cannot live inside the package.
-- The 0.2.0 RC window (``docs/rc-discipline.md``) forbids public-surface
-  changes — CLI commands included — without a recorded exception.
-
-Same verbs, same receipts, same ledger as the in-package adapters shipped
-by sibling forges; only the entrypoint differs:
+Same verbs, same receipts, same ledger as the wheel path; only the
+entrypoint differs:
 
     python scripts/forge_install.py install [--scope S] [--host H]
         [--profile P] [--root DIR] [--yes|--dry-run]

@@ -88,6 +88,10 @@ app.add_typer(plugins_app, name="plugins")
 app.add_typer(snapshot_app, name="snapshot")
 app.add_typer(knowledge_app, name="knowledge")
 
+from forge_doctor_api.cli.install_cmd import install_app  # noqa: E402
+
+app.add_typer(install_app, name="install")
+
 
 def _version(value: bool) -> None:
     if value:

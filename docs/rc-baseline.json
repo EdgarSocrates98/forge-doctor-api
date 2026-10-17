@@ -1,6 +1,6 @@
 {
   "baseline_version": 1,
-  "cli_command_count": 28,
+  "cli_command_count": 34,
   "cli_commands": [
     "blast-radius",
     "contract compatibility",
@@ -11,6 +11,12 @@
     "explain",
     "fingerprint",
     "graph",
+    "install doctor",
+    "install mcp-verify",
+    "install repair",
+    "install status",
+    "install uninstall",
+    "install update",
     "inventory",
     "knowledge list",
     "knowledge validate",
@@ -99,6 +105,6 @@
     "peak_bytes": 2.5,
     "wall_seconds": 4.0
   },
-  "test_file_count": 89,
+  "test_file_count": 90,
   "version": "0.2.0"
 }

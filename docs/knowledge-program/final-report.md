@@ -3,14 +3,14 @@
 | Campo | Valor |
 |---|---|
 | repository | `forge-doctor-api` |
-| branch | `feat/ultimate-completion` |
-| commit | `3e5f3bb` |
-| docs inventoried | 297 (excl. GENERATED mirrors: 292; vendored upstream: 0) |
+| branch | `feat/c11-2-native` |
+| commit | `1ffcb42` |
+| docs inventoried | 313 (excl. GENERATED mirrors: 308; vendored upstream: 0) |
 
 ## Review levels (honest)
 
 - `INVENTORIED`: 0
-- `AUTOMATICALLY_CHECKED`: 297
+- `AUTOMATICALLY_CHECKED`: 313
 - `TECHNICALLY_VERIFIED`: 0
 - `SEMANTICALLY_REVIEWED`: 0
 - `USER_JOURNEY_VALIDATED`: 0
@@ -19,15 +19,15 @@ Automatic checks ran on every row; semantic review is recorded only where a huma
 
 ## Category counts
 
-- `UNKNOWN`: 131
-- `HISTORICAL`: 91
-- `USER_GUIDE`: 20
-- `CONTRACT`: 10
-- `HOW_TO`: 9
+- `UNKNOWN`: 139
+- `HISTORICAL`: 92
+- `USER_GUIDE`: 24
+- `CONTRACT`: 11
+- `HOW_TO`: 10
 - `RELEASE_REPORT`: 8
 - `TEST_EVIDENCE`: 7
+- `ADR`: 6
 - `GENERATED`: 5
-- `ADR`: 5
 - `ARCHITECTURE`: 3
 - `GETTING_STARTED`: 3
 - `INTERNAL`: 2
@@ -45,7 +45,7 @@ Automatic checks ran on every row; semantic review is recorded only where a huma
 ## Educational layer delivered
 
 - first-run/quickstart docs: 3
-- docs/learn/ entries: 12
+- docs/learn/ entries: 13
 - docs/hub/ entries: 0
 
 ## Documentation changes this program

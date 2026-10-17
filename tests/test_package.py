@@ -15,6 +15,16 @@ _VENDORED = frozenset({
     "ui/i18n.py", "ui/kit.py", "ui/wizard.py", "ui/home.py",
     "ui/app.py", "ui/screen.py", "ui/tui.py",
 })
+# Install surface (cyc11.2 P2-002, RC exception — see tests/test_boundary.py
+# and docs/adr/ADR-0006): the wheel-carried forge/* install lifecycle owns
+# the package's only os/subprocess/host-write surface — reachable solely
+# through cli.install_cmd, never on the scan/engine path.
+_INSTALL_SURFACE = frozenset({
+    "_installkit.py",
+    "install/__init__.py",
+    "install/service.py",
+    "cli/install_cmd.py",
+})
 
 
 def load_pyproject() -> dict[str, object]:
@@ -55,7 +65,7 @@ FORBIDDEN_IMPORTS = {"socket", "urllib", "http", "requests", "httpx", "subproces
 
 def test_no_network_or_process_imports() -> None:
     for path in sorted(PACKAGE.rglob("*.py")):
-        if path.relative_to(PACKAGE).as_posix() in _VENDORED:
+        if path.relative_to(PACKAGE).as_posix() in _VENDORED | _INSTALL_SURFACE:
             continue
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in ast.walk(tree):
@@ -73,7 +83,7 @@ def test_host_access_only_through_context() -> None:
     for path in sorted(PACKAGE.rglob("*.py")):
         if path == PACKAGE / "core" / "context.py":
             continue
-        if path.relative_to(PACKAGE).as_posix() in _VENDORED:
+        if path.relative_to(PACKAGE).as_posix() in _VENDORED | _INSTALL_SURFACE:
             continue
         text = path.read_text(encoding="utf-8")
         for needle in forbidden:

@@ -87,6 +87,20 @@ _VENDORED = frozenset({
     "ui/i18n.py", "ui/kit.py", "ui/wizard.py", "ui/home.py",
     "ui/app.py", "ui/screen.py", "ui/tui.py",
 })
+# Install surface (cyc11.2 P2-002, RC exception): the wheel-carried
+# ``forge/*`` install lifecycle. These modules own the only
+# ``os``/``subprocess`` surface in ``src/`` — subprocess is confined to
+# ``_installkit._spawn`` and ``install.service.update``; the scan/engine
+# path never imports them (``test_install_surface_isolation`` guards it).
+_INSTALL_SURFACE = frozenset({
+    "_installkit.py",
+    "install/__init__.py",
+    "install/service.py",
+    "cli/install_cmd.py",
+})
+# Module paths only the install surface may import — any other src module
+# reaching them is a boundary violation.
+_INSTALL_MODULES = ("forge_doctor_api._installkit", "forge_doctor_api.install")
 
 
 def _member(tmp_path: Path) -> WorkspaceMember:
@@ -111,7 +125,7 @@ def test_package_ast_purity() -> None:
     offenders: list[str] = []
     for path in sorted(SRC.rglob("*.py")):
         rel = path.relative_to(SRC).as_posix()
-        if rel in _VENDORED:
+        if rel in _VENDORED or rel in _INSTALL_SURFACE:
             continue
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in ast.walk(tree):
@@ -153,6 +167,29 @@ def test_package_ast_purity() -> None:
                     offenders.append(f"{rel}: call {name}()")
     assert offenders == [], "package boundary violations:\n" + "\n".join(
         offenders)
+
+
+def test_install_surface_isolation() -> None:
+    """The install engine is reachable only from ``cli.install_cmd`` —
+    the scan/engine path and every other package module stay pure."""
+    offenders: list[str] = []
+    for path in sorted(SRC.rglob("*.py")):
+        rel = path.relative_to(SRC).as_posix()
+        if rel in _INSTALL_SURFACE:
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    if alias.name in _INSTALL_MODULES or alias.name.startswith(
+                            "forge_doctor_api.install."):
+                        offenders.append(f"{rel}: import {alias.name}")
+            elif isinstance(node, ast.ImportFrom):
+                mod = node.module or ""
+                if mod in _INSTALL_MODULES or mod.startswith(
+                        "forge_doctor_api.install"):
+                    offenders.append(f"{rel}: from {mod} import ...")
+    assert offenders == [], "install surface leaks:\n" + "\n".join(offenders)
 
 
 def test_boundary_ast_purity() -> None:
