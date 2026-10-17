@@ -20,10 +20,13 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import posixpath
 import re
+import subprocess
 import sys
 import time
 from pathlib import Path
+from urllib.parse import unquote
 
 EXCLUDE_DIRS = {
     ".git", "venv", "node_modules", "__pycache__", ".mypy_cache",
@@ -188,37 +191,145 @@ def _links_and_anchors(text: str) -> tuple[list[str], set[str]]:
     return links, anchors
 
 
+
+_REPO_URL_RE = re.compile(
+    r"^https://github\.com/(?P<slug>[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)/"
+    r"(?:blob|tree)/"
+)
+
+
+def _repo_slug(repo: Path) -> str | None:
+    """org/repo slug from pyproject project.urls (Repository/Homepage)."""
+    py = repo / "pyproject.toml"
+    if not py.exists():
+        return None
+    m = re.search(
+        r"https://github\.com/([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)",
+        py.read_text(encoding="utf-8", errors="replace"),
+    )
+    return m.group(1) if m else None
+
+
+_KNOWN_REFS: dict[Path, frozenset[str] | None] = {}
+
+
+def _known_refs(repo: Path) -> frozenset[str] | None:
+    """git tag/branch names for ``<ref>/<path>`` disambiguation.
+
+    Refs may contain ``/`` (``blob/release/1.0/README.md``); returns None
+    when git is unavailable so callers can fall back to existence checks.
+    """
+    if repo not in _KNOWN_REFS:
+        try:
+            out = subprocess.run(
+                [
+                    "git",
+                    "-C",
+                    str(repo),
+                    "for-each-ref",
+                    "--format=%(refname:lstrip=2)",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+            refs = out.stdout.split() if out.returncode == 0 else None
+        except (OSError, subprocess.SubprocessError):
+            refs = None
+        _KNOWN_REFS[repo] = frozenset(refs) if refs else None
+    return _KNOWN_REFS[repo]
+
+
+def _repo_url_path(raw: str, slug: str | None, repo: Path) -> str | None:
+    """Tag-pinned absolute URL to this repo's own file -> repo-relative path.
+
+    ``<ref>/<path>`` is ambiguous when the ref contains ``/``: candidates
+    are tried longest-ref first (GitHub's longest match wins); a ref git
+    knows wins, then the first whose path exists, then the first candidate
+    so broken links are still reported. ``?query`` and ``%XX`` escapes are
+    normalized. Returns None for foreign URLs and ``..`` escapes.
+    """
+    if slug is None:
+        return None
+    m = _REPO_URL_RE.match(raw)
+    if not m or m.group("slug") != slug:
+        return None
+    rest = raw[m.end() :].partition("#")[0].partition("?")[0]
+    parts = unquote(rest).split("/")
+    if len(parts) < 2:
+        return None
+    pairs: list[tuple[str, str]] = []
+    for i in range(len(parts) - 1, 0, -1):
+        ref_parts = parts[:i]
+        if any(seg in ("..", "") for seg in ref_parts):
+            continue  # '..' (or empty) in the ref slot is not a legal git ref
+        path = posixpath.normpath("/".join(parts[i:]))
+        if path == "." or path.startswith(("..", "/", "\\")):
+            continue
+        pairs.append(("/".join(ref_parts), path))
+    if not pairs:
+        return None
+    known = _known_refs(repo)
+    if known is not None:
+        for ref, path in pairs:
+            if ref in known:
+                return path
+    for _, path in pairs:
+        if (repo / path).exists():
+            return path
+    return pairs[0][1]
+
+
 def _check_links(repo: Path, rel: Path, links: list[str]) -> list[dict[str, str]]:
     """Internal .md targets must exist; ``#frag`` must resolve in target."""
     findings: list[dict[str, str]] = []
     base = repo / rel.parent
+    slug = _repo_slug(repo)
     for raw in links:
+        mapped = _repo_url_path(raw, slug, repo)
         # Root-relative targets are external-site paths (e.g. quoted
         # devin.ai docs), never repo files — skip alongside http/mailto.
-        if raw.startswith(("http://", "https://", "mailto:", "#", "/")):
+        if mapped is None and raw.startswith(
+            ("http://", "https://", "mailto:", "#", "/")
+        ):
             if raw.startswith("#") and len(raw) > 1:
                 continue  # same-file anchor checked via target==self below
             continue
-        target, _, frag = raw.partition("#")
+        target, _, frag = (mapped if mapped is not None else raw).partition("#")
         if not target:
             continue
         # strip optional line refs like md#L10
         clean = target.split("#")[0]
-        p = (base / clean).resolve()
+        # repo-URL paths are root-relative; plain links resolve against
+        # the directory of the linking file.
+        p = (repo / clean).resolve() if mapped is not None else (base / clean).resolve()
         try:
             exists = p.exists()
         except OSError:
             exists = False
         if not exists:
-            findings.append({"file": str(rel).replace("\\", "/"), "link": raw,
-                             "problem": "broken internal link"})
+            findings.append(
+                {
+                    "file": str(rel).replace("\\", "/"),
+                    "link": raw,
+                    "problem": "broken internal link",
+                }
+            )
             continue
         if frag and p.suffix == ".md":
             try:
-                _, anchors = _links_and_anchors(p.read_text(encoding="utf-8", errors="replace"))
+                _, anchors = _links_and_anchors(
+                    p.read_text(encoding="utf-8", errors="replace")
+                )
                 if frag.lower() not in anchors:
-                    findings.append({"file": str(rel).replace("\\", "/"), "link": raw,
-                                     "problem": "missing anchor"})
+                    findings.append(
+                        {
+                            "file": str(rel).replace("\\", "/"),
+                            "link": raw,
+                            "problem": "missing anchor",
+                        }
+                    )
             except OSError:
                 pass
     return findings
