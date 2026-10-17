@@ -288,10 +288,13 @@ def _repo_url_path(raw: str, slug: str | None, repo: Path) -> str | None:
         for ref, path in pairs:
             if ref in known:
                 return path
-    for _, path in pairs:
+    # Without git, ``<ref>/<path>`` ambiguity is unsolvable — prefer the
+    # shortest ref (the common case ``v1.0``/``main``); longest-ref-first
+    # would mis-map ``blob/v0.5.0/docs/x.md`` to ``x.md`` when both exist.
+    for _, path in reversed(pairs):
         if (repo / path).exists():
             return path
-    return pairs[0][1]
+    return pairs[-1][1]
 
 
 def _check_links(repo: Path, rel: Path, links: list[str]) -> list[dict[str, str]]:

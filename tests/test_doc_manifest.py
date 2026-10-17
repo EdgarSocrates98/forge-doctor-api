@@ -154,6 +154,16 @@ class TestRepoUrlResolver:
         url = f"{self.BASE}/blob/v1.0/a%5C..%5C..%5Cx.md"
         assert mod._repo_url_path(url, self.SLUG, repo) is None
 
+    def test_ambiguous_ref_prefers_shortest_existing_path(self, repo: Path) -> None:
+        """``blob/v1.0/docs/README.md`` must map to docs/README.md even when
+        root README.md exists and git refs are unavailable (CI checkout)."""
+        mod = _load_manifest()
+        (repo / "README.md").write_text("# Root\n", encoding="utf-8")
+        (repo / "docs").mkdir()
+        (repo / "docs" / "README.md").write_text("# Docs\n", encoding="utf-8")
+        url = f"{self.BASE}/blob/v1.0/docs/README.md"
+        assert mod._repo_url_path(url, self.SLUG, repo) == "docs/README.md"
+
     def test_git_known_ref_wins_over_path_guess(self, repo: Path) -> None:
         mod = _load_manifest()
         init = subprocess.run(
