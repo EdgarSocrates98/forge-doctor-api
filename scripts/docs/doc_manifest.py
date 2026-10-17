@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import os
 import json
 import re
 import sys
@@ -188,18 +189,56 @@ def _links_and_anchors(text: str) -> tuple[list[str], set[str]]:
     return links, anchors
 
 
+
+_REPO_URL_RE = re.compile(
+    r"^https://github\.com/(?P<slug>[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)/"
+    r"(?:blob|tree)/[^/]+/"
+)
+
+
+def _repo_slug(repo: Path) -> str | None:
+    """org/repo slug from pyproject project.urls (Repository/Homepage)."""
+    py = repo / "pyproject.toml"
+    if not py.exists():
+        return None
+    m = re.search(
+        r"https://github\.com/([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)",
+        py.read_text(encoding="utf-8", errors="replace"),
+    )
+    return m.group(1) if m else None
+
+
+def _repo_url_path(raw: str, slug: str | None) -> str | None:
+    """Tag-pinned absolute URL to this repo's own file -> repo-relative path.
+
+    Returns None for foreign/non-GitHub URLs and for ``..`` escapes.
+    """
+    if slug is None:
+        return None
+    m = _REPO_URL_RE.match(raw)
+    if not m or m.group("slug") != slug:
+        return None
+    path = _REPO_URL_RE.sub("", raw)
+    path = os.path.normpath(path)
+    if path.startswith(("..", "/", "\\")):
+        return None
+    return path
+
+
 def _check_links(repo: Path, rel: Path, links: list[str]) -> list[dict[str, str]]:
     """Internal .md targets must exist; ``#frag`` must resolve in target."""
     findings: list[dict[str, str]] = []
     base = repo / rel.parent
+    slug = _repo_slug(repo)
     for raw in links:
+        mapped = _repo_url_path(raw, slug)
         # Root-relative targets are external-site paths (e.g. quoted
         # devin.ai docs), never repo files — skip alongside http/mailto.
-        if raw.startswith(("http://", "https://", "mailto:", "#", "/")):
+        if mapped is None and raw.startswith(("http://", "https://", "mailto:", "#", "/")):
             if raw.startswith("#") and len(raw) > 1:
                 continue  # same-file anchor checked via target==self below
             continue
-        target, _, frag = raw.partition("#")
+        target, _, frag = (mapped if mapped is not None else raw).partition("#")
         if not target:
             continue
         # strip optional line refs like md#L10
