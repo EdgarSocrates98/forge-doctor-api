@@ -27,6 +27,46 @@ def m(state: str, value: object = None, unit: str = "") -> dict:
     return {"state": state, "unit": unit, "value": value}
 
 
+def _emit_result(r: dict, elapsed_ms: int) -> dict:
+    """One ``forge/BenchmarkResult/v1`` row from a ``run_labs`` result dict.
+
+    ``skipped`` is neither pass nor fail: a minimal install missing an
+    optional extra must report ``skipped`` with ``success`` not_available —
+    never a fabricated 0.0 failure.
+    """
+    observed = len(r.get("observed_findings", []))
+    missing = len(r.get("missing_findings", []))
+    forbidden = len(r.get("forbidden_hits", []))
+    expected = observed + missing
+    matched = observed
+    precision = (matched / observed) if observed else (1.0 if expected == 0 else None)
+    recall = (matched / expected) if expected else None
+    return {
+        "scenario_id": _slug(r.get("name", "unknown")),
+        "verdict": "skipped"
+        if r.get("skipped")
+        else ("pass" if r.get("passed") else "fail"),
+        "duration_ms": int(r.get("elapsed_ms", elapsed_ms)),
+        "detail": str(r.get("skip_reason", "") or ""),
+        "evidence_ref": str(r.get("domain", "")) or "",
+        "judge": None,
+        "metrics": {
+            "success": m("measured", 1.0 if r.get("passed") else 0.0, "ratio")
+            if not r.get("skipped")
+            else m("not_available"),
+            "precision": m("measured", precision, "ratio")
+            if precision is not None
+            else m("not_available"),
+            "recall": m("measured", recall, "ratio")
+            if recall is not None
+            else m("not_available"),
+            "false_positives": m("measured", forbidden),
+            "cost_usd": m("not_applicable"),
+            "tokens": m("not_applicable"),
+        },
+    }
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--checkout", required=True)
@@ -44,37 +84,7 @@ def main() -> int:
     data = report.to_dict()
     elapsed = int((time.monotonic() - started) * 1000)
 
-    results = []
-    for r in data.get("results", []):
-        observed = len(r.get("observed_findings", []))
-        missing = len(r.get("missing_findings", []))
-        forbidden = len(r.get("forbidden_hits", []))
-        expected = observed + missing
-        matched = observed
-        precision = (matched / observed) if observed else (1.0 if expected == 0 else None)
-        recall = (matched / expected) if expected else None
-        results.append(
-            {
-                "scenario_id": _slug(r.get("name", "unknown")),
-                "verdict": "pass" if r.get("passed") else "fail",
-                "duration_ms": int(r.get("elapsed_ms", elapsed)),
-                "detail": "",
-                "evidence_ref": str(r.get("domain", "")) or "",
-                "judge": None,
-                "metrics": {
-                    "success": m("measured", 1.0 if r.get("passed") else 0.0, "ratio"),
-                    "precision": m("measured", precision, "ratio")
-                    if precision is not None
-                    else m("not_available"),
-                    "recall": m("measured", recall, "ratio")
-                    if recall is not None
-                    else m("not_available"),
-                    "false_positives": m("measured", forbidden),
-                    "cost_usd": m("not_applicable"),
-                    "tokens": m("not_applicable"),
-                },
-            }
-        )
+    results = [_emit_result(r, elapsed) for r in data.get("results", [])]
 
     receipt = {
         "created_at": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),

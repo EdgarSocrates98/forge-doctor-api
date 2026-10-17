@@ -532,3 +532,35 @@ def test_workspace_scenario_proves_cross_tree_link() -> None:
     ws = next(r for r in report.results if r.domain == "workspace")
     assert ws.passed
     assert ws.unknowns >= 1
+
+
+def test_lab_emitter_maps_skipped_to_skipped_verdict() -> None:
+    """Cycle 10.3 regression: a minimal install that skips a scenario
+    (missing optional extra) must emit ``skipped`` — never a fabricated
+    ``fail`` with ``success`` 0.0."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "fda_lab_emitter",
+        Path(__file__).resolve().parents[1] / "scripts" / "lab" / "forge_doctor_api_lab.py",
+    )
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+
+    skipped = mod._emit_result(
+        {
+            "name": "graphql-schema",
+            "skipped": True,
+            "skip_reason": "missing extras: graphql",
+            "domain": "graphql",
+        },
+        elapsed_ms=0,
+    )
+    assert skipped["verdict"] == "skipped"
+    assert skipped["detail"] == "missing extras: graphql"
+    assert skipped["metrics"]["success"]["state"] == "not_available"
+    assert skipped["metrics"]["success"]["value"] is None
+
+    failed = mod._emit_result({"name": "x", "passed": False}, elapsed_ms=0)
+    assert failed["verdict"] == "fail"
+    assert failed["metrics"]["success"]["value"] == 0.0
