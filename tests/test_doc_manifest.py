@@ -122,6 +122,38 @@ class TestRepoUrlResolver:
         assert mod._repo_url_path(url, self.SLUG, repo) is None
         assert mod._check_links(repo, Path("docs/guia/README.md"), [url]) == []
 
+    def test_mapped_url_missing_anchor_is_reported(self, repo: Path) -> None:
+        mod = _load_manifest()
+        found = mod._check_links(
+            repo,
+            Path("docs/guia/README.md"),
+            [f"{self.BASE}/blob/v1.0/AGENTS.md#nonexistent"],
+        )
+        assert [f["problem"] for f in found] == ["missing anchor"]
+
+    def test_mapped_url_valid_anchor_passes(self, repo: Path) -> None:
+        mod = _load_manifest()
+        found = mod._check_links(
+            repo,
+            Path("docs/guia/README.md"),
+            [f"{self.BASE}/blob/v1.0/AGENTS.md#agents"],
+        )
+        assert found == []
+
+    def test_mapped_url_line_ref_is_not_an_anchor(self, repo: Path) -> None:
+        mod = _load_manifest()
+        found = mod._check_links(
+            repo,
+            Path("docs/guia/README.md"),
+            [f"{self.BASE}/blob/v1.0/AGENTS.md#L10"],
+        )
+        assert found == []
+
+    def test_backslash_escape_is_rejected(self, repo: Path) -> None:
+        mod = _load_manifest()
+        url = f"{self.BASE}/blob/v1.0/a%5C..%5C..%5Cx.md"
+        assert mod._repo_url_path(url, self.SLUG, repo) is None
+
     def test_git_known_ref_wins_over_path_guess(self, repo: Path) -> None:
         mod = _load_manifest()
         init = subprocess.run(

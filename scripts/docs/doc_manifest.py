@@ -196,18 +196,28 @@ _REPO_URL_RE = re.compile(
     r"^https://github\.com/(?P<slug>[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)/"
     r"(?:blob|tree)/"
 )
+# GitHub line anchors (``#L10``, ``#L10-L20``) are valid targets but not
+# heading anchors — exempt from the anchor check.
+_LINE_REF_RE = re.compile(r"L\d+(?:-L\d+)?")
+
+
+_REPO_SLUGS: dict[Path, str | None] = {}
 
 
 def _repo_slug(repo: Path) -> str | None:
     """org/repo slug from pyproject project.urls (Repository/Homepage)."""
+    if repo in _REPO_SLUGS:
+        return _REPO_SLUGS[repo]
+    slug = None
     py = repo / "pyproject.toml"
-    if not py.exists():
-        return None
-    m = re.search(
-        r"https://github\.com/([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)",
-        py.read_text(encoding="utf-8", errors="replace"),
-    )
-    return m.group(1) if m else None
+    if py.exists():
+        m = re.search(
+            r"https://github\.com/([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)",
+            py.read_text(encoding="utf-8", errors="replace"),
+        )
+        slug = m.group(1) if m else None
+    _REPO_SLUGS[repo] = slug
+    return slug
 
 
 _KNOWN_REFS: dict[Path, frozenset[str] | None] = {}
@@ -256,7 +266,10 @@ def _repo_url_path(raw: str, slug: str | None, repo: Path) -> str | None:
     if not m or m.group("slug") != slug:
         return None
     rest = raw[m.end() :].partition("#")[0].partition("?")[0]
-    parts = unquote(rest).split("/")
+    decoded = unquote(rest)
+    if "\\" in decoded:
+        return None  # backslashes are never legal in a GitHub repo URL path
+    parts = decoded.split("/")
     if len(parts) < 2:
         return None
     pairs: list[tuple[str, str]] = []
@@ -296,14 +309,15 @@ def _check_links(repo: Path, rel: Path, links: list[str]) -> list[dict[str, str]
             if raw.startswith("#") and len(raw) > 1:
                 continue  # same-file anchor checked via target==self below
             continue
-        target, _, frag = (mapped if mapped is not None else raw).partition("#")
+        # The fragment lives in the raw URL — mapped paths never carry it.
+        frag = raw.partition("#")[2]
+        target = mapped if mapped is not None else raw.partition("#")[0]
         if not target:
             continue
-        # strip optional line refs like md#L10
-        clean = target.split("#")[0]
         # repo-URL paths are root-relative; plain links resolve against
-        # the directory of the linking file.
-        p = (repo / clean).resolve() if mapped is not None else (base / clean).resolve()
+        # the directory of the linking file. A decoded ``%23`` inside a
+        # mapped path is a filename character, not a fragment separator.
+        p = (repo / target).resolve() if mapped is not None else (base / target).resolve()
         try:
             exists = p.exists()
         except OSError:
@@ -317,7 +331,7 @@ def _check_links(repo: Path, rel: Path, links: list[str]) -> list[dict[str, str]
                 }
             )
             continue
-        if frag and p.suffix == ".md":
+        if frag and not _LINE_REF_RE.fullmatch(frag) and p.suffix == ".md":
             try:
                 _, anchors = _links_and_anchors(
                     p.read_text(encoding="utf-8", errors="replace")

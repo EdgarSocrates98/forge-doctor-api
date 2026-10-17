@@ -13,6 +13,18 @@ verification matrix.
 
 ## [0.2.0] — Unreleased
 
+### Post-release polish — 2026-10-17
+
+- **Lab emitter**: scenarios gated on optional extras now report
+  `skipped`/`not_available` instead of `fail` — a minimal install no
+  longer shows a false failure (#61, regression test added).
+- **`doc_manifest._check_links`**: `#fragment` anchors on tag-pinned
+  repo URLs are verified again (they were silently dropped); GitHub
+  line refs (`#L10`) exempt; `%5C` backslash escapes rejected.
+- **Metadata/docs**: classifiers justified at Beta, `project.urls`
+  added, `pip install forge-doctor-api` section; README links pinned to
+  `v0.2.0` absolute URLs.
+
 ### RC-hardening program — 2026-10-06
 
 - **Version marker**: `0.1.0` → `0.2.0`, owner-authorized to mark the
