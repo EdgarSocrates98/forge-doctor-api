@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   pypi:
-    # Disabled until the PyPI trusted publisher exists — flip `if: false` to enable.
+    # PyPI trusted publisher registered — OIDC, no token.
     if: true
     runs-on: ubuntu-latest
     permissions:
