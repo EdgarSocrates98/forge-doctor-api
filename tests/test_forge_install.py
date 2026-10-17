@@ -165,12 +165,19 @@ def test_mcp_verify_reports_env_independently(home: Path) -> None:
     assert proc.returncode == (1 if check["status"] == "FAIL" else 0)
 
 
-def test_package_surface_unchanged() -> None:
-    """RC invariant: the adapter lives in scripts/, so the package exposes
-    no new CLI verb — guard the boundary the design depends on."""
+def test_package_carries_install_surface() -> None:
+    """cyc11.2 P2-002 (recorded RC exception): the wheel must carry the
+    install engine — ``src/_installkit.py`` stays byte-identical to the
+    canonical checkout copy so drift is impossible to hide."""
     src = ROOT / "src" / "forge_doctor_api"
-    assert not (src / "_installkit.py").exists()
-    assert not (src / "install").exists()
+    packaged = src / "_installkit.py"
+    vendored = ROOT / "scripts" / "forge_installkit.py"
+    assert packaged.is_file(), "wheel must carry _installkit.py"
+    assert (src / "install" / "service.py").is_file()
+    assert packaged.read_bytes() == vendored.read_bytes(), (
+        "src/_installkit.py drifted from scripts/forge_installkit.py — "
+        "re-vendor the canonical copy, never fork it"
+    )
 
 
 def test_hosts_none_e_csv():

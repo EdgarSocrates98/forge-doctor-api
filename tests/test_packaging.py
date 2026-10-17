@@ -35,7 +35,12 @@ def test_no_forbidden_runtime_imports() -> None:
                  "winreg", "msvcrt", "fcntl", "termios"}
     vendored = {"_graphstudio.py",
                 "ui/i18n.py", "ui/kit.py", "ui/wizard.py", "ui/home.py",
-                "ui/app.py", "ui/screen.py", "ui/tui.py"}
+                "ui/app.py", "ui/screen.py", "ui/tui.py",
+                # cyc11.2 P2-002 install surface — the sanctioned
+                # host-mutation boundary (see tests/test_boundary.py and
+                # docs/adr/ADR-0006); subprocess confined to _spawn/update
+                "_installkit.py", "install/__init__.py",
+                "install/service.py", "cli/install_cmd.py"}
     pkg = ROOT / "src" / "forge_doctor_api"
     for path in sorted(pkg.rglob("*.py")):
         if path.relative_to(pkg).as_posix() in vendored:

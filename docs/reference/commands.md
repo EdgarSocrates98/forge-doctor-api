@@ -2,7 +2,7 @@
 
 Generated from the real CLI parser by `doc_inventory.py` + `doc_reference.py`. Do not hand-edit generated sections — write between `keep:start`/`keep:end` markers. `por que`/`quando` lines come from the curated `command-rationale.json` — edit rationale there, never here. Status vocabulary: `available` unless marked otherwise.
 
-Rationale coverage: **17/17** first-level groups curated in `command-rationale.json`.
+Rationale coverage: **18/18** first-level groups curated in `command-rationale.json`.
 
 ## Groups
 
@@ -13,6 +13,7 @@ Rationale coverage: **17/17** first-level groups curated in `command-rationale.j
 - [`explain`](#explain) — 1 command(s)
 - [`fingerprint`](#fingerprint) — 1 command(s)
 - [`graph`](#graph) — 1 command(s)
+- [`install`](#install) — 7 command(s)
 - [`inventory`](#inventory) — 1 command(s)
 - [`knowledge`](#knowledge) — 3 command(s)
 - [`lab`](#lab) — 1 command(s)
@@ -265,6 +266,174 @@ forge-doctor-api graph <target> [json_out] [view] [ui] [no_browser] [port] [out]
 | `no_browser` | no | — | Serve without opening a browser (SSH). |
 | `port` | no | — | Port to bind (default ephemeral). |
 | `out` | no | — | Write canonical ServiceGraph JSON. Defaults to TARGET/.forge-doctor-api/graph/service-graph.json. |
+
+<!-- keep:start -->
+_free notes — errors, examples, next steps (hand-written, preserved)_
+<!-- keep:end -->
+
+## install
+
+### `install`
+
+**para que:** Install Forge Doctor API into a project, workspace or the user home; manage the lifecycle (status, doctor, repair, update, uninstall, mcp-verify).
+
+- **por que:** ciclo de vida forge/* v1 na wheel — install/status/doctor/repair/uninstall/update/mcp-verify
+- **quando usar:** instalar, reparar ou remover a forja num projeto/workspace — o caminho que forge-cli --native delega
+- **quando não:** diagnosticar o projeto alvo — use scan/diagnose; o install só gerencia assets da própria forja
+
+**Syntax**
+
+```text
+forge-doctor-api install [scope] [host] [profile] [root] [yes] [dry_run] [components] [gateway_profile]
+```
+
+| argument/flag | required | default | description |
+|---|---|---|---|
+| `scope` | no | — | project|workspace|user. |
+| `host` | no | — | claude|devin|codex|copilot|all. |
+| `profile` | no | — | minimal|recommended|full. |
+| `root` | no | — | Target root (default: VCS root or cwd). |
+| `yes` | no | — | Explicit approval; without it only --dry-run is allowed. |
+| `dry_run` | no | — | Plan only — writes nothing. |
+| `components` | no | — | Optional components csv: skills,agents,mcp,tui,graph-studio. |
+| `gateway_profile` | no | — | Execution profile: economy|balanced|deep. |
+
+<!-- keep:start -->
+_free notes — errors, examples, next steps (hand-written, preserved)_
+<!-- keep:end -->
+
+### `install doctor`
+
+**para que:** Run installation health checks (ledger, MCP availability).
+
+- **por que:** ciclo de vida forge/* v1 na wheel — install/status/doctor/repair/uninstall/update/mcp-verify
+- **quando usar:** instalar, reparar ou remover a forja num projeto/workspace — o caminho que forge-cli --native delega
+- **quando não:** diagnosticar o projeto alvo — use scan/diagnose; o install só gerencia assets da própria forja
+
+**Syntax**
+
+```text
+forge-doctor-api install doctor [scope] [root]
+```
+
+| argument/flag | required | default | description |
+|---|---|---|---|
+| `scope` | no | — | project|workspace|user. |
+| `root` | no | — | Target root (default: VCS root or cwd). |
+
+<!-- keep:start -->
+_free notes — errors, examples, next steps (hand-written, preserved)_
+<!-- keep:end -->
+
+### `install mcp-verify`
+
+**para que:** Handshake the configured MCP server (PASS/BLOCKED/FAIL).
+
+- **por que:** ciclo de vida forge/* v1 na wheel — install/status/doctor/repair/uninstall/update/mcp-verify
+- **quando usar:** instalar, reparar ou remover a forja num projeto/workspace — o caminho que forge-cli --native delega
+- **quando não:** diagnosticar o projeto alvo — use scan/diagnose; o install só gerencia assets da própria forja
+
+**Syntax**
+
+```text
+forge-doctor-api install mcp-verify
+```
+
+<!-- keep:start -->
+_free notes — errors, examples, next steps (hand-written, preserved)_
+<!-- keep:end -->
+
+### `install repair`
+
+**para que:** Restore missing managed assets; user-modified content is kept.
+
+- **por que:** ciclo de vida forge/* v1 na wheel — install/status/doctor/repair/uninstall/update/mcp-verify
+- **quando usar:** instalar, reparar ou remover a forja num projeto/workspace — o caminho que forge-cli --native delega
+- **quando não:** diagnosticar o projeto alvo — use scan/diagnose; o install só gerencia assets da própria forja
+
+**Syntax**
+
+```text
+forge-doctor-api install repair [scope] [root] [dry_run]
+```
+
+| argument/flag | required | default | description |
+|---|---|---|---|
+| `scope` | no | — | project|workspace|user. |
+| `root` | no | — | Target root (default: VCS root or cwd). |
+| `dry_run` | no | — | Plan only — writes nothing. |
+
+<!-- keep:start -->
+_free notes — errors, examples, next steps (hand-written, preserved)_
+<!-- keep:end -->
+
+### `install status`
+
+**para que:** Report drift/health of the resolved installation.
+
+- **por que:** ciclo de vida forge/* v1 na wheel — install/status/doctor/repair/uninstall/update/mcp-verify
+- **quando usar:** instalar, reparar ou remover a forja num projeto/workspace — o caminho que forge-cli --native delega
+- **quando não:** diagnosticar o projeto alvo — use scan/diagnose; o install só gerencia assets da própria forja
+
+**Syntax**
+
+```text
+forge-doctor-api install status [scope] [root]
+```
+
+| argument/flag | required | default | description |
+|---|---|---|---|
+| `scope` | no | — | project|workspace|user. |
+| `root` | no | — | Target root (default: VCS root or cwd). |
+
+<!-- keep:start -->
+_free notes — errors, examples, next steps (hand-written, preserved)_
+<!-- keep:end -->
+
+### `install uninstall`
+
+**para que:** Remove ledger-owned assets only; user content is preserved.
+
+- **por que:** ciclo de vida forge/* v1 na wheel — install/status/doctor/repair/uninstall/update/mcp-verify
+- **quando usar:** instalar, reparar ou remover a forja num projeto/workspace — o caminho que forge-cli --native delega
+- **quando não:** diagnosticar o projeto alvo — use scan/diagnose; o install só gerencia assets da própria forja
+
+**Syntax**
+
+```text
+forge-doctor-api install uninstall [scope] [root] [purge] [dry_run]
+```
+
+| argument/flag | required | default | description |
+|---|---|---|---|
+| `scope` | no | — | project|workspace|user. |
+| `root` | no | — | Target root (default: VCS root or cwd). |
+| `purge` | no | — | Also remove the forge state dir. |
+| `dry_run` | no | — | Plan only — writes nothing. |
+
+<!-- keep:start -->
+_free notes — errors, examples, next steps (hand-written, preserved)_
+<!-- keep:end -->
+
+### `install update`
+
+**para que:** Upgrade the bootstrapped runtime from its registered checkout.
+
+- **por que:** ciclo de vida forge/* v1 na wheel — install/status/doctor/repair/uninstall/update/mcp-verify
+- **quando usar:** instalar, reparar ou remover a forja num projeto/workspace — o caminho que forge-cli --native delega
+- **quando não:** diagnosticar o projeto alvo — use scan/diagnose; o install só gerencia assets da própria forja
+
+**Syntax**
+
+```text
+forge-doctor-api install update [to] [repo] [dry_run]
+```
+
+| argument/flag | required | default | description |
+|---|---|---|---|
+| `to` | no | — | Pin a version (never 'latest'). |
+| `repo` | no | — | Checkout to upgrade from. |
+| `dry_run` | no | — | Plan only — writes nothing. |
 
 <!-- keep:start -->
 _free notes — errors, examples, next steps (hand-written, preserved)_

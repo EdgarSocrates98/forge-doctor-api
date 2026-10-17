@@ -72,6 +72,9 @@ select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF", "DTZ"]
 # Vendored shared sources — canonical copies in the-forge are the lint target.
 "scripts/forge_installkit.py" = ["ALL"]
 "scripts/forge_bootstrap.py" = ["ALL"]
+# Wheel copy of the same vendored engine (byte-parity asserted by
+# tests/test_forge_install.py) — canonical copy is the lint target.
+"src/forge_doctor_api/_installkit.py" = ["ALL"]
 # Vendored portal server — canonical copy in forge-portal/portal_core.
 "scripts/_forge_portal.py" = ["ALL"]
 
@@ -100,5 +103,8 @@ module = [
     "forge_doctor_api._graphview",
     "forge_doctor_api._graphstudio",
     "forge_doctor_api.ui.*",
+    # vendored install engine — canonical copy in the-forge is the
+    # typecheck target; byte-parity asserted by the test suite
+    "forge_doctor_api._installkit",
 ]
 ignore_errors = true

@@ -14,7 +14,9 @@
   ],
   "install_command": [
     "{python}",
-    "{checkout}/scripts/forge_install.py"
+    "-m",
+    "forge_doctor_api",
+    "install"
   ],
   "lab": {
     "command": [

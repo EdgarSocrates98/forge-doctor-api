@@ -2,9 +2,9 @@
   "schema": "forge/CommandInventory/v1",
   "forge_id": "forge-doctor-api",
   "cli": "forge-doctor-api",
-  "generated_at": "2026-10-11T00:49:10Z",
+  "generated_at": "2026-10-17T18:49:13Z",
   "generated_by": "doc_inventory.py/1",
-  "command_count": 35,
+  "command_count": 42,
   "commands": [
     {
       "path": "blast-radius",
@@ -426,6 +426,291 @@
           "choices": null,
           "positional": false,
           "help": "Write canonical ServiceGraph JSON. Defaults to TARGET/.forge-doctor-api/graph/service-graph.json."
+        }
+      ]
+    },
+    {
+      "path": "install",
+      "help": "Install Forge Doctor API into a project, workspace or the user home; manage the lifecycle (status, doctor, repair, update, uninstall, mcp-verify).",
+      "arguments": [
+        {
+          "name": "scope",
+          "flags": [
+            "--scope"
+          ],
+          "required": false,
+          "default": "project",
+          "choices": null,
+          "positional": false,
+          "help": "project|workspace|user."
+        },
+        {
+          "name": "host",
+          "flags": [
+            "--host"
+          ],
+          "required": false,
+          "default": "all",
+          "choices": null,
+          "positional": false,
+          "help": "claude|devin|codex|copilot|all."
+        },
+        {
+          "name": "profile",
+          "flags": [
+            "--profile"
+          ],
+          "required": false,
+          "default": "recommended",
+          "choices": null,
+          "positional": false,
+          "help": "minimal|recommended|full."
+        },
+        {
+          "name": "root",
+          "flags": [
+            "--root"
+          ],
+          "required": false,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Target root (default: VCS root or cwd)."
+        },
+        {
+          "name": "yes",
+          "flags": [
+            "--yes",
+            "-y"
+          ],
+          "required": false,
+          "default": "False",
+          "choices": null,
+          "positional": false,
+          "help": "Explicit approval; without it only --dry-run is allowed."
+        },
+        {
+          "name": "dry_run",
+          "flags": [
+            "--dry-run"
+          ],
+          "required": false,
+          "default": "False",
+          "choices": null,
+          "positional": false,
+          "help": "Plan only — writes nothing."
+        },
+        {
+          "name": "components",
+          "flags": [
+            "--components"
+          ],
+          "required": false,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Optional components csv: skills,agents,mcp,tui,graph-studio."
+        },
+        {
+          "name": "gateway_profile",
+          "flags": [
+            "--gateway-profile"
+          ],
+          "required": false,
+          "default": "balanced",
+          "choices": null,
+          "positional": false,
+          "help": "Execution profile: economy|balanced|deep."
+        }
+      ],
+      "group": true
+    },
+    {
+      "path": "install doctor",
+      "help": "Run installation health checks (ledger, MCP availability).",
+      "arguments": [
+        {
+          "name": "scope",
+          "flags": [
+            "--scope"
+          ],
+          "required": false,
+          "default": "project",
+          "choices": null,
+          "positional": false,
+          "help": "project|workspace|user."
+        },
+        {
+          "name": "root",
+          "flags": [
+            "--root"
+          ],
+          "required": false,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Target root (default: VCS root or cwd)."
+        }
+      ]
+    },
+    {
+      "path": "install mcp-verify",
+      "help": "Handshake the configured MCP server (PASS/BLOCKED/FAIL).",
+      "arguments": []
+    },
+    {
+      "path": "install repair",
+      "help": "Restore missing managed assets; user-modified content is kept.",
+      "arguments": [
+        {
+          "name": "scope",
+          "flags": [
+            "--scope"
+          ],
+          "required": false,
+          "default": "project",
+          "choices": null,
+          "positional": false,
+          "help": "project|workspace|user."
+        },
+        {
+          "name": "root",
+          "flags": [
+            "--root"
+          ],
+          "required": false,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Target root (default: VCS root or cwd)."
+        },
+        {
+          "name": "dry_run",
+          "flags": [
+            "--dry-run"
+          ],
+          "required": false,
+          "default": "False",
+          "choices": null,
+          "positional": false,
+          "help": "Plan only — writes nothing."
+        }
+      ]
+    },
+    {
+      "path": "install status",
+      "help": "Report drift/health of the resolved installation.",
+      "arguments": [
+        {
+          "name": "scope",
+          "flags": [
+            "--scope"
+          ],
+          "required": false,
+          "default": "project",
+          "choices": null,
+          "positional": false,
+          "help": "project|workspace|user."
+        },
+        {
+          "name": "root",
+          "flags": [
+            "--root"
+          ],
+          "required": false,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Target root (default: VCS root or cwd)."
+        }
+      ]
+    },
+    {
+      "path": "install uninstall",
+      "help": "Remove ledger-owned assets only; user content is preserved.",
+      "arguments": [
+        {
+          "name": "scope",
+          "flags": [
+            "--scope"
+          ],
+          "required": false,
+          "default": "project",
+          "choices": null,
+          "positional": false,
+          "help": "project|workspace|user."
+        },
+        {
+          "name": "root",
+          "flags": [
+            "--root"
+          ],
+          "required": false,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Target root (default: VCS root or cwd)."
+        },
+        {
+          "name": "purge",
+          "flags": [
+            "--purge"
+          ],
+          "required": false,
+          "default": "False",
+          "choices": null,
+          "positional": false,
+          "help": "Also remove the forge state dir."
+        },
+        {
+          "name": "dry_run",
+          "flags": [
+            "--dry-run"
+          ],
+          "required": false,
+          "default": "False",
+          "choices": null,
+          "positional": false,
+          "help": "Plan only — writes nothing."
+        }
+      ]
+    },
+    {
+      "path": "install update",
+      "help": "Upgrade the bootstrapped runtime from its registered checkout.",
+      "arguments": [
+        {
+          "name": "to",
+          "flags": [
+            "--to"
+          ],
+          "required": false,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Pin a version (never 'latest')."
+        },
+        {
+          "name": "repo",
+          "flags": [
+            "--repo"
+          ],
+          "required": false,
+          "default": null,
+          "choices": null,
+          "positional": false,
+          "help": "Checkout to upgrade from."
+        },
+        {
+          "name": "dry_run",
+          "flags": [
+            "--dry-run"
+          ],
+          "required": false,
+          "default": "False",
+          "choices": null,
+          "positional": false,
+          "help": "Plan only — writes nothing."
         }
       ]
     },
