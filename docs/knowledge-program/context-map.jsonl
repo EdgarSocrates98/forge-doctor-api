@@ -207,7 +207,6 @@
 {"path": "factory/runs/2026-10-03.003-service-graph.notes.md", "title": "003-service-graph \u2014 implementation notes", "category": "UNKNOWN", "audience": "public", "related_commands": [], "review_level": "AUTOMATICALLY_CHECKED"}
 {"path": "factory/runs/2026-10-03.004-openapi-model.notes.md", "title": "004-openapi-model \u2014 implementation notes", "category": "UNKNOWN", "audience": "public", "related_commands": [], "review_level": "AUTOMATICALLY_CHECKED"}
 {"path": "factory/runs/2026-10-05-api-rc-hardening.md", "title": "Run record \u2014 api-rc-hardening (specs 081\u2013091)", "category": "UNKNOWN", "audience": "public", "related_commands": ["lab"], "review_level": "AUTOMATICALLY_CHECKED"}
-{"path": "factory/runs/2026-10-15.cyc9-09.md", "title": "Run \u2014 cyc9-09 Forge Lab emitter (forge-doctor-api)", "category": "UNKNOWN", "audience": "public", "related_commands": [], "review_level": "AUTOMATICALLY_CHECKED"}
 {"path": "factory/specs/archive/2026/001-core-models.md", "title": "Grill Gate", "category": "HISTORICAL", "audience": "maintainer", "related_commands": [], "review_level": "AUTOMATICALLY_CHECKED"}
 {"path": "factory/specs/archive/2026/002-evidence-findings.md", "title": "Grill Gate", "category": "HISTORICAL", "audience": "maintainer", "related_commands": [], "review_level": "AUTOMATICALLY_CHECKED"}
 {"path": "factory/specs/archive/2026/003-service-graph.md", "title": "Grill Gate", "category": "HISTORICAL", "audience": "maintainer", "related_commands": [], "review_level": "AUTOMATICALLY_CHECKED"}
@@ -301,8 +300,4 @@
 {"path": "factory/specs/archive/2026/091-post-rc-discipline.md", "title": "Grill Gate", "category": "HISTORICAL", "audience": "maintainer", "related_commands": [], "review_level": "AUTOMATICALLY_CHECKED"}
 {"path": "factory/specs/archive/2026/cyc9-09-scenarios-doctor-api.md", "title": "Cen\u00e1rios Forge Lab \u2014 Forge Doctor API", "category": "HISTORICAL", "audience": "maintainer", "related_commands": [], "review_level": "AUTOMATICALLY_CHECKED"}
 {"path": "factory/specs/c11-2-native-install-cli.md", "title": "RC Exception Record", "category": "USER_GUIDE", "audience": "public", "related_commands": [], "review_level": "AUTOMATICALLY_CHECKED"}
-{"path": "graphify-out/2026-10-15/GRAPH_REPORT.md", "title": "Graph Report - forge-doctor-api  (2026-10-15)", "category": "UNKNOWN", "audience": "public", "related_commands": [], "review_level": "AUTOMATICALLY_CHECKED"}
-{"path": "graphify-out/2026-10-16/GRAPH_REPORT.md", "title": "Graph Report - forge-doctor-api  (2026-10-16)", "category": "UNKNOWN", "audience": "public", "related_commands": [], "review_level": "AUTOMATICALLY_CHECKED"}
-{"path": "graphify-out/2026-10-17/GRAPH_REPORT.md", "title": "Graph Report - forge-doctor-api  (2026-10-17)", "category": "UNKNOWN", "audience": "public", "related_commands": [], "review_level": "AUTOMATICALLY_CHECKED"}
-{"path": "graphify-out/GRAPH_REPORT.md", "title": "Graph Report - forge-doctor-api  (2026-10-17)", "category": "UNKNOWN", "audience": "public", "related_commands": [], "review_level": "AUTOMATICALLY_CHECKED"}
 {"path": "tests/fixtures/contracts/PROVENANCE.md", "title": "Contract fixtures provenance", "category": "CONTRACT", "audience": "public", "related_commands": [], "review_level": "AUTOMATICALLY_CHECKED"}
