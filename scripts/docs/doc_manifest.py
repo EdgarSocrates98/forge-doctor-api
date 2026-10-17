@@ -21,6 +21,7 @@ import argparse
 import hashlib
 import json
 import os
+import posixpath
 import re
 import sys
 import time
@@ -219,7 +220,7 @@ def _repo_url_path(raw: str, slug: str | None) -> str | None:
     if not m or m.group("slug") != slug:
         return None
     path = _REPO_URL_RE.sub("", raw)
-    path = os.path.normpath(path)
+    path = posixpath.normpath(path)
     if path.startswith(("..", "/", "\\")):
         return None
     return path
