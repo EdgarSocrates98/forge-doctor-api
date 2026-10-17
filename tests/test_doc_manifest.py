@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -58,3 +59,96 @@ def test_no_broken_links_in_active_docs(cli: str, forge: str):
     assert not broken, "broken internal links in active docs:\n" + "\n".join(
         f"  {b['file']} -> {b['link']} ({b['problem']})" for b in broken[:30]
     )
+
+
+class TestRepoUrlResolver:
+    """Tag-pinned self-repo URLs resolve as repo paths for the link gate
+    (cycle-10.3 review): nested docs, slash-refs, query strings, escapes.
+    """
+
+    SLUG = "Org/proj"
+    BASE = "https://github.com/Org/proj"
+
+    @pytest.fixture()
+    def repo(self, tmp_path: Path) -> Path:
+        (tmp_path / "pyproject.toml").write_text(
+            f'[project.urls]\nRepository = "{self.BASE}"\n', encoding="utf-8"
+        )
+        (tmp_path / "AGENTS.md").write_text("# Agents\n", encoding="utf-8")
+        return tmp_path
+
+    def test_nested_doc_link_resolves_against_repo_root(self, repo: Path) -> None:
+        mod = _load_manifest()
+        found = mod._check_links(
+            repo,
+            Path("docs/guia/README.md"),
+            [f"{self.BASE}/blob/v1.0/AGENTS.md"],
+        )
+        assert found == []
+
+    def test_broken_repo_url_is_reported(self, repo: Path) -> None:
+        mod = _load_manifest()
+        found = mod._check_links(
+            repo,
+            Path("docs/guia/README.md"),
+            [f"{self.BASE}/blob/v1.0/MISSING.md"],
+        )
+        assert [f["problem"] for f in found] == ["broken internal link"]
+
+    def test_slash_containing_ref(self, repo: Path) -> None:
+        mod = _load_manifest()
+        url = f"{self.BASE}/blob/release/1.0/AGENTS.md"
+        assert mod._repo_url_path(url, self.SLUG, repo) == "AGENTS.md"
+        assert mod._check_links(repo, Path("docs/guia/README.md"), [url]) == []
+
+    def test_query_string_and_fragment_are_stripped(self, repo: Path) -> None:
+        mod = _load_manifest()
+        url = f"{self.BASE}/blob/v1.0/AGENTS.md?plain=1#L10"
+        assert mod._repo_url_path(url, self.SLUG, repo) == "AGENTS.md"
+
+    def test_dotdot_inside_url_is_not_a_blob_ref(self, repo: Path) -> None:
+        mod = _load_manifest()
+        url = f"{self.BASE}/blob/v1.0/../AGENTS.md"
+        assert mod._repo_url_path(url, self.SLUG, repo) is None
+
+    def test_dotdot_escape_is_rejected(self, repo: Path) -> None:
+        mod = _load_manifest()
+        url = f"{self.BASE}/blob/v1.0/../../outside.md"
+        assert mod._repo_url_path(url, self.SLUG, repo) is None
+
+    def test_foreign_slug_is_not_mapped(self, repo: Path) -> None:
+        mod = _load_manifest()
+        url = "https://github.com/Other/repo/blob/v1.0/AGENTS.md"
+        assert mod._repo_url_path(url, self.SLUG, repo) is None
+        assert mod._check_links(repo, Path("docs/guia/README.md"), [url]) == []
+
+    def test_git_known_ref_wins_over_path_guess(self, repo: Path) -> None:
+        mod = _load_manifest()
+        init = subprocess.run(
+            ["git", "-C", str(repo), "init", "-q"], capture_output=True, check=False
+        )
+        if init.returncode != 0:
+            pytest.skip("git unavailable")
+        subprocess.run(
+            [
+                "git",
+                "-C",
+                str(repo),
+                "-c",
+                "user.email=t@t",
+                "-c",
+                "user.name=t",
+                "commit",
+                "--allow-empty",
+                "-qm",
+                "init",
+            ],
+            check=True,
+        )
+        subprocess.run(
+            ["git", "-C", str(repo), "tag", "release/1.0"], check=True
+        )
+        # without the tag the longest existing path could win; with it the
+        # real ref must decide the boundary.
+        url = f"{self.BASE}/blob/release/1.0/AGENTS.md"
+        assert mod._repo_url_path(url, self.SLUG, repo) == "AGENTS.md"
