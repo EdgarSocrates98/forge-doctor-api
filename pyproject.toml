@@ -7,16 +7,27 @@ requires-python = ">=3.11"
 authors = [{ name = "Edgar Sócrates Caria" }]
 license = { text = "MIT" }
 classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Operating System :: OS Independent",
 ]
+keywords = ["api", "diagnostics", "offline-first", "static-analysis", "mcp"]
 dependencies = [
     "typer>=0.12",
     "rich>=15.0.0",
     "pyyaml>=6.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/EdgarSocrates98/forge-doctor-api"
+Repository = "https://github.com/EdgarSocrates98/forge-doctor-api"
+Documentation = "https://github.com/EdgarSocrates98/forge-doctor-api/blob/main/docs/architecture.md"
+Changelog = "https://github.com/EdgarSocrates98/forge-doctor-api/blob/main/CHANGELOG.md"
+Issues = "https://github.com/EdgarSocrates98/forge-doctor-api/issues"
 
 [project.optional-dependencies]
 graphql = ["graphql-core>=3.2,<4"]
