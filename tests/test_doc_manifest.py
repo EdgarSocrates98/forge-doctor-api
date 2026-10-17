@@ -192,3 +192,36 @@ class TestRepoUrlResolver:
         # real ref must decide the boundary.
         url = f"{self.BASE}/blob/release/1.0/AGENTS.md"
         assert mod._repo_url_path(url, self.SLUG, repo) == "AGENTS.md"
+
+    def test_malformed_own_repo_url_is_reported(self, repo: Path) -> None:
+        mod = _load_manifest()
+        for bad in (
+            f"{self.BASE}/blob/v1.0/a%5C..%5C..%5Cx.md",
+            f"{self.BASE}/blob//AGENTS.md",
+            f"{self.BASE}/blob/v1.0/../../outside.md",
+        ):
+            found = mod._check_links(repo, Path("docs/guia/README.md"), [bad])
+            assert [f["problem"] for f in found] == ["invalid repo url"], bad
+
+    def test_malformed_foreign_repo_url_still_skipped(self, repo: Path) -> None:
+        mod = _load_manifest()
+        url = "https://github.com/Other/repo/blob//x.md"
+        assert mod._check_links(repo, Path("docs/guia/README.md"), [url]) == []
+
+    def test_column_line_ref_is_not_an_anchor(self, repo: Path) -> None:
+        mod = _load_manifest()
+        for frag in ("#L10C5", "#L10C5-L20C7"):
+            url = f"{self.BASE}/blob/v1.0/AGENTS.md{frag}"
+            assert mod._check_links(repo, Path("docs/guia/README.md"), [url]) == []
+
+    def test_percent_encoded_anchor_matches_decoded_heading(self, repo: Path) -> None:
+        mod = _load_manifest()
+        (repo / "AGENTS.md").write_text("# Seção\n", encoding="utf-8")
+        url = f"{self.BASE}/blob/v1.0/AGENTS.md#se%C3%A7%C3%A3o"
+        assert mod._check_links(repo, Path("docs/guia/README.md"), [url]) == []
+
+    def test_percent_encoded_missing_anchor_is_reported(self, repo: Path) -> None:
+        mod = _load_manifest()
+        url = f"{self.BASE}/blob/v1.0/AGENTS.md#n%C3%A3o-existe"
+        found = mod._check_links(repo, Path("docs/guia/README.md"), [url])
+        assert [f["problem"] for f in found] == ["missing anchor"]

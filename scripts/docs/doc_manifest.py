@@ -198,7 +198,7 @@ _REPO_URL_RE = re.compile(
 )
 # GitHub line anchors (``#L10``, ``#L10-L20``) are valid targets but not
 # heading anchors — exempt from the anchor check.
-_LINE_REF_RE = re.compile(r"L\d+(?:-L\d+)?")
+_LINE_REF_RE = re.compile(r"L\d+(?:C\d+)?(?:-L\d+(?:C\d+)?)?")
 
 
 _REPO_SLUGS: dict[Path, str | None] = {}
@@ -254,11 +254,15 @@ def _known_refs(repo: Path) -> frozenset[str] | None:
 def _repo_url_path(raw: str, slug: str | None, repo: Path) -> str | None:
     """Tag-pinned absolute URL to this repo's own file -> repo-relative path.
 
-    ``<ref>/<path>`` is ambiguous when the ref contains ``/``: candidates
-    are tried longest-ref first (GitHub's longest match wins); a ref git
-    knows wins, then the first whose path exists, then the first candidate
-    so broken links are still reported. ``?query`` and ``%XX`` escapes are
-    normalized. Returns None for foreign URLs and ``..`` escapes.
+    ``<ref>/<path>`` is ambiguous when the ref contains ``/``: candidate
+    splits are built longest-ref first (GitHub's longest match wins) and
+    resolved in this order — a ref git knows wins; without git, the first
+    candidate whose path exists tried **shortest-ref first** (the common
+    ``vX.Y``/``main`` shape); finally the longest-path candidate so broken
+    links are still reported. ``?query`` and ``%XX`` escapes are
+    normalized. Returns None for foreign URLs and ``..``/``\`` escapes —
+    callers must treat a same-slug URL returning None as malformed, not
+    external.
     """
     if slug is None:
         return None
@@ -304,16 +308,29 @@ def _check_links(repo: Path, rel: Path, links: list[str]) -> list[dict[str, str]
     slug = _repo_slug(repo)
     for raw in links:
         mapped = _repo_url_path(raw, slug, repo)
+        # A same-slug blob/tree URL that failed to map (``%5C`` escape,
+        # ``..`` traversal, empty path) is malformed — report it; it must
+        # not fall through to the external-link skip.
+        own = _REPO_URL_RE.match(raw)
+        if mapped is None and own is not None and own.group("slug") == slug:
+            findings.append(
+                {
+                    "file": str(rel).replace("\\", "/"),
+                    "link": raw,
+                    "problem": "invalid repo url",
+                }
+            )
+            continue
         # Root-relative targets are external-site paths (e.g. quoted
         # devin.ai docs), never repo files — skip alongside http/mailto.
         if mapped is None and raw.startswith(
             ("http://", "https://", "mailto:", "#", "/")
         ):
-            if raw.startswith("#") and len(raw) > 1:
-                continue  # same-file anchor checked via target==self below
             continue
         # The fragment lives in the raw URL — mapped paths never carry it.
-        frag = raw.partition("#")[2]
+        # Percent-decode so ``#%C3%A7`` matches the heading ``a ç ã`` —
+        # GitHub anchors keep the decoded text.
+        frag = unquote(raw.partition("#")[2])
         target = mapped if mapped is not None else raw.partition("#")[0]
         if not target:
             continue
