@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import html
 import json
 import os
 import secrets
@@ -498,6 +499,53 @@ class PortalHandler(BaseHTTPRequestHandler):
         self.send_header("Referrer-Policy", "no-referrer")
         self.send_header("Content-Security-Policy", CSP)
         self.send_header("Cache-Control", "no-store")
+        # XFO is the legacy fallback for CSP frame-ancestors (older
+        # webviews/embedded contexts may not honour CSP); Permissions-
+        # Policy disables browser features this app never calls.
+        self.send_header("X-Frame-Options", "DENY")
+        self.send_header(
+            "Permissions-Policy",
+            "camera=(), microphone=(), geolocation=(), payment=(), "
+            "usb=(), interest-cohort=(), browsing-topics=()",
+        )
+
+    def send_error(self, code: int, message: str | None = None, explain: str | None = None) -> None:
+        """send_error with the portal's security headers attached.
+
+        The stdlib version emits a bare HTML page — traversal/missing-asset
+        404s and malformed-request refusals were the one response class
+        lacking CSP/nosniff/no-store. Same contract as the stdlib override
+        (generic escaped page, Connection: close) plus the headers every
+        other response path already sets via ``_security_headers``."""
+        try:
+            shortmsg, longmsg = self.responses[code]
+        except KeyError:
+            shortmsg, longmsg = "???", "???"
+        if message is None:
+            message = shortmsg
+        if explain is None:
+            explain = longmsg
+        self.log_error("code %d, message %s", code, message)
+        self.send_response(code, message)
+        self.send_header("Connection", "close")
+        body = None
+        if code >= 200 and code not in (204, 205, 304):
+            body = (
+                "<!doctype html><html><head>"
+                '<meta charset="utf-8">'
+                f"<title>{code} {html.escape(str(message))}</title>"
+                "</head><body>"
+                f"<h1>{code} {html.escape(str(message))}</h1>"
+                f"<p>{html.escape(str(explain))}</p>"
+                "</body></html>"
+            ).encode("utf-8", "replace")
+            self.send_header("Content-Type", self.error_content_type)
+            self.send_header("Content-Length", str(len(body)))
+        self._security_headers()
+        self.end_headers()
+        if self.command != "HEAD" and body:
+            self.wfile.write(body)
+        self.close_connection = True
 
     def _envelope(self, correlation: str, *, data: Any = None, error: dict | None = None) -> dict:
         env: dict[str, Any] = {"schema": SCHEMA, "correlation_id": correlation}
