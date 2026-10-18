@@ -38,6 +38,12 @@ SCHEMA = "forge/PortalApi/1"
 API_PREFIX = "/api/v1"
 SESSION_HEADER = "X-Forge-Session"
 SESSION_COOKIE = "forge_session"
+# forge/PortalEvent/1 — additive execution telemetry (Cycle 3). Events
+# are recorded only when the adapter installs an `event_sink`; the
+# vocabulary and field semantics live in portal_core/telemetry.py and
+# docs/observability/execution-events.md. No event is ever synthesized
+# for a past moment — `timestamp` is stamped at emit time only.
+EVENT_SCHEMA = "forge/PortalEvent/1"
 MAX_BODY = 1 << 20  # 1 MiB
 MUTATION_WINDOW_S = 60.0
 MUTATION_LIMIT = 10
@@ -53,6 +59,14 @@ _SECRET_KEYS = ("token", "secret", "password", "cookie", "authorization", "api_k
 # token must round-trip through the client for confirm-then-apply to work.
 # Everything else matching _SECRET_KEYS is scrubbed.
 _REDACT_EXEMPT = frozenset({"plan_token"})
+
+
+def _utc_now() -> str:
+    """Real wall-clock timestamp for telemetry — emitted at record time,
+    never back-filled for events that already happened."""
+    from datetime import UTC, datetime
+
+    return datetime.now(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
 
 # ---------------------------------------------------------------------------
@@ -117,6 +131,26 @@ class RequestContext:
     query: dict[str, list[str]]
     body: dict | None
     correlation_id: str
+    # forge/PortalEvent/1 — the request's own span, minted at dispatch.
+    # `emit` lets adapters record domain events (tool invocation, MCP
+    # verification, state change, receipt…) under the same span and
+    # correlation — real producer timestamps only.
+    span_id: str = ""
+
+    def emit(self, event_type: str, **fields: Any) -> None:
+        """Record a `forge/PortalEvent/1` from inside an op handler.
+
+        Fields not supplied default to this request's real context:
+        `correlation_id`, `span_id`, `source` ("adapter") — a caller may
+        still pass an explicit value (e.g. a *different* correlation id
+        the event really belongs to, like an execute referencing its
+        earlier plan request). `timestamp` is stamped at emit time —
+        there is no way to emit for a past moment. A None/absent sink
+        makes this a no-op, so instrumentation never breaks the op."""
+        fields.setdefault("correlation_id", self.correlation_id)
+        fields.setdefault("span_id", self.span_id or None)
+        fields.setdefault("source", "adapter")
+        self.handler.server.emit_event(event_type, **fields)
 
     def require(self, key: str) -> str:
         val = (self.body or {}).get(key)
@@ -562,11 +596,26 @@ class PortalHandler(BaseHTTPRequestHandler):
     def _cid(self) -> str:
         return self.headers.get("X-Correlation-Id") or secrets.token_hex(6)
 
+    def _refused(self, cid: str, code: str, rel: str, *, span_id: str | None = None) -> None:
+        """forge/PortalEvent/1 — a request refused before/at dispatch.
+        The refusal is real regardless of telemetry: this only records
+        it when the adapter installed an event sink (no-op otherwise)."""
+        self.server.emit_event(
+            "request.rejected",
+            correlation_id=cid,
+            span_id=span_id,
+            source="portal_core",
+            target=rel,
+            status="refused",
+            metadata={"code": code},
+        )
+
     def _api(self, method: str, path: str, parsed: urllib.parse.ParseResult) -> None:
         cid = self._cid()
         rel = path[len(API_PREFIX):] or "/"
 
         if not self._session_ok():
+            self._refused(cid, "PORTAL-SESSION", rel)
             self._reject(
                 403,
                 self._envelope(
@@ -578,13 +627,17 @@ class PortalHandler(BaseHTTPRequestHandler):
 
         op = self._find_op(method, rel)
         if op is None:
+            self._refused(cid, "PORTAL-NOT-FOUND", rel)
             self._send_json(404, self._envelope(cid, error=_err("PORTAL-NOT-FOUND", f"no such operation: {rel}")))
             return
         params = op[1]
         operation = op[0]
+        span_id = secrets.token_hex(8)  # this request's span — minted once, shared by ctx.emit
+        op_target = f"{method} {operation.path}"
 
         if method == "POST":
             if not self._origin_ok():
+                self._refused(cid, "PORTAL-ORIGIN", rel, span_id=span_id)
                 self._reject(
                     403,
                     self._envelope(cid, error=_err("PORTAL-ORIGIN", "cross-origin request refused")),
@@ -592,12 +645,14 @@ class PortalHandler(BaseHTTPRequestHandler):
                 return
             ctype = (self.headers.get("Content-Type") or "").split(";")[0].strip()
             if ctype != "application/json":
+                self._refused(cid, "PORTAL-CONTENT-TYPE", rel, span_id=span_id)
                 self._reject(
                     415,
                     self._envelope(cid, error=_err("PORTAL-CONTENT-TYPE", "Content-Type must be application/json")),
                 )
                 return
             if operation.mutating and not self.server.rate_limiter.allow():
+                self._refused(cid, "PORTAL-RATE-LIMITED", rel, span_id=span_id)
                 self._reject(
                     429,
                     self._envelope(
@@ -611,6 +666,7 @@ class PortalHandler(BaseHTTPRequestHandler):
         if method == "POST":
             length = int(self.headers.get("Content-Length") or 0)
             if length > MAX_BODY:
+                self._refused(cid, "PORTAL-PAYLOAD-TOO-LARGE", rel, span_id=span_id)
                 self._reject(
                     413,
                     self._envelope(cid, error=_err("PORTAL-PAYLOAD-TOO-LARGE", "body exceeds 1 MiB")),
@@ -620,13 +676,16 @@ class PortalHandler(BaseHTTPRequestHandler):
             try:
                 parsed_body = json.loads(raw or b"{}")
             except json.JSONDecodeError:
+                self._refused(cid, "PORTAL-BAD-JSON", rel, span_id=span_id)
                 self._send_json(400, self._envelope(cid, error=_err("PORTAL-BAD-JSON", "body is not valid JSON")))
                 return
             if not isinstance(parsed_body, dict):
+                self._refused(cid, "PORTAL-BAD-JSON", rel, span_id=span_id)
                 self._send_json(400, self._envelope(cid, error=_err("PORTAL-BAD-JSON", "body must be a JSON object")))
                 return
             body = parsed_body
             if operation.confirm is not None and body.get("confirm") != operation.confirm:
+                self._refused(cid, "PORTAL-CONFIRM", rel, span_id=span_id)
                 self._send_json(
                     400,
                     self._envelope(
@@ -640,6 +699,7 @@ class PortalHandler(BaseHTTPRequestHandler):
                 )
                 return
             if operation.needs_plan_token and not body.get("plan_token"):
+                self._refused(cid, "PORTAL-PLAN-REQUIRED", rel, span_id=span_id)
                 self._send_json(
                     400,
                     self._envelope(cid, error=_err("PORTAL-PLAN-REQUIRED", "plan_token is required")),
@@ -652,14 +712,32 @@ class PortalHandler(BaseHTTPRequestHandler):
             query=urllib.parse.parse_qs(parsed.query),
             body=body,
             correlation_id=cid,
+            span_id=span_id,
         )
 
+        # The operation boundary — start/end are emitted back-to-back with
+        # the handler call so `duration_ms` is measured, never estimated.
+        # A timed-out handler keeps running on its worker thread: the
+        # 'timeout' end is real (the client's wait ended); the orphan
+        # cannot emit a second end — documented in the contract.
+        t0 = time.perf_counter()
+        self.server.emit_event(
+            "operation.start",
+            correlation_id=cid,
+            span_id=span_id,
+            source="portal_core",
+            target=op_target,
+            status="started",
+            metadata={"mutating": operation.mutating},
+        )
         try:
             result = self.server.run_with_timeout(operation.handler, ctx, operation.timeout)
         except PortalError as e:
+            self._end_op(cid, span_id, op_target, t0, "refused", code=e.code)
             self._send_json(e.http, self._envelope(cid, error=e.body()))
             return
         except TimeoutError:
+            self._end_op(cid, span_id, op_target, t0, "timeout", code="PORTAL-TIMEOUT")
             self._send_json(
                 504,
                 self._envelope(
@@ -670,6 +748,7 @@ class PortalHandler(BaseHTTPRequestHandler):
             return
         except Exception as e:  # noqa: BLE001 — outermost boundary; never leak internals
             self.server.log(f"handler error on {rel}: {type(e).__name__}")
+            self._end_op(cid, span_id, op_target, t0, "failed", code="PORTAL-INTERNAL")
             self._send_json(
                 500,
                 self._envelope(
@@ -680,9 +759,28 @@ class PortalHandler(BaseHTTPRequestHandler):
             return
 
         if isinstance(result, SseResult):
-            self._stream_sse(result, cid)
+            streamed = self._stream_sse(result, cid)
+            self._end_op(cid, span_id, op_target, t0, "ok" if streamed else "failed")
             return
+        self._end_op(cid, span_id, op_target, t0, "ok")
         self._send_json(200, self._envelope(cid, data=redact(result)))
+
+    def _end_op(
+        self, cid: str, span_id: str, op_target: str, t0: float, status: str, *, code: str | None = None
+    ) -> None:
+        metadata: dict[str, Any] = {}
+        if code:
+            metadata["code"] = code
+        self.server.emit_event(
+            "operation.end",
+            correlation_id=cid,
+            span_id=span_id,
+            source="portal_core",
+            target=op_target,
+            status=status,
+            duration_ms=round((time.perf_counter() - t0) * 1000, 3),
+            metadata=metadata or None,
+        )
 
     def _find_op(self, method: str, rel: str) -> tuple[Operation, dict[str, str]] | None:
         for op in self.server.adapter.ops:
@@ -693,7 +791,9 @@ class PortalHandler(BaseHTTPRequestHandler):
                 return op, params
         return None
 
-    def _stream_sse(self, result: SseResult, cid: str) -> None:
+    def _stream_sse(self, result: SseResult, cid: str) -> bool:
+        """Write the SSE frames; returns False when the client went away
+        mid-stream — the `operation.end` event then records 'failed'."""
         self.send_response(200)
         self.send_header("Content-Type", "text/event-stream; charset=utf-8")
         self.send_header("Cache-Control", "no-store")
@@ -707,6 +807,8 @@ class PortalHandler(BaseHTTPRequestHandler):
                 self.wfile.flush()
         except (BrokenPipeError, ConnectionResetError):
             self.server.log("sse client disconnected")
+            return False
+        return True
 
     # -- static ------------------------------------------------------------
     def _static(self, path: str, parsed: urllib.parse.ParseResult) -> None:
@@ -830,6 +932,12 @@ class PortalServer(ThreadingHTTPServer):
             raise ValueError("portal binds loopback only")
         self.adapter = adapter
         self.session_token = secrets.token_urlsafe(24)
+        # forge/PortalEvent/1 sink — an adapter opts into execution
+        # telemetry by exposing `event_sink` (a callable taking the event
+        # dict, e.g. `portal_core.telemetry.EventRecorder().emit`).
+        # Absent → every emit is a no-op; adapters on older vendored
+        # copies simply record nothing, which the UI reports honestly.
+        self.event_sink = getattr(adapter, "event_sink", None)
         self._plan_secret = secrets.token_bytes(32)
         self._used_plans: set[str] = set()
         self.rate_limiter = RateLimiter()
@@ -847,6 +955,30 @@ class PortalServer(ThreadingHTTPServer):
     def run_with_timeout(self, fn: Callable[[RequestContext], Any], ctx: RequestContext, timeout: float) -> Any:
         fut = self._executor.submit(fn, ctx)
         return fut.result(timeout=timeout)
+
+    def emit_event(self, event_type: str, **fields: Any) -> None:
+        """Record one forge/PortalEvent/1 into the adapter's sink.
+
+        `schema`, `event_type` and `timestamp` are filled here — the
+        timestamp is the real emit time. Fields left out by the caller
+        stay absent (the contract makes them optional); nothing is
+        ever back-filled or inferred. Telemetry must never break a
+        request: any sink failure is logged and swallowed."""
+        sink = self.event_sink
+        if sink is None:
+            return
+        event: dict[str, Any] = {
+            "schema": EVENT_SCHEMA,
+            "event_type": event_type,
+            "timestamp": _utc_now(),
+        }
+        for key, value in fields.items():
+            if value is not None:
+                event[key] = value
+        try:
+            sink(redact(event))
+        except Exception as e:  # noqa: BLE001 — telemetry is best-effort
+            self.log(f"event sink dropped {event_type}: {type(e).__name__}")
 
     def sign_plan(self, plan: dict) -> str:
         return make_plan_token(self._plan_secret, plan)

@@ -78796,7 +78796,7 @@
         "markers": [
           "javascript"
         ],
-        "path": "portal/assets/main-S4FAHY5Q.js",
+        "path": "portal/assets/main-XNAXEXHY.js",
         "unreadable": false,
         "vendored": false
       },
@@ -90980,7 +90980,7 @@
     {
       "missing": "literal URL for the client call",
       "resolution": "the call uses a computed or interpolated URL",
-      "subject": "portal/assets/main-S4FAHY5Q.js:5"
+      "subject": "portal/assets/main-XNAXEXHY.js:5"
     },
     {
       "missing": "declared cache fields (ttl, key, invalidation, stale_policy)",
