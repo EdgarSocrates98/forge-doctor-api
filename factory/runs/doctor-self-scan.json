@@ -13600,7 +13600,7 @@
     },
     {
       "confidence": "MEDIUM",
-      "description": "undocumented write operation PUT /user/{id}/edit is implemented \u2014 potential breaking surface change",
+      "description": "undocumented write operation PUT /user/{id}/edit is implemented — potential breaking surface change",
       "entity_ids": [
         "operation:express:user.update"
       ],
@@ -13610,7 +13610,7 @@
           "line": 45,
           "offset": null,
           "source": "tests/fixtures/oss/expressjs/route-separation-index/slice.js",
-          "summary": "undocumented write operation PUT /user/{id}/edit is implemented \u2014 potential breaking surface change"
+          "summary": "undocumented write operation PUT /user/{id}/edit is implemented — potential breaking surface change"
         },
         {
           "kind": "STATIC",
@@ -13640,7 +13640,7 @@
     },
     {
       "confidence": "MEDIUM",
-      "description": "undocumented write operation POST /cats is implemented \u2014 potential breaking surface change",
+      "description": "undocumented write operation POST /cats is implemented — potential breaking surface change",
       "entity_ids": [
         "operation:nestjs:CatsController.create"
       ],
@@ -13650,7 +13650,7 @@
           "line": 23,
           "offset": null,
           "source": "labs/frameworks/nestjs-depth/cats.controller.ts",
-          "summary": "undocumented write operation POST /cats is implemented \u2014 potential breaking surface change"
+          "summary": "undocumented write operation POST /cats is implemented — potential breaking surface change"
         },
         {
           "kind": "STATIC",
@@ -13680,7 +13680,7 @@
     },
     {
       "confidence": "MEDIUM",
-      "description": "undocumented write operation POST /owners/new is implemented \u2014 potential breaking surface change",
+      "description": "undocumented write operation POST /owners/new is implemented — potential breaking surface change",
       "entity_ids": [
         "operation:spring:OwnerController.processCreationForm"
       ],
@@ -13690,7 +13690,7 @@
           "line": 61,
           "offset": null,
           "source": "tests/fixtures/oss/spring-petclinic/owner-controller/slice.java",
-          "summary": "undocumented write operation POST /owners/new is implemented \u2014 potential breaking surface change"
+          "summary": "undocumented write operation POST /owners/new is implemented — potential breaking surface change"
         },
         {
           "kind": "STATIC",
@@ -13720,7 +13720,7 @@
     },
     {
       "confidence": "MEDIUM",
-      "description": "undocumented write operation POST /owners/{ownerId}/edit is implemented \u2014 potential breaking surface change",
+      "description": "undocumented write operation POST /owners/{ownerId}/edit is implemented — potential breaking surface change",
       "entity_ids": [
         "operation:spring:OwnerController.processUpdateOwnerForm"
       ],
@@ -13730,7 +13730,7 @@
           "line": 109,
           "offset": null,
           "source": "tests/fixtures/oss/spring-petclinic/owner-controller/slice.java",
-          "summary": "undocumented write operation POST /owners/{ownerId}/edit is implemented \u2014 potential breaking surface change"
+          "summary": "undocumented write operation POST /owners/{ownerId}/edit is implemented — potential breaking surface change"
         },
         {
           "kind": "STATIC",
@@ -13760,7 +13760,7 @@
     },
     {
       "confidence": "MEDIUM",
-      "description": "undocumented write operation POST /api/pets is implemented \u2014 potential breaking surface change",
+      "description": "undocumented write operation POST /api/pets is implemented — potential breaking surface change",
       "entity_ids": [
         "operation:spring:PetController.add"
       ],
@@ -13770,7 +13770,7 @@
           "line": 17,
           "offset": null,
           "source": "labs/frameworks/spring-depth/PetController.java",
-          "summary": "undocumented write operation POST /api/pets is implemented \u2014 potential breaking surface change"
+          "summary": "undocumented write operation POST /api/pets is implemented — potential breaking surface change"
         },
         {
           "kind": "STATIC",
@@ -13800,7 +13800,7 @@
     },
     {
       "confidence": "MEDIUM",
-      "description": "undocumented write operation POST /pets/{petId}/edit is implemented \u2014 potential breaking surface change",
+      "description": "undocumented write operation POST /pets/{petId}/edit is implemented — potential breaking surface change",
       "entity_ids": [
         "operation:spring:PetController.edit"
       ],
@@ -13810,7 +13810,7 @@
           "line": 9,
           "offset": null,
           "source": "labs/realworld/spring-petclinic-lite/src/main/java/pet/PetController.java",
-          "summary": "undocumented write operation POST /pets/{petId}/edit is implemented \u2014 potential breaking surface change"
+          "summary": "undocumented write operation POST /pets/{petId}/edit is implemented — potential breaking surface change"
         },
         {
           "kind": "STATIC",
@@ -18321,7 +18321,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "Dragon.thrusters"
         }
       ]
@@ -18352,7 +18352,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "FilmCharactersConnection.characters"
         }
       ]
@@ -18383,7 +18383,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "FilmCharactersConnection.edges"
         }
       ]
@@ -18414,7 +18414,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "FilmPlanetsConnection.edges"
         }
       ]
@@ -18445,7 +18445,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "FilmPlanetsConnection.planets"
         }
       ]
@@ -18476,7 +18476,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "FilmSpeciesConnection.edges"
         }
       ]
@@ -18507,7 +18507,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "FilmSpeciesConnection.species"
         }
       ]
@@ -18538,7 +18538,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "FilmStarshipsConnection.edges"
         }
       ]
@@ -18569,7 +18569,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "FilmStarshipsConnection.starships"
         }
       ]
@@ -18600,7 +18600,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "FilmVehiclesConnection.edges"
         }
       ]
@@ -18631,7 +18631,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "FilmVehiclesConnection.vehicles"
         }
       ]
@@ -18662,7 +18662,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "FilmsConnection.edges"
         }
       ]
@@ -18693,7 +18693,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "FilmsConnection.films"
         }
       ]
@@ -18724,7 +18724,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "HistoriesResult.data"
         }
       ]
@@ -18755,7 +18755,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "Launch.ships"
         }
       ]
@@ -18786,7 +18786,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "LaunchRocketFirstStage.cores"
         }
       ]
@@ -18817,7 +18817,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "LaunchRocketSecondStage.payloads"
         }
       ]
@@ -18848,7 +18848,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "LaunchesPastResult.data"
         }
       ]
@@ -18879,7 +18879,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "Launchpad.vehicles_launched"
         }
       ]
@@ -18910,7 +18910,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "Mission.payloads"
         }
       ]
@@ -18941,7 +18941,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "MissionResult.data"
         }
       ]
@@ -18972,7 +18972,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "PeopleConnection.edges"
         }
       ]
@@ -19003,7 +19003,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "PeopleConnection.people"
         }
       ]
@@ -19034,7 +19034,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "PersonFilmsConnection.edges"
         }
       ]
@@ -19065,7 +19065,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "PersonFilmsConnection.films"
         }
       ]
@@ -19096,7 +19096,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "PersonStarshipsConnection.edges"
         }
       ]
@@ -19127,7 +19127,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "PersonStarshipsConnection.starships"
         }
       ]
@@ -19158,7 +19158,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "PersonVehiclesConnection.edges"
         }
       ]
@@ -19189,7 +19189,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "PersonVehiclesConnection.vehicles"
         }
       ]
@@ -19220,7 +19220,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "PlanetFilmsConnection.edges"
         }
       ]
@@ -19251,7 +19251,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "PlanetFilmsConnection.films"
         }
       ]
@@ -19282,7 +19282,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "PlanetResidentsConnection.edges"
         }
       ]
@@ -19313,7 +19313,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "PlanetResidentsConnection.residents"
         }
       ]
@@ -19344,7 +19344,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "PlanetsConnection.edges"
         }
       ]
@@ -19375,7 +19375,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "PlanetsConnection.planets"
         }
       ]
@@ -19406,7 +19406,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "Query.capsules"
         }
       ]
@@ -19437,7 +19437,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "Query.capsulesPast"
         }
       ]
@@ -19468,7 +19468,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "Query.capsulesUpcoming"
         }
       ]
@@ -19499,7 +19499,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "Query.cores"
         }
       ]
@@ -19530,7 +19530,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "Query.coresPast"
         }
       ]
@@ -19561,7 +19561,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "Query.coresUpcoming"
         }
       ]
@@ -19592,7 +19592,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "Query.dragons"
         }
       ]
@@ -19623,7 +19623,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "Query.histories"
         }
       ]
@@ -19654,7 +19654,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "Query.landpads"
         }
       ]
@@ -19685,7 +19685,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "Query.launches"
         }
       ]
@@ -19716,7 +19716,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "Query.launchesPast"
         }
       ]
@@ -19747,7 +19747,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "Query.launchesUpcoming"
         }
       ]
@@ -19778,7 +19778,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "Query.launchpads"
         }
       ]
@@ -19809,7 +19809,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "Query.missions"
         }
       ]
@@ -19840,7 +19840,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "Query.payloads"
         }
       ]
@@ -19871,7 +19871,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "Query.rockets"
         }
       ]
@@ -19902,7 +19902,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "Query.ships"
         }
       ]
@@ -19933,7 +19933,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "RocketsResult.data"
         }
       ]
@@ -19964,7 +19964,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "ShipsResult.data"
         }
       ]
@@ -19995,7 +19995,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "SpeciesConnection.edges"
         }
       ]
@@ -20026,7 +20026,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "SpeciesConnection.species"
         }
       ]
@@ -20057,7 +20057,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "SpeciesFilmsConnection.edges"
         }
       ]
@@ -20088,7 +20088,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "SpeciesFilmsConnection.films"
         }
       ]
@@ -20119,7 +20119,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "SpeciesPeopleConnection.edges"
         }
       ]
@@ -20150,7 +20150,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "SpeciesPeopleConnection.people"
         }
       ]
@@ -20181,7 +20181,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "StarshipFilmsConnection.edges"
         }
       ]
@@ -20212,7 +20212,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "StarshipFilmsConnection.films"
         }
       ]
@@ -20243,7 +20243,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "StarshipPilotsConnection.edges"
         }
       ]
@@ -20274,7 +20274,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "StarshipPilotsConnection.pilots"
         }
       ]
@@ -20305,7 +20305,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "StarshipsConnection.edges"
         }
       ]
@@ -20336,7 +20336,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "StarshipsConnection.starships"
         }
       ]
@@ -20367,7 +20367,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "VehicleFilmsConnection.edges"
         }
       ]
@@ -20398,7 +20398,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "VehicleFilmsConnection.films"
         }
       ]
@@ -20429,7 +20429,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "VehiclePilotsConnection.edges"
         }
       ]
@@ -20460,7 +20460,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "VehiclePilotsConnection.pilots"
         }
       ]
@@ -20491,7 +20491,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "VehiclesConnection.edges"
         }
       ]
@@ -20522,7 +20522,7 @@
       "unknowns": [
         {
           "missing": "runtime resolver invocation counts",
-          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (\u00a7102)",
+          "resolution": "RUNTIME trace evidence confirms or clears the N+1 (§102)",
           "subject": "VehiclesConnection.vehicles"
         }
       ]
@@ -25360,7 +25360,7 @@
       "title": "Idempotency unknown on retried operation",
       "unknowns": [
         {
-          "missing": "idempotency evidence (\u00a742 sources)",
+          "missing": "idempotency evidence (§42 sources)",
           "resolution": "idempotency key, contract metadata, or handler semantics required before retrying is safe",
           "subject": "gateway"
         }
@@ -25391,7 +25391,7 @@
       "title": "Idempotency unknown on retried operation",
       "unknowns": [
         {
-          "missing": "idempotency evidence (\u00a742 sources)",
+          "missing": "idempotency evidence (§42 sources)",
           "resolution": "idempotency key, contract metadata, or handler semantics required before retrying is safe",
           "subject": "payments-service"
         }
@@ -90976,11 +90976,6 @@
       "missing": "literal URL for the client call",
       "resolution": "the call uses a computed or interpolated URL",
       "subject": "labs/workspace/orders-pipeline/client/orders-web.ts:3"
-    },
-    {
-      "missing": "literal URL for the client call",
-      "resolution": "the call uses a computed or interpolated URL",
-      "subject": "portal/assets/main-A2NKRJGT.js:5"
     },
     {
       "missing": "declared cache fields (ttl, key, invalidation, stale_policy)",
