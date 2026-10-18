@@ -18,7 +18,7 @@ keywords = ["api", "diagnostics", "offline-first", "static-analysis", "mcp"]
 dependencies = [
     "typer>=0.12",
     "rich>=15.0.0",
-    "pyyaml>=6.0",
+    "pyyaml>=6.0.3",
 ]
 
 [project.urls]
