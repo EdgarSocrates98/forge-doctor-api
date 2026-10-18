@@ -49,6 +49,20 @@ The bump marks the *Trusted Unified Doctor* phase:
 rule is preserved: **no bump without an owner-documented rationale
 recorded in this file** — and no `1.0`, publish, or tag.
 
+## The recorded decision — `0.2.1`
+
+**Decision (owner-authorized, 2026-10-18): bump `0.2.0` → `0.2.1`.**
+
+Patch bump under RC discipline (`0.2.x` band): no public-surface,
+contract, or dependency changes. Ships only accumulated fixes on main —
+vendored Forge Portal 2.1 final (Cycles 0-6: real telemetry, homologation,
+personalization, security headers) and the self-scan baseline rebind that
+tracks hashed bundle filenames. Owner directed the ecosystem-wide patch
+release so published wheels carry the corrected portal. The same owner
+directive authorized the PyPI publish and the `v0.2.1` tag — the
+"no publish, or tag" hold recorded under `0.2.0` is lifted for this
+patch only; `1.0` remains un-cut by the conditions below.
+
 ## What justifies `1.0`
 
 `1.0` is cut when **both** conditions hold:

@@ -11,6 +11,11 @@ record, [docs/release.md](docs/release.md) for release mechanics,
 and [docs/release-evidence.md](docs/release-evidence.md) for the
 verification matrix.
 
+## [0.2.1] - 2026-10-18
+
+### Fixed
+- Portal vendored 2.1 final (Cycles 0-6)
+
 ## [0.2.0] — Unreleased
 
 ### Post-release polish — 2026-10-17

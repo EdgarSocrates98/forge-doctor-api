@@ -2,23 +2,23 @@
   "artifacts": [
     {
       "filename": "SHA256SUMS",
-      "sha256": "c1e7d1917750bbbd8b6ae3448c49c5f045a7c33c722245d2ccfe804ffbe47364"
+      "sha256": "f104f37a9fd9e33c41cbd5a7239ed7522b2534b08c5eb1d0c36094c2bfd25b0f"
     },
     {
-      "filename": "forge_doctor_api-0.2.0-py3-none-any.whl",
-      "sha256": "03af144e243578c38cfa7eadb24dbd361805254694ed96acb9b12361d6f591b2"
+      "filename": "forge_doctor_api-0.2.1-py3-none-any.whl",
+      "sha256": "3ee30915a6f21d5d4f6d06c60ac75a2b843c94cc1e307183812f028b229c91ef"
     },
     {
-      "filename": "forge_doctor_api-0.2.0.tar.gz",
-      "sha256": "30033a2991f258ec315365d57cb1d11f8744e45774df24d5c82ec967279831ee"
+      "filename": "forge_doctor_api-0.2.1.tar.gz",
+      "sha256": "f2ccfe07b13014ab881e0521e59485a7f4fe947ab52d465c0a23d11de96c5090"
     }
   ],
   "cli_command_count": 34,
   "contract_family": "forge-contracts",
   "contract_version": "1",
-  "dirty_tree": false,
+  "dirty_tree": true,
   "forge_protocol_version": 2,
-  "git_head": "55b7969d94d2cafdc782aea87caef9c9b6910f35",
+  "git_head": "9dc00bf35cd62340a9061e60169392c821986d54",
   "manifest_version": 1,
   "mcp_tool_count": 17,
   "package": "forge-doctor-api",
@@ -28,7 +28,7 @@
     "3.13"
   ],
   "python_requires": ">=3.11",
-  "rc": false,
+  "rc": true,
   "schema_ids": [
     "capability",
     "diagnostic-manifest",
@@ -41,5 +41,5 @@
     "remediation-plan",
     "unknown-fact"
   ],
-  "version": "0.2.0"
+  "version": "0.2.1"
 }
