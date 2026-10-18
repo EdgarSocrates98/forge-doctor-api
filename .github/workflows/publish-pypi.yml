@@ -186,9 +186,16 @@ jobs:
       - name: Install published package in clean venv
         run: |
           python -m venv /tmp/verify-venv
-          /tmp/verify-venv/bin/python -m pip install --no-cache-dir \
-            --index-url https://pypi.org/simple \
-            "forge-doctor-api==${{ inputs.version }}"
+          for i in 1 2 3 4 5 6 7 8 9 10; do
+            if /tmp/verify-venv/bin/python -m pip install --no-cache-dir \
+              --index-url https://pypi.org/simple \
+              "forge-doctor-api==${{ inputs.version }}"; then break; fi
+
+                echo "install attempt $i failed (index propagation); retrying in 30s"
+
+                sleep 30
+
+              done
 
       - name: Smoke test console script
         run: /tmp/verify-venv/bin/forge-doctor-api --version
