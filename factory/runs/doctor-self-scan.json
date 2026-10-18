@@ -926,13 +926,7 @@
       "severity": "MEDIUM",
       "source_location": null,
       "title": "Shared cache key across writer/reader subjects",
-      "unknowns": [
-        {
-          "missing": "literal URL for the client call",
-          "resolution": "the call uses a computed or interpolated URL",
-          "subject": "portal/assets/chunk-BelLryvf.js:5"
-        }
-      ]
+      "unknowns": []
     },
     {
       "confidence": "MEDIUM",
@@ -90959,29 +90953,34 @@
   },
   "unknowns": [
     {
-      "missing": "dynamic route path on labs.adversarial.dynamic-routes.app.dyn_users",
-      "resolution": "replace dynamic registration with declarative routing",
-      "subject": "labs/adversarial/dynamic-routes/app.py#L10"
+      "missing": "backend service 'my-service1' in manifests",
+      "resolution": "the referenced Service is not in scope",
+      "subject": "HTTPRoute/http-app-1"
     },
     {
-      "missing": "literal route path",
-      "resolution": "template-literal paths are dynamic; route cannot be evidenced",
-      "subject": "labs/adversarial/js-dynamic/server.js#L8"
+      "missing": "backend service 'my-service2' in manifests",
+      "resolution": "the referenced Service is not in scope",
+      "subject": "HTTPRoute/http-app-1"
     },
     {
-      "missing": "literal route path",
-      "resolution": "first arg is not a string literal; route path cannot be evidenced",
-      "subject": "labs/adversarial/js-dynamic/server.js#L9"
+      "missing": "backend service 'service1' in manifests",
+      "resolution": "the referenced Service is not in scope",
+      "subject": "Ingress/ingress-wildcard-host"
     },
     {
-      "missing": "literal URL/method for the client call",
-      "resolution": "the call uses a computed URL or dynamic dispatch",
-      "subject": "labs/golden/microservices-topology/payments-sdk/sdk.py:5"
+      "missing": "backend service 'service2' in manifests",
+      "resolution": "the referenced Service is not in scope",
+      "subject": "Ingress/ingress-wildcard-host"
     },
     {
-      "missing": "literal URL for the client call",
-      "resolution": "the call uses a computed or interpolated URL",
-      "subject": "labs/workspace/orders-pipeline/client/orders-web.ts:3"
+      "missing": "backend service reference",
+      "resolution": "declare backend.service.name / backendRefs",
+      "subject": "HTTPRoute/orphan-route"
+    },
+    {
+      "missing": "backend service reference",
+      "resolution": "declare backend.service.name / backendRefs",
+      "subject": "Ingress/empty-ingress"
     },
     {
       "missing": "declared cache fields (ttl, key, invalidation, stale_policy)",
@@ -90992,6 +90991,81 @@
       "missing": "declared cache fields (ttl, key, invalidation, stale_policy)",
       "resolution": "Cache-Control header declared on the response, but header names carry no values - declare the policy fields in config or x- extensions to make cache semantics checkable",
       "subject": "operation_id:listPets"
+    },
+    {
+      "missing": "declared upstream 'None'",
+      "resolution": "route target not resolvable to a declared service/upstream",
+      "subject": "/orders"
+    },
+    {
+      "missing": "declared upstream 'ghost_cluster'",
+      "resolution": "route target not resolvable to a declared service/upstream",
+      "subject": "/missing/"
+    },
+    {
+      "missing": "declared upstream 'http://ghost_backend'",
+      "resolution": "route target not resolvable to a declared service/upstream",
+      "subject": "/missing/"
+    },
+    {
+      "missing": "dynamic route path on labs.adversarial.dynamic-routes.app.dyn_users",
+      "resolution": "replace dynamic registration with declarative routing",
+      "subject": "labs/adversarial/dynamic-routes/app.py#L10"
+    },
+    {
+      "missing": "external reference content",
+      "resolution": "provide the referenced document locally",
+      "subject": "/etc/openapi.yaml"
+    },
+    {
+      "missing": "external reference content",
+      "resolution": "provide the referenced document locally",
+      "subject": "file:///etc/passwd"
+    },
+    {
+      "missing": "external reference content",
+      "resolution": "provide the referenced document locally",
+      "subject": "http://example.com/schemas.yaml#/Pet"
+    },
+    {
+      "missing": "external reference content",
+      "resolution": "provide the referenced document locally",
+      "subject": "https://example.com/remote.yaml#/paths/~1remote"
+    },
+    {
+      "missing": "external reference content",
+      "resolution": "provide the referenced document locally",
+      "subject": "https://example.com/schemas.yaml#/Pet"
+    },
+    {
+      "missing": "external reference content",
+      "resolution": "provide the referenced document locally",
+      "subject": "urn:example:pet"
+    },
+    {
+      "missing": "literal URL for the client call",
+      "resolution": "the call uses a computed or interpolated URL",
+      "subject": "labs/workspace/orders-pipeline/client/orders-web.ts:3"
+    },
+    {
+      "missing": "literal URL for the client call",
+      "resolution": "the call uses a computed or interpolated URL",
+      "subject": "portal/assets/chunk-BelLryvf.js:5"
+    },
+    {
+      "missing": "literal URL/method for the client call",
+      "resolution": "the call uses a computed URL or dynamic dispatch",
+      "subject": "labs/golden/microservices-topology/payments-sdk/sdk.py:5"
+    },
+    {
+      "missing": "literal route path",
+      "resolution": "first arg is not a string literal; route path cannot be evidenced",
+      "subject": "labs/adversarial/js-dynamic/server.js#L9"
+    },
+    {
+      "missing": "literal route path",
+      "resolution": "template-literal paths are dynamic; route cannot be evidenced",
+      "subject": "labs/adversarial/js-dynamic/server.js#L8"
     },
     {
       "missing": "recognized gateway dialect structure",
@@ -91039,51 +91113,6 @@
       "subject": "tests/fixtures/oss/kong/deck-gateway-input/PROVENANCE.yaml"
     },
     {
-      "missing": "declared upstream 'ghost_cluster'",
-      "resolution": "route target not resolvable to a declared service/upstream",
-      "subject": "/missing/"
-    },
-    {
-      "missing": "declared upstream 'None'",
-      "resolution": "route target not resolvable to a declared service/upstream",
-      "subject": "/orders"
-    },
-    {
-      "missing": "declared upstream 'http://ghost_backend'",
-      "resolution": "route target not resolvable to a declared service/upstream",
-      "subject": "/missing/"
-    },
-    {
-      "missing": "backend service reference",
-      "resolution": "declare backend.service.name / backendRefs",
-      "subject": "HTTPRoute/orphan-route"
-    },
-    {
-      "missing": "backend service reference",
-      "resolution": "declare backend.service.name / backendRefs",
-      "subject": "Ingress/empty-ingress"
-    },
-    {
-      "missing": "backend service 'my-service1' in manifests",
-      "resolution": "the referenced Service is not in scope",
-      "subject": "HTTPRoute/http-app-1"
-    },
-    {
-      "missing": "backend service 'my-service2' in manifests",
-      "resolution": "the referenced Service is not in scope",
-      "subject": "HTTPRoute/http-app-1"
-    },
-    {
-      "missing": "backend service 'service1' in manifests",
-      "resolution": "the referenced Service is not in scope",
-      "subject": "Ingress/ingress-wildcard-host"
-    },
-    {
-      "missing": "backend service 'service2' in manifests",
-      "resolution": "the referenced Service is not in scope",
-      "subject": "Ingress/ingress-wildcard-host"
-    },
-    {
       "missing": "source evidence for this plane",
       "resolution": "provide the corresponding artifacts",
       "subject": "DESIRED state"
@@ -91092,36 +91121,6 @@
       "missing": "source evidence for this plane",
       "resolution": "provide the corresponding artifacts",
       "subject": "HYPOTHETICAL state"
-    },
-    {
-      "missing": "external reference content",
-      "resolution": "provide the referenced document locally",
-      "subject": "/etc/openapi.yaml"
-    },
-    {
-      "missing": "external reference content",
-      "resolution": "provide the referenced document locally",
-      "subject": "file:///etc/passwd"
-    },
-    {
-      "missing": "external reference content",
-      "resolution": "provide the referenced document locally",
-      "subject": "http://example.com/schemas.yaml#/Pet"
-    },
-    {
-      "missing": "external reference content",
-      "resolution": "provide the referenced document locally",
-      "subject": "https://example.com/schemas.yaml#/Pet"
-    },
-    {
-      "missing": "external reference content",
-      "resolution": "provide the referenced document locally",
-      "subject": "urn:example:pet"
-    },
-    {
-      "missing": "external reference content",
-      "resolution": "provide the referenced document locally",
-      "subject": "https://example.com/remote.yaml#/paths/~1remote"
     }
   ]
 }
