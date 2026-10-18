@@ -30,7 +30,7 @@ Issues = "https://github.com/EdgarSocrates98/forge-doctor-api/issues"
 
 [project.optional-dependencies]
 graphql = ["graphql-core>=3.2,<4"]
-mcp = ["mcp>=2.0,<3"]
+mcp = ["mcp>=2.3.0,<3"]
 
 [project.scripts]
 forge-doctor-api = "forge_doctor_api.cli:main"
