@@ -926,7 +926,13 @@
       "severity": "MEDIUM",
       "source_location": null,
       "title": "Shared cache key across writer/reader subjects",
-      "unknowns": []
+      "unknowns": [
+        {
+          "missing": "literal URL for the client call",
+          "resolution": "the call uses a computed or interpolated URL",
+          "subject": "portal/assets/chunk-BelLryvf.js:5"
+        }
+      ]
     },
     {
       "confidence": "MEDIUM",
