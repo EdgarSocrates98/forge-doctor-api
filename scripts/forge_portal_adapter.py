@@ -27,6 +27,7 @@ if str(_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS))
 
 import _forge_portal as fp  # noqa: E402
+import _portal_telemetry as _pt  # noqa: E402
 import forge_hosts  # noqa: E402
 import forge_install  # noqa: E402 — reuse _spec/_ctx/_hosts, never re-implement
 import forge_installkit as kit  # noqa: E402
@@ -96,14 +97,18 @@ class ForgeDoctorApiPortal(fp.PortalAdapter):
         self.assets_dir = _ASSETS_DIR
         self._tasks: list[dict[str, Any]] = []
         self._task_seq = 0
+        self._telemetry_recorder = _pt.EventRecorder()
+        self.event_sink = self._telemetry_recorder.emit
         self.ops = [
             *fp.default_operations(self),
+            *_pt.operations(self._telemetry_recorder, self),
             fp.Operation("GET", "/profiles", lambda ctx: self._profiles()),
             fp.Operation("GET", "/hosts", lambda ctx: self._hosts()),
             fp.Operation("GET", "/mcp/servers", lambda ctx: self._mcp_servers()),
             fp.Operation("GET", "/skills", lambda ctx: self._skills()),
             fp.Operation("GET", "/agents", lambda ctx: self._agents()),
             fp.Operation("GET", "/tasks", lambda ctx: list(self._tasks)),
+            _pt.task_events_op(self._telemetry_recorder, lambda: list(self._tasks)),
             fp.Operation("GET", "/graphs", lambda ctx: self._graphs()),
             fp.Operation("GET", "/docs/search", lambda ctx: self._docs_search(ctx)),
             fp.Operation("POST", "/installation/plan", self._install_plan, mutating=True),

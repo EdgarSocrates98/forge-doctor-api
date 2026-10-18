@@ -260,6 +260,40 @@ def test_tasks_scan_executes_real_engine(pa, fp, target: Path) -> None:
         srv.server_close()
 
 
+# --- telemetry: forge/PortalEvent/1 via vendored _portal_telemetry ----------------
+
+
+def test_telemetry_events_and_metrics(pa, fp, target: Path) -> None:
+    srv = _server(pa.ForgeDoctorApiPortal(target), fp)
+    try:
+        # /health first: records operation.start + operation.end into the buffer
+        code, health = _call(srv, "GET", "/health")
+        assert code == 200, health
+
+        code, doc = _call(srv, "GET", "/events")
+        assert code == 200, doc
+        report = doc["data"]
+        assert report["schema"] == "forge/PortalEventReport/1"
+        ends = [e for e in report["events"] if e.get("event_type") == "operation.end"]
+        assert ends
+        ev = ends[0]
+        assert ev["schema"] == fp.EVENT_SCHEMA
+        assert ev["correlation_id"]
+        assert ev["status"] == "ok"
+        assert isinstance(ev["duration_ms"], (int, float))
+
+        code, doc = _call(srv, "GET", "/metrics")
+        assert code == 200, doc
+        metrics = doc["data"]
+        assert metrics["generated_at"]
+        assert metrics["counters"]["operation.end"] >= 1
+        assert isinstance(metrics["events"], list)
+        assert metrics["truncated"] is False
+    finally:
+        srv.shutdown()
+        srv.server_close()
+
+
 # --- entrypoint: subprocess, the real operator path ------------------------------
 
 
