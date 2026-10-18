@@ -65,9 +65,9 @@ _REDACT_EXEMPT = frozenset({"plan_token"})
 def _utc_now() -> str:
     """Real wall-clock timestamp for telemetry — emitted at record time,
     never back-filled for events that already happened."""
-    from datetime import UTC, datetime
+    from datetime import datetime, timezone
 
-    return datetime.now(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+    return datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
 
 # ---------------------------------------------------------------------------
