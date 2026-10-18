@@ -76,6 +76,7 @@ select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF", "DTZ"]
 "src/forge_doctor_api/_installkit.py" = ["ALL"]
 # Vendored portal server — canonical copy in forge-portal/portal_core.
 "scripts/_forge_portal.py" = ["ALL"]
+"scripts/_portal_telemetry.py" = ["ALL"]
 
 [tool.mypy]
 python_version = "3.11"
