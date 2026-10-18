@@ -63,6 +63,17 @@ directive authorized the PyPI publish and the `v0.2.1` tag — the
 "no publish, or tag" hold recorded under `0.2.0` is lifted for this
 patch only; `1.0` remains un-cut by the conditions below.
 
+## The recorded decision — `0.2.2`
+
+**Decision (owner-authorized, 2026-10-18): bump `0.2.1` → `0.2.2`.**
+
+0.2.2 — patch: portal 2.2 vendored generation + hardened publish
+pipeline; authorized patch bump. Under RC discipline (`0.2.x` band):
+no public-surface, contract, or dependency changes — the release ships
+the vendored Portal 2.2 generation (44-asset frontend, telemetry,
+py3.10-safe server) and the hardened PyPI pipeline (build-once/
+publish-same-artifact, version gate, post-publish verify).
+
 ## What justifies `1.0`
 
 `1.0` is cut when **both** conditions hold:
