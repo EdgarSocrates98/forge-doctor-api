@@ -243,8 +243,11 @@ class PortalAdapter:
         return detect_account_environment(self)
 
 
+PORTAL_VERSION = "1.0.0"
+
+
 def portal_version() -> str:
-    return "1.0.0"
+    return PORTAL_VERSION
 
 
 def workspace_name(root: str | None) -> str | None:

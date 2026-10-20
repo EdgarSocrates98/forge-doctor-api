@@ -8,7 +8,7 @@ repo-local ``forge.json`` so the file itself is identical everywhere.
 Pipeline (governed — see docs/portable-installation/):
 
     discover → resolve-python → create-venv → install-runtime
-    → write-launcher → register → smoke-verify → report
+    → write-launcher → smoke-verify → register → report
 
 stdlib-only, no network access beyond the explicit ``pip install`` step,
 no credential reads, never touches the project's own venv.
@@ -942,6 +942,11 @@ def run(argv: list[str] | None = None) -> int:
         report["environment"] = environment
         sm = stage("smoke", lambda: smoke(cfg["cli"], venv_dir, ["--version"], log))
         version = (sm or {}).get("version", cfg.get("version", "0.0.0"))
+        # Smoke ANTES do register: um install que não prova `--version`
+        # nunca deixa manifesto no registry (recusa → receipt de falha,
+        # sem installations/<id>.json — o lifecycle não o veria saudável).
+        if sm and sm.get("status") != "PASS":
+            raise Refusal("FORGE-INSTALL-VERIFY-FAILED", f"smoke failed: {sm}")
         stage(
             "register",
             lambda: register(
@@ -963,8 +968,6 @@ def run(argv: list[str] | None = None) -> int:
                 ),
             ),
         )
-        if sm and sm.get("status") != "PASS":
-            raise Refusal("FORGE-INSTALL-VERIFY-FAILED", f"smoke failed: {sm}")
         report["status"] = "planned" if args.dry_run else "completed"
         report["cli"] = cfg["cli"]
         report["shim_dir"] = str(shim_dir())
