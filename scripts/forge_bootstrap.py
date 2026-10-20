@@ -339,13 +339,14 @@ def install_package(
     which may hit the network for deps — allowed and reported, never silent."""
     pip = [str(_venv_python(venv)), "-m", "pip"]
     if dist:
-        log(f"installing published distribution {dist}")
         req = compose_dist_req(dist, extras)
+        log(f"installing published distribution {redact_url_userinfo(req)}")
         r = _run(pip + ["install", "--upgrade", req], timeout=900)
         if r.returncode != 0:
             raise Refusal(
                 "FORGE-INSTALL-RUNTIME-FAILED",
-                f"pip install {dist} failed: {r.stderr.strip()[-400:]}",
+                f"pip install {redact_url_userinfo(req)} failed: "
+                f"{redact_url_userinfo(r.stderr.strip()[-400:])}",
             )
         return
     # Editable mode does not need a wheel. Avoid creating build artifacts in
@@ -858,7 +859,7 @@ def run(argv: list[str] | None = None) -> int:
     source: dict[str, Any] = (
         {
             "kind": "pypi",
-            "spec": redact_url_userinfo(args.dist),
+            "spec": redact_url_userinfo(compose_dist_req(args.dist, extras)),
         }
         if args.dist
         else {
