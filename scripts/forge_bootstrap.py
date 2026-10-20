@@ -629,7 +629,15 @@ def register(
         },
         "source": source,
         "installation_method": installation_method
-        or ("pypi-wheel" if source.get("kind") == "pypi" else source.get("kind")),
+        or (
+            "pypi-wheel"
+            if source.get("kind") == "pypi"
+            else (
+                "git-checkout"
+                if source.get("editable", source.get("kind") == "git-checkout")
+                else "wheel"
+            )
+        ),
         "installed_at": _now(),
         "updated_at": _now(),
         "installed_by": {"agent": "forge_bootstrap", "version": _BOOTSTRAP_VERSION},
@@ -734,6 +742,13 @@ def run(argv: list[str] | None = None) -> int:
         action="store_true",
         help="let uv fetch a pinned python; pip may use network",
     )
+    ap.add_argument(
+        "--allow-url",
+        action="store_true",
+        help="permit PEP 508 direct references in --dist (name @ URL/wheelhouse). "
+        "The name check still applies, but the URL itself is passed to pip "
+        "verbatim — opt-in because it fetches code from an arbitrary origin",
+    )
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--quiet", action="store_true")
     args = ap.parse_args(argv)
@@ -772,6 +787,23 @@ def run(argv: list[str] | None = None) -> int:
         )
         return 2
     if args.dist:
+        if "@" in args.dist and not args.allow_url:
+            print(
+                json.dumps(
+                    {
+                        "status": "failed",
+                        "error": {
+                            "kind": "FORGE-INSTALL-DIST-URL",
+                            "detail": (
+                                f"--dist {args.dist!r} usa referencia direta a URL; "
+                                "repita com --allow-url se a origem for confiavel"
+                            ),
+                        },
+                    },
+                    indent=2,
+                )
+            )
+            return 2
         spec_name, _ = split_dist_spec(args.dist)
         if canonical_dist_name(spec_name) != canonical_dist_name(cfg["distribution"]):
             print(
