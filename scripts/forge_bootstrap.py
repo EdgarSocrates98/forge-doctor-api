@@ -296,6 +296,12 @@ def split_dist_spec(spec: str) -> tuple[str, str]:
     return match.group(1), match.group(2)
 
 
+def canonical_dist_name(name: str) -> str:
+    """PEP 503 normalization without a `packaging` dependency (installkit is
+    stdlib-only): ``sparkforge_aws`` and ``sparkforge-aws`` are the same dist."""
+    return re.sub(r"[-_.]+", "-", name.strip().lower())
+
+
 def compose_dist_req(dist: str, extras: list[str]) -> str:
     """Build the pip requirement for ``--dist``: extras go between the
     distribution name and the specifier, merged with any extras the caller
@@ -767,7 +773,7 @@ def run(argv: list[str] | None = None) -> int:
         return 2
     if args.dist:
         spec_name, _ = split_dist_spec(args.dist)
-        if spec_name != cfg["distribution"]:
+        if canonical_dist_name(spec_name) != canonical_dist_name(cfg["distribution"]):
             print(
                 json.dumps(
                     {
