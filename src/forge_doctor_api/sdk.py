@@ -24,7 +24,7 @@ from forge_doctor_api.handoff.model import ApiHandoffBundle
 from forge_doctor_api.knowledge.capability import DetectedCapability
 from forge_doctor_api.report import DoctorReport
 
-SDK_VERSION = "0.2.3"
+SDK_VERSION = "0.2.4"
 
 
 class DoctorError(Exception):

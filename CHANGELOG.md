@@ -10,6 +10,11 @@ The package is `0.2.0` and unreleased. See
 record, [docs/release.md](docs/release.md) for release mechanics,
 and [docs/release-evidence.md](docs/release-evidence.md) for the
 verification matrix.
+## [0.2.4] - 2026-10-20
+
+### Changed
+- Cycle 12.1: vendored `scripts/forge_bootstrap.py` re-stamped to the canonical ruff-formatted source; `install.windows.sh` added as the Git Bash/MSYS install route; CI gains a `bash -n` gate for it; release manifest and rc-baseline re-recorded.
+
 ## [0.2.3] - 2026-10-20
 
 ### Changed
