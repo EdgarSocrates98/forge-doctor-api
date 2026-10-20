@@ -10,6 +10,13 @@ The package is `0.2.0` and unreleased. See
 record, [docs/release.md](docs/release.md) for release mechanics,
 and [docs/release-evidence.md](docs/release-evidence.md) for the
 verification matrix.
+## [0.2.3] - 2026-10-20
+
+### Changed
+- Cycle 12 portable distribution: `_data/labs` packaged corpus resolved
+  via `lab/packaged.py` (allowlisted importlib boundary); `knowledge_new`
+  refuses writes into site-packages (incl. zipimport materialization).
+- Wheel artifact tests prove packaged labs file-by-file.
 
 ## [0.2.2] - 2026-10-18
 
