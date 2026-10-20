@@ -168,33 +168,78 @@ def _satisfies(version: str, spec: str) -> bool:
     return True
 
 
-def _python_version(exe: str) -> str | None:
+_VERSION_SNIPPET = (
+    "import sys;print(f'{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}')"
+)
+
+
+def _python_version_argv(argv: list[str]) -> str | None:
     try:
-        r = _run(
-            [
-                exe,
-                "-c",
-                "import sys;print(f'{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}')",
-            ],
-            timeout=15,
-        )
+        r = _run(argv + ["-c", _VERSION_SNIPPET], timeout=15)
         return r.stdout.strip() if r.returncode == 0 else None
     except (OSError, subprocess.TimeoutExpired):
         return None
 
 
-def find_python(spec: str, explicit: str | None, allow_download: bool, log) -> str:
+def _python_version(exe: str) -> str | None:
+    return _python_version_argv([exe])
+
+
+def _resolve_executable(argv: list[str]) -> str | None:
+    """Resolve ``sys.executable`` of an invocation — the ``py`` launcher
+    loses the minor pin without it (``py -3.12`` reports py.exe's own
+    path, not the interpreter it selected)."""
+    try:
+        rr = _run(argv + ["-c", "import sys;print(sys.executable)"], timeout=15)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    return rr.stdout.strip() if rr.returncode == 0 and rr.stdout.strip() else None
+
+
+def _explicit_python_argv(explicit: str) -> list[str]:
+    """``--python``/``FORGE_PYTHON`` may carry an invocation with args
+    (``"py -3.11"``) — same semantics as the forge-cli pipeline: the
+    literal path wins when it exists on disk, otherwise split on
+    whitespace. A real path containing spaces is never split."""
+    trimmed = explicit.strip()
+    if not re.search(r"\s", trimmed) or Path(trimmed).exists():
+        return [explicit]
+    return trimmed.split()
+
+
+def find_python(
+    spec: str,
+    explicit: str | None,
+    allow_download: bool,
+    log,
+    provenance: dict[str, Any] | None = None,
+) -> str:
     """Return a python executable satisfying ``spec``. Prefers interpreters
     already on PATH; ``uv`` (which can fetch a pinned interpreter) is used
-    only with --allow-download."""
+    only with --allow-download.
+
+    ``provenance`` (optional) is filled with the receipt ``python{}``
+    fields — ``source`` is 'explicit' when the caller forced the
+    interpreter (--python/FORGE_PYTHON; the caller maps that to
+    'flag'/'env'), 'path' for a PATH-scan hit, 'uv' for a fetched one.
+    """
     if explicit:
-        v = _python_version(explicit)
+        argv = _explicit_python_argv(explicit)
+        v = _python_version_argv(argv)
         if not v or not _satisfies(v, spec):
             raise Refusal(
                 "FORGE-INSTALL-PYTHON-INCOMPATIBLE",
                 f"--python {explicit}: {v or 'unusable'} does not satisfy {spec}",
             )
-        return explicit
+        if provenance is not None:
+            provenance.update(
+                {
+                    "source": "explicit",
+                    "version": v,
+                    "selection_reason": f"explicit interpreter {explicit!r} satisfies {spec}",
+                }
+            )
+        return _resolve_executable(argv) or argv[0]
 
     candidates: list[str] = []
     if os.name == "nt":
@@ -207,28 +252,25 @@ def find_python(spec: str, explicit: str | None, allow_download: bool, log) -> s
         candidates += ["python3", "python"]
 
     for cand in candidates:
-        exe = shutil.which(cand.split()[0])
+        argv = cand.split()
+        exe = shutil.which(argv[0])
         if not exe:
             continue
-        if cand.startswith("py "):
-            cmd = cand.split() + [
-                "-c",
-                "import sys;print(f'{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}')",
-            ]
-        else:
-            cmd = [
-                cand,
-                "-c",
-                "import sys;print(f'{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}')",
-            ]
         try:
-            r = _run(cmd, timeout=15)
+            r = _run(argv + ["-c", _VERSION_SNIPPET], timeout=15)
             v = r.stdout.strip()
             if r.returncode == 0 and _satisfies(v, spec):
                 log(f"python {v} via {cand!r} satisfies {spec}")
+                if provenance is not None:
+                    provenance.update(
+                        {
+                            "source": "path",
+                            "version": v,
+                            "selection_reason": f"first PATH candidate {cand!r} satisfying {spec}",
+                        }
+                    )
                 # resolve the real exe (the `py` launcher loses the minor pin)
-                rr = _run(cmd[:-1] + ["-c", "import sys;print(sys.executable)"], timeout=15)
-                return rr.stdout.strip() if rr.returncode == 0 and rr.stdout.strip() else exe
+                return _resolve_executable(argv) or exe
         except (OSError, subprocess.TimeoutExpired):
             continue
 
@@ -246,6 +288,14 @@ def find_python(spec: str, explicit: str | None, allow_download: bool, log) -> s
             )
         r = _run(["uv", "python", "find", minor], timeout=15)
         if r.returncode == 0 and r.stdout.strip():
+            if provenance is not None:
+                provenance.update(
+                    {
+                        "source": "uv",
+                        "version": None,
+                        "selection_reason": f"uv python install {minor} (--allow-download)",
+                    }
+                )
             return r.stdout.strip()
 
     raise Refusal(
@@ -451,13 +501,42 @@ def environment_contract(
     if shim:
         values[f"{prefix}_LAUNCHER"] = str(shim.resolve())
     aliases = {name.replace("_", "-"): value for name, value in values.items()}
-    return {
+    contract = {
         "schema": ENV_SCHEMA,
         "scope": "user",
         "prefix": prefix,
         "variables": values,
         "windows_aliases": aliases if os.name == "nt" else {},
+        # lf-0018 — shared InstallReceipt contract: the environment block
+        # records WHICH world executed the bootstrap so receipts from
+        # install.sh / install.ps1 / install.windows.sh compare equal
+        # modulo these fields (spec FASE 7).
+        "shell": _shell_label(),
+        "execution_environment": _execution_environment(),
     }
+    msystem = os.environ.get("MSYSTEM")
+    if msystem:
+        # Present only under MSYS2/Git Bash — absent on POSIX (msystem?).
+        contract["msystem"] = msystem
+    return contract
+
+
+def _execution_environment() -> str:
+    """Coarse executor triple: 'git-bash' | 'windows' | 'posix'."""
+    if _is_git_bash():
+        return "git-bash"
+    return "windows" if os.name == "nt" else "posix"
+
+
+def _shell_label() -> str:
+    """Name of the shell that launched the adapter, best-effort.
+    Under Windows outside Git Bash we cannot tell cmd from PowerShell
+    at this layer — 'windows' is the honest label."""
+    if _is_git_bash():
+        return "git-bash"
+    if os.name == "nt":
+        return "windows"
+    return Path(os.environ.get("SHELL", "")).name.lower().removesuffix(".exe") or "posix"
 
 
 def _posix_env_paths() -> tuple[Path, Path]:
@@ -612,6 +691,150 @@ def persist_environment(environment: dict[str, Any], shim: Path | None, log) -> 
         environment["shell_init"] = env_file
         log(f"account environment written to {env_file}")
     return environment
+
+
+def _persist_environment_checked(environment: dict[str, Any], shim: Path | None, log) -> dict:
+    """OS-level persistence failures become a named refusal — the receipt
+    carries FORGE-ENV-PERSISTENCE-FAILED instead of a bare traceback, so
+    the shell adapters can surface a stable FORGE-* code (FASE 8)."""
+    try:
+        return persist_environment(environment, shim, log)
+    except Refusal:
+        raise
+    except Exception as exc:  # OSError, winreg errors, UnicodeError…
+        raise Refusal(
+            "FORGE-ENV-PERSISTENCE-FAILED",
+            f"environment persistence failed ({type(exc).__name__}): {exc}",
+        ) from exc
+
+
+def managed_files(
+    cfg: dict, install_root: Path, persist_env: bool, no_launcher: bool
+) -> list[str]:
+    """Artifacts the install OWNS — an uninstall removes exactly this set.
+
+    Stores the installer MUTATES without owning (the rc-file block,
+    ``HKCU\\Environment`` values, PATH entries) are deliberately absent:
+    the same boundary forge-cli's ``managed_artifacts`` draws, so a
+    repair/uninstall reading any route's receipt removes the same class
+    of artifacts and preserves user files (FASE 7).
+    """
+    files = {
+        str(install_root),
+        str(forge_home() / INSTALLATIONS / f"{cfg['forge_id']}.json"),
+        str(forge_home() / INSTALLATIONS / f".{cfg['forge_id']}-bootstrap.json"),
+    }
+    if not no_launcher:
+        files.add(str(shim_dir() / cfg["cli"]))
+        if os.name == "nt":
+            files.add(str(shim_dir() / f"{cfg['cli']}.cmd"))
+    if persist_env and (os.name != "nt" or _is_git_bash()):
+        env_file, _ = _posix_env_paths()
+        files.add(str(env_file))
+    return sorted(files)
+
+
+# --------------------------------------------------------------------------
+# Source provenance — forge-cli detect.ts semantics (A/B/C/none)
+# --------------------------------------------------------------------------
+
+CHECKSUM_FILES = ("SHA256SUMS", "checksums.sha256", ".forge-checksums.json")
+_CHECKSUM_MAX_ENTRIES = 10_000
+
+
+def _checksum_integrity(repo: Path) -> str:
+    """'verified' | 'partial' | 'unverified' — the same verdict the
+    forge-cli classifier emits: a listed entry missing or diverging
+    degrades to 'partial'; no manifest → 'unverified'. Checksums never
+    identify origin — they only gate integrity."""
+    found = next((f for f in CHECKSUM_FILES if (repo / f).is_file()), None)
+    if not found:
+        return "unverified"
+    entries: list[tuple[str, str]] = []
+    try:
+        if found.endswith(".json"):
+            raw = json.loads((repo / found).read_text(encoding="utf-8"))
+            if isinstance(raw, dict):
+                files = raw.get("files")
+                if files is not None:
+                    if not isinstance(files, list):
+                        return "partial"
+                    for item in files:
+                        if (
+                            isinstance(item, dict)
+                            and isinstance(item.get("path"), str)
+                            and isinstance(item.get("sha256"), str)
+                        ):
+                            entries.append((item["path"], item["sha256"]))
+                else:
+                    for name, digest in raw.items():
+                        if isinstance(digest, str):
+                            entries.append((name, digest))
+        else:
+            for line in (repo / found).read_text(encoding="utf-8").splitlines():
+                m = re.match(r"^([0-9a-fA-F]{64})[ \t]+\*?(.+)$", line)
+                if m:
+                    entries.append((m.group(2).strip(), m.group(1).lower()))
+    except (OSError, ValueError):
+        return "partial"
+    if not entries or len(entries) > _CHECKSUM_MAX_ENTRIES:
+        return "partial"
+    root = repo.resolve()
+    for rel, digest in entries:
+        target = (root / rel).resolve()
+        try:
+            delta = target.relative_to(root)
+        except ValueError:
+            return "partial"  # escapes the source root — never trusted
+        if not str(delta) or str(delta).startswith("..") or not target.is_file():
+            return "partial"
+        try:
+            if _sha(target.read_bytes()) != digest.lower():
+                return "partial"
+        except OSError:
+            return "partial"
+    return "verified"
+
+
+def _source_provenance(repo: Path, manifest_valid: bool) -> dict[str, Any]:
+    """Identity fields of the receipt — forge-cli ``detect.ts`` semantics
+    so both entry points write the same truth:
+
+    ``is_git``       .git present (dir = clone, file = worktree link)
+    ``source_trust`` A = git + manifest + structure + checksums verified;
+                     B = manifest + expected structure; C = manifest
+                     only; none = not a Forge.
+    ``integrity``    checksum-manifest verdict (never identifies origin).
+    """
+    try:
+        git_marker = repo / ".git"
+        is_git = git_marker.exists()
+        is_repo = git_marker.is_dir()
+    except OSError:
+        is_git, is_repo = False, False
+    structure_ok = (repo / "scripts" / "forge_bootstrap.py").is_file() and any(
+        (repo / marker).exists()
+        for marker in (
+            "pyproject.toml",
+            "setup.py",
+            "setup.cfg",
+            "requirements.txt",
+            "package.json",
+        )
+    )
+    integrity = _checksum_integrity(repo)
+    if manifest_valid and structure_ok:
+        trust = "A" if is_repo and integrity == "verified" else "B"
+    elif manifest_valid:
+        trust = "C"
+    else:
+        trust = "none"
+    return {
+        "is_git": is_git,
+        "source_trust": trust,
+        "manifest_valid": manifest_valid,
+        "integrity": integrity,
+    }
 
 
 def register(
@@ -874,6 +1097,16 @@ def run(argv: list[str] | None = None) -> int:
         }
     )
 
+    # How the runtime enters the venv — pypi-wheel (--dist), git-checkout
+    # (--editable) or wheel (built from the checkout). This is the value
+    # the manifest stores as `installation_method`; the receipt keeps the
+    # contract name `install_method`. Naming map (lf-0018): forge-cli's
+    # LocalInstallReceipt uses `method`/`install_method` for the CHANNEL
+    # ('local'|'pypi') while here it is the RUNTIME MODE — same field
+    # name where the semantics match, documented so neither side renames
+    # persisted state.
+    install_method = "pypi-wheel" if args.dist else "git-checkout" if args.editable else "wheel"
+
     report = {
         "schema": SCHEMA_RECEIPT,
         "forge_id": cfg["forge_id"],
@@ -885,6 +1118,15 @@ def run(argv: list[str] | None = None) -> int:
             "arch": platform.machine(),
             "python": platform.python_version(),
         },
+        # forge-cli parity fields — the classifier verdict the bootstrap
+        # derives itself (load_config already proved the manifest).
+        **_source_provenance(repo, manifest_valid=True),
+        "install_method": install_method,
+        # The managed set is deterministic — emit it up-front so even a
+        # failed receipt tells an uninstall exactly what may be removed.
+        "managed_files": managed_files(
+            cfg, install_root, args.persist_env, args.no_launcher
+        ),
         "stages": [],
         "status": "failed",
         "created_at": _now(),
@@ -907,10 +1149,40 @@ def run(argv: list[str] | None = None) -> int:
     try:
         hosts = detect_hosts()
         report["hosts_detected"] = hosts
+        # FORGE_PYTHON is the explicit-selection env var of the lf-0017
+        # pipeline — --python still wins; both are validated by
+        # find_python (receipt source: 'flag' | 'env' | 'path' | 'uv').
+        explicit_python = args.python or os.environ.get("FORGE_PYTHON") or None
+        python_prov: dict[str, Any] = {}
         python = stage(
             "resolve-python",
-            lambda: find_python(cfg["python"], args.python, args.allow_download, log),
+            lambda: find_python(
+                cfg["python"], explicit_python, args.allow_download, log, python_prov
+            ),
         )
+        if python_prov.get("source") == "uv":
+            py_source = "uv"
+        elif args.python:
+            py_source = "flag"
+        elif os.environ.get("FORGE_PYTHON"):
+            py_source = "env"
+        else:
+            py_source = "path"
+        report["python"] = {
+            "source": py_source,
+            "version": python_prov.get("version") or (_python_version(python) if python else None),
+            "executable": python,
+            "selection_reason": python_prov.get("selection_reason")
+            or (
+                "--python flag"
+                if args.python
+                else (
+                    "FORGE_PYTHON environment variable"
+                    if os.environ.get("FORGE_PYTHON")
+                    else "PATH scan"
+                )
+            ),
+        }
         venv_dir = stage("create-venv", lambda: create_venv(install_root, python, log))
         stage(
             "install-runtime",
@@ -937,7 +1209,7 @@ def run(argv: list[str] | None = None) -> int:
             else:
                 environment = stage(
                     "persist-environment",
-                    lambda: persist_environment(environment, shim, log),
+                    lambda: _persist_environment_checked(environment, shim, log),
                 )
         report["environment"] = environment
         sm = stage("smoke", lambda: smoke(cfg["cli"], venv_dir, ["--version"], log))
@@ -946,6 +1218,10 @@ def run(argv: list[str] | None = None) -> int:
         # nunca deixa manifesto no registry (recusa → receipt de falha,
         # sem installations/<id>.json — o lifecycle não o veria saudável).
         if sm and sm.get("status") != "PASS":
+            # Named FORGE-INSTALL-VERIFY-FAILED — equivalent to
+            # forge-cli's FORGE-INSTALL-VERIFICATION-FAILED (same failure
+            # class, pre-existing spelling; renaming would break
+            # persisted-receipt readers).
             raise Refusal("FORGE-INSTALL-VERIFY-FAILED", f"smoke failed: {sm}")
         stage(
             "register",
@@ -963,9 +1239,7 @@ def run(argv: list[str] | None = None) -> int:
                 # Metodo = como o runtime entrou no venv: wheel publicada
                 # (pypi-wheel), wheel construida do checkout (wheel) ou
                 # editable presa ao checkout (git-checkout).
-                installation_method=(
-                    "pypi-wheel" if args.dist else "git-checkout" if args.editable else "wheel"
-                ),
+                installation_method=install_method,
             ),
         )
         report["status"] = "planned" if args.dry_run else "completed"
