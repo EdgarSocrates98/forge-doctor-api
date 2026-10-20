@@ -36,7 +36,12 @@ mcp = ["mcp>=2.0,<3"]
 forge-doctor-api = "forge_doctor_api.cli:main"
 
 [tool.poetry]
-packages = [{ include = "forge_doctor_api", from = "src" }]
+packages = [
+    { include = "forge_doctor_api", from = "src" },
+    # Corpus do `lab` (Cycle 12): sobe como `forge_doctor_api/_data/labs/` no
+    # wheel; o CLI resolve via _data quando `labs/` nao existe no cwd.
+    { include = "labs", to = "forge_doctor_api/_data" },
+]
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=8.0"

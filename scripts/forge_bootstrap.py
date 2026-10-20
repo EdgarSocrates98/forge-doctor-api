@@ -282,13 +282,56 @@ def create_venv(root: Path, python: str, log) -> Path:
     return venv_dir
 
 
+def split_dist_spec(spec: str) -> tuple[str, str]:
+    """Split ``name[extras]<constraints>`` into ``(name, rest)``.
+
+    ``rest`` is everything after the bare distribution name — an existing
+    extras bracket, a version specifier, or a wheelhouse/URL tail. Extras we
+    add must be inserted between name and rest: ``name==1.0[mcp]`` is a
+    specifier that matches nothing.
+    """
+    match = re.match(r"^([A-Za-z0-9._-]+)(.*)$", spec.strip())
+    if not match:  # unreachable for a validated spec; keep refusal-shaped
+        raise Refusal("FORGE-INSTALL-DIST-INVALID", f"--dist {spec!r} nao e um spec valido")
+    return match.group(1), match.group(2)
+
+
+def compose_dist_req(dist: str, extras: list[str]) -> str:
+    """Build the pip requirement for ``--dist``: extras go between the
+    distribution name and the specifier, merged with any extras the caller
+    already wrote in the spec — ``name[e1,e2]==v``, never ``name==v[e]``."""
+    name, rest = split_dist_spec(dist)
+    bracket = re.match(r"^\[([^\]]*)\](.*)$", rest)
+    tail = bracket.group(2) if bracket else rest
+    declared = {e.strip() for e in (bracket.group(1).split(",") if bracket else []) if e.strip()}
+    merged = sorted(declared | set(extras))
+    return f"{name}[{','.join(merged)}]{tail}" if merged else f"{name}{tail}"
+
+
 def install_package(
-    repo: Path, venv: Path, extras: list[str], editable: bool, allow_download: bool, log
+    repo: Path,
+    venv: Path,
+    extras: list[str],
+    editable: bool,
+    allow_download: bool,
+    log,
+    dist: str | None = None,
 ) -> None:
-    """Install the forge from the checkout. Prefers a built wheel (no repo
-    dependence after install); falls back to ``pip install`` which may hit
-    the network for deps — allowed and reported, never silent."""
+    """Install the forge runtime. ``--dist <spec>`` installs the published
+    distribution (PyPI or wheelhouse) with no checkout dependence; default
+    prefers a wheel built from the checkout; falls back to ``pip install``
+    which may hit the network for deps — allowed and reported, never silent."""
     pip = [str(_venv_python(venv)), "-m", "pip"]
+    if dist:
+        log(f"installing published distribution {dist}")
+        req = compose_dist_req(dist, extras)
+        r = _run(pip + ["install", "--upgrade", req], timeout=900)
+        if r.returncode != 0:
+            raise Refusal(
+                "FORGE-INSTALL-RUNTIME-FAILED",
+                f"pip install {dist} failed: {r.stderr.strip()[-400:]}",
+            )
+        return
     # Editable mode does not need a wheel. Avoid creating build artifacts in
     # the source checkout and keep project/workspace directories clean.
     whl_dir = venv.parent / ".wheels"
@@ -363,17 +406,28 @@ def env_prefix(forge_id: str) -> str:
 
 
 def environment_contract(
-    cfg: dict[str, Any], repo: Path, install_root: Path, venv: Path, shim: Path | None
+    cfg: dict[str, Any],
+    repo: Path,
+    install_root: Path,
+    venv: Path,
+    shim: Path | None,
+    *,
+    has_checkout: bool = True,
 ) -> dict[str, Any]:
     prefix = env_prefix(str(cfg["forge_id"]))
     real_cli = _cli_executable(str(cfg["cli"]), venv)
     values = {
-        f"{prefix}_HOME": str(repo.resolve()),
         f"{prefix}_INSTALL_ROOT": str(install_root.resolve()),
         f"{prefix}_VENV": str(venv.resolve()),
         f"{prefix}_PYTHON": str(_venv_python(venv).resolve()),
         f"{prefix}_CLI": str(real_cli.resolve()),
     }
+    if has_checkout:
+        # `<FORGE>_HOME` e a raiz de CODIGO-FONTE — so existe quando ha
+        # checkout real. Numa instalacao --dist o --repo e so a pasta de onde
+        # o forge.json foi lido; persisti-lo como HOME criaria a variavel
+        # "apontando para clone antigo" que o contrato proibe.
+        values[f"{prefix}_HOME"] = str(repo.resolve())
     if shim:
         values[f"{prefix}_LAUNCHER"] = str(shim.resolve())
     aliases = {name.replace("_", "-"): value for name, value in values.items()}
@@ -551,6 +605,7 @@ def register(
     mcp_name: str | None,
     hosts: dict,
     environment: dict[str, Any] | None = None,
+    installation_method: str | None = None,
 ) -> Path:
     doc = {
         "schema": SCHEMA_MANIFEST,
@@ -567,6 +622,8 @@ def register(
             "satisfies": cfg["python"],
         },
         "source": source,
+        "installation_method": installation_method
+        or ("pypi-wheel" if source.get("kind") == "pypi" else source.get("kind")),
         "installed_at": _now(),
         "updated_at": _now(),
         "installed_by": {"agent": "forge_bootstrap", "version": _BOOTSTRAP_VERSION},
@@ -653,6 +710,13 @@ def run(argv: list[str] | None = None) -> int:
         "--editable", action="store_true", help="pip install -e (dev mode; ties CLI to checkout)"
     )
     ap.add_argument(
+        "--dist",
+        default=None,
+        metavar="SPEC",
+        help="install a published distribution (e.g. 'sparkforge-aws==1.2.3') "
+        "from PyPI or a configured wheelhouse — end-user path, no checkout dependence",
+    )
+    ap.add_argument(
         "--persist-env",
         action="store_true",
         help="publish account-scoped HOME/VENV/PYTHON/CLI variables",
@@ -687,13 +751,53 @@ def run(argv: list[str] | None = None) -> int:
     install_root = (
         Path(args.install_dir) if args.install_dir else forge_home() / INSTALLS / cfg["forge_id"]
     ).resolve()
-    source = {
-        "kind": "git-checkout",
-        "path": str(repo),
-        "ref": _git(repo, "rev-parse", "--abbrev-ref", "HEAD"),
-        "rev": _git(repo, "rev-parse", "HEAD"),
-        "editable": bool(args.editable),
-    }
+    if args.dist and args.editable:
+        print(
+            json.dumps(
+                {
+                    "status": "failed",
+                    "error": {
+                        "kind": "FORGE-INSTALL-MODE-CONFLICT",
+                        "detail": "--dist e --editable sao mutuamente exclusivos",
+                    },
+                },
+                indent=2,
+            )
+        )
+        return 2
+    if args.dist:
+        spec_name, _ = split_dist_spec(args.dist)
+        if spec_name != cfg["distribution"]:
+            print(
+                json.dumps(
+                    {
+                        "status": "failed",
+                        "error": {
+                            "kind": "FORGE-INSTALL-DIST-MISMATCH",
+                            "detail": (
+                                f"--dist {args.dist!r} nao corresponde a "
+                                f"distribution={cfg['distribution']!r} do forge.json"
+                            ),
+                        },
+                    },
+                    indent=2,
+                )
+            )
+            return 2
+    source: dict[str, Any] = (
+        {
+            "kind": "pypi",
+            "spec": args.dist,
+        }
+        if args.dist
+        else {
+            "kind": "git-checkout",
+            "path": str(repo),
+            "ref": _git(repo, "rev-parse", "--abbrev-ref", "HEAD"),
+            "rev": _git(repo, "rev-parse", "HEAD"),
+            "editable": bool(args.editable),
+        }
+    )
 
     report = {
         "schema": SCHEMA_RECEIPT,
@@ -736,7 +840,7 @@ def run(argv: list[str] | None = None) -> int:
         stage(
             "install-runtime",
             lambda: install_package(
-                repo, venv_dir, extras, args.editable, args.allow_download, log
+                repo, venv_dir, extras, args.editable, args.allow_download, log, dist=args.dist
             ),
         )
         shim = stage(
@@ -744,7 +848,14 @@ def run(argv: list[str] | None = None) -> int:
         )
         planned_venv = venv_dir or (install_root / ".venv")
         planned_shim = shim or (shim_dir() / cfg["cli"])
-        environment = environment_contract(cfg, repo, install_root, planned_venv, planned_shim)
+        environment = environment_contract(
+            cfg,
+            repo,
+            install_root,
+            planned_venv,
+            planned_shim,
+            has_checkout=not args.dist,
+        )
         if args.persist_env:
             if args.dry_run:
                 report["stages"].append({"stage": "persist-environment", "status": "planned"})
@@ -769,6 +880,12 @@ def run(argv: list[str] | None = None) -> int:
                 cfg.get("mcp_server_name"),
                 hosts,
                 environment,
+                # Metodo = como o runtime entrou no venv: wheel publicada
+                # (pypi-wheel), wheel construida do checkout (wheel) ou
+                # editable presa ao checkout (git-checkout).
+                installation_method=(
+                    "pypi-wheel" if args.dist else "git-checkout" if args.editable else "wheel"
+                ),
             ),
         )
         if sm and sm.get("status") != "PASS":

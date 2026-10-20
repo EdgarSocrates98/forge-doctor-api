@@ -343,7 +343,16 @@ def lab(
     from forge_doctor_api.core.context import system_clock
     from forge_doctor_api.lab import run_labs, write_run_record
 
-    root = Path(target).resolve()
+    # Packaged fallback: in a wheel the default corpus lives at
+    # `forge_doctor_api/_data/labs/` (pyproject `packages.to`); an explicit
+    # target or a `labs/` dir in cwd always wins.
+    target_path = Path(target)
+    packaged = False
+    if target_path == Path("labs") and not target_path.is_dir():
+        candidate = Path(__file__).resolve().parents[1] / "_data" / "labs"
+        if candidate.is_dir():
+            target_path, packaged = candidate, True
+    root = target_path.resolve()
     if not root.is_dir():
         _stderr.print(f"lab: not a directory: {target}")
         raise typer.Exit(code=2)
@@ -351,7 +360,11 @@ def lab(
     report = run_labs(ctx)
     if not no_record:
         stamp = ctx.now().strftime("%Y%m%dT%H%M%SZ")
-        record = write_run_record(report, root.parent / "factory" / "runs", stamp)
+        # Site-packages is not a scratchpad: with the packaged corpus the
+        # record lands beside the caller's `labs` argument, not the wheel.
+        record_parent = Path(target).resolve().parent if packaged else root.parent
+        record_base = record_parent / "factory" / "runs"
+        record = write_run_record(report, record_base, stamp)
         _stderr.print(f"lab: run record -> {record}")
     if json_out:
         typer.echo(json.dumps(report.to_dict(), indent=2, sort_keys=True))

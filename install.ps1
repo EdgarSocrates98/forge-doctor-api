@@ -1,5 +1,7 @@
-# Forge account install — editable runtime + user-scoped environment.
+# Forge account install — wheel runtime + user-scoped environment.
 # Persists HKCU variables and can refresh current session when dot-sourced.
+# The default installs a built wheel (no checkout dependence). Pass --editable
+# for the development flow (CLI tied to this checkout).
 $ErrorActionPreference = "Stop"
 $isDotSourced = $MyInvocation.InvocationName -eq "."
 $oldLocation = Get-Location
@@ -16,7 +18,7 @@ try {
         }
     }
     if (-not $py) { throw "install: no Python executable on PATH (need >=3.11)" }
-    $installArgs = @("--editable", "--persist-env", "--allow-download") + $args
+    $installArgs = @("--persist-env", "--allow-download") + $args
     & $py @pyArgs scripts/forge_bootstrap.py @installArgs
     $status = $LASTEXITCODE
     if ($status -eq 0) {

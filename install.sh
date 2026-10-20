@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-# Forge account install — editable runtime + user-scoped environment.
+# Forge account install — wheel runtime + user-scoped environment.
 # Works from POSIX shells and native Windows Git Bash.
+# The default installs a built wheel (no checkout dependence). Pass --editable
+# for the development flow (CLI tied to this checkout).
 set -euo pipefail
 
 _forge_is_sourced=0
@@ -37,7 +39,7 @@ if [ -z "$PY" ]; then
   if [ "$_forge_is_sourced" -eq 1 ]; then return 2; fi
   exit 2
 fi
-ARGS=(--editable --persist-env --allow-download "$@")
+ARGS=(--persist-env --allow-download "$@")
 if "$PY" "${PY_ARGS[@]}" scripts/forge_bootstrap.py "${ARGS[@]}"; then
   status=0
 else
