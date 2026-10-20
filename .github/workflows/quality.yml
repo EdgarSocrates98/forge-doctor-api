@@ -54,6 +54,11 @@ jobs:
           pip install -e '.${{ matrix.extras }}' pytest ruff mypy types-PyYAML build
       - name: Tests
         run: python -m pytest -q
+      # lf-0019 B2 — install.windows.sh é a rota Git Bash no Windows;
+      # gate de sintaxe no job de qualidade.
+      - name: Git Bash installer syntax (lf-0019)
+        shell: bash
+        run: bash -n install.windows.sh
       - name: Lint
         run: python -m ruff check .
       - name: Types
