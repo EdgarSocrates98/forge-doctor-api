@@ -804,7 +804,16 @@ def run(argv: list[str] | None = None) -> int:
                 )
             )
             return 2
-        spec_name, _ = split_dist_spec(args.dist)
+        try:
+            spec_name, _ = split_dist_spec(args.dist)
+        except Refusal as exc:
+            print(
+                json.dumps(
+                    {"status": "failed", "error": {"kind": exc.kind, "detail": exc.detail}},
+                    indent=2,
+                )
+            )
+            return 2
         if canonical_dist_name(spec_name) != canonical_dist_name(cfg["distribution"]):
             print(
                 json.dumps(
