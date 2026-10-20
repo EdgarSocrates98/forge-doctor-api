@@ -296,6 +296,16 @@ def split_dist_spec(spec: str) -> tuple[str, str]:
     return match.group(1), match.group(2)
 
 
+_URL_USERINFO_RE = re.compile(r"(https?://)[^/@\s]+@")
+
+
+def redact_url_userinfo(text: str) -> str:
+    """Strip ``user:pass@`` userinfo: o spec persistido no manifesto nunca
+    carrega credencial de wheelhouse (§6.5); o host/path sobrevive para
+    diagnostico. ``pip install`` roda com o spec original em memoria."""
+    return _URL_USERINFO_RE.sub(r"\1***@", text)
+
+
 def canonical_dist_name(name: str) -> str:
     """PEP 503 normalization without a `packaging` dependency (installkit is
     stdlib-only): ``sparkforge_aws`` and ``sparkforge-aws`` are the same dist."""
@@ -772,6 +782,20 @@ def run(argv: list[str] | None = None) -> int:
     install_root = (
         Path(args.install_dir) if args.install_dir else forge_home() / INSTALLS / cfg["forge_id"]
     ).resolve()
+    if args.dist is not None and not args.dist.strip():
+        print(
+            json.dumps(
+                {
+                    "status": "failed",
+                    "error": {
+                        "kind": "FORGE-INSTALL-DIST-INVALID",
+                        "detail": "--dist recebeu um spec vazio",
+                    },
+                },
+                indent=2,
+            )
+        )
+        return 2
     if args.dist and args.editable:
         print(
             json.dumps(
@@ -795,8 +819,8 @@ def run(argv: list[str] | None = None) -> int:
                         "error": {
                             "kind": "FORGE-INSTALL-DIST-URL",
                             "detail": (
-                                f"--dist {args.dist!r} usa referencia direta a URL; "
-                                "repita com --allow-url se a origem for confiavel"
+                                f"--dist {redact_url_userinfo(args.dist)!r} usa referencia "
+                                "direta a URL; repita com --allow-url se a origem for confiavel"
                             ),
                         },
                     },
@@ -834,7 +858,7 @@ def run(argv: list[str] | None = None) -> int:
     source: dict[str, Any] = (
         {
             "kind": "pypi",
-            "spec": args.dist,
+            "spec": redact_url_userinfo(args.dist),
         }
         if args.dist
         else {

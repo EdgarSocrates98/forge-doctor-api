@@ -22,6 +22,7 @@ import hashlib
 import json
 import os
 import platform
+import re
 import sys
 import tempfile
 import time
@@ -34,7 +35,7 @@ from typing import Any
 _INSTALLKIT_VERSION = "1.0.0"
 # Filled by the vendor step (scripts/installkit/vendor.py) — the sha256 of
 # the canonical source body, so drift checks can compare vendored copies.
-_SOURCE_SHA256 = "8ccf2515bfd0ed54"
+_SOURCE_SHA256 = "bc189dd2ae0028ce"
 
 SCHEMA_MANIFEST = "forge/InstallationManifest/v1"
 SCHEMA_RECEIPT = "forge/InstallReceipt/v1"
@@ -87,6 +88,20 @@ class InstallError(Exception):
             "checks": [],
             "managed_files": [],
         }
+
+
+_URL_USERINFO_RE = re.compile(r"(https?://)[^/@\s]+@")
+
+
+def redact_url_userinfo(text: str) -> str:
+    """Strip ``user:pass@`` userinfo from URLs in persisted/logged text.
+
+    ``--dist "name @ https://user:token@host/x.whl"`` must never land in
+    manifests, receipts or stdout verbatim (prompt §6.5 — nunca registrar
+    valores secretos). Host and path survive so diagnostics still identify
+    the wheelhouse.
+    """
+    return _URL_USERINFO_RE.sub(r"\1***@", text)
 
 
 def _utc_now() -> str:
