@@ -168,9 +168,7 @@ def _satisfies(version: str, spec: str) -> bool:
     return True
 
 
-_VERSION_SNIPPET = (
-    "import sys;print(f'{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}')"
-)
+_VERSION_SNIPPET = "import sys;print(f'{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}')"
 
 
 def _python_version_argv(argv: list[str]) -> str | None:
@@ -708,9 +706,7 @@ def _persist_environment_checked(environment: dict[str, Any], shim: Path | None,
         ) from exc
 
 
-def managed_files(
-    cfg: dict, install_root: Path, persist_env: bool, no_launcher: bool
-) -> list[str]:
+def managed_files(cfg: dict, install_root: Path, persist_env: bool, no_launcher: bool) -> list[str]:
     """Artifacts the install OWNS — an uninstall removes exactly this set.
 
     Stores the installer MUTATES without owning (the rc-file block,
@@ -1124,9 +1120,7 @@ def run(argv: list[str] | None = None) -> int:
         "install_method": install_method,
         # The managed set is deterministic — emit it up-front so even a
         # failed receipt tells an uninstall exactly what may be removed.
-        "managed_files": managed_files(
-            cfg, install_root, args.persist_env, args.no_launcher
-        ),
+        "managed_files": managed_files(cfg, install_root, args.persist_env, args.no_launcher),
         "stages": [],
         "status": "failed",
         "created_at": _now(),
