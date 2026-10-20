@@ -74,6 +74,7 @@ _IMPORTLIB_ALLOWLIST = {
     "core/stats.py": "lazy import of own checks.*.catalog modules",
     "knowledge/loader.py": "importlib.resources package data access",
     "lab/capabilities.py": "find_spec detection — never imports",
+    "lab/packaged.py": "importlib.resources _data/labs corpus materialization",
     "plugins/registry.py": "importlib.metadata entry-points read",
     "plugins/trust.py": "import_module gated by TrustClass verification",
 }

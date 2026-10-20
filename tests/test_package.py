@@ -50,7 +50,15 @@ def test_runtime_dependencies_limited_to_typer_rich_and_pyyaml() -> None:
 
 def test_dev_dependencies() -> None:
     poetry = load_pyproject()["tool"]["poetry"]  # type: ignore[index]
-    assert set(poetry["group"]["dev"]["dependencies"]) == {"pytest", "ruff", "mypy", "types-PyYAML"}
+    # `build` entra no Cycle 12 para o teste de conteudo de artefato
+    # (`test_artifact_contents.py` constroi a wheel real e assere `_data/labs`).
+    assert set(poetry["group"]["dev"]["dependencies"]) == {
+        "pytest",
+        "ruff",
+        "mypy",
+        "types-PyYAML",
+        "build",
+    }
 
 
 def test_directory_layout() -> None:

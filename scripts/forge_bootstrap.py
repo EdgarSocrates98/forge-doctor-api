@@ -292,7 +292,10 @@ def split_dist_spec(spec: str) -> tuple[str, str]:
     """
     match = re.match(r"^([A-Za-z0-9._-]+)(.*)$", spec.strip())
     if not match:  # unreachable for a validated spec; keep refusal-shaped
-        raise Refusal("FORGE-INSTALL-DIST-INVALID", f"--dist {spec!r} nao e um spec valido")
+        raise Refusal(
+            "FORGE-INSTALL-DIST-INVALID",
+            f"--dist {redact_url_userinfo(spec)!r} nao e um spec valido",
+        )
     return match.group(1), match.group(2)
 
 
@@ -847,7 +850,7 @@ def run(argv: list[str] | None = None) -> int:
                         "error": {
                             "kind": "FORGE-INSTALL-DIST-MISMATCH",
                             "detail": (
-                                f"--dist {args.dist!r} nao corresponde a "
+                                f"--dist {redact_url_userinfo(args.dist)!r} nao corresponde a "
                                 f"distribution={cfg['distribution']!r} do forge.json"
                             ),
                         },

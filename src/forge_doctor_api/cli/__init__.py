@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import atexit
 import json
-from contextlib import ExitStack
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -60,12 +58,6 @@ from forge_doctor_api.security.model import SensitiveBusinessFlow
 from forge_doctor_api.service_graph import build_service_graph
 
 _stderr = Console(stderr=True, highlight=False)
-
-# Recursos packaged materializados por as_file ficam vivos ate o fim do
-# processo (zipimport extrai para um temp dir; numa wheel desempacotada
-# enter_context devolve o Path real e o stack vira no-op).
-_PACKAGED_RESOURCES = ExitStack()
-atexit.register(_PACKAGED_RESOURCES.close)
 
 app = typer.Typer(
     name="forge-doctor-api",
@@ -357,14 +349,13 @@ def lab(
     target_path = Path(target)
     packaged = False
     if target_path == Path("labs") and not target_path.is_dir():
-        # as_file materializa o corpus num path real — `Path(__file__)` daria
-        # um pseudo-caminho dentro do zip sob zipimport. O ExitStack mantem
-        # o path vivo ate o fim do processo (no-op numa wheel desempacotada).
-        from importlib.resources import as_file, files
+        # `lab.packaged` e' o modulo allowlisted para importlib.resources —
+        # o gate de pureza AST barra importlib fora da lista do boundary.
+        from forge_doctor_api.lab.packaged import packaged_labs_dir
 
-        traversable = files("forge_doctor_api").joinpath("_data", "labs")
-        if traversable.is_dir():
-            target_path = _PACKAGED_RESOURCES.enter_context(as_file(traversable))
+        labs = packaged_labs_dir()
+        if labs is not None:
+            target_path = labs
             packaged = True
     root = target_path.resolve()
     if not root.is_dir():
