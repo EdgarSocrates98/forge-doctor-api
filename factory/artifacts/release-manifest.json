@@ -1,6 +1,10 @@
 {
   "artifacts": [
     {
+      "filename": "SHA256SUMS",
+      "sha256": "c9e149a84c646534e813abdaa9b0836d33207b58d446b0c487a09b1ad63a41f3"
+    },
+    {
       "filename": "forge_doctor_api-0.2.5-py3-none-any.whl",
       "sha256": "085eb69d7b81579283c3380a84396fa2d5cc71fd516ea23c8e866c8adaab6560"
     },
@@ -14,7 +18,7 @@
   "contract_version": "1",
   "dirty_tree": false,
   "forge_protocol_version": 2,
-  "git_head": "201fc50501c33fc413daf3e3071351c035145f15",
+  "git_head": "6c7c5900f41a737d0bfcb82e97feb281d071413e",
   "manifest_version": 1,
   "mcp_tool_count": 17,
   "package": "forge-doctor-api",
