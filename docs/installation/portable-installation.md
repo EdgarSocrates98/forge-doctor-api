@@ -60,9 +60,9 @@ preservado quando instalação chega por roteamento do The Forge.
 
 ```bash
 ./install.sh                                  # prefere wheel do checkout
-./install.sh --dist "forge-doctor-api==0.2.5" # wheel publicada (PyPI/wheelhouse)
-./install.sh --dist "forge-doctor-api[mcp]==0.2.5"
-./install.sh --dist "forge-doctor-api @ https://…/x.whl" --allow-url
+./install.sh --dist "DIST==0.2.5"             # wheel publicada (PyPI/wheelhouse)
+./install.sh --dist "DIST[mcp]==0.2.5"        # extras entre nome e spec
+./install.sh --dist "DIST @ https://…/x.whl" --allow-url  # URL exige opt-in
 ./install.windows.sh                          # rota Git Bash/MSYS (sem PowerShell)
 ```
 

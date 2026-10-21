@@ -1032,9 +1032,6 @@ def test_pipeline_checkout_install_writes_manifest_and_receipt(
     assert rc == 0
     manifest = _manifest(forge_home)
     assert manifest["schema"] == "forge/InstallationManifest/v1"
-    assert manifest["installation_method"] == "git-checkout" or manifest[
-        "installation_method"
-    ] == "wheel"
     assert manifest["installation_method"] == "wheel"
     assert manifest["source"]["kind"] == "git-checkout"
     assert manifest["source"]["path"] == str(repo)
@@ -1157,14 +1154,15 @@ def test_smoke_fail_on_nonzero_and_oserror(
     assert "gone" in out["detail"]
 
 
-def test_smoke_empty_stdout_is_clean_result_not_crash(
+def test_smoke_empty_stdout_is_fail_not_crash(
     fb: Any, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """rc=0 with empty stdout returns a FAIL-able dict — never an
-    IndexError escaping the Refusal discipline (was a crash)."""
+    """rc=0 with empty stdout is FAIL — a `--version` that prints nothing
+    never proved the CLI works (and must not write `version: ""` into
+    the manifest). Never an IndexError escaping Refusal discipline."""
     monkeypatch.setattr(fb, "_run", lambda cmd, timeout=300, **kw: _cp(cmd, 0, "  \n"))
     out = fb.smoke("cli", tmp_path / "v", ["--version"], lambda m: None)
-    assert out["status"] == "PASS"
+    assert out["status"] == "FAIL"
     assert out["version"] == ""
 
 

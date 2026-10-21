@@ -349,7 +349,9 @@ def split_dist_spec(spec: str) -> tuple[str, str]:
 
 # `[^/\s]+` (not `[^/@\s]+`): a raw `@` *inside* userinfo must not
 # truncate the redaction — `u@raw:pw@host` redacts whole, while a `@`
-# after the first `/` is path content and never matches.
+# after the first `/` is path content and never matches. Accepted
+# trade-off: a `@` in a query without a path (`host?x=a@b`) also
+# redacts — over-redacting a host in a log beats leaking a credential.
 _URL_USERINFO_RE = re.compile(r"(https?://)[^/\s]+@")
 
 
@@ -932,10 +934,13 @@ def smoke(cli: str, venv: Path, version_cmd: list[str], log) -> dict[str, str]:
     exe = _cli_executable(cli, venv)
     try:
         r = _run([str(exe)] + version_cmd, timeout=30)
-        ok = r.returncode == 0
-        # rc=0 with empty stdout is still a FAIL signal upstream —
-        # `.splitlines()[0]` would IndexError past the Refusal path.
-        ver = (r.stdout.strip().splitlines() or [""])[0] if ok else ""
+        # rc=0 with empty stdout is NOT a pass — a `--version` that
+        # prints nothing never proved the CLI works; it would also write
+        # `version: ""` into the manifest. `.splitlines()[0]` on the
+        # empty list would IndexError past the Refusal path.
+        lines = r.stdout.strip().splitlines()
+        ok = r.returncode == 0 and bool(lines)
+        ver = lines[0] if ok and lines else ""
         log(f"smoke `{cli} {' '.join(version_cmd)}` -> {ver or r.returncode}")
         return {"status": "PASS" if ok else "FAIL", "version": ver}
     except (OSError, subprocess.TimeoutExpired) as exc:
