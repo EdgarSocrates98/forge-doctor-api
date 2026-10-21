@@ -17,6 +17,7 @@ import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
+from urllib.parse import unquote
 
 STUDIO_HTML = r"""<!doctype html>
 <html lang="en">
@@ -24,6 +25,13 @@ STUDIO_HTML = r"""<!doctype html>
 <meta charset="utf-8">
 <title>Forge Graph Studio</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- lf-0024: single-file app — the CSP is therefore 'unsafe-inline' for
+     script/style, but 'none' everywhere else: no remote asset of any kind
+     can ever load (no fonts, images, frames, media, workers), and fetches
+     stay same-origin (/api/*). Same policy is sent as an HTTP header. -->
+<meta http-equiv="Content-Security-Policy"
+content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline';
+connect-src 'self'; img-src 'self' data:; font-src 'self'">
 <style>
 :root{--bg:#0d1117;--panel:#161b22;--fg:#e6edf3;--dim:#8b949e;--line:#30363d;--acc:#58a6ff}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);
@@ -56,27 +64,41 @@ font-size:11px;background:rgba(13,17,23,.75);padding:1px 6px;border-radius:4px}
 background:rgba(13,17,23,.85);width:170px;height:110px}
 .mb{background:var(--bg);color:var(--fg);border:1px solid var(--line);
 border-radius:4px;padding:1px 7px;margin:1px 2px;cursor:pointer;font-size:11px}
-.nlink{color:var(--acc);cursor:pointer;margin-right:4px}
+/* lf-0024: .nlink is a <button> styled as a link — keyboard-focusable and
+   Enter/Space operable by construction (a bare <a> without href never is). */
+.nlink{color:var(--acc);cursor:pointer;margin-right:4px;background:none;
+border:0;padding:0;font:inherit;text-decoration:underline dotted}
+/* lf-0024: visible keyboard focus on every interactive element incl. canvas */
+:focus-visible{outline:2px solid var(--acc);outline-offset:1px;border-radius:2px}
 </style></head>
 <body>
 <header><b>FORGE GRAPH STUDIO</b>
-<select id="gsel"></select>
-<select id="mode" title="scale mode"><option value="overview">overview</option>
+<select id="gsel" aria-label="graph to explore"></select>
+<select id="mode" title="scale mode" aria-label="scale mode">
+<option value="overview">overview</option>
 <option value="explore">explore</option><option value="full">full</option></select>
-<select id="lod" title="level of detail"><option value="auto">lod:auto</option>
+<select id="lod" title="level of detail" aria-label="level of detail">
+<option value="auto">lod:auto</option>
 <option value="fine">lod:fine</option><option value="coarse">lod:coarse</option></select>
-<input id="q" placeholder="search… (/)" size="16">
+<input id="q" placeholder="search… (/)" size="16" aria-label="search nodes">
 <span id="meta" class="dim"></span></header>
-<div id="side"><h4>Explore</h4><div id="expl" class="dim"></div>
+<div id="side" role="complementary" aria-label="explore, layers, edge kinds and legend">
+<h4>Explore</h4><div id="expl" class="dim"></div>
 <h4>Communities</h4><div id="comms" class="dim"></div>
 <h4>Layers</h4><div id="layers"></div>
 <h4>Edge kinds</h4><div id="ekinds"></div>
 <h4>Legend</h4><div id="legend" class="dim"></div></div>
-<div id="wrap"><canvas id="cv"></canvas><div id="err"></div>
-<div id="notice"></div><canvas id="mmap" width="170" height="110"></canvas>
-<div id="crumbs"></div></div>
-<div id="insp"><h4>Inspector</h4><div id="ibody" class="dim">select a node or edge</div></div>
-<footer><span id="stats"></span><span id="prov"></span>
+<div id="wrap"><canvas id="cv" tabindex="0" role="application"
+aria-label="graph canvas — drag or arrow keys to pan, scroll or +/- to zoom,
+/ searches, Escape resets"></canvas>
+<div id="err" role="alert" tabindex="-1"></div>
+<div id="notice" role="status" aria-live="polite"></div>
+<canvas id="mmap" width="170" height="110" role="img"
+aria-label="minimap — click to center the view"></canvas>
+<div id="crumbs" role="navigation" aria-label="breadcrumb"></div></div>
+<div id="insp" role="complementary" aria-label="inspector">
+<h4>Inspector</h4><div id="ibody" class="dim">select a node or edge</div></div>
+<footer><span id="stats"></span><span id="prov" aria-live="polite"></span>
 <span class="dim">scroll=zoom · drag=pan · dblclick=drill/expand · /=search ·
 n=nbhd · x=expand · p=path · f=fit · m=mode · e=export · d=diff · s=snap · esc=reset</span></footer>
 <script>
@@ -87,7 +109,7 @@ const LINK_D=120,SPRING_K=0.02,GRAVITY=0.001,DAMP=0.85,SPMAX=50,
 REP=2000,FCAP=60,BH_N=500,THETA=0.9,ALPHA_DECAY=0.985,ALPHA_MIN=0.005,
 SMIN=0.02,SMAX=8,CHUNK=512,OV_MIN=2000,CLUST_MAX=250,LPA_ROUNDS=25,COMP_LPA=40,
 EXPL_MAX=2500,EDGE_DRAW_MAX=12000,ARROW_MAX=1500,LABEL_MAX=300,PATH_MAX_DEPTH=12,
-BLAST_CAP=800,NEI_CAP=50,DRILL_TOP=25,TICK_SMALL=8000;
+BLAST_CAP=800,NEI_CAP=50,DRILL_TOP=25,TICK_SMALL=8000,RM_TICKS=6;
 let G={nodes:[],edges:[],byId:new Map(),adj:new Map(),out:new Map()},
 view={x:0,y:0,s:1},sel=null,hover=null,kindsOn={},ekindsOn={},PAL={},
 running=false,gen=0,alpha=1,rafId=0,resets=0,settled=false,lticks=0,
@@ -96,7 +118,7 @@ explore={seeds:new Set(),depth:2,cap:25,extra:new Set()},
 crumbs=[],pathA=null,pathB=null,pathHi=null,pathEdges=null,blastHi=null,blastInfo=null,
 searchHits=null,focusSet=null,diffRef=null,drawDiffColors=null,curId=null,jobSeq=0,
 drawMeta={nodes:0,edges:0,edgesOk:0,labels:0},simPos=null,lastMini=null,lod='auto',
-neiShow=NEI_CAP,FULL_BUDGET=10000,SIM_MS=8,_seed=1;
+neiShow=NEI_CAP,FULL_BUDGET=10000,SIM_MS=8,_seed=1,lastDrawTick=-RM_TICKS;
 const cv=document.getElementById('cv'),cx=cv.getContext('2d');
 const KCOLORS=['#58a6ff','#f78166','#7ee787','#ffa657','#d2a8ff','#76e3ea','#ff9bce','#e3b341'];
 const ESTYLE={observed:[],declared:[6,3],inferred:[3,4],planned:[2,4],desired:[8,3],unknown:[1,5]};
@@ -113,22 +135,39 @@ let t=Math.imul(_seed^(_seed>>>15),1|_seed);
 t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296}
 function nowMs(){const p=typeof performance!=='undefined'&&performance.now;
 return p?performance.now():Date.now()}
+// lf-0024: prefers-reduced-motion — the sim still must run (positions ARE the
+// layout), but tick() paints at most every RM_TICKS-th logical tick instead of
+// every frame; the settled frame always paints. matchMedia may be absent in
+// headless/embed contexts → treated as "no preference".
+function rm(){return typeof matchMedia==='function'&&
+matchMedia('(prefers-reduced-motion)').matches}
 function showErr(m){const e=document.getElementById('err');
-e.textContent='⚠ '+m;e.style.display='block'}
+e.textContent='⚠ '+m;e.style.display='block';
+// lf-0024: real focus management — the alert is an AT-live region AND the
+// keyboard focus target, so a keyboard user lands on the error, not on a
+// dead canvas underneath it.
+if(e.focus)e.focus()}
 // lf-0022: no silent truncation — every cap surfaces in #notice or the footer.
 function setNotice(t){const n=document.getElementById('notice');
 n.textContent=t||'';n.style.display=t?'block':'none'}
 async function loadGraphs(){try{const r=await fetch('/api/graphs');const d=await r.json();
 const s=document.getElementById('gsel');s.innerHTML='';
-d.graphs.forEach(g=>{const o=document.createElement('option');o.value=g.graph_id;
+// lf-0024: a non-array graphs list is malformed — degrade to empty, not a crash.
+const gl=Array.isArray(d.graphs)?d.graphs:[];
+gl.forEach(g=>{const o=document.createElement('option');o.value=g.graph_id;
 o.textContent=`${g.provider_id} · ${g.graph_id}`+
 ` (${g.node_count}/${g.edge_count})`;s.appendChild(o)});
-if(d.graphs.length)loadGraph(d.graphs[0].graph_id);
+if(gl.length)loadGraph(gl[0].graph_id);
 s.onchange=e=>loadGraph(e.target.value)}catch(e){showErr('graph list failed: '+e)}}
 async function loadGraph(id){try{
 const r=await fetch('/api/graph/'+encodeURIComponent(id));
 const d=await r.json();
-curId=id;sel=null;hover=null;resets=0;simPos=null;lticks=0;
+// lf-0024: a payload that is not a ForgeGraphView document must fail loudly —
+// explicit error state via showErr, never a half-rendered white screen.
+if(!d||typeof d!=='object'||!Array.isArray(d.nodes)||
+d.nodes.some(n=>!n||typeof n!=='object'||n.id==null))
+throw new Error('malformed graph payload');
+curId=id;sel=null;hover=null;resets=0;simPos=null;lticks=0;lastDrawTick=-RM_TICKS;
 pathA=null;pathB=null;pathHi=null;pathEdges=null;blastHi=null;blastInfo=null;
 searchHits=null;focusSet=null;diffRef=null;drawDiffColors=null;crumbs=[];
 clusters=null;clusterMap=null;aggEdges=[];neiShow=NEI_CAP;
@@ -161,10 +200,11 @@ mode=(p.mode==='overview'||p.mode==='explore'||p.mode==='full')?p.mode:
 document.getElementById('mode').value=mode;
 document.getElementById('lod').value=lod;
 sidePanel();explPanel();commsPanel();renderCrumbs();inspect();
+const desc=d.descriptor||{};
 document.getElementById('meta').textContent=
-`${d.descriptor.provider_id} · ${d.descriptor.domain} · ${d.descriptor.generated_at||''}`;
+`${desc.provider_id||'?'} · ${desc.domain||''} · ${desc.generated_at||''}`;
 document.getElementById('prov').textContent=
-(d.descriptor.limitations||[]).join(' | ').slice(0,120);
+(desc.limitations||[]).join(' | ').slice(0,120);
 // lf-0021: bump the generation so any RAF chain a previous graph scheduled
 // stops on its next frame, and really cancel the pending callback.
 if(rafId)cancelAnimationFrame(rafId);rafId=0;
@@ -221,14 +261,16 @@ function commsPanel(){const e=document.getElementById('comms');if(!e)return;
 if(!clusters){e.innerHTML='<span class="dim">— overview computes them</span>';return}
 const top=clusters.slice().sort((a,b)=>(b.size-a.size)||(a.id<b.id?-1:1)).slice(0,8);
 e.innerHTML=`${clusters.length} communities<br>`+
-top.map(c=>`<a class="nlink" data-c="${c.id}">${esc(c.id)}·${c.size}</a>`).join(' ');
-e.querySelectorAll('a').forEach(a=>a.onclick=()=>{
+top.map(c=>`<button class="nlink" type="button" data-c="${esc(c.id)}">`+
+`${esc(c.id)}·${c.size}</button>`).join(' ');
+e.querySelectorAll('[data-c]').forEach(a=>a.onclick=()=>{
 const c=clusters.find(x=>x.id===a.dataset.c);if(!c)return;
 if(mode!=='overview')setMode('overview');sel=c;centerOn(c);inspect();draw()})}
 function renderCrumbs(){const c=document.getElementById('crumbs');if(!c)return;
 if(!crumbs.length){c.innerHTML=`<span class="dim">${esc(mode)}</span>`;return}
-c.innerHTML=crumbs.map((k,i)=>`<a class="nlink" data-ci="${i}">${esc(k.label)}</a>`).join(' › ');
-c.querySelectorAll('a').forEach(a=>a.onclick=()=>crumbGo(+a.dataset.ci))}
+c.innerHTML=crumbs.map((k,i)=>`<button class="nlink" type="button" data-ci="${i}">`+
+`${esc(k.label)}</button>`).join(' › ');
+c.querySelectorAll('[data-ci]').forEach(a=>a.onclick=()=>crumbGo(+a.dataset.ci))}
 function pushCrumb(label,act){if(!crumbs.length)crumbs=[{label:mode,act:{m:mode}}];
 crumbs.push({label,act});renderCrumbs()}
 function crumbGo(i){const a=crumbs[i]&&crumbs[i].act;if(!a)return;
@@ -482,7 +524,10 @@ const moving=simPos.moving;simPos=null;lticks++;
 if(moving>0&&alpha>ALPHA_MIN){alpha*=ALPHA_DECAY}
 else{settled=true;stop=true;break}}
 if(nowMs()>=deadline)break}
-draw();
+// lf-0024: under prefers-reduced-motion paint at most every RM_TICKS-th
+// logical tick (positions still update every frame — the layout itself is
+// not optional); the settled frame always paints.
+if(!rm()||stop||lticks-lastDrawTick>=RM_TICKS){draw();lastDrawTick=lticks}
 if(!stop)rafId=requestAnimationFrame(()=>{rafId=0;tick(g)})}
 catch(e){running=false;showErr('layout stopped: '+(e&&e.message||e))}}
 // lf-0022: re-enter the sim after the render set changed — positions persist
@@ -504,7 +549,14 @@ function fitToView(){fitToNodes(R.nodes)}
 function centerOn(n){view.x=-n.x*view.s;view.y=-n.y*view.s}
 function zoomC(f){const ns=Math.min(SMAX,Math.max(SMIN,view.s*f)),
 g=view.s?ns/view.s:1;view.x*=g;view.y*=g;view.s=ns;draw()}
-if(typeof window!=='undefined')window.onresize=()=>{fitToView();draw()};
+// lf-0024: debounce the resize storm — dragging a window edge fires onresize
+// per pixel; one fit+draw per settle (120ms quiet) is enough and keeps a
+// continuous resize from re-fitting mid-frame every frame.
+let rszT=0;
+if(typeof window!=='undefined')window.onresize=()=>{
+if(typeof setTimeout==='function'){clearTimeout(rszT);
+rszT=setTimeout(()=>{fitToView();draw()},120)}
+else{fitToView();draw()}};
 function toS(x,y){const r=cv.getBoundingClientRect();
 return[(x*view.s)+r.width/2+view.x,(y*view.s)+r.height/2+view.y]}
 function nrad(n){return n.cluster?Math.min(5+Math.sqrt(n.size)*1.8,30):4+Math.min(n.deg,12)}
@@ -633,7 +685,8 @@ h+=`<div class="k"><b>${esc(c.id)}</b> <span class="pill">cluster ×${c.size}</s
 .map(([k,v])=>`<span class="pill" style="color:${pal(k)}">${esc(k)} ${v}</span>`).join('')}
 <div class="dim">${c.selfE||0} internal edges collapsed</div>
 <h4>Members</h4>${c.members.slice(0,12)
-.map(id=>`<a class="nlink" data-nid="${esc(id)}">${esc(id)}</a>`).join(' ')}${c.size>12?' …':''}
+.map(id=>`<button class="nlink" type="button" data-nid="${esc(id)}">${esc(id)}</button>`)
+.join(' ')}${c.size>12?' …':''}
 <h4>Actions</h4><button class="mb" data-act="drill">drill in (explore)</button>`}
 else if(sel.source===undefined){const n=sel,
 nbs=G.adj.get(n.id)||[],outd=(G.out.get(n.id)||[]).length;
@@ -646,9 +699,10 @@ h+=`<div class="k"><b>${esc(n.label||n.id)}</b></div>
 <h4>Evidence</h4>${(n.evidence_refs||[]).map(e=>`<div class="ev">${esc(e)}</div>`)
 .join('')||'<span class="dim">none</span>'}
 <h4>Neighbors (${nbs.length})</h4>${nbs.slice(0,neiShow)
-.map(id=>`<a class="nlink" data-nid="${esc(id)}">${esc(id)}</a>`).join(' ')}
-${nbs.length>neiShow?`<a class="nlink" data-act="more">more +${NEI_CAP}`+
-` (${nbs.length-neiShow} left)</a>`:''}
+.map(id=>`<button class="nlink" type="button" data-nid="${esc(id)}">${esc(id)}</button>`)
+.join(' ')}
+${nbs.length>neiShow?`<button class="nlink" type="button" data-act="more">more +`+
+`${NEI_CAP} (${nbs.length-neiShow} left)</button>`:''}
 <h4>Actions</h4><button class="mb" data-act="pa">path A</button>
 <button class="mb" data-act="pb">path B</button>
 <button class="mb" data-act="blast">blast</button>
@@ -664,7 +718,7 @@ else{h+=`<div class="k"><b>${esc(e.kind)}</b></div>
 <div class="k dim">${esc(e.source)} → ${esc(e.target)}</div>
 <span class="pill">${esc(e.epistemic_state)}</span>`+
 `<span class="pill">${esc(e.provenance||'')}</span>
-${e.confidence!=null?`<span class="pill">conf ${e.confidence}</span>`:''}
+${e.confidence!=null?`<span class="pill">conf ${esc(e.confidence)}</span>`:''}
 <h4>Attributes</h4><div class="k">${esc(JSON.stringify(e.attributes||{}))}</div>
 <h4>Evidence</h4>${(e.evidence_refs||[]).map(x=>`<div class="ev">${esc(x)}</div>`)
 .join('')||'<span class="dim">none</span>'}
@@ -826,6 +880,16 @@ def _handler(views: dict[str, dict[str, Any]]) -> type[BaseHTTPRequestHandler]:
             self.send_header("Content-Type", ctype)
             self.send_header("Content-Length", str(len(body)))
             self.send_header("Cache-Control", "no-store")
+            # lf-0024: same policy as the <meta> CSP in STUDIO_HTML — the
+            # header covers contexts the meta tag can't (and vice-versa for
+            # file:// copies); nosniff keeps API JSON from being re-typed.
+            self.send_header("X-Content-Type-Options", "nosniff")
+            self.send_header(
+                "Content-Security-Policy",
+                "default-src 'none'; script-src 'unsafe-inline'; "
+                "style-src 'unsafe-inline'; connect-src 'self'; "
+                "img-src 'self' data:; font-src 'self'",
+            )
             self.end_headers()
             self.wfile.write(body)
 
@@ -844,7 +908,9 @@ def _handler(views: dict[str, dict[str, Any]]) -> type[BaseHTTPRequestHandler]:
                 self._json(200, {"graphs": [v["descriptor"] for v in views.values()]})
                 return
             if path.startswith("/api/graph/"):
-                gid = path[len("/api/graph/") :]
+                # lf-0024: the frontend encodeURIComponent()s the id — decode
+                # or any reserved char (/, space, %) 404s a real graph.
+                gid = unquote(path[len("/api/graph/") :])
                 view = views.get(gid)
                 if view is None:
                     self._json(404, {"error": f"unknown graph {gid!r}"})
