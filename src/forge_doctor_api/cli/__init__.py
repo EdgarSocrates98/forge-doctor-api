@@ -367,6 +367,11 @@ def lab(
         stamp = ctx.now().strftime("%Y%m%dT%H%M%SZ")
         # Site-packages is not a scratchpad: with the packaged corpus the
         # record lands beside the caller's `labs` argument, not the wheel.
+        # `packaged` is only True when `target == "labs"` (the guard
+        # above), so `Path(target)` is provably the caller's cwd-relative
+        # arg — the host-access boundary forbids reading the process cwd
+        # here, and keeping the derivation tied to `target` preserves
+        # that invariant.
         record_parent = Path(target).resolve().parent if packaged else root.parent
         record_base = record_parent / "factory" / "runs"
         record = write_run_record(report, record_base, stamp)

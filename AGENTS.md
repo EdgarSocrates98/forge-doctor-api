@@ -25,7 +25,7 @@ forge-doctor-api lab         # corpus precision/recall (expected: all pass)
   identifier, not the domain.
 - Do not add runtime dependencies beyond typer/rich/pyyaml (+graphql extra).
 - Keep `docs/assets/logo.png` and its README display intact.
-- Version is `0.2.2` — do not bump without an owner-documented
+- Version is `0.2.5` — do not bump without an owner-documented
   rationale in `docs/versioning.md`, do not publish, do not commit to
   a 1.0 API.
 - RC window: `docs/rc-discipline.md` binds what may and may not

@@ -27,6 +27,18 @@ def wheel(tmp_path_factory) -> zipfile.ZipFile:
         check=False,
     )
     if result.returncode != 0:
+        # Build isolation fails hermetically (can't fetch poetry-core) —
+        # retry against the installed backend before conceding the gate.
+        result = subprocess.run(
+            [
+                sys.executable, "-m", "build", "--wheel", "--no-isolation",
+                "--outdir", str(out), str(ROOT),
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    if result.returncode != 0:
         pytest.skip(f"`python -m build` unavailable or failed: {result.stderr[-400:]}")
     built = sorted(out.glob("*.whl"))
     assert built, "build succeeded without producing a wheel"

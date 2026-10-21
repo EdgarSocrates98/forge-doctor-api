@@ -74,6 +74,44 @@ the vendored Portal 2.2 generation (44-asset frontend, telemetry,
 py3.10-safe server) and the hardened PyPI pipeline (build-once/
 publish-same-artifact, version gate, post-publish verify).
 
+## The recorded decision — `0.2.3`
+
+**Decision (owner-authorized, 2026-10-20): bump `0.2.2` → `0.2.3`.**
+
+Patch bump under RC discipline (`0.2.x` band): no public-surface,
+contract, or dependency changes. Ships Cycle 12 wheel-first portable
+distribution — the `labs` corpus packaged as `forge_doctor_api/_data`
+(poetry `packages.to`) resolved via `lab/packaged.py` (the allowlisted
+importlib.resources boundary), `lab` run-record redirect so packaged
+installs never write into site-packages, and the `forge_bootstrap.py`
+`--dist`/`--allow-url` install modes (PEP503 name-match, credential
+userinfo redaction, checksum provenance A/B/C, `managed_files`
+receipts, `FORGE_PYTHON`, smoke-before-register). Owner directed the
+patch release so published wheels carry the portable corpus; the
+`v0.2.3` tag rode the same directive as `v0.2.1`.
+
+## The recorded decision — `0.2.4`
+
+**Decision (owner-authorized, 2026-10-20): bump `0.2.3` → `0.2.4`.**
+
+Patch bump under RC discipline (`0.2.x` band): no public-surface,
+contract, or dependency changes. Ships Cycle 12.1 — the
+`install.windows.sh` Git Bash/MSYS route plus its `bash -n` CI gate,
+`install.sh`/`install.ps1` defaulting to wheel over `--editable`, and
+the vendored bootstrap re-stamped to canonical ruff-formatted source.
+`v0.2.4` tag under the same owner directive.
+
+## The recorded decision — `0.2.5`
+
+**Decision (owner-authorized, 2026-10-21): bump `0.2.4` → `0.2.5`.**
+
+Patch bump under RC discipline (`0.2.x` band): no public-surface,
+contract, or dependency changes. Ships Cycle 13 — the re-vendored
+hardened Graph Studio (P0 physics NaN fix, scalable
+overview/explore/full modes, CSP + nosniff headers, `unquote` fix,
+GET-only loopback server) and post-lf-0023 portal explorer assets.
+`v0.2.5` tag under the same owner directive.
+
 ## What justifies `1.0`
 
 `1.0` is cut when **both** conditions hold:

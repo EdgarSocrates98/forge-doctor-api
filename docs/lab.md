@@ -55,6 +55,16 @@ required extra is absent from the install:
 minimal install the same corpus proves graceful degradation — every
 skipped scenario carries its reason in the run record.
 
+## Corpus empacotado (wheel, 0.2.3+)
+
+Numa instalação via wheel o corpus default `labs/` não existe no
+site-packages — `forge-doctor-api lab` resolve o alvo default para
+`forge_doctor_api/_data/labs/` via `lab/packaged.py`
+(`importlib.resources`, boundary allowlisted). Um alvo explícito ou um
+diretório `labs/` no cwd sempre vence. Nessa rota o run record é
+escrito sob `factory/runs/` no **cwd do chamador** — site-packages
+nunca é scratchpad.
+
 ## Determinism harness
 
 The runner injects a fixed `today` per scenario (temporal checks like

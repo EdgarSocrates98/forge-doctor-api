@@ -201,7 +201,7 @@ def _explicit_python_argv(explicit: str) -> list[str]:
     whitespace. A real path containing spaces is never split."""
     trimmed = explicit.strip()
     if not re.search(r"\s", trimmed) or Path(trimmed).exists():
-        return [explicit]
+        return [trimmed]
     return trimmed.split()
 
 
@@ -347,7 +347,10 @@ def split_dist_spec(spec: str) -> tuple[str, str]:
     return match.group(1), match.group(2)
 
 
-_URL_USERINFO_RE = re.compile(r"(https?://)[^/@\s]+@")
+# `[^/\s]+` (not `[^/@\s]+`): a raw `@` *inside* userinfo must not
+# truncate the redaction — `u@raw:pw@host` redacts whole, while a `@`
+# after the first `/` is path content and never matches.
+_URL_USERINFO_RE = re.compile(r"(https?://)[^/\s]+@")
 
 
 def redact_url_userinfo(text: str) -> str:
@@ -930,7 +933,9 @@ def smoke(cli: str, venv: Path, version_cmd: list[str], log) -> dict[str, str]:
     try:
         r = _run([str(exe)] + version_cmd, timeout=30)
         ok = r.returncode == 0
-        ver = r.stdout.strip().splitlines()[0] if ok else ""
+        # rc=0 with empty stdout is still a FAIL signal upstream —
+        # `.splitlines()[0]` would IndexError past the Refusal path.
+        ver = (r.stdout.strip().splitlines() or [""])[0] if ok else ""
         log(f"smoke `{cli} {' '.join(version_cmd)}` -> {ver or r.returncode}")
         return {"status": "PASS" if ok else "FAIL", "version": ver}
     except (OSError, subprocess.TimeoutExpired) as exc:

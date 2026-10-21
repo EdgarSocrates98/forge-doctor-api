@@ -5,7 +5,8 @@ format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 entries are grouped by factory spec wave and dated by git history —
 this file records what shipped, not what was planned.
 
-The package is `0.2.0` and unreleased. See
+The package is `0.2.5`. The `0.x` line ships owner-authorized
+patch bumps; see
 [docs/versioning.md](docs/versioning.md) for the version decision
 record, [docs/release.md](docs/release.md) for release mechanics,
 and [docs/release-evidence.md](docs/release-evidence.md) for the
@@ -25,8 +26,9 @@ verification matrix.
 
 ### Changed
 - Cycle 12 portable distribution: `_data/labs` packaged corpus resolved
-  via `lab/packaged.py` (allowlisted importlib boundary); `knowledge_new`
-  refuses writes into site-packages (incl. zipimport materialization).
+  via `lab/packaged.py` (allowlisted importlib boundary); `lab` redirects
+  run records to the caller's cwd so packaged installs never write into
+  site-packages (incl. zipimport materialization).
 - Wheel artifact tests prove packaged labs file-by-file.
 
 ## [0.2.2] - 2026-10-18

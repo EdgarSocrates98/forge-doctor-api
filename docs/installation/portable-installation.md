@@ -52,3 +52,34 @@ Perfis: `minimal` (essencial) · `recommended` (workflow completo, padrão)
 Perfis de execução: `economy` reduz custo e contexto; `balanced` é padrão;
 `deep` amplia capacidade para tarefas difíceis. Valor fica no recibo e é
 preservado quando instalação chega por roteamento do The Forge.
+
+## Bootstrap — `--dist`, `--allow-url`, `install.windows.sh` (0.2.3+)
+
+`scripts/forge_bootstrap.py` é a rota de instalação account-level
+(`install.sh`/`install.ps1`/`install.windows.sh` chamam ele):
+
+```bash
+./install.sh                                  # prefere wheel do checkout
+./install.sh --dist "forge-doctor-api==0.2.5" # wheel publicada (PyPI/wheelhouse)
+./install.sh --dist "forge-doctor-api[mcp]==0.2.5"
+./install.sh --dist "forge-doctor-api @ https://…/x.whl" --allow-url
+./install.windows.sh                          # rota Git Bash/MSYS (sem PowerShell)
+```
+
+- `--dist <spec>` instala a distribuição publicada sem dependência do
+  checkout — `pip install <req>` direto. Mutuamente exclusivo com
+  `--editable`. O nome do spec é validado por PEP503
+  (`canonical_dist_name`): `--dist "outra-coisa==1"` recusa.
+- `--allow-url` é opt-in obrigatório para specs `@ https://…` — sem ele
+  o bootstrap recusa com código de refusal próprio.
+- Credenciais em URL (`user:pass@host`) são removidas por
+  `redact_url_userinfo` **antes** de qualquer log/recibo — o spec
+  persistido no manifesto nunca carrega segredo.
+- `FORGE_PYTHON`/`--python` aceitam invocação com args (`"py -3.11"`);
+  um path real com espaços nunca é quebrado.
+- O smoke check roda **antes** de registrar launcher/ambiente — um
+  pacote que não importa não deixa entrada registrada.
+- Recibo: `source.kind` é `pypi` (spec redigido) ou `git-checkout`
+  (path/ref/rev/editable); `managed_files` lista exatamente o que foi
+  escrito (repair/uninstall leem a mesma lista); `source_trust`
+  classifica A/B/C — A exige git+manifesto+estrutura+checksums.
