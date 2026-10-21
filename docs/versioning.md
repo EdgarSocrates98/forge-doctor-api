@@ -112,6 +112,19 @@ overview/explore/full modes, CSP + nosniff headers, `unquote` fix,
 GET-only loopback server) and post-lf-0023 portal explorer assets.
 `v0.2.5` tag under the same owner directive.
 
+## The recorded decision — `0.2.6`
+
+**Decision (owner-authorized, 2026-10-21): bump `0.2.5` → `0.2.6`.**
+
+Patch bump under RC discipline (`0.2.x` band): no public-surface,
+contract, or dependency changes. Ships the integrations-cycle
+review hardening — bootstrap test coverage (`test_forge_bootstrap`,
+114 tests), `smoke()` FAIL-on-empty-stdout, `_explicit_python_argv`
+trim fix, `redact_url_userinfo` raw-`@` userinfo fix, docs-contract
+fence on portable-installation examples — plus the re-vendored
+portal bundle carrying the Specialist/Delegation Explorer pages
+(lf-0032). `v0.2.6` tag under the same owner directive.
+
 ## What justifies `1.0`
 
 `1.0` is cut when **both** conditions hold:

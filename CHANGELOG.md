@@ -11,6 +11,12 @@ patch bumps; see
 record, [docs/release.md](docs/release.md) for release mechanics,
 and [docs/release-evidence.md](docs/release-evidence.md) for the
 verification matrix.
+## [0.2.6] - 2026-10-21
+
+### Changed
+
+- Integrations cycle: review hardening — 114-test `test_forge_bootstrap` coverage, `smoke()` FAIL-on-empty-stdout, `_explicit_python_argv` trim, `redact_url_userinfo` raw-`@` fix, docs-contract fence; portal bundle re-vendored with Specialist/Delegation Explorer pages.
+
 ## [0.2.5] - 2026-10-21
 
 ### Changed
