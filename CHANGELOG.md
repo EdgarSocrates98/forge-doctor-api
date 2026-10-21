@@ -10,6 +10,12 @@ The package is `0.2.0` and unreleased. See
 record, [docs/release.md](docs/release.md) for release mechanics,
 and [docs/release-evidence.md](docs/release-evidence.md) for the
 verification matrix.
+## [0.2.5] - 2026-10-21
+
+### Changed
+
+- Cycle 13 (graph): Graph Studio vendored update — P0 physics fix (NaN blow-up on hubs/star), scalable visualization modes (overview/explore/full), navigation, inspectors and bounded analysis; post-lf-0023 portal explorer assets re-vendored; security/accessibility/reliability hardening.
+
 ## [0.2.4] - 2026-10-20
 
 ### Changed

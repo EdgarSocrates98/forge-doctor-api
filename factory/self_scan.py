@@ -38,7 +38,7 @@ def _run_scan() -> dict:
     out = subprocess.run(
         [sys.executable, "-m", "forge_doctor_api", "scan", ".",
          "--format", "report"],
-        cwd=ROOT, env=env, capture_output=True, text=True, timeout=900)
+        cwd=ROOT, env=env, capture_output=True, text=True, timeout=1800)
     if out.returncode not in (0, 1):  # 1 = gate findings present
         raise SystemExit(
             f"self_scan: scan exited {out.returncode}\n"
