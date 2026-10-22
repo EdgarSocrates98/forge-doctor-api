@@ -32,10 +32,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-_INSTALLKIT_VERSION = "1.0.1"
+_INSTALLKIT_VERSION = "1.0.2"
 # Filled by the vendor step (scripts/installkit/vendor.py) — the sha256 of
 # the canonical source body, so drift checks can compare vendored copies.
-_SOURCE_SHA256 = "4c446922f5e77a0c"
+_SOURCE_SHA256 = "a15ca78bb34a0109"
 
 SCHEMA_MANIFEST = "forge/InstallationManifest/v1"
 SCHEMA_RECEIPT = "forge/InstallReceipt/v1"
@@ -90,7 +90,12 @@ class InstallError(Exception):
         }
 
 
-_URL_USERINFO_RE = re.compile(r"(https?://)[^/@\s]+@")
+# `[^/\s]+` (not `[^/@\s]+`): a raw `@` *inside* userinfo must not
+# truncate the redaction — `u@raw:pw@host` redacts whole, while a `@`
+# after the first `/` is path content and never matches. Accepted
+# trade-off: a `@` in a query without a path (`host?x=a@b`) also
+# redacts — over-redacting a host in a log beats leaking a credential.
+_URL_USERINFO_RE = re.compile(r"(https?://)[^/\s]+@")
 
 
 def redact_url_userinfo(text: str) -> str:
