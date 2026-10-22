@@ -37,7 +37,7 @@ import venv
 from pathlib import Path
 from typing import Any
 
-_BOOTSTRAP_VERSION = "1.1.0"
+_BOOTSTRAP_VERSION = "1.1.1"
 SCHEMA_MANIFEST = "forge/InstallationManifest/v1"
 SCHEMA_RECEIPT = "forge/InstallReceipt/v1"
 FORGE_HOME = ".forge"

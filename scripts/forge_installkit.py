@@ -32,10 +32,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-_INSTALLKIT_VERSION = "1.0.0"
+_INSTALLKIT_VERSION = "1.0.1"
 # Filled by the vendor step (scripts/installkit/vendor.py) — the sha256 of
 # the canonical source body, so drift checks can compare vendored copies.
-_SOURCE_SHA256 = "bc189dd2ae0028ce"
+_SOURCE_SHA256 = "4c446922f5e77a0c"
 
 SCHEMA_MANIFEST = "forge/InstallationManifest/v1"
 SCHEMA_RECEIPT = "forge/InstallReceipt/v1"
@@ -394,6 +394,19 @@ class _Lock:
                 return True
             if alive is True:
                 return False
+            # PID undecidable (e.g. Windows) — fall back to the lock's
+            # declared age; mtime alone lies on fresh checkouts.
+            created = holder.get("created_at")
+            if isinstance(created, str):
+                try:
+                    from datetime import datetime, timezone
+
+                    stamp = datetime.strptime(created, "%Y-%m-%dT%H:%M:%SZ").replace(
+                        tzinfo=timezone.utc
+                    )
+                    return (datetime.now(timezone.utc) - stamp).total_seconds() > self._stale
+                except ValueError:
+                    pass
         try:
             age = time.time() - self._lock.stat().st_mtime
         except OSError:
