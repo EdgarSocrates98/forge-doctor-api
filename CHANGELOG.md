@@ -5,12 +5,22 @@ format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 entries are grouped by factory spec wave and dated by git history —
 this file records what shipped, not what was planned.
 
-The package is `0.2.5`. The `0.x` line ships owner-authorized
+The package is `0.2.7`. The `0.x` line ships owner-authorized
 patch bumps; see
 [docs/versioning.md](docs/versioning.md) for the version decision
 record, [docs/release.md](docs/release.md) for release mechanics,
 and [docs/release-evidence.md](docs/release-evidence.md) for the
 verification matrix.
+## [0.2.7] - 2026-10-22
+
+### Fixed
+
+- `_installkit` v1.0.2 + `forge_bootstrap` v1.1.1 vendored: userinfo
+  credential-redaction regex hardened (`[^/\s]+@` — previously leaked
+  `user:pw` fragments), stale-lock `created_at` fallback for
+  undecidable PIDs, argv trim, empty-stdout smoke. Security fix; the
+  wheel ships `_installkit.py`. Rationale: `docs/versioning.md` §0.2.7.
+
 ## [0.2.6] - 2026-10-21
 
 ### Changed

@@ -162,3 +162,20 @@ Until then the `0.x` line stays honest: breaking changes ship as
 - Patch bumps (`0.2.x`) are for bug/FP/FN/docs fixes under RC
   discipline; MINOR bumps (`0.3.0`) require the same documented
   rationale this file records for `0.2.0`.
+
+## The recorded decision — `0.2.7`
+
+**Decision (owner-authorized): bump `0.2.6` → `0.2.7`.**
+
+Patch under RC discipline — vendored installer hardening only; no
+public-surface, contract or dependency change:
+
+- `_installkit` v1.0.2 vendored (`_installkit.py` +
+  `scripts/forge_installkit.py` in lockstep): `_URL_USERINFO_RE`
+  `[^/@\s]+@` → `[^/\s]+@` — the old pattern truncated at the first
+  `@` and leaked `user:pw` fragments in wheelhouse URLs; stale-lock
+  `created_at` fallback for undecidable PIDs (Windows).
+- `forge_bootstrap` v1.1.1: argv trim + empty-stdout smoke FAIL.
+- The wheel ships `_installkit.py` (`test_package_carries_install_surface`
+  asserts it), so the credential-redaction fix must be published —
+  PyPI previously served v1.0.0 with the weak regex.
