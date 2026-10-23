@@ -193,3 +193,15 @@ public-surface, contract or dependency change:
   `_atomic_write` preserves file modes.
 - The wheel ships `_installkit.py`, so the containment + lock fixes
   must be published — PyPI served v1.0.2 without them.
+
+## The recorded decision — `0.2.9`
+
+**Decision (owner-authorized): bump `0.2.8` → `0.2.9`.**
+
+- `_installkit` v1.0.4 vendored: unsafe ledger keys now surface in
+  `status().drift.unsafe` and `doctor` reports them non-repairable with an
+  edit/rebuild unlock hint (previously invisible and misreported as
+  repairable).
+- Release hygiene: the `v0.2.8` tag pointed at a commit before the
+  `0.2.8` changelog entry, and no GitHub Release was created. `0.2.9`
+  re-cuts the chain correctly (version + changelog + tag + release).
