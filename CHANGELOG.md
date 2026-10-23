@@ -5,12 +5,23 @@ format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 entries are grouped by factory spec wave and dated by git history —
 this file records what shipped, not what was planned.
 
-The package is `0.2.7`. The `0.x` line ships owner-authorized
+The package is `0.2.8`. The `0.x` line ships owner-authorized
 patch bumps; see
 [docs/versioning.md](docs/versioning.md) for the version decision
 record, [docs/release.md](docs/release.md) for release mechanics,
 and [docs/release-evidence.md](docs/release-evidence.md) for the
 verification matrix.
+## [0.2.8] — 2026-10-23
+
+- `_installkit` v1.0.3 vendored (`_installkit.py` +
+  `scripts/forge_installkit.py` in lockstep): asset/ledger paths are
+  validated before any disk touch — `..`, absolute, drive or backslash
+  refs are refused as `FORGE-INSTALL-UNSAFE-PATH`, never written or
+  unlinked outside the install root; `_Lock` carries a unique ownership
+  token (no foreign-lock unlink, reclaim race → named refusal);
+  `_atomic_write` preserves file modes; `_prune_empty_dirs` accepts
+  absolute detach paths. Rationale: docs/versioning.md `0.2.8`.
+
 ## [0.2.7] - 2026-10-22
 
 ### Fixed
