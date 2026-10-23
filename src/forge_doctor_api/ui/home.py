@@ -16,24 +16,24 @@ from pathlib import Path
 from forge_doctor_api.ui.i18n import t
 from forge_doctor_api.ui.kit import NonInteractive, UIContext, _c, dashboard, select
 
-FORGE_NAME = 'forge-doctor-api'
-CLI_NAME = 'forge-doctor-api'
-CLI_ENTRY = 'forge_doctor_api.cli:main'
+FORGE_NAME = "forge-doctor-api"
+CLI_NAME = "forge-doctor-api"
+CLI_ENTRY = "forge_doctor_api.cli:main"
 
 _MENU: list[tuple[str, list[str] | None]] = [
-    ('Scan this project', ['scan', '.']),
-    ('Contracts', ['contract', 'inspect', '.']),
-    ('Diff two contract states', "__diff__"),
-    ('Fingerprint APIs', ['fingerprint', '.']),
-    ('Security', ['security', 'inspect', '.']),
-    ('Reliability', ['reliability', 'inspect', '.']),
-    ('Findings (diagnose)', ['diagnose', '.']),
-    ('Evidence inventory', ['inventory', '.']),
-    ('Reports (snapshots)', ['snapshot', 'list']),
-    ('Installation status', ['__script__', 'forge_install.py', 'status']),
-    ('AI hosts', ['__script__', 'forge_hosts.py']),
-    ('MCP verify (real handshake)', ['__script__', 'forge_install.py', 'mcp-verify']),
-    ('Graph Studio (browser)', ['graph','.','--ui']),
+    ("Scan this project", ["scan", "."]),
+    ("Contracts", ["contract", "inspect", "."]),
+    ("Diff two contract states", "__diff__"),
+    ("Fingerprint APIs", ["fingerprint", "."]),
+    ("Security", ["security", "inspect", "."]),
+    ("Reliability", ["reliability", "inspect", "."]),
+    ("Findings (diagnose)", ["diagnose", "."]),
+    ("Evidence inventory", ["inventory", "."]),
+    ("Reports (snapshots)", ["snapshot", "list"]),
+    ("Installation status", ["__script__", "forge_install.py", "status"]),
+    ("AI hosts", ["__script__", "forge_hosts.py"]),
+    ("MCP verify (real handshake)", ["__script__", "forge_install.py", "mcp-verify"]),
+    ("Graph Studio (browser)", ["graph", ".", "--ui"]),
     ("installation wizard", "__wizard__"),
     ("quit", None),
 ]
@@ -58,11 +58,10 @@ def _cli_argv(extra: list[str]) -> list[str] | None:
         module, _, fn = CLI_ENTRY.partition(":")
         checkout = next(
             (
-            a
-            for a in Path(__file__).resolve().parents
-            if (a / "forge.json").is_file()
-            and (a / "pyproject.toml").is_file()
-        ),
+                a
+                for a in Path(__file__).resolve().parents
+                if (a / "forge.json").is_file() and (a / "pyproject.toml").is_file()
+            ),
             None,
         )
         if checkout is None:
@@ -77,7 +76,7 @@ def _cli_argv(extra: list[str]) -> list[str] | None:
 
 
 def _run_argv(argv: list[str]) -> int:
-    env = dict(__import__('os').environ, FORGE_TEXT_OUTPUT="1")
+    env = dict(__import__("os").environ, FORGE_TEXT_OUTPUT="1")
     try:
         return subprocess.run(argv, check=False, env=env).returncode
     except FileNotFoundError:
@@ -90,6 +89,7 @@ def run_home(*, ctx: UIContext | None = None) -> int:
         raise NonInteractive("home requires a TTY")
     if ctx.ansi:  # full-screen path; ANSI-free terminals keep the inline kit
         from forge_doctor_api.ui.tui import run_tui
+
         return run_tui(ctx=ctx)
     dashboard(
         f"{FORGE_NAME}  workspace: {Path.cwd().name}",
@@ -125,7 +125,9 @@ def run_home(*, ctx: UIContext | None = None) -> int:
 
 def _script_root() -> Path:
     return next(
-        a for a in Path(__file__).resolve().parents if (a / "scripts" / "forge_install.py").is_file()
+        a
+        for a in Path(__file__).resolve().parents
+        if (a / "scripts" / "forge_install.py").is_file()
     )
 
 
@@ -146,8 +148,11 @@ def _script_call(op: str, **kw) -> dict:
     try:
         return json.loads(proc.stdout)
     except json.JSONDecodeError:
-        return {"status": "completed" if proc.returncode == 0 else "failed",
-                "checks": [], "stderr_tail": proc.stderr[-400:]}
+        return {
+            "status": "completed" if proc.returncode == 0 else "failed",
+            "checks": [],
+            "stderr_tail": proc.stderr[-400:],
+        }
 
 
 def _run_wizard(ctx: UIContext) -> None:
