@@ -179,3 +179,17 @@ public-surface, contract or dependency change:
 - The wheel ships `_installkit.py` (`test_package_carries_install_surface`
   asserts it), so the credential-redaction fix must be published —
   PyPI previously served v1.0.0 with the weak regex.
+
+## The recorded decision — `0.2.8`
+
+**Decision (owner-authorized): bump `0.2.7` → `0.2.8`.**
+
+- `_installkit` v1.0.3 vendored (`_installkit.py` +
+  `scripts/forge_installkit.py` in lockstep): asset/ledger paths are
+  validated before any disk touch — `..`, absolute, drive or backslash
+  refs are refused as `FORGE-INSTALL-UNSAFE-PATH`, never written or
+  unlinked outside the install root; `_Lock` carries a unique ownership
+  token (no foreign-lock unlink, reclaim race → named refusal);
+  `_atomic_write` preserves file modes.
+- The wheel ships `_installkit.py`, so the containment + lock fixes
+  must be published — PyPI served v1.0.2 without them.

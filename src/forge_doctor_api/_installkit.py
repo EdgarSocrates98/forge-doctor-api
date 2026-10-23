@@ -18,24 +18,27 @@ silently degrading.
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
 import os
 import platform
 import re
+import stat
 import sys
 import tempfile
 import time
+import uuid
 from importlib import metadata as importlib_metadata
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
-_INSTALLKIT_VERSION = "1.0.2"
+_INSTALLKIT_VERSION = "1.0.3"
 # Filled by the vendor step (scripts/installkit/vendor.py) — the sha256 of
 # the canonical source body, so drift checks can compare vendored copies.
-_SOURCE_SHA256 = "a15ca78bb34a0109"
+_SOURCE_SHA256 = "b102bf086301aa0d"
 
 SCHEMA_MANIFEST = "forge/InstallationManifest/v1"
 SCHEMA_RECEIPT = "forge/InstallReceipt/v1"
@@ -67,6 +70,7 @@ E_DRIFT = "FORGE-INSTALL-DRIFT-UNREPAIRABLE"
 E_UNSUPPORTED = "FORGE-INSTALL-UNSUPPORTED"
 E_SPAWN = "FORGE-INSTALL-SPAWN-DISABLED"
 E_VERIFY = "FORGE-INSTALL-VERIFY-FAILED"
+E_UNSAFE = "FORGE-INSTALL-UNSAFE-PATH"
 E_WRITE = "FORGE-INSTALL-WRITE-FAILED"
 
 
@@ -125,14 +129,35 @@ def _sha_file(path: Path) -> str:
 
 def _atomic_write(path: Path, data: bytes) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
+    # Preserve the existing file's mode — mkstemp always creates 0600, and
+    # silently downgrading a user's 0644 doc is a destructive side effect.
+    mode = stat.S_IMODE(path.stat().st_mode) if path.is_file() else None
     fd, tmp = tempfile.mkstemp(prefix=path.name, dir=str(path.parent))
     try:
         with os.fdopen(fd, "wb") as fh:
             fh.write(data)
+            fh.flush()
+            os.fsync(fh.fileno())
+        if mode is not None:
+            os.chmod(tmp, mode)
         os.replace(tmp, path)
     finally:
         if os.path.exists(tmp):
             os.unlink(tmp)
+
+
+_SAFE_REL_RE = re.compile(r"^(?!/)(?!~)[A-Za-z0-9._][A-Za-z0-9_./-]*$")
+
+
+def _safe_rel(rel: str) -> bool:
+    """A ledger/asset relative path must stay inside the install root: no
+    ``..`` segments, no absolute/drive forms, no backslashes."""
+    return (
+        bool(_SAFE_REL_RE.match(rel))
+        and "\\" not in rel
+        and not any(part == ".." for part in PurePosixPath(rel).parts)
+        and not re.match(r"^[A-Za-z]:", rel)
+    )
 
 
 def _json_bytes(doc: dict[str, Any]) -> bytes:
@@ -291,6 +316,9 @@ class Ledger:
         keys are user content); every other entry is compared by sha256."""
         out = []
         for rel, e in sorted(self.doc["entries"].items()):
+            if not _safe_rel(rel):
+                out.append({"path": rel, "status": "unsafe"})
+                continue
             p = root / rel
             if not p.exists():
                 out.append({"path": rel, "status": "missing"})
@@ -360,6 +388,7 @@ class _Lock:
     def __init__(self, lock: Path, stale_after_s: float = 900.0) -> None:
         self._lock = lock
         self._stale = stale_after_s
+        self._token = uuid.uuid4().hex
         self.held = False
         self.recovered = False
 
@@ -379,14 +408,23 @@ class _Lock:
                     E_LOCKED, f"install lock at {self._lock} could not be reclaimed"
                 ) from exc
             self.recovered = True
-            self._create()
+            try:
+                self._create()
+            except FileExistsError:
+                # A third party won the reclaim race — that is a normal lock
+                # contention outcome, not an internal error.
+                raise LockError(
+                    E_LOCKED, f"install lock at {self._lock} re-acquired during reclaim"
+                ) from None
             return self
 
     def _create(self) -> None:
         fd = os.open(str(self._lock), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
         os.write(
             fd,
-            _json_bytes({"pid": os.getpid(), "created_at": _utc_now()}),
+            _json_bytes(
+                {"pid": os.getpid(), "token": self._token, "created_at": _utc_now()}
+            ),
         )
         os.close(fd)
         self.held = True
@@ -419,11 +457,17 @@ class _Lock:
         return age > self._stale
 
     def __exit__(self, *exc: object) -> None:
-        if self.held:
-            try:
-                self._lock.unlink()
-            except OSError:
-                pass
+        try:
+            if self.held:
+                holder = _load_json(self._lock)
+                # Only remove the lock file when it still carries our token —
+                # after a stale reclaim the on-disk lock may belong to a
+                # newer claimant, and unlinking it would admit a third.
+                if isinstance(holder, dict) and holder.get("token") == self._token:
+                    with contextlib.suppress(OSError):
+                        self._lock.unlink()
+        finally:
+            self.held = False
 
 
 def acquire_lock(state_dir: Path, timeout_s: float = 0.0) -> _Lock:
@@ -677,6 +721,11 @@ def plan(ctx: InstallContext) -> dict[str, Any]:
         kind = _asset_kind(rel)
         if kind not in kinds:
             continue
+        if not _safe_rel(rel):
+            raise InstallError(
+                E_UNSAFE,
+                f"{rel!r}: escapes the install root — remove or fix the asset path",
+            )
         target = ctx.root / rel
         exists = target.exists()
         files.append(
@@ -786,6 +835,11 @@ def apply_install(ctx: InstallContext, *, approved: bool = False) -> dict[str, A
             kind = _asset_kind(rel)
             if kind not in kinds:
                 continue
+            if not _safe_rel(rel):
+                raise InstallError(
+                    E_UNSAFE,
+                    f"{rel!r}: escapes the install root — remove or fix the asset path",
+                )
             data = assets[rel]
             if kind in ("skill", "agent"):
                 ctx_bytes[kind] += len(data)
@@ -1165,10 +1219,10 @@ def repair(ctx: InstallContext) -> dict[str, Any]:
     for d in drift:
         rel = d["path"]
         entry = ledger.get(rel)
-        target = ctx.root / rel
-        if entry is None:
+        if entry is None or not _safe_rel(rel):
             skipped.append(rel)
             continue
+        target = ctx.root / rel
         data = _repair_content(ctx, rel, entry, assets, target)
         if data is None:
             skipped.append(rel)
@@ -1216,6 +1270,11 @@ def uninstall(ctx: InstallContext, *, purge_state: bool = False) -> dict[str, An
     ledger = Ledger.load(ctx.state_dir)
     removed, kept = [], []
     for rel in ledger.owned_paths():
+        if not _safe_rel(rel):
+            # A poisoned ledger key must never resolve into an unlink outside
+            # the install root — keep it (and the entry) for repair/triage.
+            kept.append(rel)
+            continue
         target = ctx.root / rel
         if rel in ctx.spec.marker_files and target.exists():
             # marker files: excise the block, keep the file
@@ -1295,9 +1354,18 @@ def _prune_empty_dirs(root: Path, removed: list[str]) -> None:
     first non-empty ancestor or ``root``. User dirs are never touched —
     ``rmdir`` refuses on non-empty directories by design."""
     seen: set[Path] = set()
+    resolved_root = root.resolve()
     for rel in removed:
-        parent = (root / rel).parent
-        while parent != root and root in parent.parents and parent not in seen:
+        # Entries may be ledger-relative keys or already-absolute paths
+        # (detach receipts). Both must resolve INSIDE root before rmdir.
+        try:
+            fpath = Path(rel) if Path(rel).is_absolute() else root / rel
+            fpath.resolve().relative_to(resolved_root)
+        except (OSError, ValueError):
+            continue
+        parent = fpath.resolve().parent
+        while parent != resolved_root and resolved_root in parent.parents \
+                and parent not in seen:
             try:
                 parent.rmdir()
             except OSError:
