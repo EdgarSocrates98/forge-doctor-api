@@ -11,6 +11,15 @@ patch bumps; see
 record, [docs/release.md](docs/release.md) for release mechanics,
 and [docs/release-evidence.md](docs/release-evidence.md) for the
 verification matrix.
+## [0.2.9] — 2026-10-24
+
+### Fixed
+
+- Vendored `_installkit` 1.0.4: unsafe ledger keys surfaced in
+  `status().drift.unsafe`; `doctor` marks them non-repairable. Also corrects
+  the v0.2.8 tag/release chain (changelog commit included, GitHub Release
+  created).
+
 ## [0.2.8] — 2026-10-23
 
 - `_installkit` v1.0.3 vendored (`_installkit.py` +

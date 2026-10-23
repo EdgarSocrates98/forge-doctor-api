@@ -35,10 +35,10 @@ from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-_INSTALLKIT_VERSION = "1.0.3"
+_INSTALLKIT_VERSION = "1.0.4"
 # Filled by the vendor step (scripts/installkit/vendor.py) — the sha256 of
 # the canonical source body, so drift checks can compare vendored copies.
-_SOURCE_SHA256 = "b102bf086301aa0d"
+_SOURCE_SHA256 = "7a51eb0c03d7a342"
 
 SCHEMA_MANIFEST = "forge/InstallationManifest/v1"
 SCHEMA_RECEIPT = "forge/InstallReceipt/v1"
@@ -1083,6 +1083,7 @@ def status(ctx: InstallContext) -> dict[str, Any]:
             "ok": ok,
             "modified": [d for d in bad if d["status"] == "modified"],
             "missing": [d for d in bad if d["status"] == "missing"],
+            "unsafe": [d for d in bad if d["status"] == "unsafe"],
         },
         "receipts": [r.name for r in receipts],
         "forge_portal": forge_portal_presence(),
@@ -1107,12 +1108,18 @@ def doctor(ctx: InstallContext) -> dict[str, Any]:
     )
     for d in ledger.drift(ctx.root, ctx.spec):
         if d["status"] != "ok":
+            unsafe = d["status"] == "unsafe"
             checks.append(
                 {
                     "id": f"drift:{d['path']}",
                     "status": "FAIL",
-                    "detail": d["status"],
-                    "repairable": True,
+                    "detail": (
+                        "unsafe — ledger key escapes the install root; "
+                        "repair skips it: edit or rebuild the ledger"
+                        if unsafe
+                        else d["status"]
+                    ),
+                    "repairable": not unsafe,
                 }
             )
     if ctx.spec.mcp_server_name:
