@@ -1,7 +1,6 @@
 """Regression: stray forge.json in an ancestor must not mark a project root."""
 
 import tempfile
-
 from pathlib import Path
 
 from forge_doctor_api.ui import wizard
