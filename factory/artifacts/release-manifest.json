@@ -16,9 +16,9 @@
   "cli_command_count": 34,
   "contract_family": "forge-contracts",
   "contract_version": "1",
-  "dirty_tree": false,
+  "dirty_tree": true,
   "forge_protocol_version": 2,
-  "git_head": "8f76fdb3d4fe252951f91da276d5a64e30192564",
+  "git_head": "c8b83950f8430161506e491764116c200d9d3a53",
   "manifest_version": 1,
   "mcp_tool_count": 17,
   "package": "forge-doctor-api",
@@ -41,5 +41,5 @@
     "remediation-plan",
     "unknown-fact"
   ],
-  "version": "0.2.9"
+  "version": "0.3.0"
 }
