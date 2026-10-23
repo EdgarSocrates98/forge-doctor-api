@@ -57,7 +57,12 @@ def _cli_argv(extra: list[str]) -> list[str] | None:
     if CLI_ENTRY:
         module, _, fn = CLI_ENTRY.partition(":")
         checkout = next(
-            (a for a in Path(__file__).resolve().parents if (a / "forge.json").is_file()),
+            (
+            a
+            for a in Path(__file__).resolve().parents
+            if (a / "forge.json").is_file()
+            and (a / "pyproject.toml").is_file()
+        ),
             None,
         )
         if checkout is None:
