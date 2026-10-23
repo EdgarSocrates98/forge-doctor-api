@@ -44605,7 +44605,7 @@
     "total_findings": 826,
     "total_unknowns": 34
   },
-  "tool_version": "0.2.9",
+  "tool_version": "0.3.0",
   "twin": {
     "counts": [
       [

@@ -105,6 +105,6 @@
     "peak_bytes": 2.5,
     "wall_seconds": 4.0
   },
-  "test_file_count": 92,
-  "version": "0.2.9"
+  "test_file_count": 93,
+  "version": "0.3.0"
 }

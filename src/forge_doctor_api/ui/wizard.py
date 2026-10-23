@@ -54,10 +54,7 @@ def _has_vcs_root(start: Path) -> bool:
     """Return whether current directory belongs to a supported project root."""
     return any(
         (candidate / ".git").exists()
-        or (
-            (candidate / "forge.json").is_file()
-            and (candidate / "pyproject.toml").is_file()
-        )
+        or ((candidate / "forge.json").is_file() and (candidate / "pyproject.toml").is_file())
         for candidate in (start, *start.parents)
     )
 
