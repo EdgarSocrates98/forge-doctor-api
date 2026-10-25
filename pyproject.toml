@@ -50,7 +50,7 @@ mypy = ">=2.3.1"
 types-PyYAML = ">=6.0"
 # Sem isto o teste de conteudo de artefato pula as assercoes de
 # `_data/labs` (paridade api-forge R7).
-build = ">=1.0"
+build = ">=1.6.1"
 
 [build-system]
 requires = ["poetry-core>=2.0"]
