@@ -49,6 +49,50 @@ class McpDependencyError(ImportError):
     """Raised when the optional `mcp` extra is not installed."""
 
 
+class _DropMalformedReadStream:
+    """Keep malformed stdio frames from aborting the MCP session.
+
+    The MCP stdio adapter represents JSON parse/validation failures as
+    ``Exception`` items in the read stream.  The upstream dispatcher treats
+    those items as transport errors while selecting the protocol era, so a
+    single hostile frame can close the connection before a valid initialize.
+    Parse failures are boundary data: drop that frame and keep reading.
+    """
+
+    def __init__(self, inner: Any, end_errors: tuple[type[BaseException], ...]) -> None:
+        self._inner = inner
+        self._end_errors = end_errors
+
+    @property
+    def last_context(self) -> Any:
+        return getattr(self._inner, "last_context", None)
+
+    async def receive(self) -> Any:
+        while True:
+            item = await self._inner.receive()
+            if isinstance(item, Exception):
+                continue
+            return item
+
+    def __aiter__(self) -> _DropMalformedReadStream:
+        return self
+
+    async def __anext__(self) -> Any:
+        try:
+            return await self.receive()
+        except self._end_errors:
+            raise StopAsyncIteration from None
+
+    async def aclose(self) -> None:
+        await self._inner.aclose()
+
+    async def __aenter__(self) -> _DropMalformedReadStream:
+        return self
+
+    async def __aexit__(self, *args: Any) -> None:
+        await self.aclose()
+
+
 def _require_mcp() -> Any:
     try:
         from mcp.server.mcpserver import MCPServer
@@ -270,5 +314,19 @@ def serve_stdio(root: str | Path, *, clock: Any = None) -> None:
     """Run the stdio transport (blocks until the client disconnects)."""
     import asyncio
 
+    import anyio
+    from mcp.server.stdio import stdio_server
+
     server = build_server(root, clock=clock)
-    asyncio.run(server.run_stdio_async())
+
+    async def _run() -> None:
+        async with stdio_server() as (read_stream, write_stream):
+            filtered = _DropMalformedReadStream(
+                read_stream, (anyio.EndOfStream, anyio.ClosedResourceError))
+            await server._lowlevel_server.run(
+                filtered,
+                write_stream,
+                server._lowlevel_server.create_initialization_options(),
+            )
+
+    asyncio.run(_run())
