@@ -243,7 +243,7 @@ class PortalAdapter:
         return detect_account_environment(self)
 
 
-PORTAL_VERSION = "1.1.0"
+PORTAL_VERSION = "1.1.1"
 
 
 def portal_version() -> str:
@@ -997,6 +997,7 @@ class PortalServer(ThreadingHTTPServer):
             max_workers=8, thread_name_prefix="forge-portal"
         )
         super().__init__((host, port), PortalHandler)
+        self._serve_thread: threading.Thread | None = None
 
     # -- helpers used by the handler --------------------------------------
     def log(self, msg: str) -> None:
@@ -1060,8 +1061,37 @@ class PortalServer(ThreadingHTTPServer):
 
     def serve_in_thread(self) -> threading.Thread:
         t = threading.Thread(target=self.serve_forever, name="forge-portal-http", daemon=True)
+        self._serve_thread = t
         t.start()
         return t
+
+    def serve_forever(self, poll_interval: float = 0.5) -> None:
+        """Track direct ``serve_forever`` callers as well as our helper.
+
+        Embedded integrations often run the server directly in a thread
+        instead of calling :meth:`serve_in_thread`.  Tracking that thread
+        keeps ``shutdown(); server_close()`` ordered on Windows, where the
+        selector otherwise can briefly observe a closed socket.
+        """
+        self._serve_thread = threading.current_thread()
+        try:
+            super().serve_forever(poll_interval=poll_interval)
+        finally:
+            self._serve_thread = None
+
+    def shutdown(self) -> None:
+        """Stop the accept loop before the socket is closed.
+
+        Tests and embedded callers commonly call ``shutdown(); server_close()``
+        immediately.  Joining the serving thread here prevents the Windows
+        selector from observing a closed socket and emitting a spurious
+        ``WinError 10038`` warning.
+        """
+        super().shutdown()
+        thread = self._serve_thread
+        if thread and thread is not threading.current_thread():
+            thread.join(timeout=5)
+        self._executor.shutdown(wait=False, cancel_futures=True)
 
 
 def default_operations(adapter: PortalAdapter) -> list[Operation]:
