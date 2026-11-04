@@ -29,7 +29,7 @@ Changelog = "https://github.com/EdgarSocrates98/forge-doctor-api/blob/main/CHANG
 Issues = "https://github.com/EdgarSocrates98/forge-doctor-api/issues"
 
 [project.optional-dependencies]
-graphql = ["graphql-core>=3.2,<4"]
+graphql = ["graphql-core>=3.3.1,<4"]
 mcp = ["mcp>=2.0,<3"]
 
 [project.scripts]
