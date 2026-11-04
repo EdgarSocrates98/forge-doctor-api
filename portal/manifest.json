@@ -267,8 +267,8 @@
   },
   "portal_version": "1.1.1",
   "schema": "forge/PortalAssets/1",
-  "server_generation": "acd824799ffd0038",
-  "server_sha256": "acd824799ffd0038f1566cf843900ff719ab3abed5ba9e444808d5785d3b66b8",
+  "server_generation": "639d5ca49c7d9916",
+  "server_sha256": "639d5ca49c7d9916965590e92facc2640f17bd6caccf2b09baff4ab1d4849a47",
   "telemetry_generation": "b506aa5c768abdd4",
   "telemetry_sha256": "b506aa5c768abdd49e036299e34aa92db5422e9f4927fd4e2d3926b3b07785ce"
 }

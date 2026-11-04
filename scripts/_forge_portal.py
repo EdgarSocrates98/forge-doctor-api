@@ -1093,6 +1093,23 @@ class PortalServer(ThreadingHTTPServer):
             thread.join(timeout=5)
         self._executor.shutdown(wait=False, cancel_futures=True)
 
+    def server_close(self) -> None:
+        """Make direct ``server_close`` callers safe too.
+
+        ``ThreadingHTTPServer`` callers sometimes only retain the stdlib
+        lifecycle and invoke ``server_close`` without an earlier
+        ``shutdown``.  Closing the selector socket underneath a live
+        ``serve_forever`` thread raises WinError 10038 on Windows.  Stop and
+        join the loop before closing the descriptor, while keeping the
+        regular ``shutdown(); server_close()`` sequence idempotent.
+        """
+        thread = self._serve_thread
+        if thread and thread.is_alive() and thread is not threading.current_thread():
+            super().shutdown()
+            thread.join(timeout=5)
+        super().server_close()
+        self._executor.shutdown(wait=False, cancel_futures=True)
+
 
 def default_operations(adapter: PortalAdapter) -> list[Operation]:
     """Core read-only surface every portal gets for free, mapped to
