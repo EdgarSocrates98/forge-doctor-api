@@ -28,6 +28,14 @@ ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "forge_bootstrap.py"
 
 
+def _test_venv_bin(venv: Path) -> Path:
+    return venv / ("Scripts" if os.name == "nt" else "bin")
+
+
+def _test_cli_name(cli: str) -> str:
+    return cli + (".exe" if os.name == "nt" else "")
+
+
 def _load_module() -> Any:
     spec = importlib.util.spec_from_file_location("forge_bootstrap", SCRIPT)
     assert spec and spec.loader
@@ -663,12 +671,18 @@ def test_managed_files_exact_owned_set(fb: Any, forge_home: Path) -> None:
     cfg = {"forge_id": "forge-doctor-api", "cli": "forge-doctor-api"}
     root = Path("/install/root")
     files = fb.managed_files(cfg, root, persist_env=False, no_launcher=False)
+    launcher = forge_home / ".local" / "bin" / "forge-doctor-api"
     expected = sorted(
         {
             str(root),
             str(forge_home / ".forge" / "installations" / "forge-doctor-api.json"),
             str(forge_home / ".forge" / "installations" / ".forge-doctor-api-bootstrap.json"),
-            str(forge_home / ".local" / "bin" / "forge-doctor-api"),
+            str(launcher),
+            *(
+                [str(launcher.with_suffix(".cmd"))]
+                if os.name == "nt"
+                else []
+            ),
         }
     )
     assert files == expected
@@ -683,6 +697,11 @@ def test_managed_files_no_launcher_drops_shim(fb: Any, forge_home: Path) -> None
 def test_managed_files_persist_env_adds_env_file(fb: Any, forge_home: Path) -> None:
     cfg = {"forge_id": "forge-doctor-api", "cli": "forge-doctor-api"}
     files = fb.managed_files(cfg, Path("/r"), persist_env=True, no_launcher=False)
+    # Native Windows keeps environment persistence in the registry; the
+    # POSIX env.sh artifact is owned only by POSIX and Git Bash routes.
+    if os.name == "nt" and not fb._is_git_bash():
+        assert str(forge_home / "xdg" / "forjas" / "env.sh") not in files
+        return
     assert str(forge_home / "xdg" / "forjas" / "env.sh") in files
 
 
@@ -826,8 +845,9 @@ def test_find_python_explicit_unusable_refused(
 
 
 def test_find_python_path_scan_hit(fb: Any, monkeypatch: pytest.MonkeyPatch) -> None:
+    candidate = "python" if os.name == "nt" else "python3.12"
     monkeypatch.setattr(
-        fb.shutil, "which", lambda exe: "/usr/bin/" + exe if exe == "python3.12" else None
+        fb.shutil, "which", lambda exe: "/usr/bin/" + exe if exe == candidate else None
     )
     monkeypatch.setattr(fb, "_run", _version_ok_run("3.12.4", "/resolved/py3.12"))
     prov: dict[str, Any] = {}
@@ -836,7 +856,7 @@ def test_find_python_path_scan_hit(fb: Any, monkeypatch: pytest.MonkeyPatch) -> 
     assert out == "/resolved/py3.12"
     assert prov["source"] == "path"
     assert prov["version"] == "3.12.4"
-    assert any("python3.12" in m for m in logged)
+    assert any(candidate in m for m in logged)
 
 
 def test_find_python_no_candidate_requires_allow_download(
@@ -953,9 +973,14 @@ def pipeline(
         return "/fake/python3.12"
 
     def fake_create_venv(root: Path, python: str, log: Any) -> Path:
-        (venv / "bin").mkdir(parents=True, exist_ok=True)
-        (venv / "bin" / "python").write_text("x", encoding="utf-8")
-        (venv / "bin" / "forge-doctor-api").write_text("x", encoding="utf-8")
+        bindir = venv / ("Scripts" if os.name == "nt" else "bin")
+        bindir.mkdir(parents=True, exist_ok=True)
+        (bindir / ("python.exe" if os.name == "nt" else "python")).write_text(
+            "x", encoding="utf-8"
+        )
+        (bindir / ("forge-doctor-api.exe" if os.name == "nt" else "forge-doctor-api")).write_text(
+            "x", encoding="utf-8"
+        )
         return venv
 
     def fake_install_package(
@@ -1132,8 +1157,9 @@ def test_smoke_pass_reports_first_stdout_line(
     fb: Any, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     venv = tmp_path / "v"
-    (venv / "bin").mkdir(parents=True)
-    (venv / "bin" / "forge-doctor-api").write_text("x", encoding="utf-8")
+    bindir = _test_venv_bin(venv)
+    bindir.mkdir(parents=True)
+    (bindir / _test_cli_name("forge-doctor-api")).write_text("x", encoding="utf-8")
     monkeypatch.setattr(
         fb, "_run", lambda cmd, timeout=300, **kw: _cp(cmd, 0, "forge-doctor-api 0.2.2\nmore\n")
     )
@@ -1207,8 +1233,11 @@ def test_create_venv_reuses_existing(fb: Any, tmp_path: Path, monkeypatch) -> No
     for i, name in enumerate((".venv", "venv")):
         root = tmp_path / f"root{i}"
         cand = root / name
-        (cand / "bin").mkdir(parents=True)
-        (cand / "bin" / "python").write_text("x", encoding="utf-8")
+        bindir = _test_venv_bin(cand)
+        bindir.mkdir(parents=True)
+        (bindir / ("python.exe" if os.name == "nt" else "python")).write_text(
+            "x", encoding="utf-8"
+        )
         monkeypatch.setattr(
             fb, "_run", lambda cmd, timeout=300, **kw: pytest.fail("must not spawn")
         )
@@ -1223,8 +1252,11 @@ def test_create_venv_delegates_explicit_python(
 
     def fake_run(cmd: list[str], timeout: int = 300, **kw: Any) -> subprocess.CompletedProcess:
         calls.append(cmd)
-        (venv_dir / "bin").mkdir(parents=True, exist_ok=True)
-        (venv_dir / "bin" / "python").write_text("x", encoding="utf-8")
+        bindir = _test_venv_bin(venv_dir)
+        bindir.mkdir(parents=True, exist_ok=True)
+        (bindir / ("python.exe" if os.name == "nt" else "python")).write_text(
+            "x", encoding="utf-8"
+        )
         return _cp(cmd)
 
     monkeypatch.setattr(fb, "_run", fake_run)
@@ -1249,7 +1281,7 @@ def test_write_launcher_no_launcher_is_noop(fb: Any, tmp_path: Path, forge_home:
 
 def test_write_launcher_missing_cli_refused(fb: Any, tmp_path: Path, forge_home: Path) -> None:
     venv = tmp_path / "v"
-    (venv / "bin").mkdir(parents=True)
+    _test_venv_bin(venv).mkdir(parents=True)
     with pytest.raises(fb.Refusal) as exc:
         fb.write_launcher("ghost", venv, False, lambda m: None)
     assert exc.value.kind == "FORGE-INSTALL-CLI-MISSING"
@@ -1259,16 +1291,22 @@ def test_write_launcher_writes_executable_shim(
     fb: Any, tmp_path: Path, forge_home: Path
 ) -> None:
     venv = tmp_path / "v"
-    real = venv / "bin" / "forge-doctor-api"
+    real = _test_venv_bin(venv) / _test_cli_name("forge-doctor-api")
     real.parent.mkdir(parents=True)
     real.write_text("#!/bin/sh\n", encoding="utf-8")
     out = fb.write_launcher("forge-doctor-api", venv, False, lambda m: None)
-    expected = forge_home / ".local" / "bin" / "forge-doctor-api"
+    expected = forge_home / ".local" / "bin" / (
+        "forge-doctor-api.cmd" if os.name == "nt" else "forge-doctor-api"
+    )
     assert out == expected
     text = expected.read_text(encoding="utf-8")
-    assert text.startswith("#!/bin/sh")
-    assert f'exec "{real}"' in text
-    assert expected.stat().st_mode & 0o777 == 0o755
+    if os.name == "nt":
+        assert text.startswith("@echo off")
+        assert f'"{real}" %*' in text
+    else:
+        assert text.startswith("#!/bin/sh")
+        assert f'exec "{real}"' in text
+        assert expected.stat().st_mode & 0o777 == 0o755
 
 
 # --------------------------------------------------------------------------
@@ -1320,7 +1358,7 @@ def test_write_receipt_hidden_bootstrap_file(fb: Any, forge_home: Path) -> None:
 def test_environment_contract_variables(fb: Any, tmp_path: Path) -> None:
     cfg = {"forge_id": "forge-doctor-api", "cli": "forge-doctor-api"}
     venv = tmp_path / "v"
-    cli = venv / "bin" / "forge-doctor-api"
+    cli = _test_venv_bin(venv) / _test_cli_name("forge-doctor-api")
     cli.parent.mkdir(parents=True)
     cli.write_text("x", encoding="utf-8")
     doc = fb.environment_contract(
@@ -1332,7 +1370,7 @@ def test_environment_contract_variables(fb: Any, tmp_path: Path) -> None:
     assert values["FORGE_DOCTOR_API_HOME"] == str((tmp_path / "repo").resolve())
     assert values["FORGE_DOCTOR_API_VENV"] == str(venv.resolve())
     assert values["FORGE_DOCTOR_API_LAUNCHER"] == str((tmp_path / "shim").resolve())
-    assert doc["execution_environment"] == "posix"
+    assert doc["execution_environment"] == ("windows" if os.name == "nt" else "posix")
 
 
 def test_environment_contract_dist_drops_home(fb: Any, tmp_path: Path) -> None:
@@ -1357,13 +1395,14 @@ def test_persist_posix_writes_marked_env_block(
     text = env_path.read_text(encoding="utf-8")
     assert text.count("# >>> forjas account environment >>>") == 1
     assert "export FORGE_DOCTOR_API_VENV='/v env'" in text
-    assert "/shimdir" in text and "PATH" in text
-    assert env_path.stat().st_mode & 0o777 == 0o600
+    assert str(Path("/shimdir")) in text and "PATH" in text
+    if os.name != "nt":
+        assert env_path.stat().st_mode & 0o777 == 0o600
     rc = (forge_home / ".bashrc").read_text(encoding="utf-8")
     assert rc.count("forjas-account-environment") == 1
     # process env + PATH are updated for the current session (patched dict)
     assert os.environ["FORGE_DOCTOR_API_VENV"] == "/v env"
-    assert "/shimdir" in os.environ["PATH"].split(os.pathsep)
+    assert str(Path("/shimdir")) in os.environ["PATH"].split(os.pathsep)
 
 
 def test_persist_posix_is_idempotent(fb: Any, forge_home: Path) -> None:
@@ -1382,6 +1421,10 @@ def test_persist_environment_posix_marks_shell_init(
 ) -> None:
     env = {"variables": {"FORGE_DOCTOR_API_VENV": "/v"}, "windows_aliases": {}}
     out = fb.persist_environment(env, None, lambda m: None)
+    if os.name == "nt" and not fb._is_git_bash():
+        assert out["persistence"] == "HKCU\\Environment"
+        assert out["shell_init"] is None
+        return
     assert out["persistence"] == "shell-init"
     assert out["shell_init"].endswith("env.sh")
 
