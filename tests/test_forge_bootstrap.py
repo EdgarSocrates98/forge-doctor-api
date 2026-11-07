@@ -358,7 +358,10 @@ def test_install_package_dist_sends_verbatim_spec_to_pip(
     fb.install_package(tmp_path, venv, ["mcp"], False, False, lambda m: None, dist=spec)
     assert len(calls) == 1
     cmd = calls[0]
-    assert cmd[:3] == [str(venv / "bin" / "python"), "-m", "pip"]
+    python = venv / ("Scripts" if os.name == "nt" else "bin") / (
+        "python.exe" if os.name == "nt" else "python"
+    )
+    assert cmd[:3] == [str(python), "-m", "pip"]
     assert cmd[3:] == [
         "install",
         "--upgrade",
