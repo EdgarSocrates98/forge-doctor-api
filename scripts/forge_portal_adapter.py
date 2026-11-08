@@ -477,7 +477,7 @@ class ForgeDoctorApiPortal(fp.PortalAdapter):
                     continue
                 candidates.append(candidate)
         packaged_roster = _REPO_ROOT / "src" / "forge_doctor_api" / "installation"
-        packaged_roster /= "assets" / "agents"
+        packaged_roster = packaged_roster / "assets" / "agents"
         candidates.append(packaged_roster.resolve())
         base = next((candidate for candidate in candidates if candidate.is_dir()), None)
         if base is None:
