@@ -103,6 +103,12 @@ follow_imports = "skip"
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
+# `anyio` is supplied transitively by the optional MCP extra.  Keep the
+# minimal install typecheckable without making MCP a mandatory dependency.
+module = ["anyio", "anyio.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
 module = ["forge_doctor_api.handoff.mcp_server"]
 disallow_untyped_decorators = false
 
