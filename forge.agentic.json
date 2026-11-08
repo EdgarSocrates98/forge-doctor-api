@@ -29,7 +29,12 @@
     }
   ],
   "skills": [],
-  "agents": [],
+  "agents": [
+    "api-diagnostic-investigator",
+    "api-contract-reviewer",
+    "api-handoff-governor"
+  ],
+  "agent_roster_paths": ["src/forge_doctor_api/installation/assets/agents"],
   "coordinators": [],
   "mcp_command": [
     "{cli}",

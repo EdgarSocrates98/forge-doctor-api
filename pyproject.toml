@@ -42,6 +42,9 @@ packages = [
     # wheel; o CLI resolve via _data quando `labs/` nao existe no cwd.
     { include = "labs", to = "forge_doctor_api/_data" },
 ]
+include = [
+    { path = "src/forge_doctor_api/installation/assets/agents", format = ["sdist", "wheel"] },
+]
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=8.0"
@@ -97,6 +100,12 @@ packages = ["forge_doctor_api"]
 # pass there (TYPE_CHECKING imports resolve as missing by design).
 module = ["mcp", "mcp.*", "graphql", "graphql.*"]
 follow_imports = "skip"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# `anyio` is supplied transitively by the optional MCP extra.  Keep the
+# minimal install typecheckable without making MCP a mandatory dependency.
+module = ["anyio", "anyio.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]

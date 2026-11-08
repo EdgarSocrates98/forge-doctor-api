@@ -455,13 +455,64 @@ class ForgeDoctorApiPortal(fp.PortalAdapter):
         }
 
     # ------------------------------------------------------------------
-    # skills / agents — this forge ships no host-asset catalog today.
+    # skills / agents — canonical packaged roster, when present in the
+    # checkout or installed bundle. Missing assets remain an honest empty
+    # catalog for minimal fixtures.
     # ------------------------------------------------------------------
     def _skills(self) -> list[dict[str, Any]]:
         return []
 
     def _agents(self) -> list[dict[str, Any]]:
-        return []
+        manifest_path = self._root / "forge.agentic.json"
+        candidates: list[Path] = []
+        if manifest_path.is_file():
+            try:
+                manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                manifest = {}
+            for relative in manifest.get("agent_roster_paths", []):
+                candidate = (self._root / str(relative)).resolve()
+                root = self._root.resolve()
+                if candidate == root or root not in candidate.parents:
+                    continue
+                candidates.append(candidate)
+        packaged_roster = _REPO_ROOT / "src" / "forge_doctor_api" / "installation"
+        packaged_roster = packaged_roster / "assets" / "agents"
+        candidates.append(packaged_roster.resolve())
+        base = next((candidate for candidate in candidates if candidate.is_dir()), None)
+        if base is None:
+            return []
+        out: list[dict[str, Any]] = []
+        for path in sorted(base.glob("*.md")):
+            try:
+                text = path.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                continue
+            fields: dict[str, str] = {}
+            in_frontmatter = False
+            for line in text.splitlines():
+                if line.strip() == "---":
+                    if in_frontmatter:
+                        break
+                    in_frontmatter = True
+                    continue
+                if in_frontmatter and ":" in line:
+                    key, value = line.split(":", 1)
+                    fields[key.strip()] = value.strip().strip('"')
+            aid = path.stem
+            out.append({
+                "id": aid,
+                "name": fields.get("name", aid),
+                "role": "specialist",
+                "description": fields.get("description", ""),
+                "authority": None,
+                "domains": ["api-diagnostics"],
+                "skills": [],
+                "hosts": [],
+                "state": "available",
+                "source": "catalog",
+            })
+        return out
 
     # ------------------------------------------------------------------
     # tasks — safe read-only diagnostics mapped from intent, real receipts
