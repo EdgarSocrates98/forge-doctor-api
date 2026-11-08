@@ -42,6 +42,9 @@ packages = [
     # wheel; o CLI resolve via _data quando `labs/` nao existe no cwd.
     { include = "labs", to = "forge_doctor_api/_data" },
 ]
+include = [
+    { path = "src/forge_doctor_api/installation/assets/agents", format = ["sdist", "wheel"] },
+]
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=8.0"
