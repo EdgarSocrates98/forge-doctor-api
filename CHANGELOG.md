@@ -5,12 +5,19 @@ format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 entries are grouped by factory spec wave and dated by git history —
 this file records what shipped, not what was planned.
 
-The package is `0.3.1`. The `0.x` line ships owner-authorized
+The package is `0.3.2`. The `0.x` line ships owner-authorized
 patch bumps; see
 [docs/versioning.md](docs/versioning.md) for the version decision
 record, [docs/release.md](docs/release.md) for release mechanics,
 and [docs/release-evidence.md](docs/release-evidence.md) for the
 verification matrix.
+
+## [0.3.2] - 2026-11-10
+
+### Fixed
+
+- Published the Cycle 2.7 release certification baseline.
+
 ## [0.3.1] - 2026-11-04
 
 ### Fixed

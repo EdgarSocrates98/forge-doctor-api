@@ -1,9 +1,9 @@
 {
   "cycle": "2.7",
   "repository": "forge-doctor-api",
-  "version": "0.3.1",
-  "tag": "v0.3.1",
-  "source_commit": "fe99013ed9b5583f655b4b4bb66b59aca58a842c",
+  "version": "0.3.2",
+  "tag": "v0.3.2",
+  "source_commit": "cecc5f9101790be2c0dcaeed370439adcc330313",
   "version_source": "pyproject.toml",
   "verified_at": "2026-11-10"
 }
