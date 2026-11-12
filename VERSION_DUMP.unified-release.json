@@ -1,0 +1,9 @@
+{
+  "cycle": "unified-release",
+  "repository": "forge-doctor-api",
+  "version": "0.3.4",
+  "tag": "v0.3.4",
+  "source_commit": "fa64af0da1ca293cc9a24541867d0ca73aff107a",
+  "version_source": "pyproject.toml|package.json|__init__",
+  "verified_at": "2026-11-12"
+}
