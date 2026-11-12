@@ -20,8 +20,9 @@ _VENDORED = frozenset(
         "ui/app.py",
         "ui/screen.py",
         "ui/tui.py",
-        # forge-obsidian engine — byte-parity vendored copy; vault env
-        # discovery (os.environ) is its documented surface.
+        # forge-context + forge-obsidian engines — byte-parity vendored
+        # copies; env/clock access is their documented canonical surface.
+        "_forgecontext.py",
         "_forge_obsidian/__init__.py",
         "_forge_obsidian/cli.py",
         "_forge_obsidian/notes.py",
