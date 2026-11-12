@@ -283,7 +283,34 @@ def workspace_resources(root: str | None) -> dict[str, Any]:
             continue
         fid = doc.get("forge_id") or doc.get("id") or repo.name
         out["forges"].append(fid)
-        for e in doc.get("resources") or []:
+        declared = doc.get("resources") or []
+        declared_ids = {e.get("id") for e in declared if isinstance(e, dict)}
+        # Legacy skills[]/agents[] names promote to typed placeholders —
+        # same merge rule as theforge.specialists.catalog_resources so the
+        # Portal and the CLI expose the identical catalog (Onda 10 gate).
+        for legacy_kind, names in (
+            ("skill", doc.get("skills") or []),
+            ("agent", doc.get("agents") or []),
+        ):
+            for name in names:
+                if not isinstance(name, str) or name in declared_ids:
+                    continue
+                out["resources"].append(
+                    {
+                        "forge_id": fid,
+                        "id": name,
+                        "kind": legacy_kind,
+                        "resource_class": "agentic",
+                        "availability": "conditional",
+                        "unavailable_reason": f"legacy {legacy_kind}s[] entry — no typed location declared",
+                        "location": None,
+                        "packaged_location": None,
+                        "tags": [],
+                        "description": None,
+                        "format": None,
+                    }
+                )
+        for e in declared:
             if not isinstance(e, dict) or not e.get("id"):
                 continue
             out["resources"].append(
