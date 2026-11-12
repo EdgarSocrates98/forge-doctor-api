@@ -54,16 +54,7 @@ CSP = (
     "base-uri 'self'; form-action 'self'"
 )
 
-_SECRET_KEYS = (
-    "token",
-    "secret",
-    "password",
-    "cookie",
-    "authorization",
-    "api_key",
-    "apikey",
-    "credential",
-)
+_SECRET_KEYS = ("token", "secret", "password", "cookie", "authorization", "api_key", "apikey", "credential")
 
 # Keys that LOOK secret-shaped but are client-usable by design: the plan
 # token must round-trip through the client for confirm-then-apply to work.
@@ -257,11 +248,60 @@ class PortalAdapter:
         return detect_account_environment(self)
 
 
-PORTAL_VERSION = "1.1.1"
+PORTAL_VERSION = "1.1.2"
 
 
 def portal_version() -> str:
     return PORTAL_VERSION
+
+
+def workspace_resources(root: str | None) -> dict[str, Any]:
+    """Resource Catalog surface for the Portal (Onda 10/§17.3).
+
+    Scans ``<root>/*/forge.agentic.json`` and returns *metadata only* —
+    id, kind, class, availability, declared location. Resource bodies are
+    never read here (access policy: list + locate, not stream contents).
+    Unavailable/conditional entries keep their explicit reasons.
+    """
+    import json
+
+    out: dict[str, Any] = {"workspace": root, "forges": [], "resources": [], "errors": []}
+    if not root:
+        return out
+    base = Path(root)
+    if not base.is_dir():
+        out["errors"].append(f"workspace root not found: {root}")
+        return out
+    for repo in sorted(base.iterdir()):
+        mp = repo / "forge.agentic.json"
+        if not repo.is_dir() or not mp.is_file():
+            continue
+        try:
+            doc = json.loads(mp.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            out["errors"].append(f"{repo.name}: unreadable manifest: {exc}")
+            continue
+        fid = doc.get("forge_id") or doc.get("id") or repo.name
+        out["forges"].append(fid)
+        for e in doc.get("resources") or []:
+            if not isinstance(e, dict) or not e.get("id"):
+                continue
+            out["resources"].append(
+                {
+                    "forge_id": fid,
+                    "id": e["id"],
+                    "kind": e.get("kind"),
+                    "resource_class": e.get("resource_class"),
+                    "availability": e.get("availability", "available"),
+                    "unavailable_reason": e.get("unavailable_reason"),
+                    "location": e.get("location"),
+                    "packaged_location": e.get("packaged_location"),
+                    "tags": e.get("tags") or [],
+                    "description": e.get("description"),
+                    "format": e.get("format"),
+                }
+            )
+    return out
 
 
 def workspace_name(root: str | None) -> str | None:
@@ -645,9 +685,7 @@ class PortalHandler(BaseHTTPRequestHandler):
     # -- routing -----------------------------------------------------------
     def do_GET(self) -> None:
         if not self._host_ok():
-            self._reject(
-                403, self._envelope(self._cid(), error=_err("PORTAL-HOST", "host must be loopback"))
-            )
+            self._reject(403, self._envelope(self._cid(), error=_err("PORTAL-HOST", "host must be loopback")))
             return
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
@@ -658,15 +696,11 @@ class PortalHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:
         if not self._host_ok():
-            self._reject(
-                403, self._envelope(self._cid(), error=_err("PORTAL-HOST", "host must be loopback"))
-            )
+            self._reject(403, self._envelope(self._cid(), error=_err("PORTAL-HOST", "host must be loopback")))
             return
         parsed = urllib.parse.urlparse(self.path)
         if not parsed.path.startswith(API_PREFIX + "/"):
-            self._reject(
-                404, self._envelope(self._cid(), error=_err("PORTAL-NOT-FOUND", "not found"))
-            )
+            self._reject(404, self._envelope(self._cid(), error=_err("PORTAL-NOT-FOUND", "not found")))
             return
         self._api("POST", parsed.path, parsed)
 
@@ -690,7 +724,7 @@ class PortalHandler(BaseHTTPRequestHandler):
 
     def _api(self, method: str, path: str, parsed: urllib.parse.ParseResult) -> None:
         cid = self._cid()
-        rel = path[len(API_PREFIX) :] or "/"
+        rel = path[len(API_PREFIX):] or "/"
 
         if not self._session_ok():
             self._refused(cid, "PORTAL-SESSION", rel)
@@ -698,9 +732,7 @@ class PortalHandler(BaseHTTPRequestHandler):
                 403,
                 self._envelope(
                     cid,
-                    error=_err(
-                        "PORTAL-SESSION", "missing or invalid session", message_key="error.session"
-                    ),
+                    error=_err("PORTAL-SESSION", "missing or invalid session", message_key="error.session"),
                 ),
             )
             return
@@ -708,10 +740,7 @@ class PortalHandler(BaseHTTPRequestHandler):
         op = self._find_op(method, rel)
         if op is None:
             self._refused(cid, "PORTAL-NOT-FOUND", rel)
-            self._send_json(
-                404,
-                self._envelope(cid, error=_err("PORTAL-NOT-FOUND", f"no such operation: {rel}")),
-            )
+            self._send_json(404, self._envelope(cid, error=_err("PORTAL-NOT-FOUND", f"no such operation: {rel}")))
             return
         params = op[1]
         operation = op[0]
@@ -723,9 +752,7 @@ class PortalHandler(BaseHTTPRequestHandler):
                 self._refused(cid, "PORTAL-ORIGIN", rel, span_id=span_id)
                 self._reject(
                     403,
-                    self._envelope(
-                        cid, error=_err("PORTAL-ORIGIN", "cross-origin request refused")
-                    ),
+                    self._envelope(cid, error=_err("PORTAL-ORIGIN", "cross-origin request refused")),
                 )
                 return
             ctype = (self.headers.get("Content-Type") or "").split(";")[0].strip()
@@ -733,10 +760,7 @@ class PortalHandler(BaseHTTPRequestHandler):
                 self._refused(cid, "PORTAL-CONTENT-TYPE", rel, span_id=span_id)
                 self._reject(
                     415,
-                    self._envelope(
-                        cid,
-                        error=_err("PORTAL-CONTENT-TYPE", "Content-Type must be application/json"),
-                    ),
+                    self._envelope(cid, error=_err("PORTAL-CONTENT-TYPE", "Content-Type must be application/json")),
                 )
                 return
             if operation.mutating and not self.server.rate_limiter.allow():
@@ -745,9 +769,7 @@ class PortalHandler(BaseHTTPRequestHandler):
                     429,
                     self._envelope(
                         cid,
-                        error=_err(
-                            "PORTAL-RATE-LIMITED", "too many mutating requests", retryable=True
-                        ),
+                        error=_err("PORTAL-RATE-LIMITED", "too many mutating requests", retryable=True),
                     ),
                 )
                 return
@@ -759,9 +781,7 @@ class PortalHandler(BaseHTTPRequestHandler):
                 self._refused(cid, "PORTAL-PAYLOAD-TOO-LARGE", rel, span_id=span_id)
                 self._reject(
                     413,
-                    self._envelope(
-                        cid, error=_err("PORTAL-PAYLOAD-TOO-LARGE", "body exceeds 1 MiB")
-                    ),
+                    self._envelope(cid, error=_err("PORTAL-PAYLOAD-TOO-LARGE", "body exceeds 1 MiB")),
                 )
                 return
             raw = self.rfile.read(length) if length else b"{}"
@@ -769,19 +789,11 @@ class PortalHandler(BaseHTTPRequestHandler):
                 parsed_body = json.loads(raw or b"{}")
             except json.JSONDecodeError:
                 self._refused(cid, "PORTAL-BAD-JSON", rel, span_id=span_id)
-                self._send_json(
-                    400,
-                    self._envelope(cid, error=_err("PORTAL-BAD-JSON", "body is not valid JSON")),
-                )
+                self._send_json(400, self._envelope(cid, error=_err("PORTAL-BAD-JSON", "body is not valid JSON")))
                 return
             if not isinstance(parsed_body, dict):
                 self._refused(cid, "PORTAL-BAD-JSON", rel, span_id=span_id)
-                self._send_json(
-                    400,
-                    self._envelope(
-                        cid, error=_err("PORTAL-BAD-JSON", "body must be a JSON object")
-                    ),
-                )
+                self._send_json(400, self._envelope(cid, error=_err("PORTAL-BAD-JSON", "body must be a JSON object")))
                 return
             body = parsed_body
             if operation.confirm is not None and body.get("confirm") != operation.confirm:
@@ -802,9 +814,7 @@ class PortalHandler(BaseHTTPRequestHandler):
                 self._refused(cid, "PORTAL-PLAN-REQUIRED", rel, span_id=span_id)
                 self._send_json(
                     400,
-                    self._envelope(
-                        cid, error=_err("PORTAL-PLAN-REQUIRED", "plan_token is required")
-                    ),
+                    self._envelope(cid, error=_err("PORTAL-PLAN-REQUIRED", "plan_token is required")),
                 )
                 return
 
@@ -894,11 +904,7 @@ class PortalHandler(BaseHTTPRequestHandler):
                 504,
                 self._envelope(
                     cid,
-                    error=_err(
-                        "PORTAL-TIMEOUT",
-                        f"operation exceeded {operation.timeout:.0f}s",
-                        retryable=True,
-                    ),
+                    error=_err("PORTAL-TIMEOUT", f"operation exceeded {operation.timeout:.0f}s", retryable=True),
                 ),
             )
             return
@@ -944,14 +950,7 @@ class PortalHandler(BaseHTTPRequestHandler):
         self._send_json(200, self._envelope(cid, data=data))
 
     def _end_op(
-        self,
-        cid: str,
-        span_id: str,
-        op_target: str,
-        t0: float,
-        status: str,
-        *,
-        code: str | None = None,
+        self, cid: str, span_id: str, op_target: str, t0: float, status: str, *, code: str | None = None
     ) -> None:
         metadata: dict[str, Any] = {}
         if code:
@@ -1041,14 +1040,7 @@ class PortalHandler(BaseHTTPRequestHandler):
         self.wfile.write(data)
 
 
-def _err(
-    code: str,
-    message: str,
-    *,
-    retryable: bool = False,
-    message_key: str | None = None,
-    details: dict | None = None,
-) -> dict:
+def _err(code: str, message: str, *, retryable: bool = False, message_key: str | None = None, details: dict | None = None) -> dict:
     body: dict[str, Any] = {
         "code": code,
         "message": message,
@@ -1135,12 +1127,9 @@ class ResponseCache:
             return etag, data, remaining
 
     def put(self, key: tuple, ttl: float, data: Any) -> str:
-        etag = (
-            '"%s"'
-            % hashlib.sha256(
-                json.dumps(data, sort_keys=True, ensure_ascii=False).encode("utf-8")
-            ).hexdigest()[:32]
-        )
+        etag = '"%s"' % hashlib.sha256(
+            json.dumps(data, sort_keys=True, ensure_ascii=False).encode("utf-8")
+        ).hexdigest()[:32]
         with self._lock:
             if len(self._entries) >= self.MAX_ENTRIES:
                 oldest = min(self._entries, key=lambda k: self._entries[k][0])
@@ -1184,9 +1173,9 @@ class PortalServer(ThreadingHTTPServer):
         self.rate_limiter = RateLimiter()
         self.cache = ResponseCache()
         self._quiet = quiet
-        self._executor = __import__(
-            "concurrent.futures", fromlist=["ThreadPoolExecutor"]
-        ).ThreadPoolExecutor(max_workers=8, thread_name_prefix="forge-portal")
+        self._executor = __import__("concurrent.futures", fromlist=["ThreadPoolExecutor"]).ThreadPoolExecutor(
+            max_workers=8, thread_name_prefix="forge-portal"
+        )
         super().__init__((host, port), PortalHandler)
         self._serve_thread: threading.Thread | None = None
 
@@ -1195,9 +1184,7 @@ class PortalServer(ThreadingHTTPServer):
         if not self._quiet:
             print(f"[forge-portal] {msg}")
 
-    def run_with_timeout(
-        self, fn: Callable[[RequestContext], Any], ctx: RequestContext, timeout: float
-    ) -> Any:
+    def run_with_timeout(self, fn: Callable[[RequestContext], Any], ctx: RequestContext, timeout: float) -> Any:
         fut = self._executor.submit(fn, ctx)
         return fut.result(timeout=timeout)
 
@@ -1313,11 +1300,7 @@ def default_operations(adapter: PortalAdapter) -> list[Operation]:
 
         def h(ctx: RequestContext) -> Any:
             if fn is None:
-                raise PortalError(
-                    "PORTAL-UNSUPPORTED",
-                    f"capability '{attr}' not available on this forge",
-                    http=404,
-                )
+                raise PortalError("PORTAL-UNSUPPORTED", f"capability '{attr}' not available on this forge", http=404)
             return fn(ctx) if _wants_ctx(fn) else fn()
 
         return h
@@ -1350,6 +1333,12 @@ def default_operations(adapter: PortalAdapter) -> list[Operation]:
             "/capabilities",
             lambda ctx: adapter.capabilities(),
             cache_ttl=60.0,
+        ),
+        Operation(
+            "GET",
+            "/resources",
+            lambda ctx: workspace_resources(adapter.workspace),
+            cache_ttl=15.0,
         ),
         Operation(
             "GET",
@@ -1403,9 +1392,7 @@ def free_port() -> int:
         return int(s.getsockname()[1])
 
 
-def serve(
-    adapter: PortalAdapter, *, port: int = 0, open_url: bool = True, quiet: bool = True
-) -> None:
+def serve(adapter: PortalAdapter, *, port: int = 0, open_url: bool = True, quiet: bool = True) -> None:
     """Blocking entry point used by `<cli> portal`."""
     server = PortalServer(adapter, port=port, quiet=quiet)
     url = server.url
