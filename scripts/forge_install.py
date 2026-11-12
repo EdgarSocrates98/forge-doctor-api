@@ -45,13 +45,15 @@ REPO = Path(__file__).resolve().parents[1]
 
 try:  # version comes from the installed dist or the source tree
     from importlib.metadata import version as _dv
+
     _VERSION = _dv("forge-doctor-api")
 except Exception:  # checkout without install — read pyproject
     try:
         import tomllib
-        _VERSION = tomllib.loads(
-            (REPO / "pyproject.toml").read_bytes().decode())[
-                "project"]["version"]
+
+        _VERSION = tomllib.loads((REPO / "pyproject.toml").read_bytes().decode())["project"][
+            "version"
+        ]
     except Exception:
         _VERSION = "0.0.0+unknown"
 
@@ -89,21 +91,25 @@ def _spec() -> kit.ForgeSpec:
 
 def _ctx(args: argparse.Namespace, hosts: tuple[str, ...]) -> kit.InstallContext:
     spec = _spec()
-    target = kit.resolve_scope(spec, args.scope, Path.cwd(),
-                               Path(args.root) if args.root else None)
+    target = kit.resolve_scope(spec, args.scope, Path.cwd(), Path(args.root) if args.root else None)
     gateway_profile = getattr(args, "gateway_profile", "balanced")
     options = kit.component_options(
         getattr(args, "profile", "recommended"),
         tuple(c.strip() for c in args.components.split(",") if c.strip())
-        if getattr(args, "components", None) else None,
+        if getattr(args, "components", None)
+        else None,
     )
     options["execution_profile"] = gateway_profile
     return kit.InstallContext(
-        spec=spec, scope=args.scope, root=target,
+        spec=spec,
+        scope=args.scope,
+        root=target,
         state_dir=kit.state_dir_for(spec, args.scope, target),
         profile=getattr(args, "profile", "recommended"),
-        hosts=hosts, dry_run=getattr(args, "dry_run", False),
-        options=options)
+        hosts=hosts,
+        dry_run=getattr(args, "dry_run", False),
+        options=options,
+    )
 
 
 def _hosts(host: str) -> tuple[str, ...]:
@@ -116,8 +122,7 @@ def _hosts(host: str) -> tuple[str, ...]:
     nomes = [h.strip() for h in host.split(",") if h.strip()]
     desconhecidos = [h for h in nomes if h not in HOSTS]
     if desconhecidos:
-        raise kit.InstallError(
-            kit.E_HOST, f"host {desconhecidos[0]!r}; {list(HOSTS)}+all,none")
+        raise kit.InstallError(kit.E_HOST, f"host {desconhecidos[0]!r}; {list(HOSTS)}+all,none")
     return tuple(dict.fromkeys(nomes))
 
 
@@ -141,10 +146,10 @@ def _emit(doc: Any) -> None:
     """TTY humans (and TUI-captured runs) get the rendered forge/* doc;
     pipes, CI and parsers keep JSON."""
     human = sys.stdout.isatty() or bool(os.environ.get("FORGE_TEXT_OUTPUT"))
-    if human and isinstance(doc, dict) and (
-        str(doc.get("schema", "")).startswith("forge/")
-        or "checks" in doc
-        or "drift" in doc
+    if (
+        human
+        and isinstance(doc, dict)
+        and (str(doc.get("schema", "")).startswith("forge/") or "checks" in doc or "drift" in doc)
     ):
         text = _render_human(doc)
         if text is not None:
@@ -157,24 +162,26 @@ def _register(ctx: kit.InstallContext) -> None:
     path = kit.installations_dir() / f"{FORGE_ID}.json"
     existing = kit._load_json(path, None)
     doc: dict[str, Any] = dict(existing) if isinstance(existing, dict) else {}
-    doc.update({
-        "schema": kit.SCHEMA_MANIFEST, "forge_id": FORGE_ID,
-        "package": "forge_doctor_api", "distribution": FORGE_ID,
-        "cli": {"name": "forge-doctor-api",
-                "version_cmd": ["forge-doctor-api", "--version"]},
-        "version": _VERSION,
-        "updated_at": kit._utc_now(),
-        "installed_at": doc.get("installed_at", kit._utc_now()),
-        "installed_by": doc.get("installed_by",
-                                {"agent": "forge_install.py",
-                                 "version": _VERSION}),
-        "source": doc.get("source", {"kind": "project-install",
-                                     "path": str(ctx.root)}),
-    })
+    doc.update(
+        {
+            "schema": kit.SCHEMA_MANIFEST,
+            "forge_id": FORGE_ID,
+            "package": "forge_doctor_api",
+            "distribution": FORGE_ID,
+            "cli": {"name": "forge-doctor-api", "version_cmd": ["forge-doctor-api", "--version"]},
+            "version": _VERSION,
+            "updated_at": kit._utc_now(),
+            "installed_at": doc.get("installed_at", kit._utc_now()),
+            "installed_by": doc.get(
+                "installed_by", {"agent": "forge_install.py", "version": _VERSION}
+            ),
+            "source": doc.get("source", {"kind": "project-install", "path": str(ctx.root)}),
+        }
+    )
     doc.setdefault("install_root", str(kit.installs_root() / FORGE_ID))
-    doc.setdefault("mcp", {"server_name": FORGE_ID,
-                           "command": ["forge-doctor-api", "mcp"],
-                           "verified": False})
+    doc.setdefault(
+        "mcp", {"server_name": FORGE_ID, "command": ["forge-doctor-api", "mcp"], "verified": False}
+    )
     kit.register_installation(doc)
 
 
@@ -183,15 +190,20 @@ def _installation_manifest() -> dict[str, Any]:
     return doc if isinstance(doc, dict) else {}
 
 
-def _receipt(operation: str, checks: list[dict[str, Any]],
-             status: str) -> dict[str, Any]:
+def _receipt(operation: str, checks: list[dict[str, Any]], status: str) -> dict[str, Any]:
     return {
-        "schema": kit.SCHEMA_RECEIPT, "forge_id": FORGE_ID,
-        "operation": operation, "managed_files": [], "checks": checks,
-        "verification": {"status": "PASS" if all(
-            c["status"] in ("PASS", "NOT_APPLICABLE", "UNVERIFIED")
-            for c in checks) else "FAIL"},
-        "status": status, "created_at": kit._utc_now(),
+        "schema": kit.SCHEMA_RECEIPT,
+        "forge_id": FORGE_ID,
+        "operation": operation,
+        "managed_files": [],
+        "checks": checks,
+        "verification": {
+            "status": "PASS"
+            if all(c["status"] in ("PASS", "NOT_APPLICABLE", "UNVERIFIED") for c in checks)
+            else "FAIL"
+        },
+        "status": status,
+        "created_at": kit._utc_now(),
         "created_by": f"{FORGE_ID}/{_VERSION}",
     }
 
@@ -246,14 +258,17 @@ def cmd_doctor(a: argparse.Namespace) -> int:
         import mcp  # noqa: F401
     except ImportError:
         doc["checks"] = [
-            c if c["id"] != "mcp-handshake" else {
-                **c, "status": "UNVERIFIED",
-                "detail": "extra 'mcp' not installed — handshake not tested"}
+            c
+            if c["id"] != "mcp-handshake"
+            else {
+                **c,
+                "status": "UNVERIFIED",
+                "detail": "extra 'mcp' not installed — handshake not tested",
+            }
             for c in doc["checks"]
         ]
         if not any(c["status"] == "FAIL" for c in doc["checks"]):
-            doc["status"] = ("healthy" if doc["status"] != "broken"
-                             else doc["status"])
+            doc["status"] = "healthy" if doc["status"] != "broken" else doc["status"]
     _emit(doc)
     return 1 if doc.get("status") in ("degraded", "broken") else 0
 
@@ -271,33 +286,45 @@ def cmd_repair(a: argparse.Namespace) -> int:
         if (ctx.root / fctx.CONTEXT_DIR).exists():
             try:
                 out_ctx = fctx.repair_context(ctx.root)
-                receipt["repaired"].extend(
-                    f"context:{w}" for w in out_ctx["written"])
+                receipt["repaired"].extend(f"context:{w}" for w in out_ctx["written"])
                 rec = out_ctx.get("recovered")
-                receipt.setdefault("checks", []).append({
-                    "id": "context-registry", "status": "PASS",
-                    "detail": (
-                        f"{out_ctx['status']} ({len(out_ctx['written'])} writes)"
-                        + (f"; recovered {rec['op']}:{rec['forge_id']}" if rec else "")
-                        + ("; stale lock reclaimed" if out_ctx.get("lock_recovered") else ""))})
+                receipt.setdefault("checks", []).append(
+                    {
+                        "id": "context-registry",
+                        "status": "PASS",
+                        "detail": (
+                            f"{out_ctx['status']} ({len(out_ctx['written'])} writes)"
+                            + (f"; recovered {rec['op']}:{rec['forge_id']}" if rec else "")
+                            + ("; stale lock reclaimed" if out_ctx.get("lock_recovered") else "")
+                        ),
+                    }
+                )
             except fctx.ContextError as exc:
                 receipt["skipped"].append(f"context:{exc.kind}")
-                receipt.setdefault("checks", []).append({
-                    "id": "context-registry", "status": "BLOCKED",
-                    "detail": f"{exc.kind}: {exc.detail}"})
+                receipt.setdefault("checks", []).append(
+                    {
+                        "id": "context-registry",
+                        "status": "BLOCKED",
+                        "detail": f"{exc.kind}: {exc.detail}",
+                    }
+                )
         # Blocos `forge:*` dos consumer docs: re-assert deterministico a
         # partir dos manifests — conteudo do usuario nunca e tocado.
         try:
             out_docs = fctx.repair_docs(ctx.root, legacy_tags=_LEGACY_DOC_TAGS)
             receipt["repaired"].extend(f"docs:{w}" for w in out_docs["written"])
-            receipt.setdefault("checks", []).append({
-                "id": "consumer-docs", "status": "PASS",
-                "detail": f"{out_docs['status']} ({len(out_docs['written'])} writes)"})
+            receipt.setdefault("checks", []).append(
+                {
+                    "id": "consumer-docs",
+                    "status": "PASS",
+                    "detail": f"{out_docs['status']} ({len(out_docs['written'])} writes)",
+                }
+            )
         except fctx.ContextError as exc:
             receipt["skipped"].append(f"docs:{exc.kind}")
-            receipt.setdefault("checks", []).append({
-                "id": "consumer-docs", "status": "BLOCKED",
-                "detail": f"{exc.kind}: {exc.detail}"})
+            receipt.setdefault("checks", []).append(
+                {"id": "consumer-docs", "status": "BLOCKED", "detail": f"{exc.kind}: {exc.detail}"}
+            )
         _emit(receipt)
     return 0
 
@@ -306,12 +333,19 @@ def cmd_uninstall(a: argparse.Namespace) -> int:
     ctx = _ctx(a, ())
     if a.dry_run:
         st = kit.status(ctx)
-        _emit({"schema": kit.SCHEMA_RECEIPT, "forge_id": FORGE_ID,
-               "operation": "uninstall", "scope": a.scope, "dry_run": True,
-               "would_remove": st.get("drift", {}),
-               "status": "planned",
-               "verification": {"status": "UNVERIFIED"},
-               "created_at": kit._utc_now()})
+        _emit(
+            {
+                "schema": kit.SCHEMA_RECEIPT,
+                "forge_id": FORGE_ID,
+                "operation": "uninstall",
+                "scope": a.scope,
+                "dry_run": True,
+                "would_remove": st.get("drift", {}),
+                "status": "planned",
+                "verification": {"status": "UNVERIFIED"},
+                "created_at": kit._utc_now(),
+            }
+        )
         return 0
     with kit.acquire_lock(ctx.state_dir):
         doc = kit.uninstall(ctx, purge_state=a.purge)
@@ -328,57 +362,104 @@ def cmd_uninstall(a: argparse.Namespace) -> int:
 
 def cmd_update(a: argparse.Namespace) -> int:
     if a.to == "latest":
-        _emit(_receipt("update", [{"id": "version", "status": "FAIL",
-                                   "detail": "'latest' is never installable"}],
-                       "failed"))
+        _emit(
+            _receipt(
+                "update",
+                [{"id": "version", "status": "FAIL", "detail": "'latest' is never installable"}],
+                "failed",
+            )
+        )
         return 1
     manifest = _installation_manifest()
-    src = (Path(a.repo) if a.repo else
-           Path(p) if (p := (manifest.get("source") or {}).get("path"))
-           else None)
+    src = (
+        Path(a.repo)
+        if a.repo
+        else Path(p)
+        if (p := (manifest.get("source") or {}).get("path"))
+        else None
+    )
     if src is None or not src.exists():
-        _emit(_receipt("update", [{"id": "source", "status": "FAIL",
-                                   "detail": "no checkout registered — "
-                                   "install via scripts/forge_bootstrap.py"}],
-                       "BLOCKED"))
+        _emit(
+            _receipt(
+                "update",
+                [
+                    {
+                        "id": "source",
+                        "status": "FAIL",
+                        "detail": "no checkout registered — install via scripts/forge_bootstrap.py",
+                    }
+                ],
+                "BLOCKED",
+            )
+        )
         return 1
     venv_dir = manifest.get("venv")
     if not venv_dir:
-        _emit(_receipt("update", [{"id": "source", "status": "FAIL",
-                                   "detail": "no venv registered; run "
-                                   "scripts/forge_bootstrap.py"}], "failed"))
+        _emit(
+            _receipt(
+                "update",
+                [
+                    {
+                        "id": "source",
+                        "status": "FAIL",
+                        "detail": "no venv registered; run scripts/forge_bootstrap.py",
+                    }
+                ],
+                "failed",
+            )
+        )
         return 1
-    venv_py = Path(venv_dir) / ("Scripts/python.exe" if os.name == "nt"
-                                else "bin/python")
+    venv_py = Path(venv_dir) / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
     if not venv_py.exists():
-        _emit(_receipt("update", [{"id": "venv", "status": "FAIL",
-                                   "detail": f"venv {venv_dir} incomplete"}],
-                       "failed"))
+        _emit(
+            _receipt(
+                "update",
+                [{"id": "venv", "status": "FAIL", "detail": f"venv {venv_dir} incomplete"}],
+                "failed",
+            )
+        )
         return 1
     cmd = [str(venv_py), "-m", "pip", "install", "--upgrade", str(src)]
     if a.dry_run:
-        _emit(_receipt("update", [{"id": "pip", "status": "UNVERIFIED",
-                                   "detail": " ".join(cmd)}], "planned"))
+        _emit(
+            _receipt(
+                "update",
+                [{"id": "pip", "status": "UNVERIFIED", "detail": " ".join(cmd)}],
+                "planned",
+            )
+        )
         return 0
-    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=900,
-                          check=False)
-    checks = [{"id": "pip",
-               "status": "PASS" if proc.returncode == 0 else "FAIL",
-               "detail": (proc.stdout or proc.stderr)[-300:]}]
-    doc = _receipt("update", checks,
-                   "completed" if proc.returncode == 0 else "failed")
+    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=900, check=False)
+    checks = [
+        {
+            "id": "pip",
+            "status": "PASS" if proc.returncode == 0 else "FAIL",
+            "detail": (proc.stdout or proc.stderr)[-300:],
+        }
+    ]
+    doc = _receipt("update", checks, "completed" if proc.returncode == 0 else "failed")
     _emit(doc)
     return 0 if proc.returncode == 0 else 1
 
 
 def cmd_mcp_verify(a: argparse.Namespace) -> int:
     check = kit.mcp_verify(_spec())
-    _emit({"schema": kit.SCHEMA_HEALTH, "forge_id": FORGE_ID,
-           "status": ("healthy" if check["status"] == "PASS"
-                      else "degraded" if check["status"] == "FAIL"
-                      else "unverified"),
-           "checks": [check], "checked_at": kit._utc_now(),
-           "repair_hint": None})
+    _emit(
+        {
+            "schema": kit.SCHEMA_HEALTH,
+            "forge_id": FORGE_ID,
+            "status": (
+                "healthy"
+                if check["status"] == "PASS"
+                else "degraded"
+                if check["status"] == "FAIL"
+                else "unverified"
+            ),
+            "checks": [check],
+            "checked_at": kit._utc_now(),
+            "repair_hint": None,
+        }
+    )
     return 1 if check["status"] == "FAIL" else 0
 
 
@@ -440,11 +521,13 @@ def _context_manifest(ctx: kit.InstallContext) -> dict[str, Any]:
     agents = _mds(_AGENTS_DIR)
 
     hosts = sorted(set(ctx.hosts) & set(fctx.HOSTS))
-    checks: list[dict[str, Any]] = [{
-        "id": "agent-specs",
-        "status": "PASS" if agents else "UNVERIFIED",
-        "detail": f"{len(agents)} bundled agent specs",
-    }]
+    checks: list[dict[str, Any]] = [
+        {
+            "id": "agent-specs",
+            "status": "PASS" if agents else "UNVERIFIED",
+            "detail": f"{len(agents)} bundled agent specs",
+        }
+    ]
     return fctx.build_manifest(
         forge_id=FORGE_ID,
         name="Forge Doctor API",
@@ -467,37 +550,49 @@ def _context_manifest(ctx: kit.InstallContext) -> dict[str, Any]:
             {"id": "forge/context-registry/v1", "version": "1"},
         ),
         discovery_commands=(
-            {"id": "scan",
-             "argv": ["forge-doctor-api", "scan", "{target}"],
-             "mode": "diagnostic-only", "read_only": True,
-             "description": "independent API diagnostic"},
-            {"id": "diagnose",
-             "argv": ["forge-doctor-api", "diagnose", "{target}"],
-             "mode": "diagnostic-only", "read_only": True,
-             "description": "contract/reliability diagnosis"},
-            {"id": "doctor",
-             "argv": ["forge-doctor-api", "install", "doctor"],
-             "mode": "diagnostic-only", "read_only": True,
-             "description": "installation + environment health"},
+            {
+                "id": "scan",
+                "argv": ["forge-doctor-api", "scan", "{target}"],
+                "mode": "diagnostic-only",
+                "read_only": True,
+                "description": "independent API diagnostic",
+            },
+            {
+                "id": "diagnose",
+                "argv": ["forge-doctor-api", "diagnose", "{target}"],
+                "mode": "diagnostic-only",
+                "read_only": True,
+                "description": "contract/reliability diagnosis",
+            },
+            {
+                "id": "doctor",
+                "argv": ["forge-doctor-api", "install", "doctor"],
+                "mode": "diagnostic-only",
+                "read_only": True,
+                "description": "installation + environment health",
+            },
         ),
-        mcp={"server_name": "forge-doctor-api",
-             "command": ["forge-doctor-api", "mcp"],
-             "verify_tool": "doctor.get_reliability"},
+        mcp={
+            "server_name": "forge-doctor-api",
+            "command": ["forge-doctor-api", "mcp"],
+            "verify_tool": "doctor.get_reliability",
+        },
         resources={
             "agents-bundle": {
                 "kind": "bundled",
                 "location": "forge_doctor_api/installation/assets/agents",
-                "optional": False},
+                "optional": False,
+            },
             "install-ledger": {
                 "kind": "referenced",
                 "location": ".forge-doctor-api/install",
-                "optional": True},
+                "optional": True,
+            },
         },
         mutating_verbs=("install", "uninstall", "repair"),
         requires_approval=("install", "uninstall"),
         offline_available=True,
-        health={"status": "healthy" if agents else "degraded",
-                "checks": checks},
+        health={"status": "healthy" if agents else "degraded", "checks": checks},
         components=ctx.options or None,
         recorded_by="forge_install.py",
     )
@@ -513,20 +608,28 @@ def _register_context(ctx: kit.InstallContext, receipt: dict[str, Any]) -> None:
     try:
         manifest = _context_manifest(ctx)
         out = fctx.install_transaction(
-            ctx.root, manifest, owner=FORGE_ID, legacy_tags=_LEGACY_DOC_TAGS)
-        receipt.setdefault("checks", []).append({
-            "id": "context-registry", "status": "PASS",
-            "detail": f".forge/context {out['status']} "
-                      f"({len(out['written'])} writes)"})
+            ctx.root, manifest, owner=FORGE_ID, legacy_tags=_LEGACY_DOC_TAGS
+        )
+        receipt.setdefault("checks", []).append(
+            {
+                "id": "context-registry",
+                "status": "PASS",
+                "detail": f".forge/context {out['status']} ({len(out['written'])} writes)",
+            }
+        )
         docs = out["docs"]
-        receipt.setdefault("checks", []).append({
-            "id": "consumer-docs", "status": "PASS",
-            "detail": f"{docs['status']}: {len(docs['written'])} written, "
-                      f"{len(docs['kept'])} kept"})
+        receipt.setdefault("checks", []).append(
+            {
+                "id": "consumer-docs",
+                "status": "PASS",
+                "detail": f"{docs['status']}: {len(docs['written'])} written, "
+                f"{len(docs['kept'])} kept",
+            }
+        )
     except fctx.ContextError as exc:
-        receipt.setdefault("checks", []).append({
-            "id": "context-registry", "status": "BLOCKED",
-            "detail": f"{exc.kind}: {exc.detail}"})
+        receipt.setdefault("checks", []).append(
+            {"id": "context-registry", "status": "BLOCKED", "detail": f"{exc.kind}: {exc.detail}"}
+        )
         receipt["status"] = "failed"
 
 
@@ -536,17 +639,25 @@ def _unregister_context(root: Path) -> list[dict[str, Any]]:
     os sobreviventes."""
     try:
         out = fctx.uninstall_transaction(
-            root, FORGE_ID, owner=FORGE_ID, legacy_tags=_LEGACY_DOC_TAGS)
+            root, FORGE_ID, owner=FORGE_ID, legacy_tags=_LEGACY_DOC_TAGS
+        )
         docs = out["docs"]
         return [
-            {"id": "context-registry", "status": "PASS",
-             "detail": f".forge/context {out['status']}"},
-            {"id": "consumer-docs", "status": "PASS",
-             "detail": f"{docs['status']}: {len(docs['written'])} changed"},
+            {
+                "id": "context-registry",
+                "status": "PASS",
+                "detail": f".forge/context {out['status']}",
+            },
+            {
+                "id": "consumer-docs",
+                "status": "PASS",
+                "detail": f"{docs['status']}: {len(docs['written'])} changed",
+            },
         ]
     except fctx.ContextError as exc:
-        return [{"id": "context-registry", "status": "BLOCKED",
-                 "detail": f"{exc.kind}: {exc.detail}"}]
+        return [
+            {"id": "context-registry", "status": "BLOCKED", "detail": f"{exc.kind}: {exc.detail}"}
+        ]
 
 
 def _docs_leftovers(root: Path) -> bool:
@@ -575,8 +686,7 @@ def _docs_leftovers(root: Path) -> bool:
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(prog="forge_install.py",
-                                 description=__doc__.splitlines()[0])
+    ap = argparse.ArgumentParser(prog="forge_install.py", description=__doc__.splitlines()[0])
     sub = ap.add_subparsers(dest="op", required=True)
 
     def _base(p: argparse.ArgumentParser) -> None:
@@ -588,16 +698,22 @@ def main(argv: list[str] | None = None) -> int:
     _base(p)
     p.add_argument("--host", default="all")
     p.add_argument("--profile", choices=PROFILES, default="recommended")
-    p.add_argument("--gateway-profile", choices=GATEWAY_PROFILES,
-                   default="balanced", dest="gateway_profile",
-                   help="execution profile: economy|balanced|deep")
-    p.add_argument("--components", default=None,
-                   help="optional components csv: skills,agents,mcp,tui,graph-studio")
+    p.add_argument(
+        "--gateway-profile",
+        choices=GATEWAY_PROFILES,
+        default="balanced",
+        dest="gateway_profile",
+        help="execution profile: economy|balanced|deep",
+    )
+    p.add_argument(
+        "--components",
+        default=None,
+        help="optional components csv: skills,agents,mcp,tui,graph-studio",
+    )
     p.add_argument("--yes", "-y", action="store_true")
     p.set_defaults(fn=cmd_install)
 
-    for name, fn in (("status", cmd_status), ("doctor", cmd_doctor),
-                     ("repair", cmd_repair)):
+    for name, fn in (("status", cmd_status), ("doctor", cmd_doctor), ("repair", cmd_repair)):
         p = sub.add_parser(name)
         _base(p)
         p.set_defaults(fn=fn)

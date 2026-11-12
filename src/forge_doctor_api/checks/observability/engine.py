@@ -37,11 +37,7 @@ def _finding(
         severity=spec.severity,
         confidence=spec.confidence,
         evidence_kind=spec.evidence_kind,
-        evidence=(
-            Evidence(
-                kind=spec.evidence_kind, source=path, summary=description
-            ),
-        ),
+        evidence=(Evidence(kind=spec.evidence_kind, source=path, summary=description),),
         source_location=loc,
         unknowns=unknowns,
     )
@@ -82,8 +78,7 @@ def run_observability_checks(model: ApiObservabilityModel) -> tuple[Finding, ...
                     UnknownFact(
                         subject="trace propagation",
                         missing="propagation header/parent evidence",
-                        resolution="propagation may occur upstream of these "
-                        "artifacts",
+                        resolution="propagation may occur upstream of these artifacts",
                     ),
                 ),
             )
@@ -132,8 +127,7 @@ def run_observability_checks(model: ApiObservabilityModel) -> tuple[Finding, ...
                     UnknownFact(
                         subject="error context",
                         missing="error.type/error.message/exception attributes",
-                        resolution="emit structured error attributes on failure "
-                        "spans",
+                        resolution="emit structured error attributes on failure spans",
                     ),
                 ),
             )
@@ -150,8 +144,7 @@ def run_observability_checks(model: ApiObservabilityModel) -> tuple[Finding, ...
                     UnknownFact(
                         subject="latency",
                         missing="start/end timestamps on spans",
-                        resolution="latency may live in a metrics artifact not "
-                        "provided",
+                        resolution="latency may live in a metrics artifact not provided",
                     ),
                 ),
             )

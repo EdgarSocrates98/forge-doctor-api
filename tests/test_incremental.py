@@ -79,8 +79,7 @@ def test_cache_dir_only_with_flag(tmp_path: Path) -> None:
     assert {"openapi", "runtime", "iac"} <= analyzers
 
 
-def test_touching_one_artifact_invalidates_only_its_keys(
-        tmp_path: Path) -> None:
+def test_touching_one_artifact_invalidates_only_its_keys(tmp_path: Path) -> None:
     root = _project(tmp_path)
     cache = AnalysisCache(root, tool_version="t")
     assert cache.get("openapi", ["sha-a"], "") is None
@@ -109,10 +108,11 @@ def test_corrupt_entry_falls_back(tmp_path: Path) -> None:
     # malformed model payload → scan falls back cleanly
     key2 = cache.key("iac", ["sha-c"], "")
     (cache_dir / f"{key2}.json").write_text(
-        json.dumps({"key": key2, "analyzer": "iac",
-                    "tool_version": "t",
-                    "model": {"bogus_field": 1}}),
-        encoding="utf-8")
+        json.dumps(
+            {"key": key2, "analyzer": "iac", "tool_version": "t", "model": {"bogus_field": 1}}
+        ),
+        encoding="utf-8",
+    )
     ctx = ProjectContext.from_root(root)
     report = scan_project(ctx, incremental=True)
     assert report.findings is not None  # full analysis still works
@@ -120,10 +120,8 @@ def test_corrupt_entry_falls_back(tmp_path: Path) -> None:
 
 def test_incremental_flag_warm_scan(tmp_path: Path) -> None:
     root = _project(tmp_path)
-    r1 = scan_project(ProjectContext.from_root(root),
-                      incremental=True)
-    r2 = scan_project(ProjectContext.from_root(root),
-                      incremental=True)
+    r1 = scan_project(ProjectContext.from_root(root), incremental=True)
+    r2 = scan_project(ProjectContext.from_root(root), incremental=True)
     assert r1.to_json() == r2.to_json()
     # findings recompute identically — never replayed from cache
     assert [f.id for f in r1.findings] == [f.id for f in r2.findings]

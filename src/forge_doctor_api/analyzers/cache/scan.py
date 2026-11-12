@@ -38,8 +38,7 @@ def _header_policy(subject: str, loc: SourceLocation) -> CachePolicy:
     The OpenAPI model retains header names, not values — so `ttl` and
     `stale_policy` stay `None` here rather than being guessed.
     """
-    return CachePolicy(
-        subject=subject, layer=CacheLayer.CLIENT, location=loc)
+    return CachePolicy(subject=subject, layer=CacheLayer.CLIENT, location=loc)
 
 
 def _config_policies(
@@ -58,10 +57,13 @@ def _config_policies(
             doc = yaml.safe_load(raw)
         except yaml.YAMLError:
             if any(k in raw for k in _CACHE_KEYS):
-                unknowns.append(UnknownFact(
-                    subject=rel,
-                    missing="parseable cache config",
-                    resolution="file has cache markers but invalid YAML"))
+                unknowns.append(
+                    UnknownFact(
+                        subject=rel,
+                        missing="parseable cache config",
+                        resolution="file has cache markers but invalid YAML",
+                    )
+                )
             continue
         if not isinstance(doc, dict):
             continue
@@ -71,10 +73,14 @@ def _config_policies(
                 continue
             for scope, body in block.items():
                 if not isinstance(body, dict):
-                    policies.append(CachePolicy(
-                        subject=str(scope), layer=CacheLayer.UNKNOWN,
-                        ttl=str(body) if body is not None else None,
-                        location=SourceLocation(path=rel)))
+                    policies.append(
+                        CachePolicy(
+                            subject=str(scope),
+                            layer=CacheLayer.UNKNOWN,
+                            ttl=str(body) if body is not None else None,
+                            location=SourceLocation(path=rel),
+                        )
+                    )
                     continue
                 layer = CacheLayer.UNKNOWN
                 declared_layer = str(body.get("layer") or "").lower()
@@ -89,8 +95,11 @@ def _config_policies(
                 vary = (
                     tuple(str(v) for v in vary_raw)
                     if isinstance(vary_raw, (list, tuple))
-                    else (tuple(s.strip() for s in str(vary_raw).split(",")
-                                if s.strip()) if vary_raw else ())
+                    else (
+                        tuple(s.strip() for s in str(vary_raw).split(",") if s.strip())
+                        if vary_raw
+                        else ()
+                    )
                 )
                 cscope = body.get("scope") or body.get("visibility")
                 if cscope is None:
@@ -98,29 +107,31 @@ def _config_policies(
                         cscope = "private"
                     elif body.get("public") is True:
                         cscope = "public"
-                stale = (
-                    str(body["stale_policy"]) if body.get("stale_policy")
-                    else None
-                )
-                sie = (
-                    body.get("stale_if_error", body.get("staleIfError",
-                             body.get("stale-if-error")))
+                stale = str(body["stale_policy"]) if body.get("stale_policy") else None
+                sie = body.get(
+                    "stale_if_error", body.get("staleIfError", body.get("stale-if-error"))
                 )
                 if sie is not None:
-                    stale = f"stale-if-error:{sie}" if stale is None \
+                    stale = (
+                        f"stale-if-error:{sie}"
+                        if stale is None
                         else f"{stale};stale-if-error:{sie}"
-                policies.append(CachePolicy(
-                    subject=str(scope),
-                    layer=layer,
-                    ttl=(str(body["ttl"]) if body.get("ttl") is not None
-                         else None),
-                    key=(str(body["key"]) if body.get("key") else None),
-                    invalidation=(str(body["invalidation"])
-                                  if body.get("invalidation") else None),
-                    stale_policy=stale,
-                    vary=vary,
-                    scope=(str(cscope) if cscope is not None else None),
-                    location=SourceLocation(path=rel)))
+                    )
+                policies.append(
+                    CachePolicy(
+                        subject=str(scope),
+                        layer=layer,
+                        ttl=(str(body["ttl"]) if body.get("ttl") is not None else None),
+                        key=(str(body["key"]) if body.get("key") else None),
+                        invalidation=(
+                            str(body["invalidation"]) if body.get("invalidation") else None
+                        ),
+                        stale_policy=stale,
+                        vary=vary,
+                        scope=(str(cscope) if cscope is not None else None),
+                        location=SourceLocation(path=rel),
+                    )
+                )
     return policies, unknowns
 
 
@@ -154,39 +165,48 @@ def load_cache_model(
             if pol.subject in seen:
                 continue
             seen.add(pol.subject)
-            unknowns.append(UnknownFact(
-                subject=pol.subject,
-                missing="declared cache fields (ttl, key, invalidation, "
-                "stale_policy)",
-                resolution="Cache-Control header declared on the "
-                "response, but header names carry no values - declare "
-                "the policy fields in config or x- extensions to make "
-                "cache semantics checkable"))
+            unknowns.append(
+                UnknownFact(
+                    subject=pol.subject,
+                    missing="declared cache fields (ttl, key, invalidation, stale_policy)",
+                    resolution="Cache-Control header declared on the "
+                    "response, but header names carry no values - declare "
+                    "the policy fields in config or x- extensions to make "
+                    "cache semantics checkable",
+                )
+            )
 
     risks: list[InvalidationRisk] = []
     if openapi is not None:
         write_subjects = {
-            op.path for op in openapi.operations
-            if op.method.lower() in _WRITE_METHODS}
+            op.path for op in openapi.operations if op.method.lower() in _WRITE_METHODS
+        }
         for pol in policies:
             for path in write_subjects:
                 if pol.subject.endswith(path) or path in pol.subject:
-                    risks.append(InvalidationRisk(
-                        subject=pol.subject,
-                        detail=(
-                            f"cache policy on {pol.subject} coexists with "
-                            f"mutating methods on {path}"),
-                        severity=Severity.MEDIUM,
-                        confidence=Confidence.LOW,
-                        evidence=(Evidence(
-                            kind=EvidenceKind.CONFIG,
-                            source=pol.location.path,
-                            line=pol.location.line,
-                            summary=f"{pol.layer} cache policy"),)))
+                    risks.append(
+                        InvalidationRisk(
+                            subject=pol.subject,
+                            detail=(
+                                f"cache policy on {pol.subject} coexists with "
+                                f"mutating methods on {path}"
+                            ),
+                            severity=Severity.MEDIUM,
+                            confidence=Confidence.LOW,
+                            evidence=(
+                                Evidence(
+                                    kind=EvidenceKind.CONFIG,
+                                    source=pol.location.path,
+                                    line=pol.location.line,
+                                    summary=f"{pol.layer} cache policy",
+                                ),
+                            ),
+                        )
+                    )
     return ApiCacheModel(
-        policies=tuple(sorted(
-            policies, key=lambda p: (p.subject, p.layer.value))),
+        policies=tuple(sorted(policies, key=lambda p: (p.subject, p.layer.value))),
         risks=tuple(sorted(risks, key=lambda r: r.subject)),
-        unknowns=tuple(sorted(
-            {u.subject: u for u in unknowns}.values(),
-            key=lambda u: (u.subject, u.missing))))
+        unknowns=tuple(
+            sorted({u.subject: u for u in unknowns}.values(), key=lambda u: (u.subject, u.missing))
+        ),
+    )

@@ -35,13 +35,11 @@ KNOWN_RELEASES: tuple[str, ...] = tuple(
 )
 
 HTTP_METHODS: tuple[str, ...] = tuple(
-    m for m in _family_fields("3.0").get("http_methods", ())
-    if isinstance(m, str)
+    m for m in _family_fields("3.0").get("http_methods", ()) if isinstance(m, str)
 )
 # OpenAPI 3.2 adds `query` and `additionalOperations` (custom methods).
 HTTP_METHODS_3_2: tuple[str, ...] = tuple(
-    m for m in _family_fields("3.2").get("http_methods", ())
-    if isinstance(m, str)
+    m for m in _family_fields("3.2").get("http_methods", ()) if isinstance(m, str)
 )
 
 VERSION_PATTERN = re.compile(

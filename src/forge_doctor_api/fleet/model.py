@@ -40,9 +40,9 @@ class PortfolioMember(Model):
     repo: str
     role: str
     styles: tuple[str, ...] = ()  # rest | graphql | grpc | async | gateway
-    apis: int = 0               # contract documents
+    apis: int = 0  # contract documents
     operations: int = 0
-    gateways: int = 0           # declared gateway routes
+    gateways: int = 0  # declared gateway routes
     external_apis: int = 0
     owner: str | None = None
 

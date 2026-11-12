@@ -81,8 +81,7 @@ def _finding(**kw) -> Finding:
         "severity": Severity.MEDIUM,
         "confidence": Confidence.HIGH,
         "evidence_kind": EvidenceKind.STATIC,
-        "evidence": (Evidence(kind=EvidenceKind.STATIC,
-                              source="api.yaml", summary="e"),),
+        "evidence": (Evidence(kind=EvidenceKind.STATIC, source="api.yaml", summary="e"),),
     }
     values.update(kw)
     return Finding(**values)
@@ -94,8 +93,7 @@ def _finding(**kw) -> Finding:
 def test_bundle_compact_and_versioned(tmp_path: Path) -> None:
     root = _write(tmp_path / "p", {"api.yaml": OPENAPI})
     api = load_openapi_project(ProjectContext.from_root(root))
-    b = assemble_bundle(service="payments", openapi=api,
-                        findings=(_finding(),))
+    b = assemble_bundle(service="payments", openapi=api, findings=(_finding(),))
     assert b.schema_version
     assert b.operations == ("GET /charges/{id}",)
     assert b.contracts == ("api.yaml openapi=3.0.3",)
@@ -110,10 +108,11 @@ def test_bundle_unknowns_present(tmp_path: Path) -> None:
     root = _write(tmp_path / "p", {"api.yaml": OPENAPI})
     api = load_openapi_project(ProjectContext.from_root(root))
     from forge_doctor_api.core.models import UnknownFact
+
     b = assemble_bundle(
         openapi=api,
-        unknowns=(UnknownFact(subject="x", missing="runtime evidence",
-                              resolution="ship OTLP"),))
+        unknowns=(UnknownFact(subject="x", missing="runtime evidence", resolution="ship OTLP"),),
+    )
     assert any(u.missing == "runtime evidence" for u in b.unknowns)
 
 
@@ -122,8 +121,7 @@ def test_bundle_redaction(tmp_path: Path) -> None:
     root = _write(tmp_path / "p", {"api.yaml": OPENAPI})
     api = load_openapi_project(ProjectContext.from_root(root))
     secret = "sk-live-abcdef0123456789"
-    b = assemble_bundle(openapi=api, findings=(_finding(
-        description=f"token {secret} exposed"),))
+    b = assemble_bundle(openapi=api, findings=(_finding(description=f"token {secret} exposed"),))
     assert secret not in json.dumps(b.to_dict())
 
 
@@ -152,14 +150,15 @@ def test_forger_routes_api_domain() -> None:
 
 
 def test_forger_routes_data_dependency() -> None:
-    refs = (ExternalReference(
-        source_id="op:x", target_domain="data", target_ref="db:t",
-        relation="downstream"),)
+    refs = (
+        ExternalReference(
+            source_id="op:x", target_domain="data", target_ref="db:t", relation="downstream"
+        ),
+    )
     r = route_request(ForgerRequest(task="slow endpoint"), refs)
     assert r.handler == "data-doctor"
     assert "data-doctor" in r.chain
-    impl = route_request(
-        ForgerRequest(task="slow endpoint; implement backfill"), refs)
+    impl = route_request(ForgerRequest(task="slow endpoint; implement backfill"), refs)
     assert impl.chain[-1] == "spark-forge"
 
 
@@ -189,8 +188,7 @@ def test_mcp_surface_local(tmp_path: Path) -> None:
 
 
 def test_mcp_breaking_changes_without_before(tmp_path: Path) -> None:
-    api = DoctorApi(ProjectContext.from_root(
-        _write(tmp_path / "p", {"api.yaml": OPENAPI})))
+    api = DoctorApi(ProjectContext.from_root(_write(tmp_path / "p", {"api.yaml": OPENAPI})))
     assert api.get_breaking_changes() is None
     assert api.get_blast_radius() is None
 
@@ -212,9 +210,12 @@ def test_mcp_breaking_changes_with_before(tmp_path: Path) -> None:
 
 
 def test_answer_move_to_grpc(tmp_path: Path) -> None:
-    _, api = None, load_openapi_project(
-        ProjectContext.from_root(_write(tmp_path / "p",
-                                        {"api.yaml": OPENAPI})))
+    _, api = (
+        None,
+        load_openapi_project(
+            ProjectContext.from_root(_write(tmp_path / "p", {"api.yaml": OPENAPI}))
+        ),
+    )
     brief = answer_move_to_grpc("getCharge", api)
     assert brief.question == DecisionQuestion.CAN_MOVE_TO_GRPC.value
     assert brief.facts or brief.tradeoffs or brief.constraints
@@ -222,32 +223,33 @@ def test_answer_move_to_grpc(tmp_path: Path) -> None:
 
 
 def test_answer_retire_version() -> None:
-    brief = answer_retire_version("v1", remaining_clients=0,
-                                observed_traffic=0)
+    brief = answer_retire_version("v1", remaining_clients=0, observed_traffic=0)
     assert any("no client call sites" in f for f in brief.facts)
     assert any("observed traffic" in f for f in brief.facts)
 
 
 def test_answer_become_async(tmp_path: Path) -> None:
     api = load_openapi_project(
-        ProjectContext.from_root(_write(tmp_path / "p",
-                                        {"api.yaml": OPENAPI})))
+        ProjectContext.from_root(_write(tmp_path / "p", {"api.yaml": OPENAPI}))
+    )
     brief = answer_become_async("getCharge", openapi=api)
     assert brief.question == DecisionQuestion.CAN_BECOME_ASYNC.value
     assert brief.unknowns  # no AsyncAPI evidence present
 
 
 def test_answer_retry_safely(tmp_path: Path) -> None:
-    root = _write(tmp_path / "p", {
-        "cfg.yaml": "retries: [{scope: gw, max_attempts: 3}]\n",
-    })
+    root = _write(
+        tmp_path / "p",
+        {
+            "cfg.yaml": "retries: [{scope: gw, max_attempts: 3}]\n",
+        },
+    )
     from forge_doctor_api.reliability import load_reliability_model
-    rel = load_reliability_model(
-        ProjectContext.from_root(root), ["cfg.yaml"])
+
+    rel = load_reliability_model(ProjectContext.from_root(root), ["cfg.yaml"])
     caps = detect_capabilities(reliability=rel)
     brief = answer_enable_retry_safely("gw", caps)
-    assert any("SAFE_RETRY" in c or "idempot" in c.lower()
-               for c in brief.constraints)
+    assert any("SAFE_RETRY" in c or "idempot" in c.lower() for c in brief.constraints)
 
 
 # --- determinism ------------------------------------------------------------------
@@ -273,6 +275,7 @@ def test_bundle_from_dict_round_trip(tmp_path: Path) -> None:
     assert parsed.findings[0].id == b.findings[0].id
     # spec 075: a bundle carrying a delta parses as well
     from forge_doctor_api.handoff.delta import DeltaContext
+
     payload = b.to_dict()
     payload["delta"] = DeltaContext(initial=True).to_dict()
     with_delta = ApiHandoffBundle.from_dict(payload)

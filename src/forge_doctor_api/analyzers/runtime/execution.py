@@ -148,8 +148,7 @@ def _timed_out(s: Span) -> bool | None:
     if code is None and err is None:
         return None
     return code in _TIMEOUT_STATUSES or (
-        err is not None
-        and any(k in err.lower() for k in ("timeout", "deadline", "timed out"))
+        err is not None and any(k in err.lower() for k in ("timeout", "deadline", "timed out"))
     )
 
 
@@ -199,11 +198,7 @@ def executions_for_trace(
             )
         )
     servers = [s for s in spans if s.kind is SpanKind.SERVER]
-    roots = (
-        servers
-        if servers
-        else [s for s in spans if not s.parent_id][:1]
-    )
+    roots = servers if servers else [s for s in spans if not s.parent_id][:1]
     # Identity-keyed: span ids can collide across merged exports.
     exec_index: dict[int, int] = {}
     exec_span_ids: set[str] = set()
@@ -241,9 +236,7 @@ def executions_for_trace(
         if s.kind not in (SpanKind.CLIENT, SpanKind.PRODUCER):
             continue
         owner_span = _nearest_exec(s, by_id, exec_span_ids)
-        owner = (
-            exec_index.get(id(owner_span)) if owner_span is not None else None
-        )
+        owner = exec_index.get(id(owner_span)) if owner_span is not None else None
         if owner is None and pairs:
             owner = 0
             unknowns.append(
@@ -257,9 +250,7 @@ def executions_for_trace(
         if owner is not None:
             caller = by_id.get(s.parent_id or "")
             calls_by_exec.setdefault(owner, []).append(
-                _downstream_call(
-                    s, caller.service if caller else None
-                )
+                _downstream_call(s, caller.service if caller else None)
             )
 
     for idx, (_span_obj, ex) in enumerate(pairs):
@@ -305,9 +296,7 @@ def executions_from_traces(
     return tuple(executions), tuple(unknowns)
 
 
-def _with_calls(
-    ex: RequestExecution, calls: tuple[DownstreamCall, ...]
-) -> RequestExecution:
+def _with_calls(ex: RequestExecution, calls: tuple[DownstreamCall, ...]) -> RequestExecution:
     return RequestExecution(
         request_id=ex.request_id,
         trace_id=ex.trace_id,

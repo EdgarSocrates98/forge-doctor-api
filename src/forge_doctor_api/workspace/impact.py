@@ -28,6 +28,7 @@ def _norm_subject(subject: str) -> str:
         return f"{parts[0].upper()} {normalize_route_path(parts[1])}"
     return normalize_route_path(subject) if subject.startswith("/") else subject
 
+
 _SUBJECT_KINDS = {EdgeKind.CLIENT_CALLS, EdgeKind.GATEWAY_ROUTES}
 
 
@@ -56,9 +57,7 @@ def _dependents(edges: tuple[CrossRepoEdge, ...]) -> dict[str, set[str]]:
     return out
 
 
-def workspace_blast_radius(
-    scan: WorkspaceScan, subjects: tuple[str, ...]
-) -> WorkspaceBlastReport:
+def workspace_blast_radius(scan: WorkspaceScan, subjects: tuple[str, ...]) -> WorkspaceBlastReport:
     """Impact of changed operation subjects (e.g. `GET /charges`) across repos."""
     dependents = _dependents(scan.edges)
     member_names = {m.name for m in scan.workspace.members}
@@ -67,10 +66,7 @@ def workspace_blast_radius(
 
     for subject in subjects:
         norm = _norm_subject(subject)
-        hits = [
-            e for e in scan.edges
-            if e.kind in _SUBJECT_KINDS and e.subject == norm
-        ]
+        hits = [e for e in scan.edges if e.kind in _SUBJECT_KINDS and e.subject == norm]
         origins = {e.to_repo for e in hits}
         if not origins:
             # no consumer edges on this subject — find implementing repos via
@@ -100,9 +96,7 @@ def workspace_blast_radius(
 
         seed = {e.from_repo for e in hits}  # direct dependents on this subject
         impacted: set[str] = set(seed)
-        chains: list[tuple[str, ...]] = [
-            (e.from_repo, e.to_repo) for e in hits
-        ]
+        chains: list[tuple[str, ...]] = [(e.from_repo, e.to_repo) for e in hits]
         frontier = list(seed)
         seen = set(frontier) | origins
         while frontier:
@@ -123,12 +117,14 @@ def workspace_blast_radius(
             )
             node_unknowns.append(fact)
             unknowns.append(fact)
-        nodes.append(WorkspaceBlastNode(
-            subject=subject,
-            repo=sorted(origins)[0],
-            impacted_repos=tuple(sorted(impacted)),
-            chains=tuple(sorted(set(chains))),
-            unknowns=tuple(node_unknowns),
-        ))
+        nodes.append(
+            WorkspaceBlastNode(
+                subject=subject,
+                repo=sorted(origins)[0],
+                impacted_repos=tuple(sorted(impacted)),
+                chains=tuple(sorted(set(chains))),
+                unknowns=tuple(node_unknowns),
+            )
+        )
     nodes.sort(key=lambda n: (n.repo, n.subject))
     return WorkspaceBlastReport(nodes=tuple(nodes), unknowns=tuple(unknowns))

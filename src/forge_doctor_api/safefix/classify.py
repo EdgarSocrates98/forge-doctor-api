@@ -12,9 +12,7 @@ from forge_doctor_api.safefix.model import (
 from forge_doctor_api.safefix.rules import classify_types, fix_types_for, justification
 
 
-def classify_fix(
-    proposed_change: str, target: str, fix_types: tuple[FixType, ...]
-) -> Remediation:
+def classify_fix(proposed_change: str, target: str, fix_types: tuple[FixType, ...]) -> Remediation:
     """Classify a proposed change — combined types escalate to strictest."""
     return Remediation(
         proposed_change=proposed_change,
@@ -46,7 +44,5 @@ def classify_findings(findings: tuple[Finding, ...]) -> RemediationReport:
     """Classify all findings — output groups by class, deterministic order."""
     candidates = tuple(classify_finding(f) for f in findings)
     order = {FixClass.SAFE: 0, FixClass.REVIEW_REQUIRED: 1, FixClass.MANUAL_ONLY: 2}
-    ordered = tuple(
-        sorted(candidates, key=lambda c: (order[c.classification], c.target))
-    )
+    ordered = tuple(sorted(candidates, key=lambda c: (order[c.classification], c.target)))
     return RemediationReport(candidates=ordered)

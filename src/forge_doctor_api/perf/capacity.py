@@ -77,15 +77,10 @@ class ApiCostDriver(Model):
     evidence: tuple[Evidence, ...] = ()
 
 
-def _classify(
-    value: float | None, thresholds: ThresholdProvenance | None
-) -> Saturation:
+def _classify(value: float | None, thresholds: ThresholdProvenance | None) -> Saturation:
     if value is None or thresholds is None:
         return Saturation.UNKNOWN
-    if (
-        thresholds.saturated is not None
-        and value >= thresholds.saturated
-    ):
+    if thresholds.saturated is not None and value >= thresholds.saturated:
         return Saturation.SATURATED
     if thresholds.elevated is not None and value >= thresholds.elevated:
         return Saturation.ELEVATED
@@ -133,16 +128,13 @@ def capacity_signals(
             dimension=CapacityDimension.CONCURRENCY,
             value=float(fanout) if fanout is not None else None,
             unit="max observed downstream fan-out",
-            saturation=_classify(
-                float(fanout) if fanout is not None else None, tp
-            ),
+            saturation=_classify(float(fanout) if fanout is not None else None, tp),
             thresholds=tp,
             evidence=(
                 Evidence(
                     kind=EvidenceKind.DERIVED,
                     source="(runtime-history)",
-                    summary="fan-out proxy only; true concurrency needs "
-                    "runtime metrics",
+                    summary="fan-out proxy only; true concurrency needs runtime metrics",
                 ),
             ),
         )
@@ -167,8 +159,7 @@ def capacity_signals(
                     Evidence(
                         kind=EvidenceKind.DERIVED,
                         source="(runtime-history)",
-                        summary=f"no {dim.value} metric evidence in "
-                        "ingested artifacts",
+                        summary=f"no {dim.value} metric evidence in ingested artifacts",
                     ),
                 ),
             )

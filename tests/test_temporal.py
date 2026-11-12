@@ -37,17 +37,19 @@ def _report(
     unknowns: tuple[UnknownFact, ...] = (),
     operations: tuple[str, ...] = (),
 ) -> DoctorReport:
-    return DoctorReport(
-        findings=findings, unknowns=unknowns, operations=operations)
+    return DoctorReport(findings=findings, unknowns=unknowns, operations=operations)
 
 
 def _finding(check_id: str, severity: Severity = Severity.HIGH) -> Finding:
     return Finding(
-        id=check_id, title=check_id, description=check_id,
-        severity=severity, confidence=Confidence.HIGH,
+        id=check_id,
+        title=check_id,
+        description=check_id,
+        severity=severity,
+        confidence=Confidence.HIGH,
         evidence_kind=EvidenceKind.STATIC,
-        evidence=(Evidence(kind=EvidenceKind.STATIC,
-                           source="t.yaml", summary="t"),))
+        evidence=(Evidence(kind=EvidenceKind.STATIC, source="t.yaml", summary="t"),),
+    )
 
 
 def test_save_load_roundtrip(tmp_path: Path) -> None:
@@ -111,32 +113,31 @@ def test_regression_removed_operation() -> None:
     prev = _report(operations=("GET /gone", "GET /kept"))
     cur = _report(operations=("GET /kept",))
     reg = architectural_regressions(prev, cur)
-    assert any(f.id == "APITEMP003" and "GET /gone" in f.description
-               for f in reg)
+    assert any(f.id == "APITEMP003" and "GET /gone" in f.description for f in reg)
 
 
 def test_regression_newly_unknown_required_fact() -> None:
     prev = _report()
-    cur = _report(unknowns=(UnknownFact(
-        subject="routes", missing="route evidence",
-        resolution="add source files"),))
+    cur = _report(
+        unknowns=(
+            UnknownFact(subject="routes", missing="route evidence", resolution="add source files"),
+        )
+    )
     reg = architectural_regressions(prev, cur)
     assert any(f.id == "APITEMP004" for f in reg)
 
 
 def test_no_regressions_on_identical_reports() -> None:
-    r = _report(findings=(_finding("OAS019"),),
-                operations=("GET /a",))
+    r = _report(findings=(_finding("OAS019"),), operations=("GET /a",))
     assert architectural_regressions(r, r) == ()
 
 
 def test_regressions_deterministic() -> None:
     prev = _report(operations=("GET /a", "GET /b"))
     cur = _report(
-        findings=(_finding("OAS019"), _finding("APISC001",
-                                               Severity.CRITICAL)),
-        unknowns=(UnknownFact(subject="contracts",
-                              missing="x", resolution="y"),))
+        findings=(_finding("OAS019"), _finding("APISC001", Severity.CRITICAL)),
+        unknowns=(UnknownFact(subject="contracts", missing="x", resolution="y"),),
+    )
     a = architectural_regressions(prev, cur)
     b = architectural_regressions(prev, cur)
     assert a == b

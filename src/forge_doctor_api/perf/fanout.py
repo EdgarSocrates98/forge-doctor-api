@@ -47,8 +47,7 @@ def _subject(route: RouteModel) -> str:
 
 def _static_widths(
     routes: RouteScan, clients: ApiClientModel
-) -> tuple[dict[str, tuple[int, SourceLocation]],
-           dict[str, list[UnknownFact]]]:
+) -> tuple[dict[str, tuple[int, SourceLocation]], dict[str, list[UnknownFact]]]:
     """subject -> (distinct-target count, location); ambiguous → unknowns."""
     by_file: dict[str, set[str]] = {}
     for site in clients.call_sites:
@@ -69,12 +68,15 @@ def _static_widths(
             widths[_subject(rs[0])] = (len(targets), rs[0].source_location)
         else:
             for r in rs:
-                unknowns.setdefault(_subject(r), []).append(UnknownFact(
-                    subject=_subject(r),
-                    missing="per-handler call-site attribution",
-                    resolution=(
-                        f"{len(rs)} handlers share {path}; "
-                        "fan-out cannot be split statically")))
+                unknowns.setdefault(_subject(r), []).append(
+                    UnknownFact(
+                        subject=_subject(r),
+                        missing="per-handler call-site attribution",
+                        resolution=(
+                            f"{len(rs)} handlers share {path}; fan-out cannot be split statically"
+                        ),
+                    )
+                )
     return widths, unknowns
 
 
@@ -96,10 +98,14 @@ def _runtime_widths(
     return {
         op: (
             len(callees),
-            tuple(Evidence(
-                kind=EvidenceKind.RUNTIME, source=s,
-                summary=f"{op} observed calling {len(callees)} callee(s)")
-                for s in sorted(sources.get(op, ()))),
+            tuple(
+                Evidence(
+                    kind=EvidenceKind.RUNTIME,
+                    source=s,
+                    summary=f"{op} observed calling {len(callees)} callee(s)",
+                )
+                for s in sorted(sources.get(op, ()))
+            ),
         )
         for op, callees in by_op.items()
     }
@@ -127,18 +133,24 @@ def fanout_signals(
         ev: list[Evidence] = []
         if sw is not None:
             width, loc = sw
-            ev.append(Evidence(
-                kind=EvidenceKind.STATIC, source=loc.path, line=loc.line,
-                summary=f"handler calls {width} distinct target(s)"))
+            ev.append(
+                Evidence(
+                    kind=EvidenceKind.STATIC,
+                    source=loc.path,
+                    line=loc.line,
+                    summary=f"handler calls {width} distinct target(s)",
+                )
+            )
         if rw is not None:
             ev.extend(rw[1])
-        signals.append(FanoutSignal(
-            subject=subject,
-            static_width=sw[0] if sw else None,
-            runtime_width=rw[0] if rw else None,
-            status=(FanoutStatus.CONFIRMED if rw is not None
-                    else FanoutStatus.CANDIDATE),
-            evidence=tuple(ev),
-            unknowns=tuple(unknowns.get(subject, ())),
-        ))
+        signals.append(
+            FanoutSignal(
+                subject=subject,
+                static_width=sw[0] if sw else None,
+                runtime_width=rw[0] if rw else None,
+                status=(FanoutStatus.CONFIRMED if rw is not None else FanoutStatus.CANDIDATE),
+                evidence=tuple(ev),
+                unknowns=tuple(unknowns.get(subject, ())),
+            )
+        )
     return tuple(signals)

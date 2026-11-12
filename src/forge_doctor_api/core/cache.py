@@ -60,9 +60,8 @@ class AnalysisCache:
     ) -> str:
         """Content key: analyzer | tool version | config | artifact shas."""
         material = json.dumps(
-            [analyzer, self._tool_version, config_digest,
-             sorted(input_shas)],
-            separators=(",", ":"))
+            [analyzer, self._tool_version, config_digest, sorted(input_shas)], separators=(",", ":")
+        )
         return hashlib.sha256(material.encode("utf-8")).hexdigest()[:32]
 
     def get(
@@ -74,16 +73,17 @@ class AnalysisCache:
         """Cached analyzer model dict, or None on miss/corruption."""
         key = self.key(analyzer, input_shas, config_digest)
         try:
-            payload = json.loads(
-                (self._dir / f"{key}.json").read_text(encoding="utf-8"))
+            payload = json.loads((self._dir / f"{key}.json").read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             self.misses += 1
             return None
-        if (not isinstance(payload, dict)
-                or payload.get("key") != key
-                or payload.get("analyzer") != analyzer
-                or payload.get("tool_version") != self._tool_version
-                or not isinstance(payload.get("model"), dict)):
+        if (
+            not isinstance(payload, dict)
+            or payload.get("key") != key
+            or payload.get("analyzer") != analyzer
+            or payload.get("tool_version") != self._tool_version
+            or not isinstance(payload.get("model"), dict)
+        ):
             self.misses += 1
             return None
         self.hits += 1
@@ -108,8 +108,14 @@ class AnalysisCache:
         try:
             self._dir.mkdir(parents=True, exist_ok=True)
             (self._dir / f"{key}.json").write_text(
-                json.dumps(payload, sort_keys=True, separators=(",", ":"),
-                           ensure_ascii=False, allow_nan=False),
-                encoding="utf-8")
+                json.dumps(
+                    payload,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                    ensure_ascii=False,
+                    allow_nan=False,
+                ),
+                encoding="utf-8",
+            )
         except OSError:
             return  # cache is best-effort; never fail a scan over it

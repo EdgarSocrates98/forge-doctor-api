@@ -10,21 +10,30 @@ ROOT = Path(__file__).resolve().parents[1]
 PACKAGE = ROOT / "src" / "forge_doctor_api"
 # Vendored upstream surfaces (byte-parity with the-forge): sanctioned host
 # imports (loopback Studio, terminal kit) — audited upstream, exempt here.
-_VENDORED = frozenset({
-    "_graphstudio.py",
-    "ui/i18n.py", "ui/kit.py", "ui/wizard.py", "ui/home.py",
-    "ui/app.py", "ui/screen.py", "ui/tui.py",
-})
+_VENDORED = frozenset(
+    {
+        "_graphstudio.py",
+        "ui/i18n.py",
+        "ui/kit.py",
+        "ui/wizard.py",
+        "ui/home.py",
+        "ui/app.py",
+        "ui/screen.py",
+        "ui/tui.py",
+    }
+)
 # Install surface (cyc11.2 P2-002, RC exception — see tests/test_boundary.py
 # and docs/adr/ADR-0006): the wheel-carried forge/* install lifecycle owns
 # the package's only os/subprocess/host-write surface — reachable solely
 # through cli.install_cmd, never on the scan/engine path.
-_INSTALL_SURFACE = frozenset({
-    "_installkit.py",
-    "install/__init__.py",
-    "install/service.py",
-    "cli/install_cmd.py",
-})
+_INSTALL_SURFACE = frozenset(
+    {
+        "_installkit.py",
+        "install/__init__.py",
+        "install/service.py",
+        "cli/install_cmd.py",
+    }
+)
 
 
 def load_pyproject() -> dict[str, object]:

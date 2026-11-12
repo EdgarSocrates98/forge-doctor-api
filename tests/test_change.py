@@ -163,8 +163,9 @@ def _diff(tmp_path: Path, old_files: dict[str, str], new_files: dict[str, str]):
     )
 
 
-def _config_events(tmp_path: Path, old_cfg: str, new_cfg: str,
-                   old_api: str = API_OLD, new_api: str = API_OLD):
+def _config_events(
+    tmp_path: Path, old_cfg: str, new_cfg: str, old_api: str = API_OLD, new_api: str = API_OLD
+):
     old_root = _write(tmp_path / "old", {"api.yaml": old_api, "cfg.yaml": old_cfg})
     new_root = _write(tmp_path / "new", {"api.yaml": new_api, "cfg.yaml": new_cfg})
     old_ctx = ProjectContext.from_root(old_root)
@@ -345,8 +346,10 @@ def test_blast_radius_unknown_subject(tmp_path: Path) -> None:
 def test_baseline_record_lookup_roundtrip(tmp_path: Path) -> None:
     model = _project(_write(tmp_path / "a", {"api.yaml": API_OLD}))
     baseline = record_baseline(
-        BackwardCompatibilityBaseline(), model,
-        label="v1", recorded_at="2026-01-01T00:00:00Z",
+        BackwardCompatibilityBaseline(),
+        model,
+        label="v1",
+        recorded_at="2026-01-01T00:00:00Z",
     )
     assert baseline.latest() is not None
     assert baseline.latest().label == "v1"
@@ -412,9 +415,7 @@ def test_cli_semantic_diff_console_and_json(tmp_path: Path) -> None:
     assert result.exit_code == 0
     assert "ENDPOINT_REMOVED" in result.output
     assert "SCHEMA_CHANGED" in result.output
-    result = runner.invoke(
-        app, ["diff", str(tmp_path / "old"), str(tmp_path / "new"), "--json"]
-    )
+    result = runner.invoke(app, ["diff", str(tmp_path / "old"), str(tmp_path / "new"), "--json"])
     payload = json.loads(result.output)
     types = {e["type"] for e in payload["events"]}
     assert "ENDPOINT_ADDED" in types and "ENDPOINT_REMOVED" in types
@@ -438,13 +439,23 @@ def test_cli_diff_pr_summary(tmp_path: Path) -> None:
     _write(tmp_path / "new", {"api.yaml": API_NEW, "cfg.yaml": CFG_NEW})
     result = runner.invoke(
         app,
-        ["diff", str(tmp_path / "old"), str(tmp_path / "new"), "--pr",
-         "--clients", str(_write(tmp_path / "clients", {"svc/app.py": CLIENT}))],
+        [
+            "diff",
+            str(tmp_path / "old"),
+            str(tmp_path / "new"),
+            "--pr",
+            "--clients",
+            str(_write(tmp_path / "clients", {"svc/app.py": CLIENT})),
+        ],
     )
     assert result.exit_code == 0
     for counter in (
-        "Breaking API changes:", "Affected clients:", "New public endpoint:",
-        "Authorization changes:", "SLO-relevant dependency changes:", "Unknowns:",
+        "Breaking API changes:",
+        "Affected clients:",
+        "New public endpoint:",
+        "Authorization changes:",
+        "SLO-relevant dependency changes:",
+        "Unknowns:",
     ):
         assert counter in result.output
 
@@ -454,8 +465,13 @@ def test_cli_blast_radius(tmp_path: Path) -> None:
     _write(tmp_path / "new", {"api.yaml": API_NEW})
     result = runner.invoke(
         app,
-        ["blast-radius", str(tmp_path / "old"), str(tmp_path / "new"),
-         "--clients", str(_write(tmp_path / "clients", {"svc/app.py": CLIENT}))],
+        [
+            "blast-radius",
+            str(tmp_path / "old"),
+            str(tmp_path / "new"),
+            "--clients",
+            str(_write(tmp_path / "clients", {"svc/app.py": CLIENT})),
+        ],
     )
     assert result.exit_code == 0
     assert "svc" in result.output

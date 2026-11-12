@@ -22,9 +22,7 @@ _NGINX = re.compile(
     r"(?P<status>\d{3}) (?P<bytes>\d+)"
 )
 # envoy default-ish: [%START_TIME%] "METHOD path PROTO" STATUS ...
-_ENVOY = re.compile(
-    r'^\[[^\]]+\] "(?P<method>[A-Z]+) (?P<path>\S+) [^"]*" (?P<status>\d{3})'
-)
+_ENVOY = re.compile(r'^\[[^\]]+\] "(?P<method>[A-Z]+) (?P<path>\S+) [^"]*" (?P<status>\d{3})')
 _REQID = re.compile(
     r'(?i)\b(x-request-id|x-correlation-id|request_id|traceparent)\b[:=]\s*"?([\w-]+)'
 )
@@ -35,14 +33,9 @@ class AccessLogAdapter(RuntimeArtifactAdapter):
 
     def detect(self, path: str, head: bytes) -> bool:
         text = head.decode("utf-8", errors="replace")
-        return any(
-            _NGINX.match(line) or _ENVOY.match(line)
-            for line in text.splitlines()[:5]
-        )
+        return any(_NGINX.match(line) or _ENVOY.match(line) for line in text.splitlines()[:5])
 
-    def iter_summaries(
-        self, reader: BinaryIO, path: str
-    ) -> Iterator[RequestSummary]:
+    def iter_summaries(self, reader: BinaryIO, path: str) -> Iterator[RequestSummary]:
         for lineno, raw in enumerate(reader, start=1):
             line = raw.decode("utf-8", errors="replace").rstrip("\n")
             m = _NGINX.match(line) or _ENVOY.match(line)
@@ -54,9 +47,7 @@ class AccessLogAdapter(RuntimeArtifactAdapter):
                 path=m.group("path"),
                 status=int(m.group("status")),
                 request_id=rid.group(2) if rid else None,
-                bytes_sent=(
-                    int(m.group("bytes")) if "bytes" in m.re.groupindex else None
-                ),
+                bytes_sent=(int(m.group("bytes")) if "bytes" in m.re.groupindex else None),
                 evidence=(
                     Evidence(
                         kind=EvidenceKind.RUNTIME,

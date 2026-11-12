@@ -25,9 +25,13 @@ from forge_doctor_api.analyzers.routes.adapter import FrameworkAdapter
 from forge_doctor_api.core.context import ProjectContext
 
 _SURFACES = (
-    "discover_auth", "discover_schemas", "discover_dependencies",
-    "discover_middleware", "discover_error_handlers",
-    "discover_validation", "discover_serialization",
+    "discover_auth",
+    "discover_schemas",
+    "discover_dependencies",
+    "discover_middleware",
+    "discover_error_handlers",
+    "discover_validation",
+    "discover_serialization",
     "discover_client_calls",
 )
 
@@ -62,29 +66,33 @@ def run_framework_conformance(
 
     # -- protocol surface: every §39 method exists and is callable ----
     missing = [
-        name for name in (
-            "detect", "attribute", "discover_routes", *_SURFACES)
+        name
+        for name in ("detect", "attribute", "discover_routes", *_SURFACES)
         if not callable(getattr(adapter, name, None))
     ]
-    checks.append(ConformanceCheck(
-        name="protocol-surface",
-        passed=not missing,
-        detail=f"missing: {missing}" if missing else "all §39 methods"))
+    checks.append(
+        ConformanceCheck(
+            name="protocol-surface",
+            passed=not missing,
+            detail=f"missing: {missing}" if missing else "all §39 methods",
+        )
+    )
 
     # -- no-exec: no import/loader machinery on the adapter -----------
-    forbidden = [
-        a for a in ("import_module", "exec", "eval", "load_module")
-        if hasattr(adapter, a)]
+    forbidden = [a for a in ("import_module", "exec", "eval", "load_module") if hasattr(adapter, a)]
     src = ""
     import contextlib
+
     with contextlib.suppress(OSError, TypeError):
         src = inspect.getsource(type(adapter))
-    banned_calls = (
-        "importlib.import_module(" in src or "__import__(" in src)
-    checks.append(ConformanceCheck(
-        name="no-exec",
-        passed=not forbidden and not banned_calls,
-        detail="no import/execute surface"))
+    banned_calls = "importlib.import_module(" in src or "__import__(" in src
+    checks.append(
+        ConformanceCheck(
+            name="no-exec",
+            passed=not forbidden and not banned_calls,
+            detail="no import/execute surface",
+        )
+    )
 
     # -- unknown-on-absence: empty surfaces carry UnknownFacts --------
     empty_items: list[str] = []
@@ -95,29 +103,25 @@ def run_framework_conformance(
             empty_items.append(name)
         if result.items or not result.unknowns:
             missing_unknowns.append(name)
-    checks.append(ConformanceCheck(
-        name="unknown-on-absence",
-        passed=not missing_unknowns,
-        detail=(
-            f"items on empty: {empty_items}; "
-            f"no unknowns: {missing_unknowns}")))
+    checks.append(
+        ConformanceCheck(
+            name="unknown-on-absence",
+            passed=not missing_unknowns,
+            detail=(f"items on empty: {empty_items}; no unknowns: {missing_unknowns}"),
+        )
+    )
 
     # -- determinism: two scans are byte-identical --------------------
     scan_a = adapter.discover_routes(ctx, "svc", files)
     scan_b = adapter.discover_routes(ctx, "svc", files)
-    checks.append(ConformanceCheck(
-        name="determinism",
-        passed=scan_a.to_json() == scan_b.to_json()))
+    checks.append(ConformanceCheck(name="determinism", passed=scan_a.to_json() == scan_b.to_json()))
 
     # -- sorted output ------------------------------------------------
     routes = scan_a.routes
     keys = [(r.method, r.path, r.handler) for r in routes]
-    checks.append(ConformanceCheck(
-        name="sorted-output",
-        passed=list(keys) == sorted(keys)))
+    checks.append(ConformanceCheck(name="sorted-output", passed=list(keys) == sorted(keys)))
 
-    return FrameworkConformance(
-        adapter=adapter.name, checks=tuple(checks))
+    return FrameworkConformance(adapter=adapter.name, checks=tuple(checks))
 
 
 def conformance_tests(

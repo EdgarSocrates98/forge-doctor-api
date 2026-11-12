@@ -50,8 +50,7 @@ def _command_paths() -> list[str]:
 
     def walk(typer_app: object, prefix: str = "") -> None:
         for info in getattr(typer_app, "registered_commands", ()):
-            name = info.name or (info.callback.__name__.replace(
-                "_", "-") if info.callback else "")
+            name = info.name or (info.callback.__name__.replace("_", "-") if info.callback else "")
             paths.append(f"{prefix}{name}".strip())
         for group in getattr(typer_app, "registered_groups", ()):
             sub = group.typer_instance
@@ -67,13 +66,13 @@ def test_every_cli_command_documented() -> None:
     paths = _command_paths()
     assert paths, "Typer tree walk must find commands"
     missing = [p for p in paths if p not in cli_text]
-    assert missing == [], (
-        f"commands missing from docs/cli.md: {missing}")
+    assert missing == [], f"commands missing from docs/cli.md: {missing}"
 
 
 def test_documented_formats_have_writers() -> None:
-    cli_text = (CLI_MD.read_text(encoding="utf-8")
-                + (DOCS / "output-formats.md").read_text(encoding="utf-8"))
+    cli_text = CLI_MD.read_text(encoding="utf-8") + (DOCS / "output-formats.md").read_text(
+        encoding="utf-8"
+    )
     for fmt in WRITERS:
         assert fmt in cli_text, f"writer {fmt!r} undocumented"
     # formats named in docs must be real writers or report/console
@@ -111,37 +110,44 @@ def _quickstart_commands() -> list[list[str]]:
             continue
         line = line.strip()
         if in_block and line.startswith("forge-doctor-api "):
-            commands.append(
-                shlex.split(line)[1:])  # drop the binary name
+            commands.append(shlex.split(line)[1:])  # drop the binary name
     return commands
 
 
 def test_readme_quickstart_commands_run(tmp_path: Path) -> None:
     (tmp_path / "api.yaml").write_text(OPENAPI, encoding="utf-8")
     (tmp_path / "baseline").mkdir()
-    (tmp_path / "baseline" / "api.yaml").write_text(
-        OPENAPI, encoding="utf-8")
+    (tmp_path / "baseline" / "api.yaml").write_text(OPENAPI, encoding="utf-8")
     commands = _quickstart_commands()
     assert commands, "README quickstart must contain CLI commands"
     runner = CliRunner()
     for argv in commands:
         argv = [
-            str(tmp_path) if a in (".", "./my-service") else
-            str(tmp_path / "baseline") if a == "./last-release" else
-            str(tmp_path / a) if a.endswith(".sarif") else a
+            str(tmp_path)
+            if a in (".", "./my-service")
+            else str(tmp_path / "baseline")
+            if a == "./last-release"
+            else str(tmp_path / a)
+            if a.endswith(".sarif")
+            else a
             for a in argv
         ]
         res = runner.invoke(app, argv)
         assert res.exit_code in (0, 1), (
             f"quickstart command failed ({res.exit_code}): "
-            f"forge-doctor-api {' '.join(argv)}\n{res.output}")
+            f"forge-doctor-api {' '.join(argv)}\n{res.output}"
+        )
 
 
 # -- spec 090: docs-as-contract expansion --------------------------------------
 
 _ELLIPSIS = re.compile(r"…|\.\.\.")
 _PY_MODULE_ALLOWLIST = {
-    "build", "mypy", "pytest", "ruff", "forge_doctor_api",
+    "build",
+    "mypy",
+    "pytest",
+    "ruff",
+    "forge_doctor_api",
 }
 
 
@@ -156,8 +162,7 @@ def _doc_command_lines() -> list[tuple[Path, str]]:
                 in_block = not in_block
                 continue
             if in_block:
-                m = re.search(
-                    r"(?<!<)\bforge-doctor-api\s+(?P<rest>[^`|\n]*)", line)
+                m = re.search(r"(?<!<)\bforge-doctor-api\s+(?P<rest>[^`|\n]*)", line)
                 if not m:
                     continue
                 rest = m.group("rest").strip()
@@ -184,9 +189,7 @@ def _catalog_prefix_check(tokens: list[str]) -> str | None:
     """Leading tokens must form (a prefix of) a real catalog path."""
     paths = _command_paths()
     prefixes = {
-        " ".join(p[:i + 1])
-        for p in (path.split() for path in paths)
-        for i in range(len(p))
+        " ".join(p[: i + 1]) for p in (path.split() for path in paths) for i in range(len(p))
     }
     command: list[str] = []
     for tok in tokens:
@@ -217,16 +220,14 @@ def test_documented_commands_resolve_to_catalog() -> None:
         tokens = [t for t in tokens if not t.startswith("`")]
         err = _catalog_prefix_check(tokens)
         if err:
-            bad.append(
-                f"{md.relative_to(ROOT)}: forge-doctor-api {rest} → {err}")
+            bad.append(f"{md.relative_to(ROOT)}: forge-doctor-api {rest} → {err}")
     assert bad == [], "undocumented/misspelled commands:\n" + "\n".join(bad)
 
 
 def test_release_doc_reproduction_commands_are_runnable() -> None:
     """Fenced commands in release/versioning docs must name real targets."""
     problems: list[str] = []
-    for md in (DOCS / "release.md", DOCS / "versioning.md",
-               DOCS / "release-policy.md"):
+    for md in (DOCS / "release.md", DOCS / "versioning.md", DOCS / "release-policy.md"):
         if not md.exists():
             continue
         in_block = False
@@ -242,13 +243,11 @@ def test_release_doc_reproduction_commands_are_runnable() -> None:
             m = re.match(r"python\s+(factory/\S+\.py)", cmd)
             if m:
                 if not (ROOT / m.group(1)).exists():
-                    problems.append(
-                        f"{md.name}: missing script {m.group(1)}")
+                    problems.append(f"{md.name}: missing script {m.group(1)}")
                 continue
             m = re.match(r"python\s+-m\s+(\S+)", cmd)
             if m and m.group(1) not in _PY_MODULE_ALLOWLIST:
-                problems.append(
-                    f"{md.name}: unexpected module {m.group(1)}")
+                problems.append(f"{md.name}: unexpected module {m.group(1)}")
                 continue
             if cmd.startswith("forge-doctor-api "):
                 tokens = shlex.split(cmd)[1:]
@@ -258,26 +257,24 @@ def test_release_doc_reproduction_commands_are_runnable() -> None:
                 continue
             if cmd.startswith(("sha256sum", "pip ", "cd ", "git ")):
                 continue
-    assert problems == [], (
-        "release reproduction commands are not runnable:\n"
-        + "\n".join(problems))
+    assert problems == [], "release reproduction commands are not runnable:\n" + "\n".join(problems)
 
 
 def test_mcp_doc_tool_names_match_inventory() -> None:
     inventory = json.loads(
-        (ROOT / "factory" / "artifacts" / "mcp-inventory.json")
-        .read_text(encoding="utf-8"))
+        (ROOT / "factory" / "artifacts" / "mcp-inventory.json").read_text(encoding="utf-8")
+    )
     registered = {t["name"] for t in inventory["tools"]}
     mcp_doc = (DOCS / "mcp.md").read_text(encoding="utf-8")
     mentioned = set(re.findall(r"`(doctor\.[a-z_]+)`", mcp_doc))
     assert mentioned <= registered, (
         "docs/mcp.md names tools absent from the frozen inventory: "
-        f"{sorted(mentioned - registered)}")
+        f"{sorted(mentioned - registered)}"
+    )
 
 
 _FENCE_JSON = re.compile(r"```json\n(.*?)```", re.DOTALL)
-_CONTRACT_SHAPED = re.compile(
-    r'"(findings|entities|relationships|schema_version)"')
+_CONTRACT_SHAPED = re.compile(r'"(findings|entities|relationships|schema_version)"')
 
 
 def test_doc_json_examples_parse_and_validate() -> None:
@@ -288,14 +285,14 @@ def test_doc_json_examples_parse_and_validate() -> None:
         for block in _FENCE_JSON.findall(text):
             checked += 1
             payload = json.loads(block)  # valid JSON or the test fails
-            if (isinstance(payload, dict)
-                    and "findings" in payload
-                    and _CONTRACT_SHAPED.search(block)):
+            if (
+                isinstance(payload, dict)
+                and "findings" in payload
+                and _CONTRACT_SHAPED.search(block)
+            ):
                 HandoffBundle.from_dict(payload)
     # canonical fixtures are the shipped contract examples
-    canonical = sorted(
-        (ROOT / "tests" / "fixtures" / "contracts" / "canonical")
-        .glob("*.json"))
+    canonical = sorted((ROOT / "tests" / "fixtures" / "contracts" / "canonical").glob("*.json"))
     assert canonical, "canonical contract fixtures must exist"
     for fixture in canonical:
         payload = json.loads(fixture.read_text(encoding="utf-8"))

@@ -159,9 +159,7 @@ def build_plan(inventory: ArtifactInventory, *, force: bool = False) -> Analysis
     skipped: list[SkippedAnalyzer] = []
     present_markers = inventory.markers()
     for req in ANALYZER_REQUIREMENTS:
-        matched_classes = [
-            c for c in req.any_classes if inventory.has_class(c)
-        ]
+        matched_classes = [c for c in req.any_classes if inventory.has_class(c)]
         matched_markers = [m for m in req.any_markers if m in present_markers]
         if force or matched_classes or matched_markers:
             analyzers.append(req.analyzer)

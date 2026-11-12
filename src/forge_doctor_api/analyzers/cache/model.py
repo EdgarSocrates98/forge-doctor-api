@@ -33,7 +33,7 @@ class CachePolicy(Model):
     the *source file* while `layer` names the §152 cache tier.
     """
 
-    subject: str            # operation or scope this policy covers
+    subject: str  # operation or scope this policy covers
     layer: CacheLayer
     ttl: str | None = None
     key: str | None = None

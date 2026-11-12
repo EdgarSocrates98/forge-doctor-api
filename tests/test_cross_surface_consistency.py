@@ -57,12 +57,14 @@ def _root(tmp_path: Path) -> Path:
 
 def _finding_sig(f: dict[str, Any]) -> tuple[Any, ...]:
     return (
-        f["id"], f["severity"], f["confidence"], f["evidence_kind"],
-        tuple(sorted(
-            (e.get("kind"), e.get("source"), e.get("line"))
-            for e in f.get("evidence", []))),
-        tuple(sorted(
-            u.get("subject") for u in f.get("unknowns", []))),
+        f["id"],
+        f["severity"],
+        f["confidence"],
+        f["evidence_kind"],
+        tuple(
+            sorted((e.get("kind"), e.get("source"), e.get("line")) for e in f.get("evidence", []))
+        ),
+        tuple(sorted(u.get("subject") for u in f.get("unknowns", []))),
     )
 
 
@@ -75,22 +77,27 @@ async def _mcp_scan(root: Path) -> dict[str, Any]:
     low = server._lowlevel_server
     async with create_client_server_memory_streams() as (client, srv):
         read, write = client
-        task = asyncio.create_task(low.run(
-            srv[0], srv[1], low.create_initialization_options()))
+        task = asyncio.create_task(low.run(srv[0], srv[1], low.create_initialization_options()))
 
         async def req(i: int, method: str, params: dict | None = None) -> Any:
-            await write.send(SessionMessage(JSONRPCRequest(
-                jsonrpc="2.0", id=i, method=method, params=params)))
+            await write.send(
+                SessionMessage(JSONRPCRequest(jsonrpc="2.0", id=i, method=method, params=params))
+            )
             return (await read.receive()).message
 
-        await req(1, "initialize", {
-            "protocolVersion": t.LATEST_PROTOCOL_VERSION,
-            "capabilities": {},
-            "clientInfo": {"name": "x-surface", "version": "0"}})
-        await write.send(SessionMessage(JSONRPCNotification(
-            jsonrpc="2.0", method="notifications/initialized")))
-        resp = await req(2, "tools/call",
-                         {"name": "doctor.scan", "arguments": {}})
+        await req(
+            1,
+            "initialize",
+            {
+                "protocolVersion": t.LATEST_PROTOCOL_VERSION,
+                "capabilities": {},
+                "clientInfo": {"name": "x-surface", "version": "0"},
+            },
+        )
+        await write.send(
+            SessionMessage(JSONRPCNotification(jsonrpc="2.0", method="notifications/initialized"))
+        )
+        resp = await req(2, "tools/call", {"name": "doctor.scan", "arguments": {}})
         text = resp.result["content"][0]["text"]
     task.cancel()
     with contextlib.suppress(BaseException):
@@ -98,13 +105,11 @@ async def _mcp_scan(root: Path) -> dict[str, Any]:
     return json.loads(text)
 
 
-def test_finding_identity_consistent_across_surfaces(
-        tmp_path: Path) -> None:
+def test_finding_identity_consistent_across_surfaces(tmp_path: Path) -> None:
     root = _root(tmp_path)
 
     runner = typer.testing.CliRunner()
-    result = runner.invoke(
-        app, ["scan", str(root), "--format", "report"])
+    result = runner.invoke(app, ["scan", str(root), "--format", "report"])
     assert result.exit_code == 0, result.output[:500]
     cli_report = json.loads(result.output)
 
@@ -115,9 +120,9 @@ def test_finding_identity_consistent_across_surfaces(
     cli_sigs = _sigs(cli_report)
     assert cli_sigs, "fixture must produce findings"
     assert cli_sigs == _sigs(sdk_report) == _sigs(mcp_report), (
-        "CLI/SDK/MCP finding identities diverged")
-    assert cli_sigs == _sigs(handoff), (
-        "handoff bundle finding identities diverged")
+        "CLI/SDK/MCP finding identities diverged"
+    )
+    assert cli_sigs == _sigs(handoff), "handoff bundle finding identities diverged"
 
 
 def test_unknown_semantics_survive_all_surfaces(tmp_path: Path) -> None:
@@ -141,8 +146,7 @@ def test_unknown_semantics_survive_all_surfaces(tmp_path: Path) -> None:
     assert bundle_subjects  # fixture must exercise unknown plumbing
 
 
-def test_schema_version_consistent_across_surfaces(
-        tmp_path: Path) -> None:
+def test_schema_version_consistent_across_surfaces(tmp_path: Path) -> None:
     root = _root(tmp_path)
     sdk_report = Doctor.from_path(root).scan().to_dict()
     mcp_report = asyncio.run(_mcp_scan(root))

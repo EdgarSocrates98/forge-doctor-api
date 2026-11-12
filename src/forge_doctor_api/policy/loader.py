@@ -28,7 +28,13 @@ from forge_doctor_api.policy.model import (
 _POLICY_SUFFIXES = (".policy.yaml", ".policy.yml")
 _POLICY_NAMES = ("policies.yaml", "policies.yml", "policy.yaml", "policy.yml")
 _REQUIRED_EXCEPTION_FIELDS = (
-    "rule", "scope", "owner", "justification", "created", "expires", "approval",
+    "rule",
+    "scope",
+    "owner",
+    "justification",
+    "created",
+    "expires",
+    "approval",
 )
 
 
@@ -66,7 +72,8 @@ def _parse_policy(raw: object, file: str, level: PolicyLevel) -> ApiPolicy | str
         enabled=bool(raw.get("enabled", True)),
         applies_to=tuple(str(p) for p in applies),
         params=tuple(sorted((str(k), str(v)) for k, v in params.items()))
-        if isinstance(params, dict) else (),
+        if isinstance(params, dict)
+        else (),
         file=file,
     )
 
@@ -203,6 +210,4 @@ def load_policies(context: ProjectContext, files: list[str]) -> PolicySet:
                 issues.append(parsed_exc)
             else:
                 exceptions.append(parsed_exc)
-    return PolicySet(
-        policies=tuple(policies), exceptions=tuple(exceptions), issues=tuple(issues)
-    )
+    return PolicySet(policies=tuple(policies), exceptions=tuple(exceptions), issues=tuple(issues))

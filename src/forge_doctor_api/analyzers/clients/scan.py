@@ -21,9 +21,7 @@ _JAVA = (".java",)
 _GQL = (".graphql", ".gql")
 
 
-def scan_clients(
-    context: ProjectContext, paths: Sequence[str]
-) -> ApiClientModel:
+def scan_clients(context: ProjectContext, paths: Sequence[str]) -> ApiClientModel:
     """Scan project files for HTTP client call sites.
 
     Files are routed by extension; vendored/generated directories are skipped

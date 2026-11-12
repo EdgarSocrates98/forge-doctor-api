@@ -74,8 +74,7 @@ def _server(adapter, fp):
     return server
 
 
-def _call(srv, method: str, path: str, body: dict | None = None,
-          session: str | None = "USE_TOKEN"):
+def _call(srv, method: str, path: str, body: dict | None = None, session: str | None = "USE_TOKEN"):
     req = urllib.request.Request(
         f"http://127.0.0.1:{srv.port}/api/v1{path}",
         data=json.dumps(body).encode() if body is not None else None,
@@ -94,8 +93,7 @@ def _call(srv, method: str, path: str, body: dict | None = None,
 
 def _ctx(server, fp, body: dict):
     handler = type("H", (), {"server": server})()
-    return fp.RequestContext(
-        handler=handler, body=body, query={}, params={}, correlation_id="t")
+    return fp.RequestContext(handler=handler, body=body, query={}, params={}, correlation_id="t")
 
 
 # --- descriptor / health -----------------------------------------------------
@@ -135,14 +133,20 @@ def test_install_plan_then_apply_roundtrip(pa, fp, target: Path) -> None:
         code, boot = _call(srv, "GET", "/bootstrap")
         assert code == 200, boot
         code, plan_doc = _call(
-            srv, "POST", "/installation/plan",
-            {"scope": "project", "host": "devin", "profile": "minimal"})
+            srv,
+            "POST",
+            "/installation/plan",
+            {"scope": "project", "host": "devin", "profile": "minimal"},
+        )
         assert code == 200, plan_doc
         plan = plan_doc["data"]["plan"]
         token = plan_doc["data"]["plan_token"]
         code, applied = _call(
-            srv, "POST", "/installation/apply",
-            {"plan": plan, "plan_token": token, "confirm": "apply"})
+            srv,
+            "POST",
+            "/installation/apply",
+            {"plan": plan, "plan_token": token, "confirm": "apply"},
+        )
         assert code == 200, applied
         assert applied["data"]["status"] == "completed"
         code, health = _call(srv, "GET", "/health")
@@ -156,8 +160,11 @@ def test_apply_rejects_stale_plan_token(pa, fp, target: Path) -> None:
     srv = _server(pa.ForgeDoctorApiPortal(target), fp)
     try:
         code, doc = _call(
-            srv, "POST", "/installation/apply",
-            {"plan": {"scope": "project"}, "plan_token": "forged", "confirm": "apply"})
+            srv,
+            "POST",
+            "/installation/apply",
+            {"plan": {"scope": "project"}, "plan_token": "forged", "confirm": "apply"},
+        )
         assert code == 409
         assert doc["error"]["code"] == "PORTAL-PLAN-STALE"
     finally:
@@ -170,8 +177,7 @@ def test_spa_served(pa, fp, target: Path) -> None:
     assert a.assets_dir is not None
     srv = _server(a, fp)
     try:
-        with urllib.request.urlopen(
-                f"http://127.0.0.1:{srv.port}/", timeout=30) as r:
+        with urllib.request.urlopen(f"http://127.0.0.1:{srv.port}/", timeout=30) as r:
             html = r.read().decode()
         assert "<" in html
     finally:
@@ -254,8 +260,9 @@ def test_tasks_scan_executes_real_engine(pa, fp, target: Path) -> None:
     try:
         plan_doc = a._tasks_plan(_ctx(srv, fp, {"intent": "scan the project"}))
         assert plan_doc["plan"]["verb"] == "scan"
-        out = a._tasks_execute(_ctx(
-            srv, fp, {"plan": plan_doc["plan"], "plan_token": plan_doc["plan_token"]}))
+        out = a._tasks_execute(
+            _ctx(srv, fp, {"plan": plan_doc["plan"], "plan_token": plan_doc["plan_token"]})
+        )
         assert out["status"] == "completed"
         receipt = out["task"]["receipt"]
         assert receipt["schema_version"] == "1.0"
@@ -306,8 +313,11 @@ def test_telemetry_events_and_metrics(pa, fp, target: Path) -> None:
 def _run_script(*args: str, cwd: Path | None = None, timeout: int = 30):
     return subprocess.run(
         [sys.executable, str(SCRIPT), *args],
-        capture_output=True, text=True, timeout=timeout,
-        cwd=str(cwd) if cwd else None)
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+        cwd=str(cwd) if cwd else None,
+    )
 
 
 def test_entrypoint_help_lists_flags() -> None:
@@ -322,20 +332,24 @@ def test_entrypoint_serves_and_answers(target: Path) -> None:
     env = dict(os.environ, PYTHONIOENCODING="utf-8")
     proc = subprocess.Popen(
         [sys.executable, str(SCRIPT), "--no-browser", "--root", str(target)],
-        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, env=env)
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        env=env,
+    )
     try:
         line = proc.stdout.readline()
         doc = json.loads(line)
         from urllib.parse import parse_qs, urlsplit
+
         parts = urlsplit(doc["url"])
         token = parse_qs(parts.query)["forge_session"][0]
         port = parts.port
-        with urllib.request.urlopen(
-                f"http://127.0.0.1:{port}/", timeout=10) as r:
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/", timeout=10) as r:
             assert r.status == 200
         req = urllib.request.Request(
-            f"http://127.0.0.1:{port}/api/v1/bootstrap",
-            headers={"X-Forge-Session": token})
+            f"http://127.0.0.1:{port}/api/v1/bootstrap", headers={"X-Forge-Session": token}
+        )
         with urllib.request.urlopen(req, timeout=30) as r:
             boot = json.loads(r.read())
         assert boot["data"]["descriptor"]["forge_id"] == "forge-doctor-api"

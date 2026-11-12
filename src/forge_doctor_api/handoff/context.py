@@ -27,17 +27,19 @@ CONTEXT_REF_PREFIX = "doctor://"
 CONTEXT_REF_VERSION = "v1"
 
 # §35 addressable kinds. Unknown kinds are a hard error, never guessed.
-REF_KINDS = frozenset({
-    "service",
-    "operation",
-    "contract",
-    "finding",
-    "unknown",
-    "graph",
-    "runtime",
-    "capability",
-    "handoff",
-})
+REF_KINDS = frozenset(
+    {
+        "service",
+        "operation",
+        "contract",
+        "finding",
+        "unknown",
+        "graph",
+        "runtime",
+        "capability",
+        "handoff",
+    }
+)
 
 # Slice caps — documented bounds that keep every slice small.
 MAX_OPS_PER_SLICE = 128
@@ -61,8 +63,7 @@ class ContextRef(Model):
     @property
     def uri(self) -> str:
         suffix = "/".join(self.parts)
-        return f"{CONTEXT_REF_PREFIX}{self.kind}" + (
-            f"/{suffix}" if suffix else "")
+        return f"{CONTEXT_REF_PREFIX}{self.kind}" + (f"/{suffix}" if suffix else "")
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -121,7 +122,7 @@ def parse(uri: str) -> ContextRef:
     """Strict `doctor://` parse — unknown kinds are errors."""
     if not uri.startswith(CONTEXT_REF_PREFIX):
         raise ContextRefError(f"not a context ref: {uri!r}")
-    body = uri[len(CONTEXT_REF_PREFIX):]
+    body = uri[len(CONTEXT_REF_PREFIX) :]
     segments = [s for s in body.split("/") if s]
     if not segments:
         raise ContextRefError("missing ref kind")
@@ -139,11 +140,15 @@ def content_digest(text: str) -> str:
 def _finding_ref(f: Finding) -> str:
     # entity_ids are optional on a Finding; fall back to the first
     # evidence source so every finding gets a mintable ref.
-    subject = (f.entity_ids[0] if f.entity_ids
-               else (f.evidence[0].source if f.evidence else "report"))
-    return mint("finding", id=f.id, subject=subject,
-                digest=content_digest(
-                    f"{f.id}|{subject}|{f.description}"))
+    subject = (
+        f.entity_ids[0] if f.entity_ids else (f.evidence[0].source if f.evidence else "report")
+    )
+    return mint(
+        "finding",
+        id=f.id,
+        subject=subject,
+        digest=content_digest(f"{f.id}|{subject}|{f.description}"),
+    )
 
 
 def finding_refs(report: DoctorReport) -> tuple[str, ...]:
@@ -162,41 +167,39 @@ def context_slice(report: DoctorReport, ref: str) -> ContextSlice:
     if kind == "finding":
         for f in report.findings:
             if _finding_ref(f) == ref:
-                return ContextSlice(
-                    ref=ref, kind=kind, findings=(f,),
-                    unknowns=f.unknowns)
+                return ContextSlice(ref=ref, kind=kind, findings=(f,), unknowns=f.unknowns)
         return ContextSlice(ref=ref, kind=kind)
 
     if kind == "unknown":
         idx = int(parsed.parts[0]) if parsed.parts else 0
-        unknowns = report.unknowns[idx: idx + 1]
+        unknowns = report.unknowns[idx : idx + 1]
         return ContextSlice(ref=ref, kind=kind, unknowns=unknowns)
 
     if kind == "service":
         truncated = len(report.operations) > MAX_OPS_PER_SLICE
         ops = report.operations[:MAX_OPS_PER_SLICE]
-        findings = tuple(sorted(
-            {f.id for f in report.findings}))[:MAX_FINDINGS_PER_SLICE]
+        findings = tuple(sorted({f.id for f in report.findings}))[:MAX_FINDINGS_PER_SLICE]
         fields = (
             ("project", report.project or ""),
             ("operations", json.dumps(ops)),
             ("finding_ids", json.dumps(list(findings))),
         )
-        return ContextSlice(
-            ref=ref, kind=kind, fields=fields, truncated=truncated)
+        return ContextSlice(ref=ref, kind=kind, fields=fields, truncated=truncated)
 
     if kind == "operation":
         ident = "/".join(parsed.parts)
         related = tuple(
-            f for f in report.findings
-            if ident in f.entity_ids or any(
-                ident in e for e in f.entity_ids)
+            f
+            for f in report.findings
+            if ident in f.entity_ids or any(ident in e for e in f.entity_ids)
         )[:MAX_FINDINGS_PER_SLICE]
         return ContextSlice(
-            ref=ref, kind=kind,
+            ref=ref,
+            kind=kind,
             fields=(("operation", ident),),
             findings=related,
-            truncated=len(related) == MAX_FINDINGS_PER_SLICE)
+            truncated=len(related) == MAX_FINDINGS_PER_SLICE,
+        )
 
     if kind == "graph":
         summary = report.graph
@@ -206,62 +209,69 @@ def context_slice(report: DoctorReport, ref: str) -> ContextSlice:
             # doctor://graph/{entity-id} — bounded depth-1 slice of the
             # flat edge export (spec 057), evidence refs preserved.
             root = "/".join(parsed.parts)
-            edges = tuple(
-                e for e in report.graph_edges
-                if e.from_id == root or e.to_id == root
-            )[:MAX_GRAPH_EDGES]
+            edges = tuple(e for e in report.graph_edges if e.from_id == root or e.to_id == root)[
+                :MAX_GRAPH_EDGES
+            ]
             return ContextSlice(
-                ref=ref, kind=kind,
+                ref=ref,
+                kind=kind,
                 fields=(
                     ("root", root),
-                    ("edges", json.dumps(
-                        [e.to_dict() for e in edges], sort_keys=True)),
+                    ("edges", json.dumps([e.to_dict() for e in edges], sort_keys=True)),
                 ),
                 truncated=len(report.graph_edges) > MAX_GRAPH_EDGES
-                and len(edges) == MAX_GRAPH_EDGES)
+                and len(edges) == MAX_GRAPH_EDGES,
+            )
         ids = summary.ids[:MAX_GRAPH_EDGES]
         return ContextSlice(
-            ref=ref, kind=kind,
+            ref=ref,
+            kind=kind,
             fields=(
-                ("entities", json.dumps(
-                    dict(summary.counts), sort_keys=True)),
+                ("entities", json.dumps(dict(summary.counts), sort_keys=True)),
                 ("service_ids", json.dumps(list(ids))),
             ),
-            truncated=len(summary.ids) > MAX_GRAPH_EDGES)
+            truncated=len(summary.ids) > MAX_GRAPH_EDGES,
+        )
 
     if kind == "runtime":
         summary = report.runtime
         if summary is None:
             return ContextSlice(ref=ref, kind=kind)
         return ContextSlice(
-            ref=ref, kind=kind,
-            fields=(("counts", json.dumps(
-                dict(summary.counts), sort_keys=True)),))
+            ref=ref,
+            kind=kind,
+            fields=(("counts", json.dumps(dict(summary.counts), sort_keys=True)),),
+        )
 
     if kind == "contract":
         summary = report.contracts
         if summary is None:
             return ContextSlice(ref=ref, kind=kind)
         return ContextSlice(
-            ref=ref, kind=kind,
-            fields=(("counts", json.dumps(
-                dict(summary.counts), sort_keys=True)),))
+            ref=ref,
+            kind=kind,
+            fields=(("counts", json.dumps(dict(summary.counts), sort_keys=True)),),
+        )
 
     if kind == "capability":
         caps = report.capabilities[:MAX_CAPABILITIES]
         names = tuple(c.capability.value for c in caps)
         return ContextSlice(
-            ref=ref, kind=kind,
+            ref=ref,
+            kind=kind,
             fields=(("capabilities", json.dumps(list(names))),),
-            truncated=len(report.capabilities) > MAX_CAPABILITIES)
+            truncated=len(report.capabilities) > MAX_CAPABILITIES,
+        )
 
     if kind == "handoff":
         return ContextSlice(
-            ref=ref, kind=kind,
+            ref=ref,
+            kind=kind,
             fields=(
                 ("schema_version", report.schema_version),
                 ("analysis_rev", report.analysis_rev or ""),
-            ))
+            ),
+        )
 
     return ContextSlice(ref=ref, kind=kind)  # unreachable: kinds gated
 

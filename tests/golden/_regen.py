@@ -26,8 +26,7 @@ def main() -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     for entry in command_inventory():
         name = entry.path.replace(" ", "-") + ".txt"
-        (OUT_DIR / name).write_text(
-            normalized_help(*entry.path.split()), encoding="utf-8")
+        (OUT_DIR / name).write_text(normalized_help(*entry.path.split()), encoding="utf-8")
         print(f"wrote {OUT_DIR / name}")
 
 

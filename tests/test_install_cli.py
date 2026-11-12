@@ -43,9 +43,7 @@ def _json(output: str) -> dict:
 
 def _invoke(*args: str) -> tuple[int, dict]:
     result = runner.invoke(app, ["install", *args])
-    assert not result.exception or isinstance(result.exception, SystemExit), (
-        result.exception
-    )
+    assert not result.exception or isinstance(result.exception, SystemExit), result.exception
     return result.exit_code, _json(result.stdout)
 
 
@@ -148,8 +146,13 @@ def test_module_invocation_is_the_catalog_argv(tmp_path: Path) -> None:
     env["FORGE_HOME_OVERRIDE"] = str(tmp_path / "home")
     proc = subprocess.run(
         [
-            sys.executable, "-m", "forge_doctor_api",
-            "install", "--root", str(root), "--dry-run",
+            sys.executable,
+            "-m",
+            "forge_doctor_api",
+            "install",
+            "--root",
+            str(root),
+            "--dry-run",
         ],
         capture_output=True,
         text=True,

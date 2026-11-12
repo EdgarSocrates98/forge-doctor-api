@@ -61,8 +61,7 @@ paths:
 
 def test_schema_dep_edge_from_declared_pointer(tmp_path: Path) -> None:
     g = build_migration_graph(_model(tmp_path, TWO_OPS_SHARED_SCHEMA))
-    edges = [e for e in g.edges
-             if e.kind is MigrationEdgeKind.SCHEMA_DEP]
+    edges = [e for e in g.edges if e.kind is MigrationEdgeKind.SCHEMA_DEP]
     assert edges, "shared declared schema must link operations"
     assert all(e.evidence for e in edges)
 
@@ -83,8 +82,7 @@ paths:
 
 def test_version_dep_edge(tmp_path: Path) -> None:
     g = build_migration_graph(_model(tmp_path, VERSIONED))
-    vedges = [e for e in g.edges
-              if e.kind is MigrationEdgeKind.VERSION_DEP]
+    vedges = [e for e in g.edges if e.kind is MigrationEdgeKind.VERSION_DEP]
     assert len(vedges) == 1
     assert vedges[0].from_id == "GET /v1/items"
     assert vedges[0].to_id == "GET /v2/items"
@@ -97,10 +95,8 @@ def test_every_edge_has_evidence(tmp_path: Path) -> None:
 
 
 def test_paths_deterministic(tmp_path: Path) -> None:
-    a = migration_paths(build_migration_graph(
-        _model(tmp_path, TWO_OPS_SHARED_SCHEMA, "a.yaml")))
-    b = migration_paths(build_migration_graph(
-        _model(tmp_path, TWO_OPS_SHARED_SCHEMA, "b.yaml")))
+    a = migration_paths(build_migration_graph(_model(tmp_path, TWO_OPS_SHARED_SCHEMA, "a.yaml")))
+    b = migration_paths(build_migration_graph(_model(tmp_path, TWO_OPS_SHARED_SCHEMA, "b.yaml")))
     assert [p.units for p in a] == [p.units for p in b]
 
 
@@ -114,11 +110,10 @@ def test_cycle_reported_not_broken() -> None:
             MigrationNode(unit_id="B", readiness=Readiness.READY),
         ),
         edges=(
-            MigrationEdge(from_id="A", to_id="B",
-                          kind=MigrationEdgeKind.SCHEMA_DEP, evidence=ev),
-            MigrationEdge(from_id="B", to_id="A",
-                          kind=MigrationEdgeKind.SCHEMA_DEP, evidence=ev),
-        ))
+            MigrationEdge(from_id="A", to_id="B", kind=MigrationEdgeKind.SCHEMA_DEP, evidence=ev),
+            MigrationEdge(from_id="B", to_id="A", kind=MigrationEdgeKind.SCHEMA_DEP, evidence=ev),
+        ),
+    )
     paths = migration_paths(g)
     cyclic = [p for p in paths if not p.ordering_known]
     assert cyclic, "cycle must surface as unknown ordering"

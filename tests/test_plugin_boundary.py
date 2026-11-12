@@ -44,7 +44,11 @@ _DYNAMIC_IMPORT_SITES = {
     # Vendored upstream surfaces (byte-parity with the-forge): lazy stdlib
     # imports inside the host-side Studio server and terminal UI kit.
     "_graphstudio.py",
-    "ui/i18n.py", "ui/kit.py", "ui/wizard.py", "ui/home.py", "ui/tui.py",
+    "ui/i18n.py",
+    "ui/kit.py",
+    "ui/wizard.py",
+    "ui/home.py",
+    "ui/tui.py",
 }
 _INTERNAL_PREFIX = "forge_doctor_api."
 
@@ -57,17 +61,25 @@ def _import_target_prefix(node: ast.Call) -> str | None:
     arg = node.args[0]
     if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
         return arg.value
-    if isinstance(arg, ast.JoinedStr) and arg.values and isinstance(
-            arg.values[0], ast.Constant) and isinstance(
-            arg.values[0].value, str):
+    if (
+        isinstance(arg, ast.JoinedStr)
+        and arg.values
+        and isinstance(arg.values[0], ast.Constant)
+        and isinstance(arg.values[0].value, str)
+    ):
         return arg.values[0].value
     return None
+
 
 # Modules the Doctor must never import — sibling-product or
 # orchestration packages would invert the boundary direction.
 _EXTERNAL_ROOTS = {
-    "forge_doctor_data", "forger", "the_forger", "api_forge",
-    "api_forge_studio", "orchestrator",
+    "forge_doctor_data",
+    "forger",
+    "the_forger",
+    "api_forge",
+    "api_forge_studio",
+    "orchestrator",
 }
 
 VALID = """
@@ -100,9 +112,11 @@ def _write(tmp_path: Path, name: str, text: str) -> Path:
 
 
 def _tree_hash(root: Path) -> dict[str, str]:
-    return {str(p.relative_to(root)): hashlib.sha256(
-        p.read_bytes()).hexdigest()
-        for p in sorted(root.rglob("*")) if p.is_file()}
+    return {
+        str(p.relative_to(root)): hashlib.sha256(p.read_bytes()).hexdigest()
+        for p in sorted(root.rglob("*"))
+        if p.is_file()
+    }
 
 
 def _iter_calls(tree: ast.AST):
@@ -141,20 +155,24 @@ def test_dynamic_import_only_at_trust_gate() -> None:
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in _iter_calls(tree):
             func = node.func
-            name = (func.id if isinstance(func, ast.Name)
-                    else func.attr if isinstance(func, ast.Attribute)
-                    else "")
+            name = (
+                func.id
+                if isinstance(func, ast.Name)
+                else func.attr
+                if isinstance(func, ast.Attribute)
+                else ""
+            )
             if name not in ("import_module", "__import__"):
                 continue
             if rel in _DYNAMIC_IMPORT_SITES:
                 continue
             prefix = _import_target_prefix(node)
-            if name == "__import__" or not prefix or not (
-                    prefix.startswith(_INTERNAL_PREFIX)
-                    or prefix == "forge_doctor_api"):
-                offenders.append(
-                    f"{rel}:L{node.lineno}: {name}() target not "
-                    "provably first-party")
+            if (
+                name == "__import__"
+                or not prefix
+                or not (prefix.startswith(_INTERNAL_PREFIX) or prefix == "forge_doctor_api")
+            ):
+                offenders.append(f"{rel}:L{node.lineno}: {name}() target not provably first-party")
     assert offenders == [], "\n".join(offenders)
 
 
@@ -205,18 +223,21 @@ def test_matrix_success(tmp_path: Path) -> None:
     assert module.__name__ == "forge_doctor_api.sdk"
 
 
-def test_matrix_import_failure_typed_and_unimported(
-        tmp_path: Path) -> None:
+def test_matrix_import_failure_typed_and_unimported(tmp_path: Path) -> None:
     """APPROVED_LOCAL plugin pointing at a missing module fails with a
     typed error — and the module never enters sys.modules."""
-    _write(tmp_path, "ghost", """
+    _write(
+        tmp_path,
+        "ghost",
+        """
 [tool.forge-doctor.plugin]
 id = "ghost"
 version = "1.0.0"
 module = "no_such_module_xyz"
 trust_class = "APPROVED_LOCAL"
 source = "plugins/ghost"
-""")
+""",
+    )
     registry = discover_registry(tmp_path)
     with pytest.raises(ModelError, match="failed to import"):
         registry.activate("ghost")
@@ -224,9 +245,13 @@ source = "plugins/ghost"
 
 
 def test_matrix_incompatible_doctor_api(tmp_path: Path) -> None:
-    _write(tmp_path, "future", VALID.replace(
-        'id = "demo-plugin"', 'id = "future"').replace(
-        'doctor_api = ">=0.1"', 'doctor_api = ">=9.9"'))
+    _write(
+        tmp_path,
+        "future",
+        VALID.replace('id = "demo-plugin"', 'id = "future"').replace(
+            'doctor_api = ">=0.1"', 'doctor_api = ">=9.9"'
+        ),
+    )
     registry = discover_registry(tmp_path)
     manifest = registry.get("future")
     assert manifest is not None
@@ -244,13 +269,13 @@ def test_matrix_invalid_manifest_rejected(tmp_path: Path) -> None:
 
 def test_matrix_duplicate_id_conflicts(tmp_path: Path) -> None:
     _write(tmp_path, "a", VALID)
-    _write(tmp_path, "b", VALID.replace(
-        'module = "forge_doctor_api.sdk"',
-        'module = "forge_doctor_api.cli"'))
+    _write(
+        tmp_path,
+        "b",
+        VALID.replace('module = "forge_doctor_api.sdk"', 'module = "forge_doctor_api.cli"'),
+    )
     registry = discover_registry(tmp_path)
-    assert any(c.kind == "duplicate-id"
-               and "demo-plugin" in c.detail
-               for c in registry.conflicts())
+    assert any(c.kind == "duplicate-id" and "demo-plugin" in c.detail for c in registry.conflicts())
 
 
 def test_matrix_timeout_is_cooperative_and_documented() -> None:
@@ -261,40 +286,43 @@ def test_matrix_timeout_is_cooperative_and_documented() -> None:
     for path in sorted(SRC.glob("plugins/*.py")):
         rel = f"plugins/{path.name}"
         tree = ast.parse(path.read_text(encoding="utf-8"))
-        banned = {"threading", "signal", "asyncio", "multiprocessing",
-                  "concurrent"}
+        banned = {"threading", "signal", "asyncio", "multiprocessing", "concurrent"}
         for node in ast.walk(tree):
             if isinstance(node, ast.Import):
                 for a in node.names:
                     if a.name.split(".")[0] in banned:
                         offenders.append(f"{rel}: {a.name}")
-            elif isinstance(node, ast.ImportFrom) and (
-                    node.module or "").split(".")[0] in banned:
+            elif isinstance(node, ast.ImportFrom) and (node.module or "").split(".")[0] in banned:
                 offenders.append(f"{rel}: from {node.module}")
     assert offenders == [], (
-        "plugin surface gained async/threading machinery — revisit "
-        f"timeout policy: {offenders}")
+        f"plugin surface gained async/threading machinery — revisit timeout policy: {offenders}"
+    )
 
 
 def test_matrix_non_model_result_flagged(tmp_path: Path) -> None:
     """A result that isn't a mapping/list is a violation, not a
     crash — serialized form is the contract."""
     assert validate_plugin_output(42, tmp_path)[0].rule == "result-type"
-    assert validate_plugin_output("oops", tmp_path)[0].rule == (
-        "result-type")
-    bad_shape = validate_plugin_output(
-        {"findings": "not-a-list"}, tmp_path)
+    assert validate_plugin_output("oops", tmp_path)[0].rule == ("result-type")
+    bad_shape = validate_plugin_output({"findings": "not-a-list"}, tmp_path)
     assert any(v.rule == "findings-type" for v in bad_shape)
 
 
 def test_matrix_oversized_result_bounded(tmp_path: Path) -> None:
     """Over-budget output is a typed violation — the budget is real."""
-    huge = {"findings": [
-        {"id": "OAS001", "title": "x" * 4096, "severity": "LOW",
-         "confidence": "HIGH", "evidence_kind": "STATIC",
-         "evidence": [{"kind": "STATIC", "source": "s",
-                       "summary": "pad"}]}
-        for _ in range((PLUGIN_RESULT_BUDGET // 4096) + 8)]}
+    huge = {
+        "findings": [
+            {
+                "id": "OAS001",
+                "title": "x" * 4096,
+                "severity": "LOW",
+                "confidence": "HIGH",
+                "evidence_kind": "STATIC",
+                "evidence": [{"kind": "STATIC", "source": "s", "summary": "pad"}],
+            }
+            for _ in range((PLUGIN_RESULT_BUDGET // 4096) + 8)
+        ]
+    }
     violations = validate_plugin_output(huge, tmp_path)
     assert any(v.rule == "oversized" for v in violations)
 
@@ -307,14 +335,13 @@ def test_matrix_crash_is_typed_no_traceback(tmp_path: Path) -> None:
     assert report.checks[0].name == "run"
     assert report.checks[0].status == "error"
     assert "Traceback" not in report.checks[0].details
-    assert "File \"" not in report.checks[0].details
+    assert 'File "' not in report.checks[0].details
 
 
 # -- no-network / no-mutation -------------------------------------------------
 
 
-_PLUGIN_SRC = (Path(__file__).resolve().parent / "fixtures"
-               / "plugin_src")
+_PLUGIN_SRC = Path(__file__).resolve().parent / "fixtures" / "plugin_src"
 
 LOCAL = """
 [tool.forge-doctor.plugin]
@@ -334,13 +361,13 @@ def _plugin_fixture(tmp_path: Path) -> Path:
     plugins = tmp_path / "plugins"
     _write(plugins, "demo-local", LOCAL)
     (tmp_path / "app.py").write_text(
-        "from fastapi import FastAPI\napp = FastAPI()\n"
-        "@app.get('/x')\ndef x(): pass\n", encoding="utf-8")
+        "from fastapi import FastAPI\napp = FastAPI()\n@app.get('/x')\ndef x(): pass\n",
+        encoding="utf-8",
+    )
     return plugins
 
 
-def test_plugin_commands_run_with_network_blocked(
-        tmp_path: Path) -> None:
+def test_plugin_commands_run_with_network_blocked(tmp_path: Path) -> None:
     """list/inspect/verify never touch the network — verify included:
     the full manifest→trust→import→conformance path stays offline."""
     plugins = _plugin_fixture(tmp_path)
@@ -349,20 +376,19 @@ def test_plugin_commands_run_with_network_blocked(
         raise OSError("network is disabled")
 
     sys.modules.pop("demoplug", None)
-    with patch.object(sys, "path", [*sys.path, str(_PLUGIN_SRC)]), \
-            patch("socket.socket", _blocked), \
-            patch("socket.create_connection", _blocked), \
-            patch("socket.getaddrinfo", _blocked):
-        r = runner.invoke(
-            app, ["plugins", "list", "--dir", str(plugins)])
+    with (
+        patch.object(sys, "path", [*sys.path, str(_PLUGIN_SRC)]),
+        patch("socket.socket", _blocked),
+        patch("socket.create_connection", _blocked),
+        patch("socket.getaddrinfo", _blocked),
+    ):
+        r = runner.invoke(app, ["plugins", "list", "--dir", str(plugins)])
+        assert r.exit_code == 0, r.output[:400]
+        r = runner.invoke(app, ["plugins", "inspect", "demo-local", "--dir", str(plugins)])
         assert r.exit_code == 0, r.output[:400]
         r = runner.invoke(
-            app, ["plugins", "inspect", "demo-local",
-                  "--dir", str(plugins)])
-        assert r.exit_code == 0, r.output[:400]
-        r = runner.invoke(
-            app, ["plugins", "verify", "demo-local", str(tmp_path),
-                  "--dir", str(plugins)])
+            app, ["plugins", "verify", "demo-local", str(tmp_path), "--dir", str(plugins)]
+        )
         assert r.exit_code == 0, r.output[:400]
 
 
@@ -376,10 +402,8 @@ def test_plugin_commands_do_not_mutate_project(tmp_path: Path) -> None:
     with patch.object(sys, "path", [*sys.path, str(_PLUGIN_SRC)]):
         for argv in (
             ["plugins", "list", "--dir", str(plugins)],
-            ["plugins", "inspect", "demo-local",
-             "--dir", str(plugins)],
-            ["plugins", "verify", "demo-local", str(tmp_path),
-             "--dir", str(plugins)],
+            ["plugins", "inspect", "demo-local", "--dir", str(plugins)],
+            ["plugins", "verify", "demo-local", str(tmp_path), "--dir", str(plugins)],
         ):
             result = runner.invoke(app, argv)
             assert result.exit_code == 0, result.output[:400]
@@ -409,8 +433,10 @@ def test_untrusted_listed_but_never_imported(tmp_path: Path) -> None:
         imported.append(name)
         return real_import(name, *a, **k)
 
-    with patch("builtins.__import__", side_effect=_spy), \
-            pytest.raises(ModelError, match="UNTRUSTED"):
+    with (
+        patch("builtins.__import__", side_effect=_spy),
+        pytest.raises(ModelError, match="UNTRUSTED"),
+    ):
         registry.activate("shady")
     assert "nonexistent_module_xyz" not in imported
     assert "nonexistent_module_xyz" not in sys.modules
@@ -421,56 +447,53 @@ def test_untrusted_listed_but_never_imported(tmp_path: Path) -> None:
 
 def _good_finding() -> dict:
     return {
-        "id": "OAS001", "title": "t", "description": "d",
-        "severity": "LOW", "confidence": "MEDIUM",
+        "id": "OAS001",
+        "title": "t",
+        "description": "d",
+        "severity": "LOW",
+        "confidence": "MEDIUM",
         "evidence_kind": "STATIC",
-        "evidence": [{"kind": "STATIC", "source": "api.yaml",
-                      "summary": "seen"}],
+        "evidence": [{"kind": "STATIC", "source": "api.yaml", "summary": "seen"}],
         "entity_ids": ["operation:openapi:listPets"],
         "source_location": {"path": "api.yaml", "line": 5},
     }
 
 
 def test_output_validation_accepts_clean(tmp_path: Path) -> None:
-    assert validate_plugin_output(
-        {"findings": [_good_finding()]}, tmp_path) == ()
+    assert validate_plugin_output({"findings": [_good_finding()]}, tmp_path) == ()
 
 
-@pytest.mark.parametrize("mutate,rule", [
-    (lambda f: f.update(severity="CATASTROPHIC"), "severity"),
-    (lambda f: f.update(confidence="PRETTY_SURE"), "confidence"),
-    (lambda f: f.update(evidence_kind="VIBES"), "evidence_kind"),
-    (lambda f: f.update(id="not-an-id"), "check-id"),
-    (lambda f: f.update(entity_ids=["no colons"]), "entity-id"),
-    (lambda f: f.pop("evidence"), "evidence"),
-    (lambda f: f.update(evidence=[{"kind": "VIBES", "source": "s",
-                                   "summary": "x"}]),
-     "evidence-kind"),
-    (lambda f: f.update(source_location={"path": "../escape.py"}),
-     "path-scope"),
-    (lambda f: f.update(source_location={"path": "/abs/escape.py"}),
-     "path-scope"),
-    (lambda f: f.update(source_location={"path": "C:\\win\\x.py"}),
-     "path-scope"),
-    (lambda f: f.update(schema_version="99.0"), "schema-version"),
-    (lambda f: f.update(confidence="UNKNOWN", unknowns=[]),
-     "unknowns"),
-])
-def test_output_validation_rejects(tmp_path: Path,
-                                   mutate, rule: str) -> None:
+@pytest.mark.parametrize(
+    "mutate,rule",
+    [
+        (lambda f: f.update(severity="CATASTROPHIC"), "severity"),
+        (lambda f: f.update(confidence="PRETTY_SURE"), "confidence"),
+        (lambda f: f.update(evidence_kind="VIBES"), "evidence_kind"),
+        (lambda f: f.update(id="not-an-id"), "check-id"),
+        (lambda f: f.update(entity_ids=["no colons"]), "entity-id"),
+        (lambda f: f.pop("evidence"), "evidence"),
+        (
+            lambda f: f.update(evidence=[{"kind": "VIBES", "source": "s", "summary": "x"}]),
+            "evidence-kind",
+        ),
+        (lambda f: f.update(source_location={"path": "../escape.py"}), "path-scope"),
+        (lambda f: f.update(source_location={"path": "/abs/escape.py"}), "path-scope"),
+        (lambda f: f.update(source_location={"path": "C:\\win\\x.py"}), "path-scope"),
+        (lambda f: f.update(schema_version="99.0"), "schema-version"),
+        (lambda f: f.update(confidence="UNKNOWN", unknowns=[]), "unknowns"),
+    ],
+)
+def test_output_validation_rejects(tmp_path: Path, mutate, rule: str) -> None:
     f = _good_finding()
     mutate(f)
-    violations = validate_plugin_output(
-        {"findings": [f]}, tmp_path)
-    assert any(v.rule == rule for v in violations), (
-        f"expected {rule} violation in {violations}")
+    violations = validate_plugin_output({"findings": [f]}, tmp_path)
+    assert any(v.rule == rule for v in violations), f"expected {rule} violation in {violations}"
 
 
 def test_output_validation_typed_and_sorted(tmp_path: Path) -> None:
     f = _good_finding()
     f.update(severity="NOPE", entity_ids=["bad id"])
-    violations = validate_plugin_output(
-        {"findings": [f]}, tmp_path)
+    violations = validate_plugin_output({"findings": [f]}, tmp_path)
     keys = [(v.rule, v.path) for v in violations]
     assert keys == sorted(keys)
     assert all(v.rule and v.detail for v in violations)
@@ -478,12 +501,12 @@ def test_output_validation_typed_and_sorted(tmp_path: Path) -> None:
 
 def test_conformance_output_schema_check(tmp_path: Path) -> None:
     """The output-schema check fails a plugin emitting bad findings."""
+
     def _bad(ctx, files):
         return [{"id": "not-an-id", "severity": "NOPE"}]
 
     report = run_conformance("bad-output", _bad, tmp_path)
-    check = next(c for c in report.checks
-                 if c.name == "output-schema")
+    check = next(c for c in report.checks if c.name == "output-schema")
     assert check.status == "fail"
     assert "check-id" in check.details or "severity" in check.details
 
@@ -492,9 +515,11 @@ def test_conformance_clean_still_passes_all(tmp_path: Path) -> None:
     from forge_doctor_api.analyzers.routes.fastapi import (
         FastApiAdapter,
     )
+
     (tmp_path / "app.py").write_text(
-        "from fastapi import FastAPI\napp = FastAPI()\n"
-        "@app.get('/x')\ndef x(): pass\n", encoding="utf-8")
+        "from fastapi import FastAPI\napp = FastAPI()\n@app.get('/x')\ndef x(): pass\n",
+        encoding="utf-8",
+    )
 
     def _clean(ctx, files):
         return FastApiAdapter().discover_routes(ctx, "conf", files)
@@ -503,8 +528,14 @@ def test_conformance_clean_still_passes_all(tmp_path: Path) -> None:
     for c in report.checks:
         assert c.status == "pass", f"{c.name}: {c.details}"
     assert {c.name for c in report.checks} == {
-        "determinism", "offline", "evidence", "side-effects",
-        "output-compat", "unknown-semantics", "output-schema"}
+        "determinism",
+        "offline",
+        "evidence",
+        "side-effects",
+        "output-compat",
+        "unknown-semantics",
+        "output-schema",
+    }
 
 
 def test_manifest_json_roundtrip_stable(tmp_path: Path) -> None:

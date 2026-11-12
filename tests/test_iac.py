@@ -72,9 +72,7 @@ class TestKubernetes:
         ctx = _ctx(tmp_path, {"k8s.yaml": _K8S})
         model = load_infra_model(ctx, sorted(ctx.iter_files()))
         kinds = {r.kind for r in model.kubernetes}
-        assert kinds == {
-            K8sKind.INGRESS, K8sKind.SERVICE, K8sKind.DEPLOYMENT,
-            K8sKind.HPA}
+        assert kinds == {K8sKind.INGRESS, K8sKind.SERVICE, K8sKind.DEPLOYMENT, K8sKind.HPA}
 
     def test_ingress_service_deployment_chain(self, tmp_path) -> None:
         ctx = _ctx(tmp_path, {"k8s.yaml": _K8S})
@@ -116,8 +114,7 @@ spec: {selector: {app: web}}
 """
         ctx = _ctx(tmp_path, {"gw.yaml": doc})
         model = load_infra_model(ctx, sorted(ctx.iter_files()))
-        assert ("HTTPRoute/rt", "Service/web-svc") in {
-            (c.source, c.target) for c in model.chains}
+        assert ("HTTPRoute/rt", "Service/web-svc") in {(c.source, c.target) for c in model.chains}
 
 
 class TestIac:
@@ -140,15 +137,13 @@ class TestIac:
         model = load_infra_model(ctx, sorted(ctx.iter_files()))
         iac = model.iac[0]
         assert iac.iac_kind == "cloudformation" and iac.parsed
-        assert iac.type_name == (
-            "AWS::ElasticLoadBalancingV2::LoadBalancer")
+        assert iac.type_name == ("AWS::ElasticLoadBalancingV2::LoadBalancer")
         attrs = {a.name: a for a in iac.attrs}
         assert attrs["Name"].value == "api-lb"
         assert attrs["Subnets"].dynamic and attrs["Subnets"].value is None
         assert any("Subnets" in u.subject for u in model.unknowns)
 
-    def test_cloudformation_malformed_is_unknown_not_crash(
-            self, tmp_path) -> None:
+    def test_cloudformation_malformed_is_unknown_not_crash(self, tmp_path) -> None:
         ctx = _ctx(tmp_path, {"stack.yaml": _CFN_BROKEN})
         model = load_infra_model(ctx, sorted(ctx.iter_files()))
         assert any(u.subject == "stack.yaml" for u in model.unknowns)
@@ -185,8 +180,7 @@ class TestIacDepth:
         assert attrs["name"].value == "api-lb"
         assert attrs["subnets"].value is None and attrs["subnets"].dynamic
 
-    def test_comments_and_strings_never_produce_resources(
-            self, tmp_path) -> None:
+    def test_comments_and_strings_never_produce_resources(self, tmp_path) -> None:
         ctx = _ctx(tmp_path, {"main.tf": _TF_ADV})
         model = load_infra_model(ctx, sorted(ctx.iter_files()))
         assert {r.name for r in model.iac} == {"main", "fn"}
@@ -203,8 +197,7 @@ class TestGraphLinkage:
     def test_deployed_as_edge_on_exact_match(self, tmp_path) -> None:
         ctx = _ctx(tmp_path, {"k8s.yaml": _K8S})
         model = load_infra_model(ctx, sorted(ctx.iter_files()))
-        entities, edges = infra_graph(
-            model, ["service:python:web-dep", "service:python:other"])
+        entities, edges = infra_graph(model, ["service:python:web-dep", "service:python:other"])
         assert len(entities) == 1
         assert entities[0].id == "deployment:k8s:web-dep"
         edge = edges[0]

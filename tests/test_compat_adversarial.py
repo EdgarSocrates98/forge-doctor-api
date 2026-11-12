@@ -124,8 +124,9 @@ def test_nullable_flip_response_breaks(tmp_path: Path) -> None:
         "        tag: {type: string, nullable: true}\n",
     )
     new = old.replace("{type: string, nullable: true}", "{type: string}")
-    diff = diff_models(_oapi(tmp_path / "o", {"a.yaml": old}),
-                       _oapi(tmp_path / "n", {"a.yaml": new}))
+    diff = diff_models(
+        _oapi(tmp_path / "o", {"a.yaml": old}), _oapi(tmp_path / "n", {"a.yaml": new})
+    )
     breaking = _classified(diff.changes, CompatibilityClass.BREAKING)
     assert "type_changed_response" in breaking
     change = next(c for c in diff.changes if c.kind == "type_changed_response")
@@ -139,12 +140,12 @@ def test_nullable_widen_response_candidate(tmp_path: Path) -> None:
         "        name: {type: string}",
         "        name: {type: string, nullable: true}",
     )
-    diff = diff_models(_oapi(tmp_path / "o", {"a.yaml": NULLABLE_BASE}),
-                       _oapi(tmp_path / "n", {"a.yaml": new}))
+    diff = diff_models(
+        _oapi(tmp_path / "o", {"a.yaml": NULLABLE_BASE}), _oapi(tmp_path / "n", {"a.yaml": new})
+    )
     candidates = _classified(diff.changes, CompatibilityClass.POTENTIALLY_BREAKING)
     assert "response_type_widened" in candidates
-    assert "type_changed_response" not in _classified(
-        diff.changes, CompatibilityClass.BREAKING)
+    assert "type_changed_response" not in _classified(diff.changes, CompatibilityClass.BREAKING)
 
 
 def test_nullable_removed_on_request_breaks(tmp_path: Path) -> None:
@@ -153,10 +154,10 @@ def test_nullable_removed_on_request_breaks(tmp_path: Path) -> None:
         "nickname: {type: string, nullable: true}",
         "nickname: {type: string}",
     )
-    diff = diff_models(_oapi(tmp_path / "o", {"a.yaml": NULLABLE_BASE}),
-                       _oapi(tmp_path / "n", {"a.yaml": new}))
-    assert "type_changed_request" in _classified(
-        diff.changes, CompatibilityClass.BREAKING)
+    diff = diff_models(
+        _oapi(tmp_path / "o", {"a.yaml": NULLABLE_BASE}), _oapi(tmp_path / "n", {"a.yaml": new})
+    )
+    assert "type_changed_request" in _classified(diff.changes, CompatibilityClass.BREAKING)
 
 
 def test_nullable_added_on_request_is_safe(tmp_path: Path) -> None:
@@ -169,10 +170,10 @@ def test_nullable_added_on_request_is_safe(tmp_path: Path) -> None:
         "        name: {type: string}\n        nickname:",
         "        name: {type: string, nullable: true}\n        nickname:",
     )
-    diff = diff_models(_oapi(tmp_path / "o", {"a.yaml": NULLABLE_BASE}),
-                       _oapi(tmp_path / "n", {"a.yaml": new}))
-    assert "type_changed_request" not in _classified(
-        diff.changes, CompatibilityClass.BREAKING)
+    diff = diff_models(
+        _oapi(tmp_path / "o", {"a.yaml": NULLABLE_BASE}), _oapi(tmp_path / "n", {"a.yaml": new})
+    )
+    assert "type_changed_request" not in _classified(diff.changes, CompatibilityClass.BREAKING)
 
 
 DISC_BASE = """openapi: "3.0.3"
@@ -201,28 +202,28 @@ components:
 def test_discriminator_removed_breaks(tmp_path: Path) -> None:
     """Dropping the dispatch key reroutes polymorphic deserialization."""
     new = DISC_BASE.replace("      discriminator: {propertyName: petType}\n", "")
-    diff = diff_models(_oapi(tmp_path / "o", {"a.yaml": DISC_BASE}),
-                       _oapi(tmp_path / "n", {"a.yaml": new}))
+    diff = diff_models(
+        _oapi(tmp_path / "o", {"a.yaml": DISC_BASE}), _oapi(tmp_path / "n", {"a.yaml": new})
+    )
     breaking = _classified(diff.changes, CompatibilityClass.BREAKING)
     assert "type_changed_response" in breaking
-    _assert_evidenced(next(
-        c for c in diff.changes if c.kind == "type_changed_response"))
+    _assert_evidenced(next(c for c in diff.changes if c.kind == "type_changed_response"))
 
 
 def test_discriminator_propertyname_change_breaks(tmp_path: Path) -> None:
     new = DISC_BASE.replace("propertyName: petType", "propertyName: kind")
-    diff = diff_models(_oapi(tmp_path / "o", {"a.yaml": DISC_BASE}),
-                       _oapi(tmp_path / "n", {"a.yaml": new}))
-    assert "type_changed_response" in _classified(
-        diff.changes, CompatibilityClass.BREAKING)
+    diff = diff_models(
+        _oapi(tmp_path / "o", {"a.yaml": DISC_BASE}), _oapi(tmp_path / "n", {"a.yaml": new})
+    )
+    assert "type_changed_response" in _classified(diff.changes, CompatibilityClass.BREAKING)
 
 
 def test_discriminator_added_breaks(tmp_path: Path) -> None:
     old = DISC_BASE.replace("      discriminator: {propertyName: petType}\n", "")
-    diff = diff_models(_oapi(tmp_path / "o", {"a.yaml": old}),
-                       _oapi(tmp_path / "n", {"a.yaml": DISC_BASE}))
-    assert "type_changed_response" in _classified(
-        diff.changes, CompatibilityClass.BREAKING)
+    diff = diff_models(
+        _oapi(tmp_path / "o", {"a.yaml": old}), _oapi(tmp_path / "n", {"a.yaml": DISC_BASE})
+    )
+    assert "type_changed_response" in _classified(diff.changes, CompatibilityClass.BREAKING)
 
 
 def test_discriminator_mapping_change_is_candidate(tmp_path: Path) -> None:
@@ -230,10 +231,10 @@ def test_discriminator_mapping_change_is_candidate(tmp_path: Path) -> None:
         "discriminator: {propertyName: petType}",
         "discriminator: {propertyName: petType, mapping: {cat: '#/C'}}",
     )
-    diff = diff_models(_oapi(tmp_path / "o", {"a.yaml": DISC_BASE}),
-                       _oapi(tmp_path / "n", {"a.yaml": new}))
-    change = next(
-        c for c in diff.changes if "discriminator" in c.path)
+    diff = diff_models(
+        _oapi(tmp_path / "o", {"a.yaml": DISC_BASE}), _oapi(tmp_path / "n", {"a.yaml": new})
+    )
+    change = next(c for c in diff.changes if "discriminator" in c.path)
     assert change.classification is CompatibilityClass.POTENTIALLY_BREAKING
     _assert_evidenced(change)
 
@@ -248,8 +249,9 @@ def test_anyof_reshuffle_is_not_silent(tmp_path: Path) -> None:
         "{anyOf: [{type: string}, {type: integer}]}",
         "{anyOf: [{type: integer}, {type: string}]}",
     )
-    diff = diff_models(_oapi(tmp_path / "o", {"a.yaml": old}),
-                       _oapi(tmp_path / "n", {"a.yaml": new}))
+    diff = diff_models(
+        _oapi(tmp_path / "o", {"a.yaml": old}), _oapi(tmp_path / "n", {"a.yaml": new})
+    )
     assert not _classified(diff.changes, CompatibilityClass.BREAKING)
 
 
@@ -276,16 +278,15 @@ def _gql(root: Path, text: str):
     graphql = pytest.importorskip("graphql")
     del graphql
     from forge_doctor_api.analyzers.graphql import load_graphql_project
-    return load_graphql_project(_write(root, {"s.graphql": text}),
-                                ["s.graphql"])
+
+    return load_graphql_project(_write(root, {"s.graphql": text}), ["s.graphql"])
 
 
 def test_graphql_union_member_removed(tmp_path: Path) -> None:
     from forge_doctor_api.checks.graphql import graphql_breaking_changes
-    new = GQL_OLD.replace("union SearchResult = Cat | Dog",
-                          "union SearchResult = Cat")
-    findings = graphql_breaking_changes(
-        _gql(tmp_path / "o", GQL_OLD), _gql(tmp_path / "n", new))
+
+    new = GQL_OLD.replace("union SearchResult = Cat | Dog", "union SearchResult = Cat")
+    findings = graphql_breaking_changes(_gql(tmp_path / "o", GQL_OLD), _gql(tmp_path / "n", new))
     (f,) = [f for f in findings if f.id == "GQL011"]
     assert f.severity.name == "HIGH"
     assert f.evidence
@@ -294,38 +295,36 @@ def test_graphql_union_member_removed(tmp_path: Path) -> None:
 
 def test_graphql_union_member_added_candidate(tmp_path: Path) -> None:
     from forge_doctor_api.checks.graphql import graphql_breaking_changes
-    new = GQL_OLD.replace("union SearchResult = Cat | Dog",
-                          "union SearchResult = Cat | Dog | Bird")
+
+    new = GQL_OLD.replace("union SearchResult = Cat | Dog", "union SearchResult = Cat | Dog | Bird")
     new += "type Bird { wings: Int }\n"
-    findings = graphql_breaking_changes(
-        _gql(tmp_path / "o", GQL_OLD), _gql(tmp_path / "n", new))
+    findings = graphql_breaking_changes(_gql(tmp_path / "o", GQL_OLD), _gql(tmp_path / "n", new))
     (f,) = [f for f in findings if f.id == "GQL013"]
     assert "Bird" in f.description
 
 
 def test_graphql_directive_change_candidate(tmp_path: Path) -> None:
     from forge_doctor_api.checks.graphql import graphql_breaking_changes
+
     new = GQL_OLD.replace("breed: String @auth", "breed: String")
-    findings = graphql_breaking_changes(
-        _gql(tmp_path / "o", GQL_OLD), _gql(tmp_path / "n", new))
+    findings = graphql_breaking_changes(_gql(tmp_path / "o", GQL_OLD), _gql(tmp_path / "n", new))
     (f,) = [f for f in findings if f.id == "GQL012"]
     assert "Dog.breed" in f.description
 
 
 def test_graphql_field_removed_breaks(tmp_path: Path) -> None:
     from forge_doctor_api.checks.graphql import graphql_breaking_changes
+
     new = GQL_OLD.replace(", lives: Int", "")
-    findings = graphql_breaking_changes(
-        _gql(tmp_path / "o", GQL_OLD), _gql(tmp_path / "n", new))
+    findings = graphql_breaking_changes(_gql(tmp_path / "o", GQL_OLD), _gql(tmp_path / "n", new))
     assert "GQL002" in {f.id for f in findings}
 
 
 def test_graphql_enum_value_removed_breaks(tmp_path: Path) -> None:
     from forge_doctor_api.checks.graphql import graphql_breaking_changes
-    new = GQL_OLD.replace("enum Species { CAT DOG BIRD }",
-                          "enum Species { CAT DOG }")
-    findings = graphql_breaking_changes(
-        _gql(tmp_path / "o", GQL_OLD), _gql(tmp_path / "n", new))
+
+    new = GQL_OLD.replace("enum Species { CAT DOG BIRD }", "enum Species { CAT DOG }")
+    findings = graphql_breaking_changes(_gql(tmp_path / "o", GQL_OLD), _gql(tmp_path / "n", new))
     assert "GQL005" in {f.id for f in findings}
 
 
@@ -333,7 +332,7 @@ def test_graphql_enum_value_removed_breaks(tmp_path: Path) -> None:
 # gRPC — enum renumber + oneof (spec 087)
 # ---------------------------------------------------------------------------
 
-GRPC_OLD = '''syntax = "proto3";
+GRPC_OLD = """syntax = "proto3";
 package acme.v1;
 message Get { string id = 1; }
 message Reply {
@@ -343,14 +342,14 @@ message Reply {
 }
 service Svc { rpc Get(Get) returns (Reply); }
 enum Role { ROLE_UNSPECIFIED = 0; ADMIN = 1; USER = 2; }
-'''
+"""
 
 
 def test_grpc_enum_renumber_breaks(tmp_path: Path) -> None:
     new = GRPC_OLD.replace("ADMIN = 1", "ADMIN = 7")
     findings = grpc_breaking_changes(
-        _grpc(tmp_path / "o", {"a.proto": GRPC_OLD}),
-        _grpc(tmp_path / "n", {"a.proto": new})).findings
+        _grpc(tmp_path / "o", {"a.proto": GRPC_OLD}), _grpc(tmp_path / "n", {"a.proto": new})
+    ).findings
     (f,) = [f for f in findings if f.id == "GRPC008"]
     assert "ADMIN" in f.description
     assert f.evidence
@@ -363,8 +362,8 @@ def test_grpc_oneof_membership_change_breaks(tmp_path: Path) -> None:
         "  string phone = 2;\n  oneof contact { string email = 3; }\n",
     )
     findings = grpc_breaking_changes(
-        _grpc(tmp_path / "o", {"a.proto": GRPC_OLD}),
-        _grpc(tmp_path / "n", {"a.proto": new})).findings
+        _grpc(tmp_path / "o", {"a.proto": GRPC_OLD}), _grpc(tmp_path / "n", {"a.proto": new})
+    ).findings
     (f,) = [f for f in findings if f.id == "GRPC009"]
     assert "phone" in f.description
 
@@ -372,12 +371,11 @@ def test_grpc_oneof_membership_change_breaks(tmp_path: Path) -> None:
 def test_grpc_oneof_member_added_candidate(tmp_path: Path) -> None:
     new = GRPC_OLD.replace(
         "oneof contact { string phone = 2; string email = 3; }",
-        "oneof contact { string phone = 2; string email = 3; "
-        "string fax = 5; }",
+        "oneof contact { string phone = 2; string email = 3; string fax = 5; }",
     )
     findings = grpc_breaking_changes(
-        _grpc(tmp_path / "o", {"a.proto": GRPC_OLD}),
-        _grpc(tmp_path / "n", {"a.proto": new})).findings
+        _grpc(tmp_path / "o", {"a.proto": GRPC_OLD}), _grpc(tmp_path / "n", {"a.proto": new})
+    ).findings
     (f,) = [f for f in findings if f.id == "GRPC009"]
     assert "fax" in f.description
 
@@ -388,8 +386,8 @@ def test_grpc_field_number_reuse_breaks(tmp_path: Path) -> None:
         "  int32 count = 4;",
     )
     findings = grpc_breaking_changes(
-        _grpc(tmp_path / "o", {"a.proto": GRPC_OLD}),
-        _grpc(tmp_path / "n", {"a.proto": new})).findings
+        _grpc(tmp_path / "o", {"a.proto": GRPC_OLD}), _grpc(tmp_path / "n", {"a.proto": new})
+    ).findings
     assert "GRPC004" in {f.id for f in findings}
 
 
@@ -398,12 +396,11 @@ def test_grpc_rename_breaks(tmp_path: Path) -> None:
     so it surfaces in ContractDiff.changes, not findings."""
     new = GRPC_OLD.replace("package acme.v1;", "package acme.v2;")
     diff = grpc_breaking_changes(
-        _grpc(tmp_path / "o", {"a.proto": GRPC_OLD}),
-        _grpc(tmp_path / "n", {"a.proto": new}))
+        _grpc(tmp_path / "o", {"a.proto": GRPC_OLD}), _grpc(tmp_path / "n", {"a.proto": new})
+    )
     renames = [c for c in diff.changes if c.kind == "GRPC_RENAME"]
     assert renames
-    assert all(
-        c.classification is CompatibilityClass.BREAKING for c in renames)
+    assert all(c.classification is CompatibilityClass.BREAKING for c in renames)
 
 
 # ---------------------------------------------------------------------------
@@ -439,28 +436,27 @@ def test_async_channel_removed_breaks(tmp_path: Path) -> None:
         "  user/removed:",
     )
     findings = asyncapi_breaking_changes(
-        _async(tmp_path / "o", {"a.yaml": ASYNC_OLD}),
-        _async(tmp_path / "n", {"a.yaml": new}))
+        _async(tmp_path / "o", {"a.yaml": ASYNC_OLD}), _async(tmp_path / "n", {"a.yaml": new})
+    )
     kinds = {f.id for f in findings}
-    assert "ASYNC009" in kinds   # channel removed
-    assert "ASYNC010" in kinds   # channel added (rename = remove+add)
+    assert "ASYNC009" in kinds  # channel removed
+    assert "ASYNC010" in kinds  # channel added (rename = remove+add)
 
 
 def test_async_action_flip_breaks(tmp_path: Path) -> None:
     new = ASYNC_OLD.replace("    publish:\n", "    subscribe:\n")
     findings = asyncapi_breaking_changes(
-        _async(tmp_path / "o", {"a.yaml": ASYNC_OLD}),
-        _async(tmp_path / "n", {"a.yaml": new}))
+        _async(tmp_path / "o", {"a.yaml": ASYNC_OLD}), _async(tmp_path / "n", {"a.yaml": new})
+    )
     (f,) = [f for f in findings if f.id == "ASYNC012"]
     assert "send" in f.description and "receive" in f.description
 
 
 def test_async_correlation_change_breaks(tmp_path: Path) -> None:
-    new = ASYNC_OLD.replace(
-        '"$message.header#/cid"', '"$message.payload#/cid"')
+    new = ASYNC_OLD.replace('"$message.header#/cid"', '"$message.payload#/cid"')
     findings = asyncapi_breaking_changes(
-        _async(tmp_path / "o", {"a.yaml": ASYNC_OLD}),
-        _async(tmp_path / "n", {"a.yaml": new}))
+        _async(tmp_path / "o", {"a.yaml": ASYNC_OLD}), _async(tmp_path / "n", {"a.yaml": new})
+    )
     (f,) = [f for f in findings if f.id == "ASYNC013"]
     assert f.evidence
 
@@ -473,8 +469,8 @@ def test_async_binding_change_candidate(tmp_path: Path) -> None:
         "bindings: {amqp: {partitions: 3}}",
     )
     findings = asyncapi_breaking_changes(
-        _async(tmp_path / "o", {"a.yaml": ASYNC_OLD}),
-        _async(tmp_path / "n", {"a.yaml": new}))
+        _async(tmp_path / "o", {"a.yaml": ASYNC_OLD}), _async(tmp_path / "n", {"a.yaml": new})
+    )
     (f,) = [f for f in findings if f.id == "ASYNC017"]
     assert f.confidence is Confidence.MEDIUM
 
@@ -482,8 +478,7 @@ def test_async_binding_change_candidate(tmp_path: Path) -> None:
 def test_async_message_removed_breaks(tmp_path: Path) -> None:
     """Dropping the declared message (component + all refs) removes its
     payload contract entirely."""
-    new = ASYNC_OLD.replace(
-        "      message: {$ref: '#/components/messages/SignedUp'}\n", "")
+    new = ASYNC_OLD.replace("      message: {$ref: '#/components/messages/SignedUp'}\n", "")
     new = new.replace(
         """  messages:
     SignedUp:
@@ -495,8 +490,8 @@ def test_async_message_removed_breaks(tmp_path: Path) -> None:
         "",
     )
     findings = asyncapi_breaking_changes(
-        _async(tmp_path / "o", {"a.yaml": ASYNC_OLD}),
-        _async(tmp_path / "n", {"a.yaml": new}))
+        _async(tmp_path / "o", {"a.yaml": ASYNC_OLD}), _async(tmp_path / "n", {"a.yaml": new})
+    )
     assert "ASYNC014" in {f.id for f in findings}
 
 
@@ -515,8 +510,8 @@ def test_async_dangling_ref_surfaces_as_attribute_loss(tmp_path: Path) -> None:
         "",
     )
     findings = asyncapi_breaking_changes(
-        _async(tmp_path / "o", {"a.yaml": ASYNC_OLD}),
-        _async(tmp_path / "n", {"a.yaml": new}))
+        _async(tmp_path / "o", {"a.yaml": ASYNC_OLD}), _async(tmp_path / "n", {"a.yaml": new})
+    )
     assert findings
     assert "ASYNC014" not in {f.id for f in findings}
 
@@ -529,8 +524,8 @@ def test_async_payload_schema_breaks(tmp_path: Path) -> None:
         "        id: {type: integer}",
     )
     findings = asyncapi_breaking_changes(
-        _async(tmp_path / "o", {"a.yaml": ASYNC_OLD}),
-        _async(tmp_path / "n", {"a.yaml": new}))
+        _async(tmp_path / "o", {"a.yaml": ASYNC_OLD}), _async(tmp_path / "n", {"a.yaml": new})
+    )
     (f,) = [f for f in findings if f.id == "ASYNC015"]
     assert f.evidence
 
@@ -538,8 +533,8 @@ def test_async_payload_schema_breaks(tmp_path: Path) -> None:
 def test_async_content_type_candidate(tmp_path: Path) -> None:
     new = ASYNC_OLD.replace("application/json", "application/avro")
     findings = asyncapi_breaking_changes(
-        _async(tmp_path / "o", {"a.yaml": ASYNC_OLD}),
-        _async(tmp_path / "n", {"a.yaml": new}))
+        _async(tmp_path / "o", {"a.yaml": ASYNC_OLD}), _async(tmp_path / "n", {"a.yaml": new})
+    )
     assert [f for f in findings if f.id == "ASYNC016"]
 
 
@@ -551,30 +546,26 @@ def test_async_content_type_candidate(tmp_path: Path) -> None:
 def test_unknown_classification_carries_unknown_fact(tmp_path: Path) -> None:
     """Unresolvable structures classify UNKNOWN — the finding carries the
     recorded unknowns, never a bare BREAKING verdict."""
-    old = NULLABLE_BASE.replace(
-        "schema: {$ref: '#/components/schemas/Pet'}", "schema: {}")
+    old = NULLABLE_BASE.replace("schema: {$ref: '#/components/schemas/Pet'}", "schema: {}")
     new = NULLABLE_BASE.replace(
         "schema: {$ref: '#/components/schemas/Pet'}",
         "schema: {type: object, properties: {x: {type: string}}}",
     )
-    diff = diff_models(_oapi(tmp_path / "o", {"a.yaml": old}),
-                       _oapi(tmp_path / "n", {"a.yaml": new}))
-    unknowns = [c for c in diff.changes
-                if c.classification is CompatibilityClass.UNKNOWN]
+    diff = diff_models(
+        _oapi(tmp_path / "o", {"a.yaml": old}), _oapi(tmp_path / "n", {"a.yaml": new})
+    )
+    unknowns = [c for c in diff.changes if c.classification is CompatibilityClass.UNKNOWN]
     assert unknowns
-    finding = next(
-        f for f in diff.findings
-        if f.confidence is Confidence.UNKNOWN)
+    finding = next(f for f in diff.findings if f.confidence is Confidence.UNKNOWN)
     assert finding.unknowns
 
 
 def test_candidate_class_never_claims_breaking(tmp_path: Path) -> None:
     """Directive drift and union-add stay POTENTIALLY — distinction test."""
     from forge_doctor_api.checks.graphql import graphql_breaking_changes
-    new = GQL_OLD.replace("type Pet { id: ID! }",
-                          "type Pet @auth { id: ID! }")
-    findings = graphql_breaking_changes(
-        _gql(tmp_path / "o", GQL_OLD), _gql(tmp_path / "n", new))
+
+    new = GQL_OLD.replace("type Pet { id: ID! }", "type Pet @auth { id: ID! }")
+    findings = graphql_breaking_changes(_gql(tmp_path / "o", GQL_OLD), _gql(tmp_path / "n", new))
     assert findings  # the directive change is detected
     assert all(f.severity.value != "critical" for f in findings)
 
@@ -600,8 +591,9 @@ public interface OrdersClient {
 
 
 def test_java_feign_extracted(tmp_path: Path) -> None:
-    model = scan_clients(_write(tmp_path, {"svc/OrdersClient.java": FEIGN}),
-                         ["svc/OrdersClient.java"])
+    model = scan_clients(
+        _write(tmp_path, {"svc/OrdersClient.java": FEIGN}), ["svc/OrdersClient.java"]
+    )
     sites = {s.path: s for s in model.call_sites}
     assert "/v1/orders" in sites
     assert "/v1/orders/{id}/pay" in sites
@@ -612,8 +604,8 @@ def test_java_feign_extracted(tmp_path: Path) -> None:
 def test_java_no_feign_no_sites(tmp_path: Path) -> None:
     """A plain Java class is not a client — no fabrication."""
     model = scan_clients(
-        _write(tmp_path, {"svc/Util.java": "package a;\nclass Util {}"}),
-        ["svc/Util.java"])
+        _write(tmp_path, {"svc/Util.java": "package a;\nclass Util {}"}), ["svc/Util.java"]
+    )
     assert model.call_sites == ()
 
 
@@ -627,8 +619,7 @@ resp = stub.GetOrder(request)
 
 
 def test_python_grpc_stub_extracted(tmp_path: Path) -> None:
-    model = scan_clients(_write(tmp_path, {"svc/client.py": GRPC_STUB}),
-                         ["svc/client.py"])
+    model = scan_clients(_write(tmp_path, {"svc/client.py": GRPC_STUB}), ["svc/client.py"])
     (site,) = model.call_sites
     assert site.library == "grpc-stub"
     assert site.operation == "GetOrder"
@@ -644,8 +635,7 @@ pets.list_pets(limit=10)
 
 
 def test_python_generated_openapi_extracted(tmp_path: Path) -> None:
-    model = scan_clients(_write(tmp_path, {"svc/gen.py": GEN_API}),
-                         ["svc/gen.py"])
+    model = scan_clients(_write(tmp_path, {"svc/gen.py": GEN_API}), ["svc/gen.py"])
     (site,) = model.call_sites
     assert site.library == "openapi-generated"
     assert site.operation == "list_pets"
@@ -662,8 +652,8 @@ mutation UpdateName($id: ID!, $name: String!) {
 
 def test_graphql_document_extracted(tmp_path: Path) -> None:
     model = scan_clients(
-        _write(tmp_path, {"app/queries.graphql": GQL_DOC}),
-        ["app/queries.graphql"])
+        _write(tmp_path, {"app/queries.graphql": GQL_DOC}), ["app/queries.graphql"]
+    )
     ops = {s.operation for s in model.call_sites}
     assert ops == {"GetUser", "UpdateName"}
     site = next(s for s in model.call_sites if s.operation == "GetUser")
@@ -678,8 +668,7 @@ const Q = gql`
 
 
 def test_gql_template_extracted(tmp_path: Path) -> None:
-    model = scan_clients(
-        _write(tmp_path, {"app/q.ts": GQL_TEMPLATE}), ["app/q.ts"])
+    model = scan_clients(_write(tmp_path, {"app/q.ts": GQL_TEMPLATE}), ["app/q.ts"])
     (site,) = model.call_sites
     assert site.operation == "GetPet"
     assert site.language.value == "graphql"
@@ -688,8 +677,8 @@ def test_gql_template_extracted(tmp_path: Path) -> None:
 def test_graphql_schema_file_not_a_client(tmp_path: Path) -> None:
     """An SDL `.graphql` contract file yields no client sites."""
     model = scan_clients(
-        _write(tmp_path, {"api/schema.graphql": "type Query { x: Int }"}),
-        ["api/schema.graphql"])
+        _write(tmp_path, {"api/schema.graphql": "type Query { x: Int }"}), ["api/schema.graphql"]
+    )
     assert model.call_sites == ()
 
 
@@ -712,9 +701,7 @@ def _edge(a: Entity, b: Entity) -> Relationship:
         source_id=a.id,
         target_id=b.id,
         confidence=Confidence.HIGH,
-        evidence=(
-            Evidence(kind=EvidenceKind.STATIC, source="t.yaml", summary="dep"),
-        ),
+        evidence=(Evidence(kind=EvidenceKind.STATIC, source="t.yaml", summary="dep"),),
     )
 
 
@@ -743,8 +730,7 @@ def test_conflicting_redefinition_rejected_not_merged() -> None:
     a = _entity("service", "svc")
     g.add_entity(a)
     with pytest.raises(GraphError):
-        g.add_entity(Entity(
-            id=a.id, kind=EntityKind.SERVICE, name="svc-renamed"))
+        g.add_entity(Entity(id=a.id, kind=EntityKind.SERVICE, name="svc-renamed"))
 
 
 def test_relationship_join_requires_exact_ids() -> None:
@@ -760,24 +746,24 @@ def test_relationship_join_requires_exact_ids() -> None:
     ghost = _entity("service", "a2")
     near = Relationship(
         kind=RelationshipKind.DEPENDS_ON,
-        source_id=ghost.id, target_id=b.id,
+        source_id=ghost.id,
+        target_id=b.id,
         confidence=Confidence.HIGH,
-        evidence=(
-            Evidence(kind=EvidenceKind.STATIC, source="t.yaml", summary="dep"),
-        ))
+        evidence=(Evidence(kind=EvidenceKind.STATIC, source="t.yaml", summary="dep"),),
+    )
     with pytest.raises(GraphError):
         g.add_relationship(near)
     # malformed id (trailing space): the model refuses before the graph
     from forge_doctor_api.core.models import ModelError
+
     with pytest.raises(ModelError):
         Relationship(
             kind=RelationshipKind.DEPENDS_ON,
-            source_id=a.id + " ", target_id=b.id,
+            source_id=a.id + " ",
+            target_id=b.id,
             confidence=Confidence.HIGH,
-            evidence=(
-                Evidence(kind=EvidenceKind.STATIC, source="t.yaml",
-                         summary="dep"),
-            ))
+            evidence=(Evidence(kind=EvidenceKind.STATIC, source="t.yaml", summary="dep"),),
+        )
 
 
 def test_deprecation_readiness_emitted_with_unknowns_when_signals_absent(
@@ -790,11 +776,12 @@ def test_deprecation_readiness_emitted_with_unknowns_when_signals_absent(
     from forge_doctor_api.fleet import build_fleet_report
     from forge_doctor_api.workspace import load_workspace
 
-    base = _write(tmp_path / "ws", {
-        "forge-doctor-api.workspace.yaml":
-            "name: t\nmembers:\n"
+    base = _write(
+        tmp_path / "ws",
+        {
+            "forge-doctor-api.workspace.yaml": "name: t\nmembers:\n"
             "  - {name: legacy, path: legacy, role: service}\n",
-        "legacy/api.yaml": """openapi: "3.0.3"
+            "legacy/api.yaml": """openapi: "3.0.3"
 info: {title: L, version: "1.0", deprecated: true,
        x-deprecation-date: "2026-06-01", x-sunset-date: "2027-01-01"}
 paths:
@@ -803,13 +790,13 @@ paths:
       operationId: old
       responses: {'200': {description: ok}}
 """,
-    })
-    ctx = ProjectContext.from_root(
-        base.root, clock=lambda: datetime(2026, 10, 3, tzinfo=UTC))
+        },
+    )
+    ctx = ProjectContext.from_root(base.root, clock=lambda: datetime(2026, 10, 3, tzinfo=UTC))
     ws = load_workspace(ctx)
     assert ws is not None
     rep = build_fleet_report(ctx, ws)
     dep = next((d for d in rep.deprecations if d.repo == "legacy"), None)
     assert dep is not None
     assert dep.observed_traffic is None  # no runtime evidence
-    assert dep.unknowns                  # unknowns recorded, not guessed
+    assert dep.unknowns  # unknowns recorded, not guessed

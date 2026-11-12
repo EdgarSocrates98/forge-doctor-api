@@ -49,23 +49,23 @@ _BY_CHECK: dict[str, tuple[FixType, ...]] = {
     "OAS018": (FixType.SPEC_NORMALIZATION,),
     "OAS020": (FixType.METADATA_MISSING,),
     # MANUAL_ONLY — contract shape / auth surface
-    "OAS008": (FixType.BREAKING_CONTRACT,),   # adding request schema tightens contract
-    "OAS010": (FixType.AUTH,),                # adding security requirements
-    "OAS011": (FixType.AUTHORIZATION,),       # security override change
-    "OAS012": (FixType.BREAKING_CONTRACT,),   # path param rename
-    "OAS013": (FixType.BREAKING_CONTRACT,),   # declaring required param
-    "OAS016": (FixType.GATEWAY_ROUTING,),     # server URL env change
-    "OAS017": (FixType.BREAKING_CONTRACT,),   # restricting additionalProperties
-    "OAS019": (FixType.BREAKING_CONTRACT,),   # schema restructure
+    "OAS008": (FixType.BREAKING_CONTRACT,),  # adding request schema tightens contract
+    "OAS010": (FixType.AUTH,),  # adding security requirements
+    "OAS011": (FixType.AUTHORIZATION,),  # security override change
+    "OAS012": (FixType.BREAKING_CONTRACT,),  # path param rename
+    "OAS013": (FixType.BREAKING_CONTRACT,),  # declaring required param
+    "OAS016": (FixType.GATEWAY_ROUTING,),  # server URL env change
+    "OAS017": (FixType.BREAKING_CONTRACT,),  # restricting additionalProperties
+    "OAS019": (FixType.BREAKING_CONTRACT,),  # schema restructure
     # MANUAL_ONLY — security surface (§104 members)
     "APISEC001": (FixType.AUTHORIZATION,),
     "APISEC002": (FixType.AUTHORIZATION,),
     "APISEC003": (FixType.AUTH,),
-    "APISEC004": (FixType.AUTHORIZATION,),    # CORS is access policy
+    "APISEC004": (FixType.AUTHORIZATION,),  # CORS is access policy
     "APISEC005": (FixType.RATE_LIMIT,),
     "APISEC006": (FixType.PAGINATION_DEFAULT, FixType.RATE_LIMIT),
     "APISEC007": (FixType.AUTHORIZATION,),
-    "APISEC008": (FixType.SCHEMA_REMOVAL,),   # removing exposed property
+    "APISEC008": (FixType.SCHEMA_REMOVAL,),  # removing exposed property
     "APISEC009": (FixType.GATEWAY_ROUTING,),  # decommissioning traffic
     "APISEC010": (FixType.AUTH, FixType.TIMEOUT),
     # REVIEW_REQUIRED — tunables
@@ -73,13 +73,13 @@ _BY_CHECK: dict[str, tuple[FixType, ...]] = {
     "RELAPI002": (FixType.RETRY,),
     "RELAPI003": (FixType.TIMEOUT,),
     "RELAPI004": (FixType.TIMEOUT,),
-    "RELAPI005": (FixType.UNMAPPED,),         # circuit breaker — not in §104 table
-    "RELAPI006": (FixType.UNMAPPED,),         # health check — default-deny
-    "RELAPI007": (FixType.UNMAPPED,),         # graceful shutdown — default-deny
+    "RELAPI005": (FixType.UNMAPPED,),  # circuit breaker — not in §104 table
+    "RELAPI006": (FixType.UNMAPPED,),  # health check — default-deny
+    "RELAPI007": (FixType.UNMAPPED,),  # graceful shutdown — default-deny
     "APIPERF004": (FixType.RETRY,),
     "APIPERF005": (FixType.TIMEOUT,),
-    "APIPERF006": (FixType.UNMAPPED,),        # payload reduction may change schema
-    "APIPERF007": (FixType.UNMAPPED,),        # fan-out change is architectural
+    "APIPERF006": (FixType.UNMAPPED,),  # payload reduction may change schema
+    "APIPERF007": (FixType.UNMAPPED,),  # fan-out change is architectural
     "APIPERF008": (FixType.CACHE,),
 }
 # perf regressions (001-003), drift, compat, client, async/gql/grpc/obs

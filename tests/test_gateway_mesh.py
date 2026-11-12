@@ -253,8 +253,7 @@ class TestGatewayDepthAdversarial:
         # declared service resolves; undeclared -> unresolved + unknown
         resolved = [r for r in gw.routes if r.upstream]
         assert any("api-svc" in (r.upstream or "") for r in resolved)
-        assert any("ghost" in u.subject or "nope" in u.subject
-                   for u in unknowns)
+        assert any("ghost" in u.subject or "nope" in u.subject for u in unknowns)
 
     def test_nginx_unresolved_upstream(self, tmp_path) -> None:
         ctx = _ctx(tmp_path, {"nginx.conf": _NGINX_UNRESOLVED})
@@ -297,5 +296,4 @@ upstream other_backend { server o.internal:1; }
         route = next(r for r in gws[0].routes if r.path == "/a/")
         # declared_backend has no upstream block -> unresolved
         assert route.service is None
-        assert any(u.name == "other_backend"
-                   for u in gws[0].upstream_targets)
+        assert any(u.name == "other_backend" for u in gws[0].upstream_targets)

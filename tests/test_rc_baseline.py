@@ -63,10 +63,11 @@ def test_baseline_counts_match_reality() -> None:
 def test_baseline_check_mode_passes() -> None:
     result = subprocess.run(
         [sys.executable, str(GENERATOR), "--check"],
-        capture_output=True, text=True, cwd=ROOT,
+        capture_output=True,
+        text=True,
+        cwd=ROOT,
     )
-    assert result.returncode == 0, (
-        f"rc_baseline --check failed:\n{result.stdout}\n{result.stderr}")
+    assert result.returncode == 0, f"rc_baseline --check failed:\n{result.stdout}\n{result.stderr}"
 
 
 def test_baseline_generation_is_deterministic() -> None:
@@ -74,7 +75,8 @@ def test_baseline_generation_is_deterministic() -> None:
     for _ in range(2):
         result = subprocess.run(
             [sys.executable, str(GENERATOR), "--stdout"],
-            capture_output=True, cwd=ROOT,
+            capture_output=True,
+            cwd=ROOT,
         )
         assert result.returncode == 0
         runs.append(result.stdout)
@@ -83,11 +85,8 @@ def test_baseline_generation_is_deterministic() -> None:
 
 def test_rc_policy_and_public_surface_docs_exist() -> None:
     policy = (ROOT / "docs" / "rc-policy.md").read_text(encoding="utf-8")
-    surface = (ROOT / "docs" / "public-surface.md").read_text(
-        encoding="utf-8")
-    for cls in ("STABLE", "WIRE", "UX", "EXPERIMENTAL", "INTERNAL",
-                "DEPRECATED"):
+    surface = (ROOT / "docs" / "public-surface.md").read_text(encoding="utf-8")
+    for cls in ("STABLE", "WIRE", "UX", "EXPERIMENTAL", "INTERNAL", "DEPRECATED"):
         assert cls in policy, f"rc-policy.md missing class {cls}"
     for section in ("CLI", "SDK", "MCP", "contract", "check", "plugin"):
-        assert section.lower() in surface.lower(), (
-            f"public-surface.md missing {section} section")
+        assert section.lower() in surface.lower(), f"public-surface.md missing {section} section"

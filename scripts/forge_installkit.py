@@ -423,9 +423,7 @@ class _Lock:
         fd = os.open(str(self._lock), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
         os.write(
             fd,
-            _json_bytes(
-                {"pid": os.getpid(), "token": self._token, "created_at": _utc_now()}
-            ),
+            _json_bytes({"pid": os.getpid(), "token": self._token, "created_at": _utc_now()}),
         )
         os.close(fd)
         self.held = True
@@ -664,12 +662,26 @@ def profile_asset_kinds(profile: str) -> tuple[str, ...]:
     return {
         "minimal": ("config", "mcp", "marker", "state"),
         "recommended": (
-            "config", "mcp", "marker", "state", "skill", "agent",
-            "knowledge", "rules", "evals",
+            "config",
+            "mcp",
+            "marker",
+            "state",
+            "skill",
+            "agent",
+            "knowledge",
+            "rules",
+            "evals",
         ),
         "full": (
-            "config", "mcp", "marker", "state", "skill", "agent",
-            "knowledge", "rules", "evals",
+            "config",
+            "mcp",
+            "marker",
+            "state",
+            "skill",
+            "agent",
+            "knowledge",
+            "rules",
+            "evals",
         ),
     }[profile]
 
@@ -865,7 +877,11 @@ def apply_install(ctx: InstallContext, *, approved: bool = False) -> dict[str, A
         assets = ctx.spec.render_assets(ctx) if ctx.spec.render_assets else {}
         kinds = set(asset_kinds_for(ctx))
         ctx_bytes = {
-            "skill": 0, "agent": 0, "knowledge": 0, "rules": 0, "evals": 0,
+            "skill": 0,
+            "agent": 0,
+            "knowledge": 0,
+            "rules": 0,
+            "evals": 0,
             "managed": 0,
         }
         for rel in sorted(assets):
@@ -1035,7 +1051,7 @@ def apply_install(ctx: InstallContext, *, approved: bool = False) -> dict[str, A
                 "id": "mcp-scope:codex",
                 "status": "NOT_APPLICABLE",
                 "detail": "codex does not read project .mcp.json; MCP needs "
-                          "--scope user or `codex mcp add`",
+                "--scope user or `codex mcp add`",
             }
         )
     receipt = {
@@ -1195,9 +1211,11 @@ def doctor(ctx: InstallContext) -> dict[str, Any]:
             "id": "forge-portal",
             "status": "PASS" if found else "NOT_APPLICABLE",
             "detail": presence["install_root"]
-            or ("vendored assets only — no local forge-portal install found"
+            or (
+                "vendored assets only — no local forge-portal install found"
                 if not found
-                else presence["manifest"]),
+                else presence["manifest"]
+            ),
             "repairable": False,
         }
     )
@@ -1413,8 +1431,7 @@ def _prune_empty_dirs(root: Path, removed: list[str]) -> None:
         except (OSError, ValueError):
             continue
         parent = fpath.resolve().parent
-        while parent != resolved_root and resolved_root in parent.parents \
-                and parent not in seen:
+        while parent != resolved_root and resolved_root in parent.parents and parent not in seen:
             try:
                 parent.rmdir()
             except OSError:

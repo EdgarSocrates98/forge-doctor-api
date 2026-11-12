@@ -64,13 +64,18 @@ def _span(i: int, dur_ms: float = 100.0) -> dict[str, object]:
 
 
 def _otlp(count: int) -> str:
-    return json.dumps({
-        "resourceSpans": [{
-            "resource": {"attributes": [
-                {"key": "service.name", "value": {"stringValue": "api"}}]},
-            "scopeSpans": [{"scope": {}, "spans": [_span(i) for i in range(count)]}],
-        }],
-    })
+    return json.dumps(
+        {
+            "resourceSpans": [
+                {
+                    "resource": {
+                        "attributes": [{"key": "service.name", "value": {"stringValue": "api"}}]
+                    },
+                    "scopeSpans": [{"scope": {}, "spans": [_span(i) for i in range(count)]}],
+                }
+            ],
+        }
+    )
 
 
 def test_scan_project_runs_offline(tmp_path: Path) -> None:
@@ -97,9 +102,9 @@ def test_streaming_ingestion_scale(tmp_path: Path, count: int) -> None:
 def test_compact_history_storage(tmp_path: Path) -> None:
     """§87 — RequestHistory keeps summary executions, never span payloads."""
     from forge_doctor_api.analyzers.runtime.history import RequestHistory
+
     (tmp_path / "traces.json").write_text(_otlp(500), encoding="utf-8")
-    rt = load_runtime_project(
-        ProjectContext.from_root(tmp_path), ["traces.json"], keep_spans=True)
+    rt = load_runtime_project(ProjectContext.from_root(tmp_path), ["traces.json"], keep_spans=True)
     executions, _ = executions_from_traces(rt.traces)
     history = RequestHistory()
     history.add_all(executions)

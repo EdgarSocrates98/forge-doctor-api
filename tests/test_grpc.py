@@ -14,7 +14,7 @@ from forge_doctor_api.checks.grpc import grpc_breaking_changes, run_grpc_checks
 from forge_doctor_api.core.context import ProjectContext
 from forge_doctor_api.core.models import Confidence
 
-PROTO = '''syntax = "proto3";
+PROTO = """syntax = "proto3";
 package acme.v1;
 import "google/protobuf/empty.proto";
 import "common.proto";
@@ -34,7 +34,7 @@ service UserService {
   }
 }
 enum Role { ROLE_UNSPECIFIED = 0; ADMIN = 1; }
-'''
+"""
 
 COMMON = 'syntax = "proto3";\npackage acme.v1;\nmessage Empty {}\n'
 
@@ -78,7 +78,7 @@ def test_unresolved_import_recorded(tmp_path: Path) -> None:
 
 
 def test_malformed_proto_is_issue(tmp_path: Path) -> None:
-    model = _model(tmp_path, {"bad.proto": "syntax = \"proto3\";\nmessage X {\n"})
+    model = _model(tmp_path, {"bad.proto": 'syntax = "proto3";\nmessage X {\n'})
     assert model.documents[0].status is ProtoDocumentStatus.MALFORMED
 
 
@@ -141,10 +141,7 @@ def test_grpc002_retry_without_idempotency(tmp_path: Path) -> None:
 
 
 def test_grpc004_reserved_overlap(tmp_path: Path) -> None:
-    proto = (
-        'syntax = "proto3";\n'
-        "message M { string a = 1; reserved 1; }\n"
-    )
+    proto = 'syntax = "proto3";\nmessage M { string a = 1; reserved 1; }\n'
     model = _model(tmp_path, {"a.proto": proto})
     assert "GRPC004" in _ids(run_grpc_checks(model))
 
@@ -179,12 +176,12 @@ def test_grpc007_retry_amplification(tmp_path: Path) -> None:
 
 # -- diff checks (§26) -------------------------------------------------------------
 
-OLD = '''syntax = "proto3";
+OLD = """syntax = "proto3";
 package acme.v1;
 message M { string id = 1; string email = 2; int32 n = 3; }
 service S { rpc Get(M) returns (M); rpc List(M) returns (stream M); }
 enum R { A = 0; B = 1; }
-'''
+"""
 
 
 def test_grpc003_removed_without_reserved(tmp_path: Path) -> None:
@@ -216,9 +213,7 @@ def test_grpc004_clean_when_renamed_field_reserved(tmp_path: Path) -> None:
 
 
 def test_grpc006_streaming_change(tmp_path: Path) -> None:
-    new = OLD.replace(
-        "rpc Get(M) returns (M);", "rpc Get(M) returns (stream M);"
-    )
+    new = OLD.replace("rpc Get(M) returns (M);", "rpc Get(M) returns (stream M);")
     old = _model(tmp_path / "o", {"a.proto": OLD})
     new_m = _model(tmp_path / "n", {"a.proto": new})
     d = grpc_breaking_changes(old, new_m)

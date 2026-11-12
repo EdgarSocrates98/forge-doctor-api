@@ -115,8 +115,12 @@ def _question(report, key: str):
 def test_six_questions_answered(tmp_path: Path) -> None:
     rep = _report(tmp_path)
     assert {q.key for q in rep.questions} == {
-        "public_apis", "unowned_apis", "unauthenticated_operations",
-        "deprecated_versions", "regressing_endpoints", "shared_external_apis",
+        "public_apis",
+        "unowned_apis",
+        "unauthenticated_operations",
+        "deprecated_versions",
+        "regressing_endpoints",
+        "shared_external_apis",
     }
     public = _question(rep, "public_apis")
     assert any(e.repo == "legacy-api" for e in public.entries)  # /old has no security
@@ -150,10 +154,13 @@ def test_regressing_without_runtime_is_unknown(tmp_path: Path) -> None:
 
 
 def test_shared_external_api(tmp_path: Path) -> None:
-    rep = _report(tmp_path, {
-        "shop-api/ext.yaml": EXT_CFG,
-        "legacy-api/ext.yaml": EXT_CFG,
-    })
+    rep = _report(
+        tmp_path,
+        {
+            "shop-api/ext.yaml": EXT_CFG,
+            "legacy-api/ext.yaml": EXT_CFG,
+        },
+    )
     q = _question(rep, "shared_external_apis")
     assert q.entries and "maps.example.com" in q.entries[0].subject
     assert "legacy-api" in q.entries[0].detail and "shop-api" in q.entries[0].detail
@@ -174,9 +181,12 @@ def test_portfolio_per_member(tmp_path: Path) -> None:
 
 
 def test_portfolio_multi_style(tmp_path: Path) -> None:
-    rep = _report(tmp_path, {
-        "shop-api/svc.proto": 'syntax = "proto3";\nservice S {}\n',
-    })
+    rep = _report(
+        tmp_path,
+        {
+            "shop-api/svc.proto": 'syntax = "proto3";\nservice S {}\n',
+        },
+    )
     by_repo = {m.repo: m for m in rep.portfolio}
     assert "grpc" in by_repo["shop-api"].styles
     assert "rest" in by_repo["shop-api"].styles
@@ -186,13 +196,17 @@ def test_portfolio_multi_style(tmp_path: Path) -> None:
 
 
 def test_complexity_signals_are_opportunities(tmp_path: Path) -> None:
-    rep = _report(tmp_path, {
-        "shop-api/svc.proto": 'syntax = "proto3";\nservice S {}\n',
-        "shop-api/ext.yaml": EXT_CFG,
-        "legacy-api/ext.yaml": EXT_CFG,
-        "gw2/d.yaml": GW,  # not a member — must not count
-        "forge-doctor-api.workspace.yaml": MANIFEST + "  - {name: gw2, path: gw2, role: gateway}\n",
-    })
+    rep = _report(
+        tmp_path,
+        {
+            "shop-api/svc.proto": 'syntax = "proto3";\nservice S {}\n',
+            "shop-api/ext.yaml": EXT_CFG,
+            "legacy-api/ext.yaml": EXT_CFG,
+            "gw2/d.yaml": GW,  # not a member — must not count
+            "forge-doctor-api.workspace.yaml": MANIFEST
+            + "  - {name: gw2, path: gw2, role: gateway}\n",
+        },
+    )
     kinds = {s.kind for s in rep.complexity}
     assert "multi_protocol" in kinds
     assert "shared_external_dependency" in kinds
@@ -202,17 +216,20 @@ def test_complexity_signals_are_opportunities(tmp_path: Path) -> None:
 
 
 def test_multiple_auth_models_signal(tmp_path: Path) -> None:
-    rep = _report(tmp_path, {
-        "legacy-api/api.yaml": LEGACY_API.replace(
-            "responses: {'200': {description: ok}}",
-            "security: [{o: []}]\n      responses: {'200': {description: ok}}",
-        ).replace(
-            "x-replacement: shop-api}",
-            'x-replacement: shop-api}\ncomponents:\n'
-            '  securitySchemes: {o: {type: oauth2, flows: {implicit: '
-            '{authorizationUrl: "https://x", scopes: {}}}}}',
-        ),
-    })
+    rep = _report(
+        tmp_path,
+        {
+            "legacy-api/api.yaml": LEGACY_API.replace(
+                "responses: {'200': {description: ok}}",
+                "security: [{o: []}]\n      responses: {'200': {description: ok}}",
+            ).replace(
+                "x-replacement: shop-api}",
+                "x-replacement: shop-api}\ncomponents:\n"
+                "  securitySchemes: {o: {type: oauth2, flows: {implicit: "
+                '{authorizationUrl: "https://x", scopes: {}}}}}',
+            ),
+        },
+    )
     kinds = {s.kind for s in rep.complexity}
     assert "multiple_auth_models" in kinds
 
@@ -233,11 +250,14 @@ def test_deprecation_readiness(tmp_path: Path) -> None:
 
 def test_deprecation_no_clients_vs_no_evidence(tmp_path: Path) -> None:
     """Review note: 'no clients found' differs from 'no client evidence'."""
-    rep = _report(tmp_path, {
-        "forge-doctor-api.workspace.yaml": MANIFEST.replace(
-            "  - {name: mobile, path: mobile, role: client}\n", ""
-        ),
-    })
+    rep = _report(
+        tmp_path,
+        {
+            "forge-doctor-api.workspace.yaml": MANIFEST.replace(
+                "  - {name: mobile, path: mobile, role: client}\n", ""
+            ),
+        },
+    )
     dep = next(d for d in rep.deprecations if d.repo == "legacy-api")
     assert dep.remaining_clients is None  # no client repos -> UNKNOWN
     assert any("client" in u.missing for u in dep.unknowns)
@@ -250,7 +270,7 @@ def test_external_api_sanitized_and_candidates(tmp_path: Path) -> None:
     rep = _report(tmp_path, {"shop-api/ext.yaml": EXT_CFG})
     ext = next(e for e in rep.external_apis if e.repo == "shop-api")
     assert "user:secret" not in ext.host  # userinfo stripped
-    assert "key=abc" not in ext.host      # query stripped
+    assert "key=abc" not in ext.host  # query stripped
     assert ext.host == "https://maps.example.com/v2"
     assert ext.timeout_ms == 500
     assert ext.has_retry is False
@@ -258,8 +278,7 @@ def test_external_api_sanitized_and_candidates(tmp_path: Path) -> None:
 
 
 def test_sanitize_host() -> None:
-    assert sanitize_host("https://u:p@h.example.com/x?y=1#z") == \
-        "https://h.example.com/x"
+    assert sanitize_host("https://u:p@h.example.com/x?y=1#z") == "https://h.example.com/x"
     assert sanitize_host("plain.example.com") == "plain.example.com"
 
 
@@ -270,10 +289,7 @@ def test_quality_dimensions_no_score(tmp_path: Path) -> None:
     rep = _report(tmp_path)
     dims = {(d.repo, d.name): d for d in rep.quality}
     assert ("shop-api", "contract completeness") in dims
-    assert (
-        dims[("shop-api", "contract completeness")].value
-        == "2/2 operations have operationId"
-    )
+    assert dims[("shop-api", "contract completeness")].value == "2/2 operations have operationId"
     assert ("legacy-api", "ownership") in dims
     assert dims[("legacy-api", "ownership")].value == "unknown"
     assert not hasattr(rep, "score")  # §191: no composite number
@@ -281,21 +297,47 @@ def test_quality_dimensions_no_score(tmp_path: Path) -> None:
 
 def test_health_counts(tmp_path: Path) -> None:
     findings = (
-        Finding(id="COMPAT001", title="t", description="d",
-                severity=Severity.HIGH, confidence=Confidence.HIGH,
-                evidence_kind=EvidenceKind.STATIC, unknowns=()),
-        Finding(id="RELAPI002", title="t", description="d",
-                severity=Severity.MEDIUM, confidence=Confidence.HIGH,
-                evidence_kind=EvidenceKind.CONFIG),
-        Finding(id="APISEC001", title="t", description="d",
-                severity=Severity.HIGH, confidence=Confidence.LOW,
-                evidence_kind=EvidenceKind.STATIC),
-        Finding(id="APIPERF001", title="t", description="d",
-                severity=Severity.MEDIUM, confidence=Confidence.HIGH,
-                evidence_kind=EvidenceKind.RUNTIME),
-        Finding(id="OAS001", title="t", description="d",
-                severity=Severity.LOW, confidence=Confidence.HIGH,
-                evidence_kind=EvidenceKind.STATIC),
+        Finding(
+            id="COMPAT001",
+            title="t",
+            description="d",
+            severity=Severity.HIGH,
+            confidence=Confidence.HIGH,
+            evidence_kind=EvidenceKind.STATIC,
+            unknowns=(),
+        ),
+        Finding(
+            id="RELAPI002",
+            title="t",
+            description="d",
+            severity=Severity.MEDIUM,
+            confidence=Confidence.HIGH,
+            evidence_kind=EvidenceKind.CONFIG,
+        ),
+        Finding(
+            id="APISEC001",
+            title="t",
+            description="d",
+            severity=Severity.HIGH,
+            confidence=Confidence.LOW,
+            evidence_kind=EvidenceKind.STATIC,
+        ),
+        Finding(
+            id="APIPERF001",
+            title="t",
+            description="d",
+            severity=Severity.MEDIUM,
+            confidence=Confidence.HIGH,
+            evidence_kind=EvidenceKind.RUNTIME,
+        ),
+        Finding(
+            id="OAS001",
+            title="t",
+            description="d",
+            severity=Severity.LOW,
+            confidence=Confidence.HIGH,
+            evidence_kind=EvidenceKind.STATIC,
+        ),
     )
     h = fleet_health_counts(findings)
     assert h.breaking_changes == 1 and h.reliability_gaps == 1
@@ -310,11 +352,14 @@ def test_inventory_cli(tmp_path: Path) -> None:
 
     from forge_doctor_api.cli import app
 
-    root = _write(tmp_path / "ws", {
-        "forge-doctor-api.workspace.yaml": MANIFEST,
-        "shop-api/api.yaml": SHOP_API,
-        "legacy-api/api.yaml": LEGACY_API,
-    })
+    root = _write(
+        tmp_path / "ws",
+        {
+            "forge-doctor-api.workspace.yaml": MANIFEST,
+            "shop-api/api.yaml": SHOP_API,
+            "legacy-api/api.yaml": LEGACY_API,
+        },
+    )
     runner = CliRunner()
     res = runner.invoke(app, ["inventory", str(root)])
     assert res.exit_code == 0, res.output

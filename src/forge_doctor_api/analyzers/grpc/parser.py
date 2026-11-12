@@ -39,9 +39,7 @@ _RPC = re.compile(
     r"^\s*rpc\s+(\w+)\s*\(\s*(stream\s+)?([\w.]+)\s*\)\s*returns\s*"
     r"\(\s*(stream\s+)?([\w.]+)\s*\)"
 )
-_FIELD = re.compile(
-    r"^\s*(optional|required|repeated)?\s*([\w.]+)\s+(\w+)\s*=\s*(\d+)"
-)
+_FIELD = re.compile(r"^\s*(optional|required|repeated)?\s*([\w.]+)\s+(\w+)\s*=\s*(\d+)")
 _MAP_FIELD = re.compile(r"^\s*map\s*<([\w.]+)\s*,\s*([\w.]+)>\s+(\w+)\s*=\s*(\d+)")
 _ENUM_VALUE = re.compile(r"^\s*([A-Z_][\w]*)\s*=\s*(-?\d+)")
 _RESERVED = re.compile(r"^\s*reserved\s+(.+?)\s*;?$")
@@ -135,7 +133,9 @@ def _streaming(client_stream: str | None, server_stream: str | None) -> Streamin
     return StreamingMode.UNARY
 
 
-def _parse_proto(path: str, lines: list[tuple[int, str]]) -> tuple[
+def _parse_proto(
+    path: str, lines: list[tuple[int, str]]
+) -> tuple[
     ProtoFile | None,
     list[ProtoService],
     list[ProtoMessage],
@@ -258,9 +258,7 @@ def _parse_proto(path: str, lines: list[tuple[int, str]]) -> tuple[
                         request_type=last.request_type,
                         response_type=last.response_type,
                         streaming=last.streaming,
-                        idempotent_evidence=(
-                            *last.idempotent_evidence, im.group(1)
-                        ),
+                        idempotent_evidence=(*last.idempotent_evidence, im.group(1)),
                         location=last.location,
                     )
                 else:
@@ -335,9 +333,7 @@ def _parse_proto(path: str, lines: list[tuple[int, str]]) -> tuple[
     return pf, services, messages, enums, issues
 
 
-def load_grpc_project(
-    context: ProjectContext, files: list[str]
-) -> GrpcProjectModel:
+def load_grpc_project(context: ProjectContext, files: list[str]) -> GrpcProjectModel:
     documents: list[ProtoDocument] = []
     protos: list[ProtoFile] = []
     services: list[ProtoService] = []
@@ -357,9 +353,7 @@ def load_grpc_project(
         pf, svcs, msgs, enms, errs = _parse_proto(path, _logical_lines(text))
         issues.extend(errs)
         if pf is None:
-            documents.append(
-                ProtoDocument(path=path, status=ProtoDocumentStatus.MALFORMED)
-            )
+            documents.append(ProtoDocument(path=path, status=ProtoDocumentStatus.MALFORMED))
             continue
         unresolved = []
         for imp in pf.imports:
@@ -385,9 +379,7 @@ def load_grpc_project(
         services.extend(svcs)
         messages.extend(msgs)
         enums.extend(enms)
-        documents.append(
-            ProtoDocument(path=path, status=ProtoDocumentStatus.PARSED)
-        )
+        documents.append(ProtoDocument(path=path, status=ProtoDocumentStatus.PARSED))
 
     from forge_doctor_api.analyzers.grpc.reliability import (
         extract_service_configs,

@@ -48,12 +48,15 @@ def test_missing_manifest_listed(tmp_path: Path) -> None:
 
 
 def test_malformed_never_partial_load(tmp_path: Path) -> None:
-    d = _pack(tmp_path / "bad", """
+    d = _pack(
+        tmp_path / "bad",
+        """
 [knowledge]
 id = "INVALID ID!"
 version = "not-semver"
 provides = "not-a-list"
-""")
+""",
+    )
     manifest, errors = load_manifest(d)
     assert manifest is None
     assert len(errors) >= 3  # id, version, provides all listed
@@ -66,12 +69,15 @@ def test_bad_toml_listed(tmp_path: Path) -> None:
 
 
 def test_incompatible_skipped_with_unknown(tmp_path: Path) -> None:
-    d = _pack(tmp_path / "old", """
+    d = _pack(
+        tmp_path / "old",
+        """
 [knowledge]
 id = "old-pack"
 version = "1.0.0"
 doctor_compat = ">=9.9"
-""")
+""",
+    )
     listings, unknowns = list_packs((d,), include_builtin=False)
     assert listings[0].status is PackStatus.INCOMPATIBLE
     assert any(u.subject == "old-pack" for u in unknowns)
@@ -89,19 +95,21 @@ def test_conflict_deterministic_winner(tmp_path: Path) -> None:
 
 def test_builtin_listed_and_pinned(tmp_path: Path) -> None:
     listings, _ = list_packs(())
-    builtin = [li for li in listings if li.manifest
-               and li.manifest.id == BUILTIN_ID]
+    builtin = [li for li in listings if li.manifest and li.manifest.id == BUILTIN_ID]
     assert len(builtin) == 1
     assert builtin[0].status is PackStatus.ACTIVE
     assert "pinned" in builtin[0].details
 
 
 def test_builtin_shadowed_by_explicit(tmp_path: Path) -> None:
-    d = _pack(tmp_path / "mine", """
+    d = _pack(
+        tmp_path / "mine",
+        """
 [knowledge]
 id = "builtin"
 version = "9.9.9"
-""")
+""",
+    )
     listings, _ = list_packs((d,))
     by_id = {li.source: li for li in listings}
     assert by_id[str(d)].status is PackStatus.ACTIVE
@@ -110,8 +118,7 @@ version = "9.9.9"
 
 
 def test_semver_range_ops() -> None:
-    m = PackManifest(id="x", version="1.0.0",
-                     doctor_compat=">=0.1,<0.3")
+    m = PackManifest(id="x", version="1.0.0", doctor_compat=">=0.1,<0.3")
     assert compatible(m, "0.2.0")[0]
     assert not compatible(m, "0.3.0")[0]
     assert not compatible(m, "0.0.9")[0]

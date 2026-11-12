@@ -89,14 +89,8 @@ class RequestHistory:
     def services(self) -> tuple[str, ...]:
         return tuple(sorted({k[0] for k in self._records}))
 
-    def operations(
-        self, service: str | None = None
-    ) -> tuple[tuple[str, str], ...]:
-        pairs = {
-            (k[0], k[1])
-            for k in self._records
-            if service is None or k[0] == service
-        }
+    def operations(self, service: str | None = None) -> tuple[tuple[str, str], ...]:
+        pairs = {(k[0], k[1]) for k in self._records if service is None or k[0] == service}
         return tuple(sorted(pairs))
 
     def count(self) -> int:

@@ -17,8 +17,7 @@ from forge_doctor_api.checks.compat.engine import ContractChange
 
 # wire-compatible scalar families; anything else is a wire-format break
 _WIRE_GROUPS = [
-    {"int32", "int64", "uint32", "uint64", "sint32", "sint64", "bool",
-     "enum"},
+    {"int32", "int64", "uint32", "uint64", "sint32", "sint64", "bool", "enum"},
     {"sint32", "sint64"},
     {"fixed32", "sfixed32", "float"},
     {"fixed64", "sfixed64", "double"},
@@ -38,9 +37,7 @@ def _subject(kind: str, name: str) -> str:
     return f"{kind}:{name}"
 
 
-def diff_proto_models(
-    old: GrpcProjectModel, new: GrpcProjectModel
-) -> tuple[ContractChange, ...]:
+def diff_proto_models(old: GrpcProjectModel, new: GrpcProjectModel) -> tuple[ContractChange, ...]:
     changes: list[ContractChange] = []
 
     # package / service rename
@@ -138,8 +135,7 @@ def diff_proto_models(
         # spec 087 — renumbering: same value name, different wire number
         shared = set(old_enums[name].values) & set(new_enums[name].values)
         for v in sorted(shared):
-            o_num, n_num = (
-                old_enums[name].values[v], new_enums[name].values[v])
+            o_num, n_num = (old_enums[name].values[v], new_enums[name].values[v])
             if o_num != n_num:
                 changes.append(
                     ContractChange(
@@ -148,9 +144,7 @@ def diff_proto_models(
                         side=ChangeSide.RESPONSE,
                         subject=_subject("proto_enum", name),
                         path=f"enum:{name}.{v}",
-                        detail=(
-                            f"enum value renumbered: {name}.{v} "
-                            f"{o_num} -> {n_num}"),
+                        detail=(f"enum value renumbered: {name}.{v} {o_num} -> {n_num}"),
                         before=str(o_num),
                         after=str(n_num),
                         location=new_enums[name].location,
@@ -159,9 +153,7 @@ def diff_proto_models(
     return tuple(changes)
 
 
-def _diff_message(
-    name: str, old: ProtoMessage, new: ProtoMessage
-) -> list[ContractChange]:
+def _diff_message(name: str, old: ProtoMessage, new: ProtoMessage) -> list[ContractChange]:
     changes: list[ContractChange] = []
     old_by_num = {f.number: f for f in old.fields}
     new_by_num = {f.number: f for f in new.fields}
@@ -204,8 +196,7 @@ def _diff_message(
                     subject=_subject("proto_message", name),
                     path=f"field:{name}#{num}",
                     detail=(
-                        f"field number {num} reused: {of.name}({of.type}) -> "
-                        f"{nf.name}({nf.type})"
+                        f"field number {num} reused: {of.name}({of.type}) -> {nf.name}({nf.type})"
                     ),
                     before=f"{of.name}:{of.type}",
                     after=f"{nf.name}:{nf.type}",
@@ -227,7 +218,8 @@ def _diff_message(
                     path=f"field:{name}.{fname}",
                     detail=(
                         f"oneof membership changed: {name}.{fname} "
-                        f"{of.oneof or '(none)'} -> {nf.oneof or '(none)'}"),
+                        f"{of.oneof or '(none)'} -> {nf.oneof or '(none)'}"
+                    ),
                     before=of.oneof,
                     after=nf.oneof,
                     location=nf.location,
@@ -248,7 +240,8 @@ def _diff_message(
                     path=f"oneof:{name}.{oneof}.{fname}",
                     detail=(
                         f"oneof member added: {oneof} gains {fname}; "
-                        "exhaustive decoders may not handle it"),
+                        "exhaustive decoders may not handle it"
+                    ),
                     before=None,
                     after=fname,
                     location=new.location,

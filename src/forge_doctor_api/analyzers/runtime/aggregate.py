@@ -115,14 +115,10 @@ class _OpAcc:
     timeouts: int = 0
     retries_observed: int = 0
     downstream_calls: int = 0
-    latency: _Reservoir = field(
-        default_factory=lambda: _Reservoir(DEFAULT_SAMPLE_CAP))
-    request_bytes: _Reservoir = field(
-        default_factory=lambda: _Reservoir(DEFAULT_SAMPLE_CAP))
-    response_bytes: _Reservoir = field(
-        default_factory=lambda: _Reservoir(DEFAULT_SAMPLE_CAP))
-    windows: dict[str, int] = field(
-        default_factory=lambda: defaultdict(int))
+    latency: _Reservoir = field(default_factory=lambda: _Reservoir(DEFAULT_SAMPLE_CAP))
+    request_bytes: _Reservoir = field(default_factory=lambda: _Reservoir(DEFAULT_SAMPLE_CAP))
+    response_bytes: _Reservoir = field(default_factory=lambda: _Reservoir(DEFAULT_SAMPLE_CAP))
+    windows: dict[str, int] = field(default_factory=lambda: defaultdict(int))
 
 
 def aggregate_executions(
@@ -145,9 +141,7 @@ def aggregate_executions(
             )
             accs[key] = acc
         acc.requests += 1
-        if e.status is not None and (
-            e.status == "error" or e.status.startswith("5")
-        ):
+        if e.status is not None and (e.status == "error" or e.status.startswith("5")):
             acc.errors += 1
         if e.timed_out:
             acc.timeouts += 1
@@ -178,18 +172,12 @@ def aggregate_executions(
                 operation=operation,
                 requests=acc.requests,
                 errors=acc.errors,
-                error_rate=acc.errors / acc.requests
-                if acc.requests
-                else None,
+                error_rate=acc.errors / acc.requests if acc.requests else None,
                 timeouts=acc.timeouts,
                 retries_observed=acc.retries_observed,
-                retry_rate=acc.retries_observed / acc.requests
-                if acc.requests
-                else None,
+                retry_rate=acc.retries_observed / acc.requests if acc.requests else None,
                 downstream_calls=acc.downstream_calls,
-                fanout_per_request=acc.downstream_calls / acc.requests
-                if acc.requests
-                else None,
+                fanout_per_request=acc.downstream_calls / acc.requests if acc.requests else None,
                 latency_ms=acc.latency.stats(),
                 request_bytes=acc.request_bytes.stats(),
                 response_bytes=acc.response_bytes.stats(),
@@ -219,6 +207,4 @@ def aggregate_summaries(
             acc = _Reservoir(cap)
             accs[key] = acc
         acc.add(r.duration_ms)
-    return tuple(
-        (path, acc.stats()) for path, acc in sorted(accs.items())
-    )
+    return tuple((path, acc.stats()) for path, acc in sorted(accs.items()))

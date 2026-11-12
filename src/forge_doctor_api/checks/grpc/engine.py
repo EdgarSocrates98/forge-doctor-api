@@ -57,9 +57,8 @@ def run_grpc_checks(model: GrpcProjectModel) -> tuple[Finding, ...]:
     """Single-model GRPC checks (001, 002, 005, 007 + within-file 004)."""
     findings: list[Finding] = []
 
-    any_deadline = (
-        any(c.has_deadline for c in model.service_configs)
-        or any(c.has_deadline for c in model.client_calls)
+    any_deadline = any(c.has_deadline for c in model.service_configs) or any(
+        c.has_deadline for c in model.client_calls
     )
 
     # -- GRPC001 call without deadline evidence --------------------------------
@@ -69,15 +68,13 @@ def run_grpc_checks(model: GrpcProjectModel) -> tuple[Finding, ...]:
                 findings.append(
                     _finding(
                         BY_ID["GRPC001"],
-                        f"no deadline/timeout evidence for "
-                        f"{svc.package}.{svc.name}/{m.name}",
+                        f"no deadline/timeout evidence for {svc.package}.{svc.name}/{m.name}",
                         m.location,
                         unknowns=(
                             UnknownFact(
                                 subject=f"{svc.name}/{m.name}",
                                 missing="deadline or timeout config/code evidence",
-                                resolution="service config timeout or stub call "
-                                "deadline",
+                                resolution="service config timeout or stub call deadline",
                             ),
                         ),
                     )
@@ -93,14 +90,12 @@ def run_grpc_checks(model: GrpcProjectModel) -> tuple[Finding, ...]:
                 findings.append(
                     _finding(
                         BY_ID["GRPC002"],
-                        f"retry policy exists but {svc.name}/{m.name} has no "
-                        f"idempotency evidence",
+                        f"retry policy exists but {svc.name}/{m.name} has no idempotency evidence",
                         m.location,
                         unknowns=(
                             UnknownFact(
                                 subject=f"{svc.name}/{m.name}",
-                                missing="idempotency_level option or equivalent "
-                                "evidence",
+                                missing="idempotency_level option or equivalent evidence",
                                 resolution="declare `option idempotency_level` in "
                                 "proto or confirm handler safety",
                             ),
@@ -124,22 +119,19 @@ def run_grpc_checks(model: GrpcProjectModel) -> tuple[Finding, ...]:
 
     # -- GRPC005 health service absent from declared production config ---------
     has_health_proto = any(
-        "grpc.health.v1" in svc.package or svc.name == "Health"
-        for svc in model.services
+        "grpc.health.v1" in svc.package or svc.name == "Health" for svc in model.services
     )
     for cfg in model.service_configs:
         if cfg.production and not (cfg.has_health_check or has_health_proto):
             findings.append(
                 _finding(
                     BY_ID["GRPC005"],
-                    f"production config {cfg.path} lacks gRPC health protocol "
-                    f"evidence (§157)",
+                    f"production config {cfg.path} lacks gRPC health protocol evidence (§157)",
                     cfg.location,
                     unknowns=(
                         UnknownFact(
                             subject="health checks",
-                            missing="healthCheckConfig or grpc.health.v1 service "
-                            "evidence",
+                            missing="healthCheckConfig or grpc.health.v1 service evidence",
                             resolution="declare health checking in service config",
                         ),
                     ),
@@ -162,8 +154,7 @@ def run_grpc_checks(model: GrpcProjectModel) -> tuple[Finding, ...]:
                             UnknownFact(
                                 subject="retry amplification",
                                 missing="deadline cap + upstream retry evidence",
-                                resolution="deadline + upstream retry policy "
-                                "visibility",
+                                resolution="deadline + upstream retry policy visibility",
                             ),
                         ),
                     )
@@ -175,9 +166,7 @@ def run_grpc_checks(model: GrpcProjectModel) -> tuple[Finding, ...]:
 _CHECK_KINDS = {"GRPC003", "GRPC004", "GRPC006", "GRPC008", "GRPC009"}
 
 
-def grpc_breaking_changes(
-    old: GrpcProjectModel, new: GrpcProjectModel
-) -> ContractDiff:
+def grpc_breaking_changes(old: GrpcProjectModel, new: GrpcProjectModel) -> ContractDiff:
     """Proto schema diff (§26): all changes + findings for check-mapped kinds.
 
     Every detectable change is a `ContractChange` classified via the

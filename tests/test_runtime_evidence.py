@@ -29,9 +29,7 @@ def _span(
         "kind": kind,
         "startTimeUnixNano": "0",
         "endTimeUnixNano": str(int(dur * 1e6)),
-        "attributes": [
-            {"key": k, "value": {"stringValue": v}} for k, v in (attrs or {}).items()
-        ],
+        "attributes": [{"key": k, "value": {"stringValue": v}} for k, v in (attrs or {}).items()],
         "status": {"code": code},
     }
 
@@ -68,9 +66,7 @@ def _load(root: Path, files: dict[str, str], keep_spans: bool = True):
         t = root / name
         t.parent.mkdir(parents=True, exist_ok=True)
         t.write_text(text, encoding="utf-8")
-    rt = load_runtime_project(
-        ProjectContext.from_root(root), list(files), keep_spans=keep_spans
-    )
+    rt = load_runtime_project(ProjectContext.from_root(root), list(files), keep_spans=keep_spans)
     return rt.traces, rt.observability, rt.unknowns
 
 
@@ -149,9 +145,7 @@ def test_obsapi001_clean_with_correlation(tmp_path: Path) -> None:
 def test_obsapi002_orphan_gap(tmp_path: Path) -> None:
     spans = [_span("o", "t1", "op", parent="gone", dur=10)]
     _, obs, _ = _load(tmp_path, {"t.json": _otlp(spans)})
-    f = next(
-        f for f in run_observability_checks(obs) if f.id == "OBSAPI002"
-    )
+    f = next(f for f in run_observability_checks(obs) if f.id == "OBSAPI002")
     assert "parents absent" in f.description
 
 

@@ -21,9 +21,7 @@ from forge_doctor_api.core.models import SourceLocation
 
 _CONFIG_SUFFIXES = {".json", ".yaml", ".yml"}
 _PROD_HINT = re.compile(r"(prod|production)", re.I)
-_PROD_KEY = re.compile(
-    r"(?im)^\s*[\"']?(env|environment|stage)[\"']?\s*[:=]\s*[\"']?prod", re.I
-)
+_PROD_KEY = re.compile(r"(?im)^\s*[\"']?(env|environment|stage)[\"']?\s*[:=]\s*[\"']?prod", re.I)
 _MAX_ATTEMPTS = re.compile(r'["\']?maxAttempts["\']?\s*[:=]\s*(\d+)')
 _MAX_HEDGES = re.compile(r'["\']?(?:maxHedges|hedgingPolicy)["\']?\s*[:=]\s*(\d+)')
 _BACKOFF = re.compile(r'["\']?initialBackoff["\']?\s*[:=]\s*["\']?([\w.]+)')
@@ -64,8 +62,8 @@ def extract_service_configs(
         retries: list[GrpcRetryPolicy] = []
         for m in _MAX_ATTEMPTS.finditer(text):
             line = text[: m.start()].count("\n") + 1
-            hedges = _MAX_HEDGES.search(text[m.end():])
-            backoff = _BACKOFF.search(text[m.end():])
+            hedges = _MAX_HEDGES.search(text[m.end() :])
+            backoff = _BACKOFF.search(text[m.end() :])
             retries.append(
                 GrpcRetryPolicy(
                     max_attempts=int(m.group(1)),
@@ -92,9 +90,7 @@ def extract_service_configs(
     return tuple(out)
 
 
-def extract_stub_calls(
-    context: ProjectContext, files: list[str]
-) -> tuple[GrpcClientCall, ...]:
+def extract_stub_calls(context: ProjectContext, files: list[str]) -> tuple[GrpcClientCall, ...]:
     """§185: detect generated-stub construction and calls in Python source."""
     out: list[GrpcClientCall] = []
     for path in sorted(files):
@@ -122,9 +118,7 @@ def extract_stub_calls(
                     method=method,
                     has_deadline=bool(kwargs & {"timeout", "deadline", "deadline_ms"}),
                     has_wait_for_ready="wait_for_ready" in kwargs,
-                    location=SourceLocation(
-                        path=path, line=text[: m.start()].count("\n") + 1
-                    ),
+                    location=SourceLocation(path=path, line=text[: m.start()].count("\n") + 1),
                 )
             )
     return tuple(out)

@@ -62,10 +62,18 @@ MARKER_BUILD_MANIFEST = "build-manifest"
 
 # Directories whose files are recorded but flagged `vendored` — matching
 # the skip convention analyzers already use (`_SKIP_DIRS`, hidden parts).
-_VENDOR_PARTS = frozenset({
-    "node_modules", "__pycache__", "site-packages", "dist", "build",
-    "vendor", "venv", ".venv",
-})
+_VENDOR_PARTS = frozenset(
+    {
+        "node_modules",
+        "__pycache__",
+        "site-packages",
+        "dist",
+        "build",
+        "vendor",
+        "venv",
+        ".venv",
+    }
+)
 
 _HEAD_BYTES = 4096
 
@@ -91,14 +99,24 @@ _CLIENT_SUFFIXES = _JS_SUFFIXES | {".py", ".java", ".graphql", ".gql"}
 _DOC_SUFFIXES = {".md", ".rst", ".adoc"}
 
 _WORKSPACE_NAMES = {
-    "forge-doctor-api.workspace.yaml", "forge-doctor-api.workspace.yml",
-    "workspace.yaml", "workspace.yml",
+    "forge-doctor-api.workspace.yaml",
+    "forge-doctor-api.workspace.yml",
+    "workspace.yaml",
+    "workspace.yml",
 }
 _OWNERSHIP_NAMES = {"codeowners", "owners"}
 _BUILD_MANIFEST_NAMES = {
-    "pom.xml", "build.gradle", "build.gradle.kts", "package.json",
-    "go.mod", "cargo.toml", "pyproject.toml", "setup.py", "setup.cfg",
-    "gemfile", "composer.json",
+    "pom.xml",
+    "build.gradle",
+    "build.gradle.kts",
+    "package.json",
+    "go.mod",
+    "cargo.toml",
+    "pyproject.toml",
+    "setup.py",
+    "setup.cfg",
+    "gemfile",
+    "composer.json",
 }
 
 # yaml/json markers: (marker-tag, needle candidates). Matched against the
@@ -111,8 +129,12 @@ _CONTRACT_NEEDLES = {
 }
 _K8S_NEEDLES = ("apiversion:", "kind:")
 _ISTIO_NEEDLES = (
-    "virtualservice", "destinationrule", "gateway.networking.istio.io",
-    "istio.io", "serviceentry", "authorizationpolicy",
+    "virtualservice",
+    "destinationrule",
+    "gateway.networking.istio.io",
+    "istio.io",
+    "serviceentry",
+    "authorizationpolicy",
 )
 _LINKDERD_NEEDLES = ("serviceprofile", "linkerd.io")
 _GATEWAY_NEEDLES = {
@@ -125,10 +147,7 @@ _POLICY_NEEDLE = "policies:"
 
 
 def _vendored(path: str) -> bool:
-    return any(
-        part.startswith(".") or part in _VENDOR_PARTS
-        for part in path.split("/")[:-1]
-    )
+    return any(part.startswith(".") or part in _VENDOR_PARTS for part in path.split("/")[:-1])
 
 
 def _sniff_head(context: ProjectContext, path: str) -> tuple[str, str | None, bool]:
@@ -201,24 +220,19 @@ class ArtifactInventory(Model):
                 return a
         return None
 
-    def files_in(
-        self, *classes: ArtifactClass, include_vendored: bool = False
-    ) -> list[str]:
+    def files_in(self, *classes: ArtifactClass, include_vendored: bool = False) -> list[str]:
         """Sorted paths carrying any of `classes` (vendored excluded)."""
         return [
             a.path
             for a in self.artifacts
-            if (include_vendored or not a.vendored)
-            and any(c in a.classes for c in classes)
+            if (include_vendored or not a.vendored) and any(c in a.classes for c in classes)
         ]
 
     def has_class(self, cls: ArtifactClass) -> bool:
         return any(not a.vendored and cls in a.classes for a in self.artifacts)
 
     def markers(self) -> frozenset[str]:
-        return frozenset(
-            m for a in self.artifacts if not a.vendored for m in a.markers
-        )
+        return frozenset(m for a in self.artifacts if not a.vendored for m in a.markers)
 
     def counts_by_class(self) -> dict[str, int]:
         counts: dict[str, int] = {}

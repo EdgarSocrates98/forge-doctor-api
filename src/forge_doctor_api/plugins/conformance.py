@@ -41,7 +41,7 @@ PluginRun = Callable[[ProjectContext, Sequence[str]], Any]
 @dataclass(frozen=True, kw_only=True)
 class CheckResult(Model):
     name: str
-    status: str          # "pass" | "fail" | "error"
+    status: str  # "pass" | "fail" | "error"
     details: str = ""
 
 
@@ -60,8 +60,7 @@ def _snapshot(root: Path) -> dict[str, str]:
     out: dict[str, str] = {}
     for p in sorted(root.rglob("*")):
         if p.is_file():
-            out[str(p.relative_to(root))] = hashlib.sha256(
-                p.read_bytes()).hexdigest()
+            out[str(p.relative_to(root))] = hashlib.sha256(p.read_bytes()).hexdigest()
     return out
 
 
@@ -95,8 +94,9 @@ def _serialize(result: Any) -> bytes:
     if isinstance(result, (tuple, list)):
         parts = []
         for x in result:
-            parts.append(x.to_json() if isinstance(x, Model)
-                         else json.dumps(x, sort_keys=True, default=str))
+            parts.append(
+                x.to_json() if isinstance(x, Model) else json.dumps(x, sort_keys=True, default=str)
+            )
         return ("[" + ",".join(parts) + "]").encode("utf-8")
     return json.dumps(result, sort_keys=True, default=str).encode("utf-8")
 
@@ -115,94 +115,116 @@ def run_conformance(
     try:
         r1 = run(ctx, files)
     except Exception as exc:
-        return ConformanceReport(plugin=name, checks=(CheckResult(
-            name="run", status="error",
-            details=f"plugin run raised {exc!r}"),))
+        return ConformanceReport(
+            plugin=name,
+            checks=(CheckResult(name="run", status="error", details=f"plugin run raised {exc!r}"),),
+        )
 
     # determinism ---------------------------------------------------------------
     try:
         r2 = run(ProjectContext.from_root(project_root), files)
         same = _serialize(r1) == _serialize(r2)
-        checks.append(CheckResult(
-            name="determinism", status="pass" if same else "fail",
-            details="two runs byte-identical" if same
-            else "outputs differ between identical runs"))
+        checks.append(
+            CheckResult(
+                name="determinism",
+                status="pass" if same else "fail",
+                details="two runs byte-identical"
+                if same
+                else "outputs differ between identical runs",
+            )
+        )
     except Exception as exc:
-        checks.append(CheckResult(
-            name="determinism", status="error", details=repr(exc)))
+        checks.append(CheckResult(name="determinism", status="error", details=repr(exc)))
 
     # offline --------------------------------------------------------------------
     try:
         # `patch` resolves "socket.*" lazily — no `import socket`
         # statement here; src/ must never import the network stack.
-        with patch("socket.socket", _blocked), \
-             patch("socket.create_connection", _blocked), \
-             patch("socket.getaddrinfo", _blocked):
+        with (
+            patch("socket.socket", _blocked),
+            patch("socket.create_connection", _blocked),
+            patch("socket.getaddrinfo", _blocked),
+        ):
             run(ProjectContext.from_root(project_root), files)
         checks.append(CheckResult(name="offline", status="pass"))
     except Exception as exc:
-        checks.append(CheckResult(
-            name="offline", status="fail",
-            details=f"raised under blocked sockets: {exc!r}"))
+        checks.append(
+            CheckResult(
+                name="offline", status="fail", details=f"raised under blocked sockets: {exc!r}"
+            )
+        )
 
     # evidence compliance --------------------------------------------------------
     findings = _findings(r1)
     no_ev = [f.id for f in findings if not f.evidence]
-    no_unk = [
-        f.id for f in findings
-        if f.confidence is Confidence.UNKNOWN and not f.unknowns]
+    no_unk = [f.id for f in findings if f.confidence is Confidence.UNKNOWN and not f.unknowns]
     ok = not no_ev and not no_unk
-    checks.append(CheckResult(
-        name="evidence",
-        status="pass" if ok else "fail",
-        details=(
-            f"{len(findings)} findings checked"
-            if ok else
-            f"no evidence: {no_ev}; UNKNOWN w/o unknowns: {no_unk}")))
+    checks.append(
+        CheckResult(
+            name="evidence",
+            status="pass" if ok else "fail",
+            details=(
+                f"{len(findings)} findings checked"
+                if ok
+                else f"no evidence: {no_ev}; UNKNOWN w/o unknowns: {no_unk}"
+            ),
+        )
+    )
 
     # side-effects ----------------------------------------------------------------
     try:
         run(ProjectContext.from_root(project_root), files)
         same = _snapshot(project_root) == fileset_before
-        checks.append(CheckResult(
-            name="side-effects", status="pass" if same else "fail",
-            details="fileset unchanged" if same
-            else "plugin modified the analyzed project"))
+        checks.append(
+            CheckResult(
+                name="side-effects",
+                status="pass" if same else "fail",
+                details="fileset unchanged" if same else "plugin modified the analyzed project",
+            )
+        )
     except Exception as exc:
-        checks.append(CheckResult(
-            name="side-effects", status="error", details=repr(exc)))
+        checks.append(CheckResult(name="side-effects", status="error", details=repr(exc)))
 
     # output compatibility ----------------------------------------------------------
     try:
         json.loads(_serialize(r1).decode("utf-8"))
         checks.append(CheckResult(name="output-compat", status="pass"))
     except Exception as exc:
-        checks.append(CheckResult(
-            name="output-compat", status="fail",
-            details=f"serialization failed: {exc!r}"))
+        checks.append(
+            CheckResult(
+                name="output-compat", status="fail", details=f"serialization failed: {exc!r}"
+            )
+        )
 
     # unknown semantics --------------------------------------------------------------
     bad = [
-        u for u in _unknowns(r1)
-        if not isinstance(u, UnknownFact)
-        or not u.subject or not u.missing]
-    checks.append(CheckResult(
-        name="unknown-semantics",
-        status="pass" if not bad else "fail",
-        details="unknowns are typed UnknownFacts" if not bad
-        else f"malformed unknowns: {bad[:3]}"))
+        u for u in _unknowns(r1) if not isinstance(u, UnknownFact) or not u.subject or not u.missing
+    ]
+    checks.append(
+        CheckResult(
+            name="unknown-semantics",
+            status="pass" if not bad else "fail",
+            details="unknowns are typed UnknownFacts"
+            if not bad
+            else f"malformed unknowns: {bad[:3]}",
+        )
+    )
 
     # output schema (spec 084) --------------------------------------------------
     from forge_doctor_api.plugins.validation import (
         validate_plugin_output,
     )
+
     violations = validate_plugin_output(r1, project_root)
-    checks.append(CheckResult(
-        name="output-schema",
-        status="pass" if not violations else "fail",
-        details="output satisfies the contract" if not violations
-        else "; ".join(f"{v.rule}@{v.path or '-'}"
-                       for v in violations[:5])))
+    checks.append(
+        CheckResult(
+            name="output-schema",
+            status="pass" if not violations else "fail",
+            details="output satisfies the contract"
+            if not violations
+            else "; ".join(f"{v.rule}@{v.path or '-'}" for v in violations[:5]),
+        )
+    )
 
     return ConformanceReport(plugin=name, checks=tuple(checks))
 
@@ -215,7 +237,9 @@ def plugin_run_surface(plugin: Any) -> PluginRun | None:
     if callable(getattr(plugin, "analyze", None)):
         return plugin.analyze  # type: ignore[no-any-return]
     if callable(getattr(plugin, "discover_routes", None)):
+
         def _run(ctx: ProjectContext, files: Sequence[str]) -> Any:
             return plugin.discover_routes(ctx, "conformance", files)
+
         return _run
     return None

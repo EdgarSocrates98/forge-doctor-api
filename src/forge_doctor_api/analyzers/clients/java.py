@@ -30,8 +30,7 @@ _MAPPING = re.compile(
     r"@(?P<ann>Get|Post|Put|Delete|Patch|Head|Options)Mapping\b"
     r"(?:\s*\(\s*(?:value\s*=\s*|path\s*=\s*)?\"(?P<path>[^\"]*)\")?",
 )
-_REQUEST_MAPPING = re.compile(
-    r'@RequestMapping\s*\((?P<args>[^)]*)\)', re.S)
+_REQUEST_MAPPING = re.compile(r"@RequestMapping\s*\((?P<args>[^)]*)\)", re.S)
 _RM_METHOD = re.compile(r"RequestMethod\.(?P<m>[A-Z]+)")
 _RM_VALUE = re.compile(r'(?:value|path)\s*=\s*"(?P<p>[^"]*)"')
 _RM_POSITIONAL = re.compile(r'^\s*"(?P<p>[^"]*)"')
@@ -49,9 +48,7 @@ def _join(prefix: str | None, path: str | None) -> str | None:
     return prefix.rstrip("/") + (path if path.startswith("/") else "/" + path)
 
 
-def scan_java_source(
-    path: str, source: str
-) -> tuple[list[ClientCallSite], list[UnknownFact]]:
+def scan_java_source(path: str, source: str) -> tuple[list[ClientCallSite], list[UnknownFact]]:
     """Extract Feign call sites from one Java source file."""
     sites: list[ClientCallSite] = []
     unknowns: list[UnknownFact] = []
@@ -74,22 +71,36 @@ def scan_java_source(
             p = "/" + p if p else None
         line = _line(source, match.start())
         if p is None:
-            unknowns.append(UnknownFact(
-                subject=f"{path}:{line}",
-                missing="literal path in @RequestLine",
-                resolution="the annotation uses a computed path"))
+            unknowns.append(
+                UnknownFact(
+                    subject=f"{path}:{line}",
+                    missing="literal path in @RequestLine",
+                    resolution="the annotation uses a computed path",
+                )
+            )
             continue
-        sites.append(ClientCallSite(
-            client=client_name_for(path),
-            language=ClientLanguage.JAVA,
-            library="feign",
-            method=verb.upper() if verb.upper() in {
-                "GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS",
-            } else None,
-            url=_join(prefix, p),
-            path=_join(prefix, p),
-            location=SourceLocation(path=path, line=line, column=1),
-        ))
+        sites.append(
+            ClientCallSite(
+                client=client_name_for(path),
+                language=ClientLanguage.JAVA,
+                library="feign",
+                method=verb.upper()
+                if verb.upper()
+                in {
+                    "GET",
+                    "POST",
+                    "PUT",
+                    "DELETE",
+                    "PATCH",
+                    "HEAD",
+                    "OPTIONS",
+                }
+                else None,
+                url=_join(prefix, p),
+                path=_join(prefix, p),
+                location=SourceLocation(path=path, line=line, column=1),
+            )
+        )
 
     for match in _MAPPING.finditer(source):
         line = _line(source, match.start())
@@ -98,20 +109,25 @@ def scan_java_source(
             raw = "/" + raw if raw else None
         joined = _join(prefix, raw)
         if joined is None:
-            unknowns.append(UnknownFact(
-                subject=f"{path}:{line}",
-                missing="literal path in mapping annotation",
-                resolution="the annotation uses a computed path"))
+            unknowns.append(
+                UnknownFact(
+                    subject=f"{path}:{line}",
+                    missing="literal path in mapping annotation",
+                    resolution="the annotation uses a computed path",
+                )
+            )
             continue
-        sites.append(ClientCallSite(
-            client=client_name_for(path),
-            language=ClientLanguage.JAVA,
-            library="feign",
-            method=match["ann"].upper(),
-            url=joined,
-            path=joined,
-            location=SourceLocation(path=path, line=line, column=1),
-        ))
+        sites.append(
+            ClientCallSite(
+                client=client_name_for(path),
+                language=ClientLanguage.JAVA,
+                library="feign",
+                method=match["ann"].upper(),
+                url=joined,
+                path=joined,
+                location=SourceLocation(path=path, line=line, column=1),
+            )
+        )
 
     for match in _REQUEST_MAPPING.finditer(source):
         args = match["args"]
@@ -122,18 +138,23 @@ def scan_java_source(
             continue  # class-level prefix or unannotated — not a call site
         joined = _join(prefix, value_m["p"] if value_m else None)
         if joined is None:
-            unknowns.append(UnknownFact(
-                subject=f"{path}:{line}",
-                missing="literal path in @RequestMapping",
-                resolution="the annotation uses a computed path"))
+            unknowns.append(
+                UnknownFact(
+                    subject=f"{path}:{line}",
+                    missing="literal path in @RequestMapping",
+                    resolution="the annotation uses a computed path",
+                )
+            )
             continue
-        sites.append(ClientCallSite(
-            client=client_name_for(path),
-            language=ClientLanguage.JAVA,
-            library="feign",
-            method=method_m["m"],
-            url=joined,
-            path=joined,
-            location=SourceLocation(path=path, line=line, column=1),
-        ))
+        sites.append(
+            ClientCallSite(
+                client=client_name_for(path),
+                language=ClientLanguage.JAVA,
+                library="feign",
+                method=method_m["m"],
+                url=joined,
+                path=joined,
+                location=SourceLocation(path=path, line=line, column=1),
+            )
+        )
     return sites, unknowns

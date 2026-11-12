@@ -23,15 +23,15 @@ def pr_summary(
     - `extra_unknowns`: unknowns from inputs that produced no event
       (e.g. malformed contract documents) — counted, never dropped.
     """
-    breaking = sum(
-        1 for e in events if e.classification is CompatibilityClass.BREAKING
-    )
+    breaking = sum(1 for e in events if e.classification is CompatibilityClass.BREAKING)
     new_endpoints = sum(1 for e in events if e.type is ChangeType.ENDPOINT_ADDED)
     auth = sum(1 for e in events if e.type is ChangeType.AUTH_CHANGED)
 
-    objective_names = frozenset(
-        o.name for o in reliability.objectives
-    ) if reliability is not None else frozenset()
+    objective_names = (
+        frozenset(o.name for o in reliability.objectives)
+        if reliability is not None
+        else frozenset()
+    )
     slo_relevant = sum(
         1
         for e in events
@@ -43,9 +43,7 @@ def pr_summary(
         )
     )
 
-    unknown_events = sum(
-        1 for e in events if e.classification is CompatibilityClass.UNKNOWN
-    )
+    unknown_events = sum(1 for e in events if e.classification is CompatibilityClass.UNKNOWN)
     return PrIntelSummary(
         breaking_changes=breaking,
         affected_clients=len(set(affected_clients)),

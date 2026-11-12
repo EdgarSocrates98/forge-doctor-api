@@ -80,18 +80,17 @@ MODEL_BY_FIXTURE: dict[str, type[ContractModel]] = {
 
 
 def _fixture(name: str) -> dict[str, Any]:
-    return json.loads(
-        (CANONICAL / f"{name}.json").read_text(encoding="utf-8"))
+    return json.loads((CANONICAL / f"{name}.json").read_text(encoding="utf-8"))
 
 
 # -- canonical fixture round trips ----------------------------------------------
+
 
 @pytest.mark.parametrize("name", sorted(MODEL_BY_FIXTURE))
 def test_canonical_fixture_round_trips_byte_identical(name: str) -> None:
     payload = _fixture(name)
     model = MODEL_BY_FIXTURE[name].from_dict(payload)  # type: ignore[attr-defined]
-    assert model.to_dict() == payload, (
-        f"{name}: from_dict(to_dict) changed the wire shape")
+    assert model.to_dict() == payload, f"{name}: from_dict(to_dict) changed the wire shape"
 
 
 @pytest.mark.parametrize("name", sorted(MODEL_BY_FIXTURE))
@@ -119,80 +118,106 @@ def test_canonical_fixture_set_is_complete() -> None:
 
 # -- null / empty semantics -------------------------------------------------------
 
+
 def _minimal(model: type[ContractModel]) -> dict[str, Any]:
     return json.loads(model().to_json())
 
 
-@pytest.mark.parametrize("field", [
-    "check_id", "title", "severity", "category", "message"])
+@pytest.mark.parametrize("field", ["check_id", "title", "severity", "category", "message"])
 def test_finding_required_field_missing_or_null_errors(field: str) -> None:
     base = _fixture("finding")
-    for bad in ({k: v for k, v in base.items() if k != field},
-                {**base, field: None}):
+    for bad in ({k: v for k, v in base.items() if k != field}, {**base, field: None}):
         with pytest.raises((ValueError, ContractError)):
             Finding.from_dict(bad)
 
 
-@pytest.mark.parametrize("model,field", [
-    (Entity, "id"), (Entity, "kind"), (Entity, "domain"),
-    (Relationship, "src"), (Relationship, "dst"), (Relationship, "kind"),
-    (Evidence, "ref"), (Evidence, "kind"), (Evidence, "source"),
-    (Capability, "id"), (Capability, "domain"), (Capability, "status"),
-    (UnknownFact, "subject"), (UnknownFact, "kind"), (UnknownFact, "reason"),
-    (MigrationPlan, "id"), (MigrationPlan, "source"),
-    (MigrationPlan, "target"), (MigrationPlan, "kind"),
-    (RemediationPlan, "id"), (RemediationPlan, "check_id"),
-    (RemediationPlan, "problem"),
-])
-def test_required_scalar_missing_and_null_error(
-        model: type[ContractModel], field: str) -> None:
+@pytest.mark.parametrize(
+    "model,field",
+    [
+        (Entity, "id"),
+        (Entity, "kind"),
+        (Entity, "domain"),
+        (Relationship, "src"),
+        (Relationship, "dst"),
+        (Relationship, "kind"),
+        (Evidence, "ref"),
+        (Evidence, "kind"),
+        (Evidence, "source"),
+        (Capability, "id"),
+        (Capability, "domain"),
+        (Capability, "status"),
+        (UnknownFact, "subject"),
+        (UnknownFact, "kind"),
+        (UnknownFact, "reason"),
+        (MigrationPlan, "id"),
+        (MigrationPlan, "source"),
+        (MigrationPlan, "target"),
+        (MigrationPlan, "kind"),
+        (RemediationPlan, "id"),
+        (RemediationPlan, "check_id"),
+        (RemediationPlan, "problem"),
+    ],
+)
+def test_required_scalar_missing_and_null_error(model: type[ContractModel], field: str) -> None:
     base = _minimal(model)
     assert field in base, f"{model.__name__} must emit {field}"
-    for bad in ({k: v for k, v in base.items() if k != field},
-                {**base, field: None}):
+    for bad in ({k: v for k, v in base.items() if k != field}, {**base, field: None}):
         with pytest.raises((ValueError, ContractError)):
             model.from_dict(bad)  # type: ignore[attr-defined]
 
 
-@pytest.mark.parametrize("model,field", [
-    (Finding, "tags"),
-    (Capability, "evidence_refs"),
-    (MigrationPlan, "steps"), (MigrationPlan, "risks"),
-    (RemediationPlan, "targets"), (RemediationPlan, "actions"),
-    (RemediationPlan, "risks"),
-    (HandoffBundle, "findings"), (HandoffBundle, "entities"),
-    (HandoffBundle, "relationships"), (HandoffBundle, "capabilities"),
-    (HandoffBundle, "plans"), (HandoffBundle, "unknowns"),
-])
+@pytest.mark.parametrize(
+    "model,field",
+    [
+        (Finding, "tags"),
+        (Capability, "evidence_refs"),
+        (MigrationPlan, "steps"),
+        (MigrationPlan, "risks"),
+        (RemediationPlan, "targets"),
+        (RemediationPlan, "actions"),
+        (RemediationPlan, "risks"),
+        (HandoffBundle, "findings"),
+        (HandoffBundle, "entities"),
+        (HandoffBundle, "relationships"),
+        (HandoffBundle, "capabilities"),
+        (HandoffBundle, "plans"),
+        (HandoffBundle, "unknowns"),
+    ],
+)
 def test_collection_missing_null_empty_decode_to_empty(
-        model: type[ContractModel], field: str) -> None:
+    model: type[ContractModel], field: str
+) -> None:
     for variant in ({}, {field: None}, {field: []}):
         base = {**_minimal(model), **variant}
         decoded = model.from_dict(base)  # type: ignore[attr-defined]
         assert getattr(decoded, field) == ()
 
 
-@pytest.mark.parametrize("model,field,attr", [
-    (Finding, "file", "file"),
-    (Finding, "confidence", "confidence"),
-    (Entity, "file", "file"),
-    (Relationship, "evidence_kind", "evidence_kind"),
-    (Evidence, "detail", "detail"),
-    (Capability, "confidence", "confidence"),
-    (UnknownFact, "source", "source"),
-    (MigrationPlan, "readiness", "readiness"),
-])
+@pytest.mark.parametrize(
+    "model,field,attr",
+    [
+        (Finding, "file", "file"),
+        (Finding, "confidence", "confidence"),
+        (Entity, "file", "file"),
+        (Relationship, "evidence_kind", "evidence_kind"),
+        (Evidence, "detail", "detail"),
+        (Capability, "confidence", "confidence"),
+        (UnknownFact, "source", "source"),
+        (MigrationPlan, "readiness", "readiness"),
+    ],
+)
 def test_optional_scalar_absent_null_decodes_none_and_omits(
-        model: type[ContractModel], field: str, attr: str) -> None:
+    model: type[ContractModel], field: str, attr: str
+) -> None:
     for variant in ({}, {field: None}):
         base = {**_minimal(model), **variant}
         decoded = model.from_dict(base)  # type: ignore[attr-defined]
         assert getattr(decoded, attr) is None
-        assert attr not in decoded.to_dict(), (
-            f"{model.__name__}.{attr} must be omitted when null")
+        assert attr not in decoded.to_dict(), f"{model.__name__}.{attr} must be omitted when null"
 
 
 # -- forward compatibility ---------------------------------------------------------
+
 
 def test_unknown_x_key_survives_round_trip() -> None:
     payload = {**_fixture("finding"), "x-future-v2": {"nested": [1, 2]}}
@@ -218,24 +243,34 @@ def test_extensions_do_not_change_universal_semantics() -> None:
     stripped = {k: v for k, v in base.items() if not k.startswith("x-")}
     with_ext = Finding.from_dict(base)
     without_ext = Finding.from_dict(stripped)
-    for field in ("check_id", "title", "severity", "category",
-                  "message", "file", "line", "confidence", "evidence"):
+    for field in (
+        "check_id",
+        "title",
+        "severity",
+        "category",
+        "message",
+        "file",
+        "line",
+        "confidence",
+        "evidence",
+    ):
         assert getattr(with_ext, field) == getattr(without_ext, field)
 
 
 # -- x-forge-api registry ----------------------------------------------------------
 
+
 def _core_finding_with_unknowns() -> CoreFinding:
     return CoreFinding(
-        id="OAS009", title="t", description="d",
-        severity=Severity.MEDIUM, confidence=Confidence.MEDIUM,
+        id="OAS009",
+        title="t",
+        description="d",
+        severity=Severity.MEDIUM,
+        confidence=Confidence.MEDIUM,
         evidence_kind=EvidenceKind.STATIC,
-        evidence=(CoreEvidence(
-            kind=EvidenceKind.STATIC, source="api.yaml",
-            summary="s", line=1),),
+        evidence=(CoreEvidence(kind=EvidenceKind.STATIC, source="api.yaml", summary="s", line=1),),
         entity_ids=("operation:openapi:get /pets",),
-        unknowns=(CoreUnknown(
-            subject="s", missing="m", resolution="r"),),
+        unknowns=(CoreUnknown(subject="s", missing="m", resolution="r"),),
     )
 
 
@@ -250,29 +285,39 @@ def _emitted_extension_keys() -> set[str]:
     from forge_doctor_api.core.models import (
         Relationship as CoreRelationship,
     )
+
     keys: set[str] = set()
     f = wire_finding(_core_finding_with_unknowns())
     keys |= set(f.extensions.get(API_EXTENSION, {}))
-    rel = wire_relationship(CoreRelationship(
-        source_id="a:b:c", target_id="a:b:d", kind="EXPOSES",
-        confidence=Confidence.HIGH,
-        evidence=(CoreEvidence(
-            kind=EvidenceKind.STATIC, source="api.yaml",
-            summary="edge"),),
-        unknowns=(CoreUnknown(
-            subject="s", missing="m", resolution="r"),)))
+    rel = wire_relationship(
+        CoreRelationship(
+            source_id="a:b:c",
+            target_id="a:b:d",
+            kind="EXPOSES",
+            confidence=Confidence.HIGH,
+            evidence=(CoreEvidence(kind=EvidenceKind.STATIC, source="api.yaml", summary="edge"),),
+            unknowns=(CoreUnknown(subject="s", missing="m", resolution="r"),),
+        )
+    )
     keys |= set(rel.extensions.get(API_EXTENSION, {}))
-    edge = wire_edge_export(EdgeExport(
-        from_id="a:b:c", to_id="a:b:d", kind="CALLS",
-        evidence_ids=("ev:1",), confidence=Confidence.HIGH))
+    edge = wire_edge_export(
+        EdgeExport(
+            from_id="a:b:c",
+            to_id="a:b:d",
+            kind="CALLS",
+            evidence_ids=("ev:1",),
+            confidence=Confidence.HIGH,
+        )
+    )
     keys |= set(edge.extensions.get(API_EXTENSION, {}))
     report = DoctorReport(
-        tool_version="0.1.0", project="demo", analysis_rev="rev1",
-        findings=(_core_finding_with_unknowns(),))
-    keys |= set(report_handoff(report).extensions.get(
-        API_EXTENSION, {}))
-    keys |= set(report_manifest(report).extensions.get(
-        API_EXTENSION, {}))
+        tool_version="0.1.0",
+        project="demo",
+        analysis_rev="rev1",
+        findings=(_core_finding_with_unknowns(),),
+    )
+    keys |= set(report_handoff(report).extensions.get(API_EXTENSION, {}))
+    keys |= set(report_manifest(report).extensions.get(API_EXTENSION, {}))
     return keys
 
 
@@ -289,45 +334,61 @@ def test_x_forge_api_registry_matches_emitted_keys() -> None:
     registered = _registered_extension_keys()
     assert emitted == registered, (
         f"emitted-not-registered: {sorted(emitted - registered)}; "
-        f"registered-not-emitted: {sorted(registered - emitted)}")
+        f"registered-not-emitted: {sorted(registered - emitted)}"
+    )
 
 
 def test_no_api_specific_root_fields_outside_extension() -> None:
     """The bundle root carries only universal keys + x-* extensions."""
     report = DoctorReport(
-        tool_version="0.1.0", project="demo", analysis_rev="rev1",
-        findings=(_core_finding_with_unknowns(),))
+        tool_version="0.1.0",
+        project="demo",
+        analysis_rev="rev1",
+        findings=(_core_finding_with_unknowns(),),
+    )
     payload = report_handoff(report).to_dict()
     allowed = {
-        "contract_version", "tool", "project", "summary", "findings",
-        "entities", "relationships", "capabilities", "plans",
+        "contract_version",
+        "tool",
+        "project",
+        "summary",
+        "findings",
+        "entities",
+        "relationships",
+        "capabilities",
+        "plans",
         "unknowns",
     }
     extras = set(payload) - allowed
     assert all(k.startswith("x-") for k in extras), (
-        f"non-extension root keys leaked: {sorted(extras)}")
+        f"non-extension root keys leaked: {sorted(extras)}"
+    )
 
 
 # -- delta context categories -------------------------------------------------------
 
-def _report(rev: str, findings: tuple[CoreFinding, ...] = (),
-            ) -> DoctorReport:
-    return DoctorReport(
-        tool_version="0.1.0", project="demo", analysis_rev=rev,
-        findings=findings)
+
+def _report(
+    rev: str,
+    findings: tuple[CoreFinding, ...] = (),
+) -> DoctorReport:
+    return DoctorReport(tool_version="0.1.0", project="demo", analysis_rev=rev, findings=findings)
 
 
 def test_delta_context_categories() -> None:
     prev = DoctorReport(
-        tool_version="0.1.0", project="demo", analysis_rev="rev-a",
+        tool_version="0.1.0",
+        project="demo",
+        analysis_rev="rev-a",
         findings=(_core_finding_with_unknowns(),),
-        unknowns=(CoreUnknown(
-            subject="cap:GRPC", missing="proto files",
-            resolution="add .proto sources"),))
+        unknowns=(
+            CoreUnknown(subject="cap:GRPC", missing="proto files", resolution="add .proto sources"),
+        ),
+    )
     cur = _report("rev-b")
     delta = compute_delta(
-        prev, cur, baseline_ref="doctor://handoff/rev-a",
-        changed_files=("b.py", "a.py"))
+        prev, cur, baseline_ref="doctor://handoff/rev-a", changed_files=("b.py", "a.py")
+    )
     assert delta.changed_files == ("a.py", "b.py")  # sorted echo
     assert delta.baseline_ref == "doctor://handoff/rev-a"
     assert delta.analysis_rev_prev == "rev-a"
@@ -344,14 +405,14 @@ def test_delta_context_capability_and_domain_transitions() -> None:
     from forge_doctor_api.knowledge.capability import (
         DetectedCapability,
     )
+
     cap = DetectedCapability(
         capability=CapabilityKind.OPENAPI_32,
-        evidence=(CoreEvidence(
-            kind=EvidenceKind.STATIC, source="api.yaml",
-            summary="openapi: 3"),))
+        evidence=(CoreEvidence(kind=EvidenceKind.STATIC, source="api.yaml", summary="openapi: 3"),),
+    )
     prev = DoctorReport(
-        tool_version="0.1.0", project="demo", analysis_rev="rev-a",
-        capabilities=(cap,))
+        tool_version="0.1.0", project="demo", analysis_rev="rev-a", capabilities=(cap,)
+    )
     cur = _report("rev-b")
     delta = compute_delta(prev, cur)
     assert "-capability:OPENAPI_32" in delta.protocol_diff
@@ -365,14 +426,14 @@ def test_delta_context_initial_run() -> None:
     from forge_doctor_api.knowledge.capability import (
         DetectedCapability,
     )
+
     cap = DetectedCapability(
         capability=CapabilityKind.OPENAPI_32,
-        evidence=(CoreEvidence(
-            kind=EvidenceKind.STATIC, source="api.yaml",
-            summary="openapi: 3"),))
+        evidence=(CoreEvidence(kind=EvidenceKind.STATIC, source="api.yaml", summary="openapi: 3"),),
+    )
     cur = DoctorReport(
-        tool_version="0.1.0", project="demo", analysis_rev="rev-a",
-        capabilities=(cap,))
+        tool_version="0.1.0", project="demo", analysis_rev="rev-a", capabilities=(cap,)
+    )
     delta = compute_delta(None, cur)
     assert delta.initial is True
     assert delta.analysis_rev_cur == "rev-a"
@@ -380,6 +441,7 @@ def test_delta_context_initial_run() -> None:
 
 
 # -- no orchestration fields ---------------------------------------------------------
+
 
 def _walk_keys(node: Any, out: set[str]) -> set[str]:
     if isinstance(node, dict):
@@ -394,11 +456,13 @@ def _walk_keys(node: Any, out: set[str]) -> set[str]:
 
 def test_no_orchestration_fields_in_universal_payloads() -> None:
     """The Doctor hands over facts — never routing/scheduling keys."""
-    banned = {"next_tool", "route_to", "schedule", "delegate",
-              "invoke"}
+    banned = {"next_tool", "route_to", "schedule", "delegate", "invoke"}
     report = DoctorReport(
-        tool_version="0.1.0", project="demo", analysis_rev="rev1",
-        findings=(_core_finding_with_unknowns(),))
+        tool_version="0.1.0",
+        project="demo",
+        analysis_rev="rev1",
+        findings=(_core_finding_with_unknowns(),),
+    )
     payloads = [
         report_handoff(report).to_dict(),
         report_manifest(report).to_dict(),

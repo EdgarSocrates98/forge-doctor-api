@@ -40,8 +40,9 @@ _KIND_TO_TYPE: dict[str, ChangeType] = {
 # changes, plus `unresolvable`) is a schema-level change.
 
 
-def _derived_evidence(change: ContractChange | None, subject: str,
-                      detail: str, location: SourceLocation | None) -> tuple[Evidence, ...]:
+def _derived_evidence(
+    change: ContractChange | None, subject: str, detail: str, location: SourceLocation | None
+) -> tuple[Evidence, ...]:
     return (
         Evidence(
             kind=EvidenceKind.DERIVED,
@@ -130,20 +131,30 @@ def _timeout_events(old: ApiReliabilityModel, new: ApiReliabilityModel) -> list[
     for scope in sorted(set(om) | set(nm)):
         o, n = om.get(scope), nm.get(scope)
         if o is None and n is not None:
-            events.append(_config_event(
-                ChangeType.TIMEOUT_CHANGED, "timeout_added",
-                CompatibilityClass.POTENTIALLY_BREAKING, scope,
-                f"timeout policy added for `{scope}` ({n.timeout_ms} ms)",
-                after=str(n.timeout_ms), location=n.location,
-                unknown_ms=n.timeout_ms is None,
-            ))
+            events.append(
+                _config_event(
+                    ChangeType.TIMEOUT_CHANGED,
+                    "timeout_added",
+                    CompatibilityClass.POTENTIALLY_BREAKING,
+                    scope,
+                    f"timeout policy added for `{scope}` ({n.timeout_ms} ms)",
+                    after=str(n.timeout_ms),
+                    location=n.location,
+                    unknown_ms=n.timeout_ms is None,
+                )
+            )
         elif n is None and o is not None:
-            events.append(_config_event(
-                ChangeType.TIMEOUT_CHANGED, "timeout_removed",
-                CompatibilityClass.POTENTIALLY_BREAKING, scope,
-                f"timeout policy removed for `{scope}` (was {o.timeout_ms} ms)",
-                before=str(o.timeout_ms), location=o.location,
-            ))
+            events.append(
+                _config_event(
+                    ChangeType.TIMEOUT_CHANGED,
+                    "timeout_removed",
+                    CompatibilityClass.POTENTIALLY_BREAKING,
+                    scope,
+                    f"timeout policy removed for `{scope}` (was {o.timeout_ms} ms)",
+                    before=str(o.timeout_ms),
+                    location=o.location,
+                )
+            )
         elif o is not None and n is not None and o.timeout_ms != n.timeout_ms:
             if o.timeout_ms is None or n.timeout_ms is None:
                 cls = CompatibilityClass.UNKNOWN
@@ -153,13 +164,19 @@ def _timeout_events(old: ApiReliabilityModel, new: ApiReliabilityModel) -> list[
                     if n.timeout_ms < o.timeout_ms
                     else CompatibilityClass.NON_BREAKING
                 )
-            events.append(_config_event(
-                ChangeType.TIMEOUT_CHANGED, "timeout_ms_changed", cls, scope,
-                f"timeout for `{scope}` changed {o.timeout_ms} ms -> {n.timeout_ms} ms",
-                before=str(o.timeout_ms), after=str(n.timeout_ms),
-                location=n.location,
-                unknown_ms=cls is CompatibilityClass.UNKNOWN,
-            ))
+            events.append(
+                _config_event(
+                    ChangeType.TIMEOUT_CHANGED,
+                    "timeout_ms_changed",
+                    cls,
+                    scope,
+                    f"timeout for `{scope}` changed {o.timeout_ms} ms -> {n.timeout_ms} ms",
+                    before=str(o.timeout_ms),
+                    after=str(n.timeout_ms),
+                    location=n.location,
+                    unknown_ms=cls is CompatibilityClass.UNKNOWN,
+                )
+            )
     return events
 
 
@@ -170,19 +187,29 @@ def _retry_events(old: ApiReliabilityModel, new: ApiReliabilityModel) -> list[Ch
     for scope in sorted(set(om) | set(nm)):
         o, n = om.get(scope), nm.get(scope)
         if o is None and n is not None:
-            events.append(_config_event(
-                ChangeType.RETRY_CHANGED, "retry_added",
-                CompatibilityClass.POTENTIALLY_BREAKING, scope,
-                f"retry policy added for `{scope}` (max_attempts={n.max_attempts})",
-                after=str(n.max_attempts), location=n.location,
-            ))
+            events.append(
+                _config_event(
+                    ChangeType.RETRY_CHANGED,
+                    "retry_added",
+                    CompatibilityClass.POTENTIALLY_BREAKING,
+                    scope,
+                    f"retry policy added for `{scope}` (max_attempts={n.max_attempts})",
+                    after=str(n.max_attempts),
+                    location=n.location,
+                )
+            )
         elif n is None and o is not None:
-            events.append(_config_event(
-                ChangeType.RETRY_CHANGED, "retry_removed",
-                CompatibilityClass.POTENTIALLY_BREAKING, scope,
-                f"retry policy removed for `{scope}` (was max_attempts={o.max_attempts})",
-                before=str(o.max_attempts), location=o.location,
-            ))
+            events.append(
+                _config_event(
+                    ChangeType.RETRY_CHANGED,
+                    "retry_removed",
+                    CompatibilityClass.POTENTIALLY_BREAKING,
+                    scope,
+                    f"retry policy removed for `{scope}` (was max_attempts={o.max_attempts})",
+                    before=str(o.max_attempts),
+                    location=o.location,
+                )
+            )
         elif o is not None and n is not None:
             changed = (
                 o.max_attempts != n.max_attempts
@@ -208,11 +235,18 @@ def _retry_events(old: ApiReliabilityModel, new: ApiReliabilityModel) -> list[Ch
             else:
                 cls = CompatibilityClass.UNKNOWN
                 detail = f"retry policy for `{scope}` changed (backoff/jitter/statuses)"
-            events.append(_config_event(
-                ChangeType.RETRY_CHANGED, "retry_changed", cls, scope, detail,
-                before=str(o.max_attempts), after=str(n.max_attempts),
-                location=n.location,
-            ))
+            events.append(
+                _config_event(
+                    ChangeType.RETRY_CHANGED,
+                    "retry_changed",
+                    cls,
+                    scope,
+                    detail,
+                    before=str(o.max_attempts),
+                    after=str(n.max_attempts),
+                    location=n.location,
+                )
+            )
     return events
 
 
@@ -223,21 +257,33 @@ def _rate_limit_events(old: ApiSecurityModel, new: ApiSecurityModel) -> list[Cha
     for scope in sorted(set(om) | set(nm)):
         o, n = om.get(scope), nm.get(scope)
         if o is None and n is not None:
-            events.append(_config_event(
-                ChangeType.RATE_LIMIT_CHANGED, "rate_limit_added",
-                CompatibilityClass.POTENTIALLY_BREAKING, scope,
-                f"rate limit added for `{scope}` ({n.limit}/{n.window or 'window'})",
-                after=str(n.limit), location=n.location,
-            ))
+            events.append(
+                _config_event(
+                    ChangeType.RATE_LIMIT_CHANGED,
+                    "rate_limit_added",
+                    CompatibilityClass.POTENTIALLY_BREAKING,
+                    scope,
+                    f"rate limit added for `{scope}` ({n.limit}/{n.window or 'window'})",
+                    after=str(n.limit),
+                    location=n.location,
+                )
+            )
         elif n is None and o is not None:
-            events.append(_config_event(
-                ChangeType.RATE_LIMIT_CHANGED, "rate_limit_removed",
-                CompatibilityClass.NON_BREAKING, scope,
-                f"rate limit removed for `{scope}` (was {o.limit})",
-                before=str(o.limit), location=o.location,
-            ))
-        elif o is not None and n is not None and (
-            o.limit != n.limit or o.window != n.window or o.burst != n.burst
+            events.append(
+                _config_event(
+                    ChangeType.RATE_LIMIT_CHANGED,
+                    "rate_limit_removed",
+                    CompatibilityClass.NON_BREAKING,
+                    scope,
+                    f"rate limit removed for `{scope}` (was {o.limit})",
+                    before=str(o.limit),
+                    location=o.location,
+                )
+            )
+        elif (
+            o is not None
+            and n is not None
+            and (o.limit != n.limit or o.window != n.window or o.burst != n.burst)
         ):
             if o.limit is None or n.limit is None or o.limit == n.limit:
                 cls = CompatibilityClass.UNKNOWN
@@ -247,12 +293,19 @@ def _rate_limit_events(old: ApiSecurityModel, new: ApiSecurityModel) -> list[Cha
                     if n.limit < o.limit
                     else CompatibilityClass.NON_BREAKING
                 )
-            events.append(_config_event(
-                ChangeType.RATE_LIMIT_CHANGED, "rate_limit_changed", cls, scope,
-                f"rate limit for `{scope}` changed {o.limit} -> {n.limit} "
-                f"(window {o.window} -> {n.window})",
-                before=str(o.limit), after=str(n.limit), location=n.location,
-            ))
+            events.append(
+                _config_event(
+                    ChangeType.RATE_LIMIT_CHANGED,
+                    "rate_limit_changed",
+                    cls,
+                    scope,
+                    f"rate limit for `{scope}` changed {o.limit} -> {n.limit} "
+                    f"(window {o.window} -> {n.window})",
+                    before=str(o.limit),
+                    after=str(n.limit),
+                    location=n.location,
+                )
+            )
     return events
 
 
@@ -263,73 +316,105 @@ def _dependency_events(old: ApiSecurityModel, new: ApiSecurityModel) -> list[Cha
     for host in sorted(set(om) | set(nm)):
         o, n = om.get(host), nm.get(host)
         if o is None and n is not None:
-            events.append(_config_event(
-                ChangeType.DEPENDENCY_CHANGED, "dependency_added",
-                CompatibilityClass.NON_BREAKING, host,
-                f"external dependency `{host}` declared",
-                after=host, location=None,
-            ))
+            events.append(
+                _config_event(
+                    ChangeType.DEPENDENCY_CHANGED,
+                    "dependency_added",
+                    CompatibilityClass.NON_BREAKING,
+                    host,
+                    f"external dependency `{host}` declared",
+                    after=host,
+                    location=None,
+                )
+            )
         elif n is None and o is not None:
-            events.append(_config_event(
-                ChangeType.DEPENDENCY_CHANGED, "dependency_removed",
-                CompatibilityClass.POTENTIALLY_BREAKING, host,
-                f"external dependency `{host}` no longer declared",
-                before=host, location=None,
-            ))
-        elif o is not None and n is not None and (
-            o.timeout_ms != n.timeout_ms
-            or o.has_retry != n.has_retry
-            or o.has_auth != n.has_auth
+            events.append(
+                _config_event(
+                    ChangeType.DEPENDENCY_CHANGED,
+                    "dependency_removed",
+                    CompatibilityClass.POTENTIALLY_BREAKING,
+                    host,
+                    f"external dependency `{host}` no longer declared",
+                    before=host,
+                    location=None,
+                )
+            )
+        elif (
+            o is not None
+            and n is not None
+            and (
+                o.timeout_ms != n.timeout_ms
+                or o.has_retry != n.has_retry
+                or o.has_auth != n.has_auth
+            )
         ):
-            events.append(_config_event(
-                ChangeType.DEPENDENCY_CHANGED, "dependency_changed",
-                CompatibilityClass.UNKNOWN, host,
-                f"external dependency `{host}` configuration changed",
-                before=host, after=host, location=None,
-            ))
+            events.append(
+                _config_event(
+                    ChangeType.DEPENDENCY_CHANGED,
+                    "dependency_changed",
+                    CompatibilityClass.UNKNOWN,
+                    host,
+                    f"external dependency `{host}` configuration changed",
+                    before=host,
+                    after=host,
+                    location=None,
+                )
+            )
     return events
 
 
-def _version_events(old: ApiVersionModel, new: ApiVersionModel,
-                    old_doc: OpenApiProjectModel | None,
-                    new_doc: OpenApiProjectModel | None) -> list[ChangeEvent]:
+def _version_events(
+    old: ApiVersionModel,
+    new: ApiVersionModel,
+    old_doc: OpenApiProjectModel | None,
+    new_doc: OpenApiProjectModel | None,
+) -> list[ChangeEvent]:
     events: list[ChangeEvent] = []
     old_ids = {(v.mechanism.value, v.identifier) for v in old.versions}
     new_ids = {(v.mechanism.value, v.identifier) for v in new.versions}
     for mech, ident in sorted(old_ids - new_ids):
-        events.append(_config_event(
-            ChangeType.VERSION_CHANGED, "version_removed",
-            CompatibilityClass.POTENTIALLY_BREAKING, ident,
-            f"version marker `{ident}` ({mech}) removed",
-            before=ident,
-        ))
+        events.append(
+            _config_event(
+                ChangeType.VERSION_CHANGED,
+                "version_removed",
+                CompatibilityClass.POTENTIALLY_BREAKING,
+                ident,
+                f"version marker `{ident}` ({mech}) removed",
+                before=ident,
+            )
+        )
     for mech, ident in sorted(new_ids - old_ids):
-        events.append(_config_event(
-            ChangeType.VERSION_CHANGED, "version_added",
-            CompatibilityClass.NON_BREAKING, ident,
-            f"version marker `{ident}` ({mech}) added",
-            after=ident,
-        ))
+        events.append(
+            _config_event(
+                ChangeType.VERSION_CHANGED,
+                "version_added",
+                CompatibilityClass.NON_BREAKING,
+                ident,
+                f"version marker `{ident}` ({mech}) added",
+                after=ident,
+            )
+        )
     if old_doc is not None and new_doc is not None:
-        old_versions = sorted(
-            d.api_version for d in old_doc.documents if d.api_version is not None
-        )
-        new_versions = sorted(
-            d.api_version for d in new_doc.documents if d.api_version is not None
-        )
+        old_versions = sorted(d.api_version for d in old_doc.documents if d.api_version is not None)
+        new_versions = sorted(d.api_version for d in new_doc.documents if d.api_version is not None)
         if old_versions != new_versions:
             title = (
                 new_doc.documents[0].title or old_doc.documents[0].title
                 if new_doc.documents or old_doc.documents
                 else "api"
             ) or "api"
-            events.append(_config_event(
-                ChangeType.VERSION_CHANGED, "api_version_changed",
-                CompatibilityClass.NON_BREAKING, title,
-                f"document version {old_versions} -> {new_versions}",
-                before=str(old_versions), after=str(new_versions),
-                location=new_doc.documents[0].location if new_doc.documents else None,
-            ))
+            events.append(
+                _config_event(
+                    ChangeType.VERSION_CHANGED,
+                    "api_version_changed",
+                    CompatibilityClass.NON_BREAKING,
+                    title,
+                    f"document version {old_versions} -> {new_versions}",
+                    before=str(old_versions),
+                    after=str(new_versions),
+                    location=new_doc.documents[0].location if new_doc.documents else None,
+                )
+            )
     return events
 
 
@@ -356,11 +441,14 @@ def config_events(
         events.extend(_rate_limit_events(sec_o, sec_n))
         events.extend(_dependency_events(sec_o, sec_n))
     if old_version is not None or new_version is not None:
-        events.extend(_version_events(
-            old_version or ApiVersionModel(),
-            new_version or ApiVersionModel(),
-            old_doc, new_doc,
-        ))
+        events.extend(
+            _version_events(
+                old_version or ApiVersionModel(),
+                new_version or ApiVersionModel(),
+                old_doc,
+                new_doc,
+            )
+        )
     events.sort(key=lambda e: (e.type.value, e.subject, e.path or "", e.kind))
     return tuple(events)
 

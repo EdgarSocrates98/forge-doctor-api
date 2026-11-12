@@ -79,35 +79,40 @@ def _hop_signals(
         if c.callee:
             by_callee.setdefault(c.callee, []).append(c)
         else:
-            unknowns.append(UnknownFact(
-                subject=service,
-                missing="downstream callee identity",
-                resolution="record span `peer.service`/`server.address` on client spans",
-            ))
+            unknowns.append(
+                UnknownFact(
+                    subject=service,
+                    missing="downstream callee identity",
+                    resolution="record span `peer.service`/`server.address` on client spans",
+                )
+            )
 
-    retry_scopes = {
-        p.scope: p for p in (reliability.retry_policies if reliability else ())
-    }
+    retry_scopes = {p.scope: p for p in (reliability.retry_policies if reliability else ())}
     for callee in sorted(by_callee):
         calls = by_callee[callee]
         # timeout signal
         timed = sum(
-            1 for c in calls
+            1
+            for c in calls
             if _is_error_status(c.status.value if hasattr(c.status, "value") else str(c.status))
-            or (c.timeout_ms is not None and c.duration_ms is not None
-                and c.duration_ms >= c.timeout_ms)
+            or (
+                c.timeout_ms is not None
+                and c.duration_ms is not None
+                and c.duration_ms >= c.timeout_ms
+            )
         )
         if timed:
-            hops.append(CascadeHop(
-                service=callee, signal=CascadeSignal.TIMEOUT,
-                detail=f"{service} observed {timed}/{len(calls)} timed-out call(s) to {callee}",
-                evidence=tuple(e for c in calls for e in c.evidence)[:4],
-            ))
+            hops.append(
+                CascadeHop(
+                    service=callee,
+                    signal=CascadeSignal.TIMEOUT,
+                    detail=f"{service} observed {timed}/{len(calls)} timed-out call(s) to {callee}",
+                    evidence=tuple(e for c in calls for e in c.evidence)[:4],
+                )
+            )
         # retry signal — observed resends or declared amplification
         observed_retries = sum(c.retries or 0 for c in calls)
-        base_retries = sum(
-            c.retries or 0 for c in base_calls if c.callee == callee
-        )
+        base_retries = sum(c.retries or 0 for c in base_calls if c.callee == callee)
         scope = retry_scopes.get(f"{service}->{callee}") or retry_scopes.get(service)
         if observed_retries > 0:
             factor = (
@@ -115,62 +120,79 @@ def _hop_signals(
                 if base_retries
                 else f"{observed_retries} resends"
             )
-            hops.append(CascadeHop(
-                service=callee, signal=CascadeSignal.RETRY,
-                detail=f"{service} retried calls to {callee} ({factor})",
-                evidence=tuple(e for c in calls for e in c.evidence)[:4],
-            ))
-            observed.append(ObservedSignal(
-                detail=f"retry count toward {callee}: {factor} vs baseline",
-            ))
+            hops.append(
+                CascadeHop(
+                    service=callee,
+                    signal=CascadeSignal.RETRY,
+                    detail=f"{service} retried calls to {callee} ({factor})",
+                    evidence=tuple(e for c in calls for e in c.evidence)[:4],
+                )
+            )
+            observed.append(
+                ObservedSignal(
+                    detail=f"retry count toward {callee}: {factor} vs baseline",
+                )
+            )
         if scope is not None and scope.max_attempts and scope.max_attempts > 1:
-            observed.append(ObservedSignal(
-                detail=f"declared retry policy at {scope.scope}: "
-                f"max_attempts={scope.max_attempts}",
-                evidence=scope.evidence,
-            ))
+            observed.append(
+                ObservedSignal(
+                    detail=f"declared retry policy at {scope.scope}: "
+                    f"max_attempts={scope.max_attempts}",
+                    evidence=scope.evidence,
+                )
+            )
         # load signal — call volume up
         if base_calls:
             base_n = sum(1 for c in base_calls if c.callee == callee)
             cur_n = len(calls)
             if cur_n > base_n * 2 and cur_n >= _MIN_SAMPLES:
-                hops.append(CascadeHop(
-                    service=callee, signal=CascadeSignal.LOAD,
-                    detail=f"calls {service}->{callee} up {base_n} -> {cur_n}/window",
-                    evidence=tuple(e for c in calls for e in c.evidence)[:4],
-                ))
-                observed.append(ObservedSignal(
-                    detail=f"request volume toward {callee} increased "
-                    f"{base_n} -> {cur_n}",
-                ))
+                hops.append(
+                    CascadeHop(
+                        service=callee,
+                        signal=CascadeSignal.LOAD,
+                        detail=f"calls {service}->{callee} up {base_n} -> {cur_n}/window",
+                        evidence=tuple(e for c in calls for e in c.evidence)[:4],
+                    )
+                )
+                observed.append(
+                    ObservedSignal(
+                        detail=f"request volume toward {callee} increased {base_n} -> {cur_n}",
+                    )
+                )
         # latency — callee's own executions regressed?
         c_base = [e.duration_ms for e in base_by_svc.get(callee, ()) if e.duration_ms]
-        c_cur = [
-            e.duration_ms
-            for e in executions_by_svc.get(callee, ())
-            if e.duration_ms
-        ]
+        c_cur = [e.duration_ms for e in executions_by_svc.get(callee, ()) if e.duration_ms]
         if c_base and c_cur and _median(c_cur) and _median(c_base):
             cm, bm = _median(c_cur), _median(c_base)
             if cm is not None and bm is not None:
                 if cm > bm * 1.5:
-                    hops.append(CascadeHop(
-                        service=callee, signal=CascadeSignal.LATENCY,
-                        detail=f"{callee} median latency {bm:.0f} -> {cm:.0f} ms",
-                        evidence=tuple(
-                            ev for e in executions_by_svc.get(callee, ())[:2]
-                            for ev in e.evidence
-                        )[:4],
-                    ))
+                    hops.append(
+                        CascadeHop(
+                            service=callee,
+                            signal=CascadeSignal.LATENCY,
+                            detail=f"{callee} median latency {bm:.0f} -> {cm:.0f} ms",
+                            evidence=tuple(
+                                ev
+                                for e in executions_by_svc.get(callee, ())[:2]
+                                for ev in e.evidence
+                            )[:4],
+                        )
+                    )
                 else:
-                    observed.append(ObservedSignal(
-                        detail=f"{callee} latency stable "
-                        f"(median {bm:.0f} -> {cm:.0f} ms)",
-                    ))
+                    observed.append(
+                        ObservedSignal(
+                            detail=f"{callee} latency stable (median {bm:.0f} -> {cm:.0f} ms)",
+                        )
+                    )
         # recurse one level into the callee's own downstream calls
         sub_hops, sub_obs, sub_unk = _hop_signals(
-            callee, base_by_svc.get(callee, []), executions_by_svc.get(callee, []),
-            reliability, executions_by_svc, base_by_svc, seen,
+            callee,
+            base_by_svc.get(callee, []),
+            executions_by_svc.get(callee, []),
+            reliability,
+            executions_by_svc,
+            base_by_svc,
+            seen,
         )
         hops.extend(sub_hops)
         observed.extend(sub_obs)
@@ -206,42 +228,51 @@ def _candidates(
             continue
         corroborated = event.subject in hop_services
         tier = CauseTier.DERIVED if corroborated else CauseTier.STATIC
-        causes.append(CandidateCause(
-            subject=event.subject,
-            kind=event.kind,
-            tier=tier,
-            rank=0,  # filled after sort
-            rationale=(
-                f"{event.type.value} on {event.subject}"
-                + (
-                    " — corroborated by observed runtime signal at the same hop"
-                    if corroborated
-                    else " — config evidence only, no matching runtime signal"
-                )
-            ),
-            evidence=event.evidence,
-        ))
+        causes.append(
+            CandidateCause(
+                subject=event.subject,
+                kind=event.kind,
+                tier=tier,
+                rank=0,  # filled after sort
+                rationale=(
+                    f"{event.type.value} on {event.subject}"
+                    + (
+                        " — corroborated by observed runtime signal at the same hop"
+                        if corroborated
+                        else " — config evidence only, no matching runtime signal"
+                    )
+                ),
+                evidence=event.evidence,
+            )
+        )
     # runtime-only signals with no matching change -> RUNTIME candidates
     changed_subjects = {e.subject for e in events}
     for hop in hops:
         if hop.service in changed_subjects:
             continue
         if hop.signal in (CascadeSignal.TIMEOUT, CascadeSignal.RETRY):
-            causes.append(CandidateCause(
-                subject=hop.service,
-                kind=f"runtime_{hop.signal.value.lower()}",
-                tier=CauseTier.RUNTIME,
-                rank=0,
-                rationale=f"observed {hop.signal.value.lower()} at {hop.service} "
-                "with no matching config change in the diff window",
-                evidence=hop.evidence,
-            ))
+            causes.append(
+                CandidateCause(
+                    subject=hop.service,
+                    kind=f"runtime_{hop.signal.value.lower()}",
+                    tier=CauseTier.RUNTIME,
+                    rank=0,
+                    rationale=f"observed {hop.signal.value.lower()} at {hop.service} "
+                    "with no matching config change in the diff window",
+                    evidence=hop.evidence,
+                )
+            )
     causes.sort(key=lambda c: (_tier_rank(c.tier), c.subject, c.kind))
     return tuple(
         CandidateCause(
-            subject=c.subject, kind=c.kind, tier=c.tier, rank=i + 1,
-            rationale=c.rationale, evidence=c.evidence,
-            unknowns=c.unknowns or (
+            subject=c.subject,
+            kind=c.kind,
+            tier=c.tier,
+            rank=i + 1,
+            rationale=c.rationale,
+            evidence=c.evidence,
+            unknowns=c.unknowns
+            or (
                 ()
                 if c.evidence
                 else (
@@ -280,11 +311,13 @@ def diagnose(
 
     regression = [f for f in findings if f.id in _REGRESSION_IDS]
     if not regression:
-        unknowns.append(UnknownFact(
-            subject="runtime",
-            missing="no regression findings in the target window",
-            resolution="provide runtime artifacts covering at least two windows",
-        ))
+        unknowns.append(
+            UnknownFact(
+                subject="runtime",
+                missing="no regression findings in the target window",
+                resolution="provide runtime artifacts covering at least two windows",
+            )
+        )
 
     for finding in regression:
         subject = finding.entity_ids[0] if finding.entity_ids else ""
@@ -297,32 +330,43 @@ def diagnose(
         base = [e for e in base_exs_all if e.service == svc and (not op or e.operation == op)]
 
         hops, observed, hop_unknowns = _hop_signals(
-            svc_key, base, cur, reliability, cur_by_svc, base_by_svc, set(),
+            svc_key,
+            base,
+            cur,
+            reliability,
+            cur_by_svc,
+            base_by_svc,
+            set(),
         )
         unknowns.extend(hop_unknowns)
-        slo = tuple(sorted(
-            o.name
-            for o in (reliability.objectives if reliability else ())
-            if svc_key in o.name or op in o.name
-        ))
+        slo = tuple(
+            sorted(
+                o.name
+                for o in (reliability.objectives if reliability else ())
+                if svc_key in o.name or op in o.name
+            )
+        )
         affected = sorted({svc_key, *{h.service for h in hops}})
-        episodes.append(ApiIncidentEpisode(
-            symptom=finding.description,
-            service=svc_key,
-            operation=op,
-            path=tuple(hops),
-            changes=tuple(
-                e.detail for e in events
-                if e.type in _CHANGE_HINTS
-                and (e.subject in affected or e.subject.split("->")[0] == svc_key)
-            ),
-            observed=tuple(observed),
-            candidates=_candidates(hops, events, svc_key, op),
-            slo=slo,
-            affected_services=tuple(affected),
-            evidence=finding.evidence,
-            unknowns=tuple(finding.unknowns),
-        ))
+        episodes.append(
+            ApiIncidentEpisode(
+                symptom=finding.description,
+                service=svc_key,
+                operation=op,
+                path=tuple(hops),
+                changes=tuple(
+                    e.detail
+                    for e in events
+                    if e.type in _CHANGE_HINTS
+                    and (e.subject in affected or e.subject.split("->")[0] == svc_key)
+                ),
+                observed=tuple(observed),
+                candidates=_candidates(hops, events, svc_key, op),
+                slo=slo,
+                affected_services=tuple(affected),
+                evidence=finding.evidence,
+                unknowns=tuple(finding.unknowns),
+            )
+        )
 
     episodes.sort(key=lambda e: (e.service, e.operation))
     return DiagnosisReport(episodes=tuple(episodes), unknowns=tuple(unknowns))

@@ -46,9 +46,7 @@ def _finding(
         ),
         evidence_kind=EvidenceKind.STATIC,
         entity_ids=(f"operation:x:{check_id}",),
-        source_location=(
-            SourceLocation(path=path, line=line) if path is not None else None
-        ),
+        source_location=(SourceLocation(path=path, line=line) if path is not None else None),
     )
 
 

@@ -20,11 +20,11 @@ from forge_doctor_api.core.export import export_findings
 
 HEADER = 'openapi: "3.0.3"\ninfo: {title: T, version: "1.0"}\n'
 
-PYAPP = '''
+PYAPP = """
 from fastapi import FastAPI
 
 app = FastAPI()
-'''
+"""
 
 
 def _write(root: Path, files: dict[str, str]) -> Path:
@@ -59,7 +59,7 @@ def test_normalize_path_conservative() -> None:
 def test_exact_match_clean(tmp_path: Path) -> None:
     spec = {
         "api.yaml": HEADER
-        + 'paths:\n  /pets:\n    get:\n      operationId: listPets\n'
+        + "paths:\n  /pets:\n    get:\n      operationId: listPets\n"
         + '      responses: {"200": {description: ok}}\n'
     }
     py = {"main.py": PYAPP + '@app.get("/pets")\ndef listPets(): ...\n'}
@@ -72,7 +72,7 @@ def test_operationid_correlation(tmp_path: Path) -> None:
     """FastAPI operationId defaults to the function name — correlate it."""
     spec = {
         "api.yaml": HEADER
-        + 'paths:\n  /pets:\n    get:\n      operationId: listPets\n'
+        + "paths:\n  /pets:\n    get:\n      operationId: listPets\n"
         + '      responses: {"200": {description: ok}}\n'
     }
     py = {"main.py": PYAPP + '@app.get("/pets")\ndef listPets(): ...\n'}
@@ -87,9 +87,9 @@ def test_operationid_correlation(tmp_path: Path) -> None:
 def test_documented_missing_implementation(tmp_path: Path) -> None:
     spec = {
         "api.yaml": HEADER
-        + 'paths:\n  /pets:\n    get:\n      operationId: listPets\n'
+        + "paths:\n  /pets:\n    get:\n      operationId: listPets\n"
         + '      responses: {"200": {description: ok}}\n'
-        + '  /owners:\n    get:\n      operationId: owners\n'
+        + "  /owners:\n    get:\n      operationId: owners\n"
         + '      responses: {"200": {description: ok}}\n'
     }
     py = {"main.py": PYAPP + '@app.get("/pets")\ndef listPets(): ...\n'}
@@ -145,7 +145,7 @@ def test_get_unmatched_not_breaking(tmp_path: Path) -> None:
 def test_method_mismatch(tmp_path: Path) -> None:
     spec = {
         "api.yaml": HEADER
-        + 'paths:\n  /pets:\n    get:\n      operationId: listPets\n'
+        + "paths:\n  /pets:\n    get:\n      operationId: listPets\n"
         + '      responses: {"200": {description: ok}}\n'
     }
     py = {"main.py": PYAPP + '@app.post("/pets")\ndef createPet(): ...\n'}
@@ -162,13 +162,11 @@ def test_method_mismatch(tmp_path: Path) -> None:
 def test_param_name_drift(tmp_path: Path) -> None:
     spec = {
         "api.yaml": HEADER
-        + 'paths:\n  /users/{id}:\n    get:\n      operationId: getUser\n      parameters:\n'
-        + '        - {name: id, in: path, required: true}\n'
+        + "paths:\n  /users/{id}:\n    get:\n      operationId: getUser\n      parameters:\n"
+        + "        - {name: id, in: path, required: true}\n"
         + '      responses: {"200": {description: ok}}\n'
     }
-    py = {
-        "main.py": PYAPP + '@app.get("/users/{userId}")\ndef getUser(userId: int): ...\n'
-    }
+    py = {"main.py": PYAPP + '@app.get("/users/{userId}")\ndef getUser(userId: int): ...\n'}
     report = _report(tmp_path, spec, py)
     ids = _ids(report.findings)
     assert "DRIFT004" in ids
@@ -179,14 +177,12 @@ def test_param_name_drift(tmp_path: Path) -> None:
 def test_param_required_drift(tmp_path: Path) -> None:
     spec = {
         "api.yaml": HEADER
-        + 'paths:\n  /users/{id}:\n    get:\n      operationId: getUser\n      parameters:\n'
-        + '        - {name: id, in: path, required: true}\n'
-        + '        - {name: q, in: query, required: true}\n'
+        + "paths:\n  /users/{id}:\n    get:\n      operationId: getUser\n      parameters:\n"
+        + "        - {name: id, in: path, required: true}\n"
+        + "        - {name: q, in: query, required: true}\n"
         + '      responses: {"200": {description: ok}}\n'
     }
-    py = {
-        "main.py": PYAPP + '@app.get("/users/{id}")\ndef getUser(id: int, q: str = ""): ...\n'
-    }
+    py = {"main.py": PYAPP + '@app.get("/users/{id}")\ndef getUser(id: int, q: str = ""): ...\n'}
     report = _report(tmp_path, spec, py)
     assert "DRIFT004" in _ids(report.findings)
 
@@ -194,9 +190,9 @@ def test_param_required_drift(tmp_path: Path) -> None:
 def test_param_missing_in_impl(tmp_path: Path) -> None:
     spec = {
         "api.yaml": HEADER
-        + 'paths:\n  /users/{id}:\n    get:\n      operationId: getUser\n      parameters:\n'
-        + '        - {name: id, in: path, required: true}\n'
-        + '        - {name: org, in: query, required: true}\n'
+        + "paths:\n  /users/{id}:\n    get:\n      operationId: getUser\n      parameters:\n"
+        + "        - {name: id, in: path, required: true}\n"
+        + "        - {name: org, in: query, required: true}\n"
         + '      responses: {"200": {description: ok}}\n'
     }
     py = {"main.py": PYAPP + '@app.get("/users/{id}")\ndef getUser(id: int): ...\n'}
@@ -207,14 +203,14 @@ def test_param_missing_in_impl(tmp_path: Path) -> None:
 def test_param_extra_in_impl(tmp_path: Path) -> None:
     spec = {
         "api.yaml": HEADER
-        + 'paths:\n  /users/{id}:\n    get:\n      operationId: getUser\n      parameters:\n'
-        + '        - {name: id, in: path, required: true}\n'
+        + "paths:\n  /users/{id}:\n    get:\n      operationId: getUser\n      parameters:\n"
+        + "        - {name: id, in: path, required: true}\n"
         + '      responses: {"200": {description: ok}}\n'
     }
     py = {
         "main.py": PYAPP
         + '@app.get("/users/{id}")\n'
-        + 'def getUser(id: int, debug: bool = False): ...\n'
+        + "def getUser(id: int, debug: bool = False): ...\n"
     }
     report = _report(tmp_path, spec, py)
     assert "DRIFT004" in _ids(report.findings)
@@ -223,7 +219,7 @@ def test_param_extra_in_impl(tmp_path: Path) -> None:
 def test_framework_param_not_a_drift(tmp_path: Path) -> None:
     spec = {
         "api.yaml": HEADER
-        + 'paths:\n  /a:\n    get:\n      operationId: a\n'
+        + "paths:\n  /a:\n    get:\n      operationId: a\n"
         + '      responses: {"200": {description: ok}}\n'
     }
     py = {
@@ -240,11 +236,11 @@ def test_framework_param_not_a_drift(tmp_path: Path) -> None:
 def test_request_schema_missing_impl(tmp_path: Path) -> None:
     spec = {
         "api.yaml": HEADER
-        + 'paths:\n  /pets:\n    post:\n      operationId: createPet\n'
-        + '      requestBody:\n        content:\n          application/json:\n'
+        + "paths:\n  /pets:\n    post:\n      operationId: createPet\n"
+        + "      requestBody:\n        content:\n          application/json:\n"
         + '            schema: {$ref: "#/components/schemas/Pet"}\n'
         + '      responses: {"200": {description: ok}}\n'
-        + 'components:\n  schemas:\n    Pet: {type: object}\n'
+        + "components:\n  schemas:\n    Pet: {type: object}\n"
     }
     py = {"main.py": PYAPP + '@app.post("/pets")\ndef createPet(): ...\n'}
     report = _report(tmp_path, spec, py)
@@ -254,11 +250,11 @@ def test_request_schema_missing_impl(tmp_path: Path) -> None:
 def test_request_schema_name_mismatch(tmp_path: Path) -> None:
     spec = {
         "api.yaml": HEADER
-        + 'paths:\n  /pets:\n    post:\n      operationId: createPet\n'
-        + '      requestBody:\n        content:\n          application/json:\n'
+        + "paths:\n  /pets:\n    post:\n      operationId: createPet\n"
+        + "      requestBody:\n        content:\n          application/json:\n"
         + '            schema: {$ref: "#/components/schemas/PetIn"}\n'
         + '      responses: {"200": {description: ok}}\n'
-        + 'components:\n  schemas:\n    PetIn: {type: object}\n'
+        + "components:\n  schemas:\n    PetIn: {type: object}\n"
     }
     py = {
         "main.py": PYAPP
@@ -280,11 +276,11 @@ def createPet(body: Animal): ...
 def test_request_schema_match_clean(tmp_path: Path) -> None:
     spec = {
         "api.yaml": HEADER
-        + 'paths:\n  /pets:\n    post:\n      operationId: createPet\n'
-        + '      requestBody:\n        content:\n          application/json:\n'
+        + "paths:\n  /pets:\n    post:\n      operationId: createPet\n"
+        + "      requestBody:\n        content:\n          application/json:\n"
         + '            schema: {$ref: "#/components/schemas/Pet"}\n'
         + '      responses: {"200": {description: ok}}\n'
-        + 'components:\n  schemas:\n    Pet: {type: object}\n'
+        + "components:\n  schemas:\n    Pet: {type: object}\n"
     }
     py = {
         "main.py": PYAPP
@@ -306,11 +302,11 @@ def createPet(body: Pet): ...
 def test_response_schema_mismatch(tmp_path: Path) -> None:
     spec = {
         "api.yaml": HEADER
-        + 'paths:\n  /pets:\n    get:\n      operationId: getPet\n      responses:\n'
+        + "paths:\n  /pets:\n    get:\n      operationId: getPet\n      responses:\n"
         + '        "200":\n          description: ok\n          content:\n'
-        + '            application/json:\n'
+        + "            application/json:\n"
         + '              schema: {$ref: "#/components/schemas/Pet"}\n'
-        + 'components:\n  schemas:\n    Pet: {type: object}\n'
+        + "components:\n  schemas:\n    Pet: {type: object}\n"
     }
     py = {
         "main.py": PYAPP
@@ -335,7 +331,7 @@ def getPet(): ...
 def test_status_code_drift(tmp_path: Path) -> None:
     spec = {
         "api.yaml": HEADER
-        + 'paths:\n  /pets:\n    post:\n      operationId: createPet\n      responses:\n'
+        + "paths:\n  /pets:\n    post:\n      operationId: createPet\n      responses:\n"
         + '        "200": {description: ok}\n'
     }
     py = {"main.py": PYAPP + '@app.post("/pets", status_code=201)\ndef createPet(): ...\n'}
@@ -346,10 +342,10 @@ def test_status_code_drift(tmp_path: Path) -> None:
 def test_auth_drift_contract_requires_impl_missing(tmp_path: Path) -> None:
     spec = {
         "api.yaml": HEADER
-        + 'security:\n  - bearerAuth: []\n'
-        + 'paths:\n  /pets:\n    get:\n      operationId: listPets\n'
+        + "security:\n  - bearerAuth: []\n"
+        + "paths:\n  /pets:\n    get:\n      operationId: listPets\n"
         + '      responses: {"200": {description: ok}}\n'
-        + 'components:\n  securitySchemes:\n    bearerAuth: {type: http, scheme: bearer}\n'
+        + "components:\n  securitySchemes:\n    bearerAuth: {type: http, scheme: bearer}\n"
     }
     py = {"main.py": PYAPP + '@app.get("/pets")\ndef listPets(): ...\n'}
     report = _report(tmp_path, spec, py)
@@ -359,12 +355,12 @@ def test_auth_drift_contract_requires_impl_missing(tmp_path: Path) -> None:
 def test_auth_drift_impl_enforces_contract_silent(tmp_path: Path) -> None:
     spec = {
         "api.yaml": HEADER
-        + 'paths:\n  /pets:\n    get:\n      operationId: listPets\n'
+        + "paths:\n  /pets:\n    get:\n      operationId: listPets\n"
         + '      responses: {"200": {description: ok}}\n'
     }
     py = {
         "main.py": PYAPP
-        + 'from fastapi import Security\n\n\n'
+        + "from fastapi import Security\n\n\n"
         + '@app.get("/pets")\ndef listPets(user=Security(current_user)): ...\n'
     }
     report = _report(tmp_path, spec, py)
@@ -374,7 +370,7 @@ def test_auth_drift_impl_enforces_contract_silent(tmp_path: Path) -> None:
 def test_deprecated_still_implemented(tmp_path: Path) -> None:
     spec = {
         "api.yaml": HEADER
-        + 'paths:\n  /old:\n    get:\n      operationId: old\n      deprecated: true\n'
+        + "paths:\n  /old:\n    get:\n      operationId: old\n      deprecated: true\n"
         + '      responses: {"200": {description: ok}}\n'
     }
     py = {"main.py": PYAPP + '@app.get("/old")\ndef old(): ...\n'}
@@ -388,11 +384,11 @@ def test_deprecated_still_implemented(tmp_path: Path) -> None:
 def test_error_model_populated(tmp_path: Path) -> None:
     spec = {
         "api.yaml": HEADER
-        + 'paths:\n  /pets:\n    get:\n      operationId: listPets\n      responses:\n'
+        + "paths:\n  /pets:\n    get:\n      operationId: listPets\n      responses:\n"
         + '        "200": {description: ok}\n'
         + '        "404": {description: nf, content: {application/json:\n'
         + '          {schema: {$ref: "#/components/schemas/Error"}}}}\n'
-        + 'components:\n  schemas:\n    Error: {type: object}\n'
+        + "components:\n  schemas:\n    Error: {type: object}\n"
     }
     py = {"main.py": PYAPP + '@app.get("/pets")\ndef listPets(): ...\n'}
     report = _report(tmp_path, spec, py)
@@ -406,7 +402,7 @@ def test_error_model_populated(tmp_path: Path) -> None:
 def test_both_sides_surfaced_no_silent_drops(tmp_path: Path) -> None:
     spec = {
         "api.yaml": HEADER
-        + 'paths:\n  /contract-only:\n    get:\n      operationId: c\n'
+        + "paths:\n  /contract-only:\n    get:\n      operationId: c\n"
         + '      responses: {"200": {description: ok}}\n'
     }
     py = {"main.py": PYAPP + '@app.get("/impl-only")\ndef i(): ...\n'}
@@ -423,14 +419,15 @@ def test_both_sides_surfaced_no_silent_drops(tmp_path: Path) -> None:
 def test_deterministic(tmp_path: Path) -> None:
     spec = {
         "api.yaml": HEADER
-        + 'paths:\n  /pets/{id}:\n    get:\n      operationId: getPet\n      parameters:\n'
-        + '        - {name: id, in: path, required: true}\n'
+        + "paths:\n  /pets/{id}:\n    get:\n      operationId: getPet\n      parameters:\n"
+        + "        - {name: id, in: path, required: true}\n"
         + '      responses: {"200": {description: ok}}\n'
-        + '  /orphan:\n    post:\n      operationId: orphan\n'
+        + "  /orphan:\n    post:\n      operationId: orphan\n"
         + '      responses: {"200": {description: ok}}\n'
     }
     py = {
-        "main.py": PYAPP + '@app.get("/pets/{petId}")\ndef getPet(petId: int): ...\n'
+        "main.py": PYAPP
+        + '@app.get("/pets/{petId}")\ndef getPet(petId: int): ...\n'
         + '@app.post("/extra")\ndef extra(): ...\n'
     }
     one = export_findings(_report(tmp_path, spec, py).findings).to_json()
@@ -441,7 +438,7 @@ def test_deterministic(tmp_path: Path) -> None:
 def test_findings_carry_both_locations(tmp_path: Path) -> None:
     spec = {
         "api.yaml": HEADER
-        + 'paths:\n  /pets:\n    get:\n      operationId: getPets\n      deprecated: true\n'
+        + "paths:\n  /pets:\n    get:\n      operationId: getPets\n      deprecated: true\n"
         + '      responses: {"200": {description: ok}}\n'
     }
     py = {"main.py": PYAPP + '@app.get("/pets")\ndef getPets(): ...\n'}
@@ -460,13 +457,13 @@ def test_contract_graph_edges(tmp_path: Path) -> None:
 
     spec = {
         "api.yaml": HEADER
-        + 'paths:\n  /pets:\n    post:\n      operationId: createPet\n'
-        + '      requestBody:\n        content:\n          application/json:\n'
+        + "paths:\n  /pets:\n    post:\n      operationId: createPet\n"
+        + "      requestBody:\n        content:\n          application/json:\n"
         + '            schema: {$ref: "#/components/schemas/Pet"}\n'
         + '      responses:\n        "201":\n          description: ok\n'
-        + '          content:\n            application/json:\n'
+        + "          content:\n            application/json:\n"
         + '              schema: {$ref: "#/components/schemas/Pet"}\n'
-        + 'components:\n  schemas:\n    Pet: {type: object}\n'
+        + "components:\n  schemas:\n    Pet: {type: object}\n"
     }
     _write(tmp_path, spec)
     model = load_openapi_project(ProjectContext.from_root(tmp_path), ["api.yaml"])

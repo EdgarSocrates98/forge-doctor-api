@@ -82,11 +82,7 @@ def extract_client_queries(
                     )
                 )
                 continue
-            ops = [
-                d
-                for d in doc.definitions
-                if d.__class__.__name__ == "OperationDefinitionNode"
-            ]
+            ops = [d for d in doc.definitions if d.__class__.__name__ == "OperationDefinitionNode"]
             for op in ops:
                 shape = query_shape(
                     doc, table, model=model, operation=(op.name.value if op.name else None)
@@ -120,20 +116,14 @@ def _extract_strings(path: str, text: str) -> list[tuple[str, int]]:
     return out
 
 
-def _touched_fields(
-    op: Any, doc: Any, table: dict[str, dict[str, Any]] | None
-) -> tuple[str, ...]:
+def _touched_fields(op: Any, doc: Any, table: dict[str, dict[str, Any]] | None) -> tuple[str, ...]:
     """Resolve selections to ``Type.field`` pairs when the schema is known."""
     if table is None:
         return ()
     kind = str(getattr(op.operation, "value", "query"))
-    root = {"query": "Query", "mutation": "Mutation", "subscription": "Subscription"}.get(
-        kind
-    )
+    root = {"query": "Query", "mutation": "Mutation", "subscription": "Subscription"}.get(kind)
     fragments = {
-        d.name.value: d
-        for d in doc.definitions
-        if d.__class__.__name__ == "FragmentDefinitionNode"
+        d.name.value: d for d in doc.definitions if d.__class__.__name__ == "FragmentDefinitionNode"
     }
     touched: set[str] = set()
 
@@ -153,11 +143,7 @@ def _touched_fields(
             elif name == "FragmentSpreadNode":
                 frag = fragments.get(sel.name.value)
                 if frag is not None and sel.name.value not in seen:
-                    t = (
-                        frag.type_condition.name.value
-                        if frag.type_condition
-                        else parent
-                    )
+                    t = frag.type_condition.name.value if frag.type_condition else parent
                     walk(frag.selection_set, t, seen | {sel.name.value})
 
     walk(op.selection_set, root, frozenset())

@@ -66,31 +66,51 @@ CFG_NEW = """services:
 
 
 def _exec(
-    i: int, w: int, dur: float, *, svc: str = "checkout-api", op: str = "/checkout",
-    callee: str | None = "payment-api", callee_dur: float = 100,
-    callee_retries: int = 0, callee_status: str = "200", callee_timeout: float | None = None,
+    i: int,
+    w: int,
+    dur: float,
+    *,
+    svc: str = "checkout-api",
+    op: str = "/checkout",
+    callee: str | None = "payment-api",
+    callee_dur: float = 100,
+    callee_retries: int = 0,
+    callee_status: str = "200",
+    callee_timeout: float | None = None,
     unnamed_callee: bool = False,
 ) -> RequestExecution:
     calls = (
-        DownstreamCall(
-            caller=svc, callee=None if unnamed_callee else callee, operation="charge",
-            duration_ms=callee_dur, status=callee_status,
-            retries=callee_retries, timeout_ms=callee_timeout,
-        ),
-    ) if callee or unnamed_callee else ()
+        (
+            DownstreamCall(
+                caller=svc,
+                callee=None if unnamed_callee else callee,
+                operation="charge",
+                duration_ms=callee_dur,
+                status=callee_status,
+                retries=callee_retries,
+                timeout_ms=callee_timeout,
+            ),
+        )
+        if callee or unnamed_callee
+        else ()
+    )
     return RequestExecution(
-        request_id=f"r{i}", trace_id=f"t{i}", service=svc, operation=op,
-        method="GET", route=op, start_unix_nano=BASE + w * HOUR + i,
-        duration_ms=dur, status="200", downstream_calls=calls,
+        request_id=f"r{i}",
+        trace_id=f"t{i}",
+        service=svc,
+        operation=op,
+        method="GET",
+        route=op,
+        start_unix_nano=BASE + w * HOUR + i,
+        duration_ms=dur,
+        status="200",
+        downstream_calls=calls,
     )
 
 
 def _fixture() -> tuple[RequestExecution, ...]:
     """§62: window 0 stable (300ms), window 1 regressed (1200ms, retries on psp)."""
-    exs = [
-        _exec(i, 0, 300.0)
-        for i in range(10)
-    ]
+    exs = [_exec(i, 0, 300.0) for i in range(10)]
     exs += [
         _exec(i, 1, 1200.0, callee_dur=900, callee_retries=4, callee_status="200")
         for i in range(10)
@@ -98,9 +118,13 @@ def _fixture() -> tuple[RequestExecution, ...]:
     # psp's own executions stay stable — no psp latency regression
     exs += [
         RequestExecution(
-            request_id=f"p{i}", trace_id=f"pt{i}", service="payment-api",
-            operation="charge", start_unix_nano=BASE + w * HOUR + i,
-            duration_ms=90.0, status="200",
+            request_id=f"p{i}",
+            trace_id=f"pt{i}",
+            service="payment-api",
+            operation="charge",
+            start_unix_nano=BASE + w * HOUR + i,
+            duration_ms=90.0,
+            status="200",
         )
         for w in (0, 1)
         for i in range(10)
@@ -117,8 +141,10 @@ def _events(tmp_path: Path) -> tuple:
         (root / "cfg.yaml").write_text(cfg, encoding="utf-8")
     old_ctx, new_ctx = ProjectContext.from_root(old_root), ProjectContext.from_root(new_root)
     from forge_doctor_api.analyzers.openapi.parser import load_openapi_project
+
     om, nm = load_openapi_project(old_ctx), load_openapi_project(new_ctx)
     from forge_doctor_api.analyzers.version.detect import detect_version_model
+
     return change_report(
         diff_models(om, nm),
         config_events(
@@ -126,7 +152,10 @@ def _events(tmp_path: Path) -> tuple:
             load_reliability_model(new_ctx, ["cfg.yaml"]),
             load_security_model(old_ctx, ["cfg.yaml"], openapi=om),
             load_security_model(new_ctx, ["cfg.yaml"], openapi=nm),
-            detect_version_model(om), detect_version_model(nm), om, nm,
+            detect_version_model(om),
+            detect_version_model(nm),
+            om,
+            nm,
         ),
     ).events
 
@@ -186,7 +215,8 @@ def test_static_only_change_stays_static(tmp_path: Path) -> None:
     # no observed retries/timeouts: clean downstream calls both windows
     exs = tuple(
         _exec(i, w, 300.0 if w == 0 else 1200.0, callee="payment-api")
-        for w in (0, 1) for i in range(10)
+        for w in (0, 1)
+        for i in range(10)
     )
     report = diagnose(exs, run_perf_checks(exs), _events(tmp_path), None)
     ep = report.episodes[0]
@@ -203,9 +233,7 @@ def test_no_regressions_yields_unknown_not_episode(tmp_path: Path) -> None:
 
 
 def test_missing_callee_is_unknown(tmp_path: Path) -> None:
-    exs = tuple(
-        _exec(i, 0, 300.0, unnamed_callee=True) for i in range(10)
-    ) + tuple(
+    exs = tuple(_exec(i, 0, 300.0, unnamed_callee=True) for i in range(10)) + tuple(
         _exec(i, 1, 1200.0, unnamed_callee=True) for i in range(10)
     )
     report = diagnose(exs, run_perf_checks(exs), ())
@@ -248,45 +276,68 @@ def _write_otlp_fixture(root: Path, *, stable_only: bool = False) -> None:
         dur = 300.0 if w == 0 or stable_only else 1200.0
         for i in range(10):
             tid = f"{'s' if stable_only else ''}t{w}_{i}"
-            spans.append({
-                "traceId": tid, "spanId": f"srv{w}_{i}", "name": "GET /checkout",
-                "kind": 2,
-                "startTimeUnixNano": str(BASE + w * HOUR + i * 1000),
-                "endTimeUnixNano": str(BASE + w * HOUR + i * 1000 + int(dur * 1e6)),
-                "attributes": [{"key": "http.route", "value": {"stringValue": "/checkout"}}],
-                "status": {"code": 1},
-            })
+            spans.append(
+                {
+                    "traceId": tid,
+                    "spanId": f"srv{w}_{i}",
+                    "name": "GET /checkout",
+                    "kind": 2,
+                    "startTimeUnixNano": str(BASE + w * HOUR + i * 1000),
+                    "endTimeUnixNano": str(BASE + w * HOUR + i * 1000 + int(dur * 1e6)),
+                    "attributes": [{"key": "http.route", "value": {"stringValue": "/checkout"}}],
+                    "status": {"code": 1},
+                }
+            )
             if not stable_only and w == 1:
-                spans.append({
-                    "traceId": tid, "spanId": f"cli{w}_{i}", "name": "POST charge",
-                    "kind": 3, "parentSpanId": f"srv{w}_{i}",
-                    "startTimeUnixNano": str(BASE + w * HOUR + i * 1000),
-                    "endTimeUnixNano": str(BASE + w * HOUR + i * 1000 + int(900 * 1e6)),
-                    "attributes": [
-                        {"key": "peer.service", "value": {"stringValue": "payment-api"}},
-                        {"key": "http.resend_count", "value": {"intValue": "4"}},
-                    ],
-                    "status": {"code": 1},
-                })
+                spans.append(
+                    {
+                        "traceId": tid,
+                        "spanId": f"cli{w}_{i}",
+                        "name": "POST charge",
+                        "kind": 3,
+                        "parentSpanId": f"srv{w}_{i}",
+                        "startTimeUnixNano": str(BASE + w * HOUR + i * 1000),
+                        "endTimeUnixNano": str(BASE + w * HOUR + i * 1000 + int(900 * 1e6)),
+                        "attributes": [
+                            {"key": "peer.service", "value": {"stringValue": "payment-api"}},
+                            {"key": "http.resend_count", "value": {"intValue": "4"}},
+                        ],
+                        "status": {"code": 1},
+                    }
+                )
             else:
-                spans.append({
-                    "traceId": tid, "spanId": f"cli{w}_{i}", "name": "POST charge",
-                    "kind": 3, "parentSpanId": f"srv{w}_{i}",
-                    "startTimeUnixNano": str(BASE + w * HOUR + i * 1000),
-                    "endTimeUnixNano": str(BASE + w * HOUR + i * 1000 + int(100 * 1e6)),
-                    "attributes": [
-                        {"key": "peer.service", "value": {"stringValue": "payment-api"}},
-                    ],
-                    "status": {"code": 1},
-                })
-    (root / "traces.json").write_text(json.dumps({
-        "resourceSpans": [{
-            "resource": {"attributes": [
-                {"key": "service.name", "value": {"stringValue": "checkout-api"}},
-            ]},
-            "scopeSpans": [{"scope": {}, "spans": spans}],
-        }],
-    }), encoding="utf-8")
+                spans.append(
+                    {
+                        "traceId": tid,
+                        "spanId": f"cli{w}_{i}",
+                        "name": "POST charge",
+                        "kind": 3,
+                        "parentSpanId": f"srv{w}_{i}",
+                        "startTimeUnixNano": str(BASE + w * HOUR + i * 1000),
+                        "endTimeUnixNano": str(BASE + w * HOUR + i * 1000 + int(100 * 1e6)),
+                        "attributes": [
+                            {"key": "peer.service", "value": {"stringValue": "payment-api"}},
+                        ],
+                        "status": {"code": 1},
+                    }
+                )
+    (root / "traces.json").write_text(
+        json.dumps(
+            {
+                "resourceSpans": [
+                    {
+                        "resource": {
+                            "attributes": [
+                                {"key": "service.name", "value": {"stringValue": "checkout-api"}},
+                            ]
+                        },
+                        "scopeSpans": [{"scope": {}, "spans": spans}],
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
 
 
 def test_explain_cli(tmp_path: Path) -> None:
@@ -301,10 +352,13 @@ def test_explain_cli(tmp_path: Path) -> None:
 
 def test_explain_redaction(tmp_path: Path) -> None:
     """§57/§125: explain output must not leak secrets from config."""
-    root = _write(tmp_path / "proj", {
-        "api.yaml": API,
-        "cfg.yaml": 'services:\n  psp:\n    authorization: "Bearer supersecret123"\n',
-    })
+    root = _write(
+        tmp_path / "proj",
+        {
+            "api.yaml": API,
+            "cfg.yaml": 'services:\n  psp:\n    authorization: "Bearer supersecret123"\n',
+        },
+    )
     result = runner.invoke(app, ["explain", str(root), "RELAPI"])
     assert "supersecret123" not in result.output
 

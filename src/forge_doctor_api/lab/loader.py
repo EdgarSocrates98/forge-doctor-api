@@ -38,9 +38,7 @@ def _expectation(raw: object) -> LabExpectation:
         findings=_list(doc.get("expected_findings")),
         forbidden_findings=_list(doc.get("forbidden_findings")),
         description_contains=_list(doc.get("expected_description_contains")),
-        forbidden_description_contains=_list(
-            doc.get("forbidden_description_contains")
-        ),
+        forbidden_description_contains=_list(doc.get("forbidden_description_contains")),
         entities=_list(doc.get("expected_entities")),
         edges=_list(doc.get("expected_edges")),
         forbidden_entities=_list(doc.get("forbidden_entities")),
@@ -58,28 +56,23 @@ def _scenario(context: ProjectContext, rel: str) -> LabScenario:
     doc: object = None
     try:
         text = context.read_text(rel)
-        doc = (json.loads(text) if rel.endswith(".json")
-               else yaml.safe_load(text))
-    except (OSError, UnicodeDecodeError, yaml.YAMLError,
-            json.JSONDecodeError):
+        doc = json.loads(text) if rel.endswith(".json") else yaml.safe_load(text)
+    except (OSError, UnicodeDecodeError, yaml.YAMLError, json.JSONDecodeError):
         doc = None
     problems: list[str] = []
     if not isinstance(doc, dict):
         problems.append("unparseable expectations file")
         return LabScenario(
-            domain=domain or "labs", name=name or path, path=path,
-            problems=tuple(problems))
+            domain=domain or "labs", name=name or path, path=path, problems=tuple(problems)
+        )
     provenance: tuple[tuple[str, str], ...] = ()
     required = _PROVENANCE_KEYS.get(domain)
     if required is not None:
         prov = doc.get("provenance")
         if not isinstance(prov, dict) or any(k not in prov for k in required):
-            problems.append(
-                f"{domain} scenario missing provenance block "
-                f"(requires {required})")
+            problems.append(f"{domain} scenario missing provenance block (requires {required})")
         else:
-            provenance = tuple(sorted(
-                (str(k), str(v)) for k, v in prov.items()))
+            provenance = tuple(sorted((str(k), str(v)) for k, v in prov.items()))
     diff = doc.get("diff")
     diff_old = diff_new = None
     if isinstance(diff, dict):

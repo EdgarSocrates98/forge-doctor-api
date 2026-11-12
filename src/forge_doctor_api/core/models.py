@@ -199,15 +199,13 @@ def _decode(tp: Any, value: Any, name: str) -> Any:
             raise ModelError(f"{name}: expected a list, got {type(value).__name__}")
         if len(args) == 2 and args[1] is Ellipsis:
             item_tp = args[0]
-            return tuple(_decode(item_tp, item, f"{name}[{i}]")
-                         for i, item in enumerate(value))
+            return tuple(_decode(item_tp, item, f"{name}[{i}]") for i, item in enumerate(value))
         if len(args) != len(value):
-            raise ModelError(
-                f"{name}: expected a {len(args)}-tuple, "
-                f"got {len(value)} item(s)")
-        return tuple(_decode(item_tp, item, f"{name}[{i}]")
-                     for i, (item_tp, item)
-                     in enumerate(zip(args, value, strict=True)))
+            raise ModelError(f"{name}: expected a {len(args)}-tuple, got {len(value)} item(s)")
+        return tuple(
+            _decode(item_tp, item, f"{name}[{i}]")
+            for i, (item_tp, item) in enumerate(zip(args, value, strict=True))
+        )
     if origin is dict:
         key_tp, value_tp = get_args(tp)
         if not isinstance(value, Mapping):

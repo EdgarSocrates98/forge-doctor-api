@@ -27,23 +27,37 @@ _OTHER = SourceLocation(path="other.py", line=1)
 
 def _route(path: str, file: str = "app.py") -> RouteModel:
     return RouteModel(
-        framework="fastapi", service="svc", method="GET", path=path,
+        framework="fastapi",
+        service="svc",
+        method="GET",
+        path=path,
         handler=f"svc.h_{path.strip('/') or 'root'}",
-        source_location=SourceLocation(path=file, line=10))
+        source_location=SourceLocation(path=file, line=10),
+    )
 
 
 def _site(url: str, file: str = "app.py") -> ClientCallSite:
     return ClientCallSite(
-        client="cli", language=ClientLanguage.PYTHON, library="requests",
-        method="GET", url=url, path=None, location=SourceLocation(path=file))
+        client="cli",
+        language=ClientLanguage.PYTHON,
+        library="requests",
+        method="GET",
+        url=url,
+        path=None,
+        location=SourceLocation(path=file),
+    )
 
 
 def _exec(op: str, callees: tuple[str, ...]) -> RequestExecution:
     return RequestExecution(
-        request_id="r1", trace_id="t1", service="svc", operation=op,
+        request_id="r1",
+        trace_id="t1",
+        service="svc",
+        operation=op,
         downstream_calls=tuple(
-            DownstreamCall(caller="svc", callee=c, operation=f"op_{c}")
-            for c in callees))
+            DownstreamCall(caller="svc", callee=c, operation=f"op_{c}") for c in callees
+        ),
+    )
 
 
 def _scan(*routes: RouteModel) -> RouteScan:
@@ -58,7 +72,8 @@ class TestStaticTier:
     def test_single_handler_file_gets_candidate_width(self) -> None:
         sigs = fanout_signals(
             _scan(_route("/x")),
-            _clients(_site("https://a.internal/x"), _site("https://b.internal/x")))
+            _clients(_site("https://a.internal/x"), _site("https://b.internal/x")),
+        )
         assert len(sigs) == 1
         sig = sigs[0]
         assert sig.subject == "GET /x"
@@ -72,12 +87,23 @@ class TestStaticTier:
 
     def test_ambiguous_attribution_records_unknown(self) -> None:
         scan = _scan(
-            RouteModel(framework="fastapi", service="svc", method="GET",
-                       path="/a", handler="svc.a",
-                       source_location=SourceLocation(path="app.py", line=1)),
-            RouteModel(framework="fastapi", service="svc", method="GET",
-                       path="/b", handler="svc.b",
-                       source_location=SourceLocation(path="app.py", line=9)))
+            RouteModel(
+                framework="fastapi",
+                service="svc",
+                method="GET",
+                path="/a",
+                handler="svc.a",
+                source_location=SourceLocation(path="app.py", line=1),
+            ),
+            RouteModel(
+                framework="fastapi",
+                service="svc",
+                method="GET",
+                path="/b",
+                handler="svc.b",
+                source_location=SourceLocation(path="app.py", line=9),
+            ),
+        )
         sigs = fanout_signals(scan, _clients(_site("https://a.internal/x")))
         assert len(sigs) == 2
         for sig in sigs:
@@ -89,9 +115,10 @@ class TestStaticTier:
 class TestRuntimeTier:
     def test_runtime_only_is_confirmed(self) -> None:
         sigs = fanout_signals(
-            _scan(), _clients(),
-            executions=(_exec("GET /x", ("db", "mq")),
-                        _exec("GET /x", ("db",))))
+            _scan(),
+            _clients(),
+            executions=(_exec("GET /x", ("db", "mq")), _exec("GET /x", ("db",))),
+        )
         assert sigs[0].status is FanoutStatus.CONFIRMED
         assert sigs[0].runtime_width == 2
         assert sigs[0].static_width is None
@@ -103,24 +130,22 @@ class TestMerged:
         sigs = fanout_signals(
             _scan(_route("/x")),
             _clients(_site("https://a.internal/x")),
-            executions=(_exec("GET /x", ("a.internal", "b")),))
+            executions=(_exec("GET /x", ("a.internal", "b")),),
+        )
         sig = sigs[0]
         assert sig.status is FanoutStatus.CONFIRMED
         assert sig.static_width == 1
         assert sig.runtime_width == 2
-        assert {e.kind for e in sig.evidence} == {
-            EvidenceKind.STATIC, EvidenceKind.RUNTIME}
+        assert {e.kind for e in sig.evidence} == {EvidenceKind.STATIC, EvidenceKind.RUNTIME}
 
     def test_requested_subject_without_evidence_is_empty_candidate(self) -> None:
-        sigs = fanout_signals(
-            _scan(), _clients(), subjects=("GET /unmeasured",))
+        sigs = fanout_signals(_scan(), _clients(), subjects=("GET /unmeasured",))
         sig = sigs[0]
         assert sig.status is FanoutStatus.CANDIDATE
         assert sig.static_width is None and sig.runtime_width is None
 
     def test_deterministic(self) -> None:
-        clients = _clients(_site("https://b.internal/x"),
-                           _site("https://a.internal/x"))
+        clients = _clients(_site("https://b.internal/x"), _site("https://a.internal/x"))
         a = fanout_signals(_scan(_route("/x")), clients)
         b = fanout_signals(_scan(_route("/x")), clients)
         assert a == b

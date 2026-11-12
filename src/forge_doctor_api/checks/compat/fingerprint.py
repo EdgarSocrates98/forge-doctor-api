@@ -51,9 +51,7 @@ def _projection(model: OpenApiProjectModel) -> dict[str, Any]:
             }
             for d in model.documents
         ],
-        "servers": [
-            {"url": s.url, "description": s.description} for s in model.servers
-        ],
+        "servers": [{"url": s.url, "description": s.description} for s in model.servers],
         "operations": ops,
         "parameters": [
             {
@@ -84,15 +82,11 @@ def _projection(model: OpenApiProjectModel) -> dict[str, Any]:
             }
             for r in model.responses
         ],
-        "schemas": [
-            {"name": s.name, "content": _canon(s.content)} for s in model.schemas
-        ],
+        "schemas": [{"name": s.name, "content": _canon(s.content)} for s in model.schemas],
         "security_requirements": [
             {
                 "owner": r.owner_pointer,
-                "schemes": sorted(
-                    {"name": s.name, "scopes": sorted(s.scopes)} for s in r.schemes
-                ),
+                "schemes": sorted({"name": s.name, "scopes": sorted(s.scopes)} for s in r.schemes),
             }
             for r in model.security_requirements
         ],

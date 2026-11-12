@@ -63,8 +63,7 @@ def _opt_int(d: Json, key: str) -> int | None:
     if value is None:
         return None
     if isinstance(value, bool) or not isinstance(value, int):
-        raise ValueError(
-            f"field {key!r} must be an integer or null, got {value!r}")
+        raise ValueError(f"field {key!r} must be an integer or null, got {value!r}")
     return int(value)
 
 
@@ -81,8 +80,7 @@ def _list(d: Json, key: str) -> tuple[Any, ...]:
     if value is None:
         return ()
     if not isinstance(value, (list, tuple)):
-        raise ValueError(
-            f"field {key!r} must be an array, got {value!r}")
+        raise ValueError(f"field {key!r} must be an array, got {value!r}")
     return tuple(value)
 
 
@@ -95,17 +93,13 @@ def _obj(d: Json, key: str) -> Json:
     if value is None:
         return {}
     if not isinstance(value, dict):
-        raise ValueError(
-            f"field {key!r} must be an object, got {value!r}")
+        raise ValueError(f"field {key!r} must be an object, got {value!r}")
     return dict(value)
 
 
 def _extensions(d: Json) -> Json:
     """``x-*`` extension keys survive a parse so forward payloads round-trip."""
-    return {
-        k: v for k, v in d.items()
-        if isinstance(k, str) and k.startswith("x-")
-    }
+    return {k: v for k, v in d.items() if isinstance(k, str) and k.startswith("x-")}
 
 
 def _version_str(value: object) -> str:
@@ -127,8 +121,7 @@ class ContractModel:
         raise NotImplementedError
 
     def to_json(self) -> str:
-        return json.dumps(
-            self.to_dict(), sort_keys=True, ensure_ascii=False)
+        return json.dumps(self.to_dict(), sort_keys=True, ensure_ascii=False)
 
 
 @dataclass(frozen=True)
@@ -155,28 +148,30 @@ class Finding(ContractModel):
     tags: tuple[str, ...] = ()
 
     def to_dict(self) -> Json:
-        return _drop_none({
-            **self.extensions,
-            "contract_version": self.contract_version,
-            "check_id": self.check_id,
-            "title": self.title,
-            "severity": self.severity,
-            "category": self.category,
-            "message": self.message,
-            "fingerprint": self.fingerprint,
-            "file": self.file,
-            "line": self.line,
-            "column": self.column,
-            "end_line": self.end_line,
-            "end_column": self.end_column,
-            "recommendation": self.recommendation,
-            "confidence": self.confidence,
-            "evidence": self.evidence,
-            "evidence_kind": self.evidence_kind,
-            "source": self.source,
-            "fixable": self.fixable,
-            "tags": list(self.tags),
-        })
+        return _drop_none(
+            {
+                **self.extensions,
+                "contract_version": self.contract_version,
+                "check_id": self.check_id,
+                "title": self.title,
+                "severity": self.severity,
+                "category": self.category,
+                "message": self.message,
+                "fingerprint": self.fingerprint,
+                "file": self.file,
+                "line": self.line,
+                "column": self.column,
+                "end_line": self.end_line,
+                "end_column": self.end_column,
+                "recommendation": self.recommendation,
+                "confidence": self.confidence,
+                "evidence": self.evidence,
+                "evidence_kind": self.evidence_kind,
+                "source": self.source,
+                "fixable": self.fixable,
+                "tags": list(self.tags),
+            }
+        )
 
     @staticmethod
     def from_dict(d: Json) -> Finding:
@@ -218,18 +213,20 @@ class Entity(ContractModel):
     attrs: Json = field(default_factory=dict)
 
     def to_dict(self) -> Json:
-        return _drop_none({
-            **self.extensions,
-            "contract_version": self.contract_version,
-            "id": self.id,
-            "kind": self.kind,
-            "domain": self.domain,
-            "identifier": self.identifier,
-            "name": self.name,
-            "file": self.file,
-            "line": self.line,
-            "attrs": dict(self.attrs),
-        })
+        return _drop_none(
+            {
+                **self.extensions,
+                "contract_version": self.contract_version,
+                "id": self.id,
+                "kind": self.kind,
+                "domain": self.domain,
+                "identifier": self.identifier,
+                "name": self.name,
+                "file": self.file,
+                "line": self.line,
+                "attrs": dict(self.attrs),
+            }
+        )
 
     @staticmethod
     def from_dict(d: Json) -> Entity:
@@ -258,15 +255,17 @@ class Relationship(ContractModel):
     attrs: Json = field(default_factory=dict)
 
     def to_dict(self) -> Json:
-        return _drop_none({
-            **self.extensions,
-            "contract_version": self.contract_version,
-            "src": self.src,
-            "dst": self.dst,
-            "kind": self.kind,
-            "evidence_kind": self.evidence_kind,
-            "attrs": dict(self.attrs),
-        })
+        return _drop_none(
+            {
+                **self.extensions,
+                "contract_version": self.contract_version,
+                "src": self.src,
+                "dst": self.dst,
+                "kind": self.kind,
+                "evidence_kind": self.evidence_kind,
+                "attrs": dict(self.attrs),
+            }
+        )
 
     @staticmethod
     def from_dict(d: Json) -> Relationship:
@@ -291,14 +290,16 @@ class Evidence(ContractModel):
     detail: str | None = None
 
     def to_dict(self) -> Json:
-        return _drop_none({
-            **self.extensions,
-            "contract_version": self.contract_version,
-            "ref": self.ref,
-            "kind": self.kind,
-            "source": self.source,
-            "detail": self.detail,
-        })
+        return _drop_none(
+            {
+                **self.extensions,
+                "contract_version": self.contract_version,
+                "ref": self.ref,
+                "kind": self.kind,
+                "source": self.source,
+                "detail": self.detail,
+            }
+        )
 
     @staticmethod
     def from_dict(d: Json) -> Evidence:
@@ -323,15 +324,17 @@ class Capability(ContractModel):
     evidence_refs: tuple[str, ...] = ()
 
     def to_dict(self) -> Json:
-        return _drop_none({
-            **self.extensions,
-            "contract_version": self.contract_version,
-            "id": self.id,
-            "domain": self.domain,
-            "status": self.status,
-            "confidence": self.confidence,
-            "evidence_refs": list(self.evidence_refs),
-        })
+        return _drop_none(
+            {
+                **self.extensions,
+                "contract_version": self.contract_version,
+                "id": self.id,
+                "domain": self.domain,
+                "status": self.status,
+                "confidence": self.confidence,
+                "evidence_refs": list(self.evidence_refs),
+            }
+        )
 
     @staticmethod
     def from_dict(d: Json) -> Capability:
@@ -362,15 +365,17 @@ class UnknownFact(ContractModel):
     detail: str | None = None
 
     def to_dict(self) -> Json:
-        return _drop_none({
-            **self.extensions,
-            "contract_version": self.contract_version,
-            "subject": self.subject,
-            "kind": self.kind,
-            "reason": self.reason,
-            "source": self.source,
-            "detail": self.detail,
-        })
+        return _drop_none(
+            {
+                **self.extensions,
+                "contract_version": self.contract_version,
+                "subject": self.subject,
+                "kind": self.kind,
+                "reason": self.reason,
+                "source": self.source,
+                "detail": self.detail,
+            }
+        )
 
     @staticmethod
     def from_dict(d: Json) -> UnknownFact:
@@ -398,17 +403,19 @@ class MigrationPlan(ContractModel):
     risks: tuple[str, ...] = ()
 
     def to_dict(self) -> Json:
-        return _drop_none({
-            **self.extensions,
-            "contract_version": self.contract_version,
-            "id": self.id,
-            "source": self.source,
-            "target": self.target,
-            "kind": self.kind,
-            "readiness": self.readiness,
-            "steps": list(self.steps),
-            "risks": list(self.risks),
-        })
+        return _drop_none(
+            {
+                **self.extensions,
+                "contract_version": self.contract_version,
+                "id": self.id,
+                "source": self.source,
+                "target": self.target,
+                "kind": self.kind,
+                "readiness": self.readiness,
+                "steps": list(self.steps),
+                "risks": list(self.risks),
+            }
+        )
 
     @staticmethod
     def from_dict(d: Json) -> MigrationPlan:
@@ -438,25 +445,26 @@ class RemediationPlan(ContractModel):
     requires_approval: bool = False
 
     def to_dict(self) -> Json:
-        return _drop_none({
-            **self.extensions,
-            "contract_version": self.contract_version,
-            "id": self.id,
-            "check_id": self.check_id,
-            "problem": self.problem,
-            "targets": list(self.targets),
-            "actions": list(self.actions),
-            "risks": list(self.risks),
-            "requires_approval": self.requires_approval,
-        })
+        return _drop_none(
+            {
+                **self.extensions,
+                "contract_version": self.contract_version,
+                "id": self.id,
+                "check_id": self.check_id,
+                "problem": self.problem,
+                "targets": list(self.targets),
+                "actions": list(self.actions),
+                "risks": list(self.risks),
+                "requires_approval": self.requires_approval,
+            }
+        )
 
     @staticmethod
     def from_dict(d: Json) -> RemediationPlan:
         # Wire actions are objects ({id, description,...}); the contract
         # surface is their descriptions.
         actions = tuple(
-            a.get("description", "") if isinstance(a, dict) else str(a)
-            for a in _list(d, "actions")
+            a.get("description", "") if isinstance(a, dict) else str(a) for a in _list(d, "actions")
         )
         return RemediationPlan(
             contract_version=_version_str(d.get("contract_version")),
@@ -524,10 +532,7 @@ class HandoffBundle(ContractModel):
                 return items
             return items[:limit]
 
-        notes = list(
-            self.unknowns[:unknowns] if unknowns is not None
-            else self.unknowns
-        )
+        notes = list(self.unknowns[:unknowns] if unknowns is not None else self.unknowns)
         for family, items, limit in (
             ("findings", self.findings, findings),
             ("entities", self.entities, entities),
@@ -536,12 +541,14 @@ class HandoffBundle(ContractModel):
             ("plans", self.plans, plans),
         ):
             if limit is not None and len(items) > limit:
-                notes.append(UnknownFact(
-                    subject=family,
-                    kind="truncated",
-                    reason=f"bounded to {limit} of {len(items)}",
-                    source=self.tool,
-                ))
+                notes.append(
+                    UnknownFact(
+                        subject=family,
+                        kind="truncated",
+                        reason=f"bounded to {limit} of {len(items)}",
+                        source=self.tool,
+                    )
+                )
         return HandoffBundle(
             contract_version=self.contract_version,
             extensions=dict(self.extensions),
@@ -577,33 +584,27 @@ class HandoffBundle(ContractModel):
                 for cap, status in caps_by_name.items()
             )
         else:
-            caps = tuple(
-                Capability.from_dict(c) for c in capabilities)
+            caps = tuple(Capability.from_dict(c) for c in capabilities)
         return HandoffBundle(
             contract_version=_version_str(d.get("contract_version")),
             extensions=_extensions(d),
-            tool=str(tool.get("name", "")) if isinstance(tool, dict)
-            else str(tool),
-            tool_version=str(tool.get("version", ""))
-            if isinstance(tool, dict) else "",
+            tool=str(tool.get("name", "")) if isinstance(tool, dict) else str(tool),
+            tool_version=str(tool.get("version", "")) if isinstance(tool, dict) else "",
             project=_obj(d, "project"),
             summary=_obj(d, "summary"),
             findings=tuple(
-                Finding.from_dict(f)
-                for f in _list(d, "findings") or _list(d, "results")),
+                Finding.from_dict(f) for f in _list(d, "findings") or _list(d, "results")
+            ),
             entities=tuple(
-                Entity.from_dict(e)
-                for e in (_list(d, "entities")
-                          or _list(graph, "entities"))),
+                Entity.from_dict(e) for e in (_list(d, "entities") or _list(graph, "entities"))
+            ),
             relationships=tuple(
                 Relationship.from_dict(r)
-                for r in (_list(d, "relationships")
-                          or _list(graph, "relationships"))),
+                for r in (_list(d, "relationships") or _list(graph, "relationships"))
+            ),
             capabilities=caps,
-            plans=tuple(
-                RemediationPlan.from_dict(p) for p in _list(d, "plans")),
-            unknowns=tuple(
-                UnknownFact.from_dict(u) for u in _list(d, "unknowns")),
+            plans=tuple(RemediationPlan.from_dict(p) for p in _list(d, "plans")),
+            unknowns=tuple(UnknownFact.from_dict(u) for u in _list(d, "unknowns")),
         )
 
 
@@ -641,18 +642,13 @@ class DiagnosticManifest(ContractModel):
         return DiagnosticManifest(
             contract_version=_version_str(d.get("contract_version")),
             extensions=_extensions(d),
-            tool=str(tool.get("name", "")) if isinstance(tool, dict)
-            else str(tool),
-            tool_version=str(tool.get("version", ""))
-            if isinstance(tool, dict) else "",
+            tool=str(tool.get("name", "")) if isinstance(tool, dict) else str(tool),
+            tool_version=str(tool.get("version", "")) if isinstance(tool, dict) else "",
             domains=_str_list(d, "domains"),
             entity_count=int(d.get("entity_count") or 0),
             finding_count=int(d.get("finding_count") or 0),
             unknown_count=int(d.get("unknown_count") or 0),
-            risks=tuple(
-                dict(r) for r in _list(d, "risks") if isinstance(r, dict)),
-            capabilities=tuple(
-                Capability.from_dict(c)
-                for c in _list(d, "capabilities")),
+            risks=tuple(dict(r) for r in _list(d, "risks") if isinstance(r, dict)),
+            capabilities=tuple(Capability.from_dict(c) for c in _list(d, "capabilities")),
             evidence_refs=_str_list(d, "evidence_refs"),
         )

@@ -23,8 +23,14 @@ _DOMAIN_HANDLERS = {
 
 # §215: API dependency pointing at a data path routes to Data Doctor;
 # implementation-grade data work continues to Spark Forge.
-_DATA_IMPLEMENT_HINTS = ("migration", "schema change", "backfill",
-                         "transform", "implement", "build")
+_DATA_IMPLEMENT_HINTS = (
+    "migration",
+    "schema change",
+    "backfill",
+    "transform",
+    "implement",
+    "build",
+)
 
 
 def route_request(
@@ -33,12 +39,10 @@ def route_request(
 ) -> ForgerRoute:
     if request.domain == "api":
         data_refs = tuple(
-            r for r in references
-            if r.target_domain.replace("_", "-").startswith("data")
+            r for r in references if r.target_domain.replace("_", "-").startswith("data")
         )
         if data_refs:
-            impl = any(h in request.task.lower()
-                       for h in _DATA_IMPLEMENT_HINTS)
+            impl = any(h in request.task.lower() for h in _DATA_IMPLEMENT_HINTS)
             chain = ["doctor-api", "data-doctor"]
             if impl:
                 chain.append("spark-forge")
@@ -47,9 +51,7 @@ def route_request(
                 handler="data-doctor",
                 reason=(
                     "API dependency evidence points to a data-owned "
-                    "entity"
-                    + (" and the task implies implementation work"
-                       if impl else "")
+                    "entity" + (" and the task implies implementation work" if impl else "")
                 ),
                 chain=tuple(chain),
                 references=data_refs,
@@ -75,10 +77,11 @@ def route_request(
         handler="unrouted",
         reason="no declared route for this domain",
         references=references,
-        unknowns=(UnknownFact(
-            subject=request.domain,
-            missing="routing rule for domain",
-            resolution="declare a domain->handler mapping in the routing "
-                       "contract",
-        ),),
+        unknowns=(
+            UnknownFact(
+                subject=request.domain,
+                missing="routing rule for domain",
+                resolution="declare a domain->handler mapping in the routing contract",
+            ),
+        ),
     )

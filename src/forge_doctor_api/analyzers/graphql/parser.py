@@ -103,10 +103,7 @@ def _field(path: str, name: str, f: Any) -> GraphQLField:
         GraphQLArgument(
             name=aname,
             type=_type_ref(arg.type),
-            required=(
-                not _type_ref(arg.type).nullable
-                and arg.default_value is gql.Undefined
-            ),
+            required=(not _type_ref(arg.type).nullable and arg.default_value is gql.Undefined),
             has_default=arg.default_value is not gql.Undefined,
             deprecated=arg.deprecation_reason is not None,
             location=_loc(path, getattr(arg, "ast_node", None)),
@@ -185,10 +182,7 @@ def _extract_schema(schema: GraphQLSchema, path: str) -> list[GraphQLType]:
                     name=name,
                     kind=GraphQLTypeKind.OBJECT,
                     operation_root=_root_kind(schema, name),
-                    fields=tuple(
-                        _field(path, fname, f)
-                        for fname, f in sorted(t.fields.items())
-                    ),
+                    fields=tuple(_field(path, fname, f) for fname, f in sorted(t.fields.items())),
                     interfaces=tuple(sorted(i.name for i in t.interfaces)),
                     directives=directives,
                     location=loc,
@@ -211,9 +205,7 @@ def _extract_schema(schema: GraphQLSchema, path: str) -> list[GraphQLType]:
                     kind=GraphQLTypeKind.ENUM,
                     enum_values=tuple(sorted(t.values)),
                     deprecated_enum_values=tuple(
-                        sorted(
-                            v for v, ev in t.values.items() if ev.deprecation_reason
-                        )
+                        sorted(v for v, ev in t.values.items() if ev.deprecation_reason)
                     ),
                     directives=directives,
                     location=loc,
@@ -225,8 +217,7 @@ def _extract_schema(schema: GraphQLSchema, path: str) -> list[GraphQLType]:
                     name=name,
                     kind=GraphQLTypeKind.INPUT_OBJECT,
                     fields=tuple(
-                        _input_field(path, fname, f)
-                        for fname, f in sorted(t.fields.items())
+                        _input_field(path, fname, f) for fname, f in sorted(t.fields.items())
                     ),
                     directives=directives,
                     location=loc,
@@ -255,11 +246,7 @@ def _resolvers(types: list[GraphQLType]) -> list[GraphQLResolver]:
             if not is_root and not f.arguments:
                 continue
             evidence = sorted(
-                {
-                    d
-                    for d in (*f.directives, *t.directives)
-                    if _AUTH_DIRECTIVE.search(d)
-                }
+                {d for d in (*f.directives, *t.directives) if _AUTH_DIRECTIVE.search(d)}
             )
             out.append(
                 GraphQLResolver(
@@ -272,9 +259,7 @@ def _resolvers(types: list[GraphQLType]) -> list[GraphQLResolver]:
     return out
 
 
-def _introspection_policy(
-    context: ProjectContext, files: list[str]
-) -> list[IntrospectionEvidence]:
+def _introspection_policy(context: ProjectContext, files: list[str]) -> list[IntrospectionEvidence]:
     out: list[IntrospectionEvidence] = []
     for path in sorted(files):
         if Path(path).suffix.lower() not in _CONFIG_SUFFIXES:
@@ -288,9 +273,7 @@ def _introspection_policy(
             out.append(
                 IntrospectionEvidence(
                     enabled=raw in {"true", "enabled"},
-                    location=SourceLocation(
-                        path=path, line=text[: match.start()].count("\n") + 1
-                    ),
+                    location=SourceLocation(path=path, line=text[: match.start()].count("\n") + 1),
                     detail=match.group(0).strip(),
                 )
             )
@@ -336,9 +319,7 @@ def load_graphql_project(
                 schema = gql.build_schema(text)
             except Exception as exc:  # untrusted input: GraphQLError family
                 documents.append(
-                    GraphQLDocument(
-                        path=path, status=GraphQLDocumentStatus.MALFORMED, source="sdl"
-                    )
+                    GraphQLDocument(path=path, status=GraphQLDocumentStatus.MALFORMED, source="sdl")
                 )
                 issues.append(
                     GraphQLIssue(
@@ -349,9 +330,7 @@ def load_graphql_project(
                 )
                 continue
             documents.append(
-                GraphQLDocument(
-                    path=path, status=GraphQLDocumentStatus.PARSED, source="sdl"
-                )
+                GraphQLDocument(path=path, status=GraphQLDocumentStatus.PARSED, source="sdl")
             )
             types.extend(_extract_schema(schema, path))
         elif suffix == ".json":

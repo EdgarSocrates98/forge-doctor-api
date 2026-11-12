@@ -19,19 +19,26 @@ class ClientCheckSpec:
 
 CATALOG: tuple[ClientCheckSpec, ...] = (
     ClientCheckSpec(
-        "CLIENT001", "Confirmed client impact", Severity.HIGH, Confidence.HIGH,
+        "CLIENT001",
+        "Confirmed client impact",
+        Severity.HIGH,
+        Confidence.HIGH,
         EvidenceKind.STATIC,
-        "A breaking contract change touches an element a known client "
-        "statically reads (§183).",
+        "A breaking contract change touches an element a known client statically reads (§183).",
     ),
     ClientCheckSpec(
-        "CLIENT002", "Client in blast radius", Severity.MEDIUM, Confidence.MEDIUM,
+        "CLIENT002",
+        "Client in blast radius",
+        Severity.MEDIUM,
+        Confidence.MEDIUM,
         EvidenceKind.STATIC,
-        "A known client consumes an operation that changed; no field-level "
-        "usage proves impact.",
+        "A known client consumes an operation that changed; no field-level usage proves impact.",
     ),
     ClientCheckSpec(
-        "CLIENT003", "Unresolvable client call site", Severity.LOW, Confidence.LOW,
+        "CLIENT003",
+        "Unresolvable client call site",
+        Severity.LOW,
+        Confidence.LOW,
         EvidenceKind.STATIC,
         "An HTTP client call has a dynamic URL/method that cannot be mapped "
         "to the contract; it may or may not consume a changed operation.",

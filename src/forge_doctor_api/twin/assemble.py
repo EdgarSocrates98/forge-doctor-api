@@ -48,23 +48,18 @@ def _desired_view(
                 UnknownFact(
                     subject="DESIRED state",
                     missing="SLOs / platform policies / business flows",
-                    resolution="provide declared objectives or "
-                    "policy config",
+                    resolution="provide declared objectives or policy config",
                 ),
             ),
         )
     objectives = reliability.objectives
     identifiers = tuple(sorted(o.name for o in objectives))
-    srcs = tuple(
-        sorted({e.source for o in objectives for e in o.evidence})
-    )
+    srcs = tuple(sorted({e.source for o in objectives for e in o.evidence}))
     return TwinStateView(
         state=TwinState.DESIRED,
         present=bool(identifiers),
         record_count=len(identifiers),
-        fingerprint=_fp(
-            [(o.name, o.metric, o.target, o.window) for o in objectives]
-        ),
+        fingerprint=_fp([(o.name, o.metric, o.target, o.window) for o in objectives]),
         identifiers=identifiers,
         sources=srcs,
         evidence=tuple(e for o in objectives for e in o.evidence)[:8],
@@ -75,8 +70,7 @@ def _desired_view(
                 UnknownFact(
                     subject="DESIRED state",
                     missing="SLOs / platform policies / business flows",
-                    resolution="provide declared objectives or "
-                    "policy config",
+                    resolution="provide declared objectives or policy config",
                 ),
             )
         ),
@@ -142,24 +136,19 @@ def _implemented_view(routes: RouteScan | None) -> TwinStateView:
                 ),
             ),
         )
-    ids = sorted(
-        f"{r.method.upper()} {r.path} -> {r.handler}"
-        for r in routes.routes
-    )
+    ids = sorted(f"{r.method.upper()} {r.path} -> {r.handler}" for r in routes.routes)
     return TwinStateView(
         state=TwinState.IMPLEMENTED,
         present=True,
         record_count=len(ids),
         fingerprint=_fp(ids),
         identifiers=tuple(ids),
-        sources=tuple(sorted({r.source_location.path
-                              for r in routes.routes})),
+        sources=tuple(sorted({r.source_location.path for r in routes.routes})),
         evidence=(
             Evidence(
                 kind=EvidenceKind.STATIC,
                 source="(routes)",
-                summary=f"{len(routes.routes)} routes in "
-                f"{routes.service}",
+                summary=f"{len(routes.routes)} routes in {routes.service}",
             ),
         ),
     )
@@ -177,8 +166,7 @@ def _observed_view(
                 UnknownFact(
                     subject="OBSERVED state",
                     missing="traces/access logs/runtime metadata",
-                    resolution="export runtime artifacts (OTLP JSON, "
-                    "access logs) into the project",
+                    resolution="export runtime artifacts (OTLP JSON, access logs) into the project",
                 ),
             ),
         )
@@ -187,16 +175,9 @@ def _observed_view(
         state=TwinState.OBSERVED,
         present=True,
         record_count=len(executions),
-        fingerprint=_fp(
-            [
-                (e.request_id, e.operation, e.duration_ms, e.status)
-                for e in executions
-            ]
-        ),
+        fingerprint=_fp([(e.request_id, e.operation, e.duration_ms, e.status) for e in executions]),
         identifiers=tuple(ops[:64]),
-        sources=tuple(sorted(
-            {ev.source for e in executions for ev in e.evidence}
-        )),
+        sources=tuple(sorted({ev.source for e in executions for ev in e.evidence})),
         unknowns=(),
     )
 
@@ -206,9 +187,7 @@ def _hypothetical_view(
     labels: tuple[str, ...] = (),
 ) -> TwinStateView:
     """HYPOTHETICAL: experiments/migration scenarios - isolated view."""
-    names = tuple(
-        sorted({*(e.name for e in experiments or ()), *labels})
-    )
+    names = tuple(sorted({*(e.name for e in experiments or ()), *labels}))
     return TwinStateView(
         state=TwinState.HYPOTHETICAL,
         present=bool(names),
@@ -222,8 +201,7 @@ def _hypothetical_view(
                 UnknownFact(
                     subject="HYPOTHETICAL state",
                     missing="experiment/migration scenarios",
-                    resolution="attach a what-if scenario to populate "
-                    "this state",
+                    resolution="attach a what-if scenario to populate this state",
                 ),
             )
         ),

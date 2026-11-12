@@ -77,9 +77,7 @@ def run_graphql_checks(model: GraphQLProjectModel) -> tuple[Finding, ...]:
                         f"deprecated field {t.name}.{f.name} still selected by a "
                         f"client query (reason: {f.deprecation_reason or 'n/a'})",
                         f.location,
-                        entities=(
-                            entity_id("graphql_type", "graphql", f"{t.kind}:{t.name}"),
-                        ),
+                        entities=(entity_id("graphql_type", "graphql", f"{t.kind}:{t.name}"),),
                     )
                 )
 
@@ -98,8 +96,7 @@ def run_graphql_checks(model: GraphQLProjectModel) -> tuple[Finding, ...]:
                     UnknownFact(
                         subject="resolver authorization",
                         missing="code-level or middleware auth enforcement evidence",
-                        resolution="inspect resolver implementations or attach auth "
-                        "directives",
+                        resolution="inspect resolver implementations or attach auth directives",
                     ),
                 ),
             )
@@ -119,15 +116,12 @@ def run_graphql_checks(model: GraphQLProjectModel) -> tuple[Finding, ...]:
                     BY_ID["GQL007"],
                     f"list field {t.name}.{f.name} has no pagination arguments",
                     f.location,
-                    entities=(
-                        entity_id("graphql_type", "graphql", f"{t.kind}:{t.name}"),
-                    ),
+                    entities=(entity_id("graphql_type", "graphql", f"{t.kind}:{t.name}"),),
                     unknowns=(
                         UnknownFact(
                             subject=f"{t.name}.{f.name}",
                             missing="server-side result-set cap evidence",
-                            resolution="runtime cardinality evidence or pagination "
-                            "arguments",
+                            resolution="runtime cardinality evidence or pagination arguments",
                         ),
                     ),
                 )
@@ -139,14 +133,12 @@ def run_graphql_checks(model: GraphQLProjectModel) -> tuple[Finding, ...]:
         findings.append(
             _finding(
                 BY_ID["GQL008"],
-                f"recursive type path admits unbounded query depth: "
-                f"{' -> '.join(cycle)}",
+                f"recursive type path admits unbounded query depth: {' -> '.join(cycle)}",
                 head.location if head is not None else SourceLocation(path="(schema)"),
                 unknowns=(
                     UnknownFact(
                         subject="query depth",
-                        missing="a documented depth-limit policy or runtime depth "
-                        "evidence",
+                        missing="a documented depth-limit policy or runtime depth evidence",
                         resolution="confirm a depth limiter exists or cap traversal",
                     ),
                 ),
@@ -204,8 +196,7 @@ def run_graphql_checks(model: GraphQLProjectModel) -> tuple[Finding, ...]:
                         unknowns=(
                             UnknownFact(
                                 subject="introspection policy",
-                                missing="a declared introspection policy to compare "
-                                "against",
+                                missing="a declared introspection policy to compare against",
                                 resolution="declare policy in org config (spec 023)",
                             ),
                         ),
@@ -255,7 +246,7 @@ def _type_cycles(model: GraphQLProjectModel) -> list[tuple[str, ...]]:
             node, path = stack.pop()
             for nxt in sorted(edges.get(node, set())):
                 if nxt in path:
-                    cycle = path[path.index(nxt):]
+                    cycle = path[path.index(nxt) :]
                     key = frozenset(cycle)
                     if key not in seen_cycles and len(cycles) < 64:
                         seen_cycles.add(key)

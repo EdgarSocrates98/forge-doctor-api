@@ -50,10 +50,10 @@ class PluginManifest(Model):
     version: str
     module: str
     trust: TrustClass
-    doctor_api: str = ""          # version specifier set, e.g. ">=0.1,<0.2"
+    doctor_api: str = ""  # version specifier set, e.g. ">=0.1,<0.2"
     capabilities: tuple[str, ...] = ()
     signature: str | None = None
-    source: str = ""              # manifest file it was declared in
+    source: str = ""  # manifest file it was declared in
 
 
 def _spec_ok(spec: str, version: str) -> bool:
@@ -63,8 +63,8 @@ def _spec_ok(spec: str, version: str) -> bool:
     for part in spec.split(","):
         part = part.strip()
         op, _, ver = next(
-            ((o, "", part[len(o):].strip()) for o in _OPS
-             if part.startswith(o)), ("", "", ""))
+            ((o, "", part[len(o) :].strip()) for o in _OPS if part.startswith(o)), ("", "", "")
+        )
         if not op or not _SEMVER.match(ver):
             return False
         tgt = tuple(int(p) for p in re.split(r"[.-]", ver)[:3])
@@ -90,8 +90,7 @@ def _revalidated(data: dict[str, Any], errors: list[str]) -> TrustClass:
     module = str(data.get("module", ""))
     if raw == "BUILTIN":
         if not module.startswith("forge_doctor_api"):
-            errors.append(
-                "BUILTIN requires module under forge_doctor_api")
+            errors.append("BUILTIN requires module under forge_doctor_api")
             return TrustClass.UNTRUSTED
         return TrustClass.BUILTIN
     if raw == "SIGNED":
@@ -110,7 +109,9 @@ def _revalidated(data: dict[str, Any], errors: list[str]) -> TrustClass:
 
 
 def parse_manifest(
-    path: str | Path, *, source: str | None = None,
+    path: str | Path,
+    *,
+    source: str | None = None,
 ) -> tuple[PluginManifest | None, tuple[ManifestError, ...]]:
     """Strict TOML parse: rejected -> (None, errors), never partial."""
     p = Path(path)
@@ -118,16 +119,22 @@ def parse_manifest(
     try:
         data = tomllib.loads(p.read_text(encoding="utf-8"))
     except Exception as exc:
-        return None, (ManifestError(
-            path=str(p), reason=f"unparseable TOML: {exc}"),)
+        return None, (ManifestError(path=str(p), reason=f"unparseable TOML: {exc}"),)
     table: Any = data
     for key in _TABLE:
         table = table.get(key) if isinstance(table, dict) else None
         if table is None:
-            return None, (ManifestError(
-                path=str(p), reason="no [tool.forge-doctor.plugin] table"),)
-    known = {"id", "version", "module", "doctor_api", "capabilities",
-             "trust_class", "signature", "source"}
+            return None, (ManifestError(path=str(p), reason="no [tool.forge-doctor.plugin] table"),)
+    known = {
+        "id",
+        "version",
+        "module",
+        "doctor_api",
+        "capabilities",
+        "trust_class",
+        "signature",
+        "source",
+    }
     unknown = sorted(set(table) - known)
     if unknown:
         errors.append(f"unknown manifest keys: {unknown}")
@@ -141,21 +148,23 @@ def parse_manifest(
     if not re.fullmatch(r"[A-Za-z_][\w.]*", module):
         errors.append("module must be a dotted import path")
     caps = table.get("capabilities", [])
-    if not isinstance(caps, list) or not all(
-            isinstance(c, str) for c in caps):
+    if not isinstance(caps, list) or not all(isinstance(c, str) for c in caps):
         errors.append("capabilities must be a string list")
         caps = []
     doctor_api = str(table.get("doctor_api", "")).strip()
     trust = _revalidated(table, errors)
     if errors:
-        return None, tuple(
-            ManifestError(path=str(p), reason=e) for e in errors)
+        return None, tuple(ManifestError(path=str(p), reason=e) for e in errors)
     return PluginManifest(
-        plugin_id=pid, version=version, module=module, trust=trust,
+        plugin_id=pid,
+        version=version,
+        module=module,
+        trust=trust,
         doctor_api=doctor_api,
         capabilities=tuple(sorted(caps)),
         signature=table.get("signature"),
-        source=source or str(p)), ()
+        source=source or str(p),
+    ), ()
 
 
 def manifest_compatible(manifest: PluginManifest, sdk_version: str) -> bool:
@@ -165,8 +174,9 @@ def manifest_compatible(manifest: PluginManifest, sdk_version: str) -> bool:
     return _spec_ok(manifest.doctor_api, sdk_version)
 
 
-def discover_manifests(root: Path) -> tuple[tuple[PluginManifest | None,
-        tuple[ManifestError, ...]], ...]:
+def discover_manifests(
+    root: Path,
+) -> tuple[tuple[PluginManifest | None, tuple[ManifestError, ...]], ...]:
     """Scan `root` one level deep for manifest files."""
     out: list[tuple[PluginManifest | None, tuple[ManifestError, ...]]] = []
     for name in MANIFEST_NAMES:

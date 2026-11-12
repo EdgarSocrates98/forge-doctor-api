@@ -25,34 +25,36 @@ paths:
       responses: {"200": {description: ok}}
 """
 
-EXPECTED_ALL = sorted([
-    "SDK_VERSION",
-    "AnalysisPlan",
-    "ApiHandoffBundle",
-    "ArtifactInventory",
-    "Confidence",
-    "Doctor",
-    "DoctorError",
-    "DoctorReport",
-    "DomainSummary",
-    "Evidence",
-    "EvidenceKind",
-    "Finding",
-    "FindingNotFoundError",
-    "ForgeHandoff",
-    "ForgeReceipt",
-    "ForgeRef",
-    "ForgeRequest",
-    "ForgeResult",
-    "Model",
-    "ProjectContext",
-    "ProjectUnreadableError",
-    "Severity",
-    "SourceLocation",
-    "UnknownFact",
-    "__version__",
-    "assemble_bundle",
-])
+EXPECTED_ALL = sorted(
+    [
+        "SDK_VERSION",
+        "AnalysisPlan",
+        "ApiHandoffBundle",
+        "ArtifactInventory",
+        "Confidence",
+        "Doctor",
+        "DoctorError",
+        "DoctorReport",
+        "DomainSummary",
+        "Evidence",
+        "EvidenceKind",
+        "Finding",
+        "FindingNotFoundError",
+        "ForgeHandoff",
+        "ForgeReceipt",
+        "ForgeRef",
+        "ForgeRequest",
+        "ForgeResult",
+        "Model",
+        "ProjectContext",
+        "ProjectUnreadableError",
+        "Severity",
+        "SourceLocation",
+        "UnknownFact",
+        "__version__",
+        "assemble_bundle",
+    ]
+)
 
 
 def _project(tmp_path: Path) -> Path:
@@ -68,8 +70,7 @@ def test_from_path_errors_are_typed(tmp_path: Path) -> None:
     with pytest.raises(ProjectUnreadableError):
         Doctor.from_path(tmp_path / "nope")
     with pytest.raises(ProjectUnreadableError):
-        Doctor.from_path(tmp_path / "file.txt") if (
-            tmp_path / "file.txt").write_text("x") else None
+        Doctor.from_path(tmp_path / "file.txt") if (tmp_path / "file.txt").write_text("x") else None
 
 
 def test_scan_round_trip(tmp_path: Path) -> None:

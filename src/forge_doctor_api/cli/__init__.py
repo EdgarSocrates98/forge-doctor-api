@@ -70,15 +70,13 @@ runtime_app = typer.Typer(help="Analyze exported runtime evidence.", no_args_is_
 security_app = typer.Typer(help="Passive security analysis.", no_args_is_help=True)
 reliability_app = typer.Typer(help="Reliability analysis.", no_args_is_help=True)
 
-plugins_app = typer.Typer(
-    help="Plugin manifests, registry and conformance.",
-    no_args_is_help=True)
+plugins_app = typer.Typer(help="Plugin manifests, registry and conformance.", no_args_is_help=True)
 snapshot_app = typer.Typer(
-    help="Temporal snapshots + architectural regressions.",
-    no_args_is_help=True)
+    help="Temporal snapshots + architectural regressions.", no_args_is_help=True
+)
 knowledge_app = typer.Typer(
-    help="Knowledge-pack manifests, compat and precedence.",
-    no_args_is_help=True)
+    help="Knowledge-pack manifests, compat and precedence.", no_args_is_help=True
+)
 
 app.add_typer(contract_app, name="contract")
 app.add_typer(runtime_app, name="runtime")
@@ -151,25 +149,25 @@ def scan(
     fmt: Annotated[
         str,
         typer.Option(
-            "--format",
-            help="console | json | jsonl | sarif | agent | report (full DoctorReport)."),
+            "--format", help="console | json | jsonl | sarif | agent | report (full DoctorReport)."
+        ),
     ] = "console",
-    out: Annotated[
-        str | None, typer.Option("--out", help="Write the export to a file.")
-    ] = None,
+    out: Annotated[str | None, typer.Option("--out", help="Write the export to a file.")] = None,
     stats_timing: Annotated[
         bool,
         typer.Option(
             "--stats-timing",
             help="Record per-analyzer wall time in report.stats "
-            "(non-canonical; excluded from deterministic hashing)."),
+            "(non-canonical; excluded from deterministic hashing).",
+        ),
     ] = False,
     incremental: Annotated[
         bool,
         typer.Option(
             "--incremental",
             help="Reuse cached analyzer models under "
-            ".forge-doctor/cache/ (findings always recompute)."),
+            ".forge-doctor/cache/ (findings always recompute).",
+        ),
     ] = False,
 ) -> None:
     """§177 full scan: every deterministic pipeline + optional §178 gate."""
@@ -194,25 +192,26 @@ def scan(
         try:
             categories.add(GateCategory(part))
         except ValueError:
-            _stderr.print(
-                f"unknown fail-on category: {part} "
-                "(expected breaking|security|policy)")
+            _stderr.print(f"unknown fail-on category: {part} (expected breaking|security|policy)")
             raise typer.Exit(code=2) from None
 
     ctx = ProjectContext(root=Path(target).resolve())
     before = ProjectContext(root=Path(baseline).resolve()) if baseline else None
-    extra_policy = (
-        ProjectContext(root=Path(policy).resolve()) if policy else None)
-    report = scan_project(ctx, before=before, extra_policy=extra_policy,
-                          stats_timing=stats_timing,
-                          incremental=incremental)
+    extra_policy = ProjectContext(root=Path(policy).resolve()) if policy else None
+    report = scan_project(
+        ctx,
+        before=before,
+        extra_policy=extra_policy,
+        stats_timing=stats_timing,
+        incremental=incremental,
+    )
     try:
-        failures = evaluate_gate(report.findings, report.diff,
-                                 frozenset(categories))
+        failures = evaluate_gate(report.findings, report.diff, frozenset(categories))
     except _GateConfigError as exc:
         _stderr.print(str(exc))
         raise typer.Exit(code=2) from None
     import dataclasses
+
     report = dataclasses.replace(report, gate_failures=failures)
 
     if fmt == "console":
@@ -231,8 +230,7 @@ def scan(
     elif fmt == "agent":
         _emit_text(write_agent(report.findings, report.unknowns), out)
     else:
-        _stderr.print(f"unknown format: {fmt} "
-                      "(expected console|json|jsonl|sarif|agent|report)")
+        _stderr.print(f"unknown format: {fmt} (expected console|json|jsonl|sarif|agent|report)")
         raise typer.Exit(code=2)
 
     if failures:
@@ -249,22 +247,19 @@ def _emit_text(text: str, out: str | None) -> None:
 def _print_scan_console(report: ScanReport) -> None:
     table = Table("id", "severity", "confidence", "subject", "description")
     for f in report.findings:
-        subject = f.entity_ids[0] if f.entity_ids else (
-            f.source_location.path if f.source_location else "-")
-        table.add_row(
-            f.id, f.severity.value, f.confidence.value, subject,
-            f.description[:80])
+        subject = (
+            f.entity_ids[0]
+            if f.entity_ids
+            else (f.source_location.path if f.source_location else "-")
+        )
+        table.add_row(f.id, f.severity.value, f.confidence.value, subject, f.description[:80])
     _console.print(table)
     if report.unknowns:
         _console.print(f"[dim]Unknowns: {len(report.unknowns)}[/dim]")
     for failure in report.gate_failures:
-        _console.print(
-            f"[red]GATE {failure.category}[/red] {failure.detail}")
+        _console.print(f"[red]GATE {failure.category}[/red] {failure.detail}")
     status = "[green]PASS[/green]" if report.gate_passed else "[red]FAIL[/red]"
     _console.print(f"gate: {status}")
-
-
-
 
 
 @app.command()
@@ -288,9 +283,13 @@ def inventory(
     ctx = ProjectContext.from_root(root)
     workspace = load_workspace(ctx) or Workspace(
         name=root.name,
-        members=(WorkspaceMember(
-            name=root.name, path=".", role=MemberRole.MIXED,
-        ),),
+        members=(
+            WorkspaceMember(
+                name=root.name,
+                path=".",
+                role=MemberRole.MIXED,
+            ),
+        ),
     )
     report = build_fleet_report(ctx, workspace)
     if json_out:
@@ -299,14 +298,17 @@ def inventory(
 
     _console.print(f"Workspace: {report.workspace}")
     if report.members_missing:
-        _console.print(
-            f"  missing members: {', '.join(report.members_missing)} [UNKNOWN]"
-        )
+        _console.print(f"  missing members: {', '.join(report.members_missing)} [UNKNOWN]")
     table = Table("repo", "role", "styles", "apis", "ops", "gw", "ext", "owner")
     for m in report.portfolio:
         table.add_row(
-            m.repo, m.role, ",".join(m.styles) or "-", str(m.apis),
-            str(m.operations), str(m.gateways), str(m.external_apis),
+            m.repo,
+            m.role,
+            ",".join(m.styles) or "-",
+            str(m.apis),
+            str(m.operations),
+            str(m.gateways),
+            str(m.external_apis),
             m.owner or "unknown",
         )
     _console.print(table)
@@ -323,10 +325,7 @@ def inventory(
     if report.deprecations:
         _console.print("[bold]Deprecation readiness[/bold]")
         for dep in report.deprecations:
-            clients = (
-                "unknown" if dep.remaining_clients is None
-                else str(dep.remaining_clients)
-            )
+            clients = "unknown" if dep.remaining_clients is None else str(dep.remaining_clients)
             _console.print(
                 f"  {dep.repo}: clients={clients} "
                 f"traffic={'unknown' if dep.observed_traffic is None else dep.observed_traffic} "
@@ -385,20 +384,13 @@ def lab(
         raise typer.Exit(code=0 if report.failed == 0 else 1)
 
     _console.print(
-        f"Forge Lab: {report.passed} passed, {report.failed} failed, "
-        f"{report.skipped} skipped"
+        f"Forge Lab: {report.passed} passed, {report.failed} failed, {report.skipped} skipped"
     )
     if report.extras_absent:
-        _console.print(
-            f"  install profile: extras absent: "
-            f"{', '.join(report.extras_absent)}"
-        )
+        _console.print(f"  install profile: extras absent: {', '.join(report.extras_absent)}")
     for r in report.results:
         if r.skipped:
-            _console.print(
-                f"  [yellow]SKIP[/yellow] {r.domain}/{r.name} "
-                f"({r.skip_reason})"
-            )
+            _console.print(f"  [yellow]SKIP[/yellow] {r.domain}/{r.name} ({r.skip_reason})")
             continue
         mark = "[green]PASS[/green]" if r.passed else "[red]FAIL[/red]"
         _console.print(f"  {mark} {r.domain}/{r.name}")
@@ -421,35 +413,63 @@ def lab(
     if report.families:
         _console.print("[bold]Per-family metrics[/bold]")
         table = Table(
-            "family", "tp", "fp", "fn", "precision", "recall",
-            "unknown", "unsupp", "parse", "ms", "peak-KB", "n", "conf",
+            "family",
+            "tp",
+            "fp",
+            "fn",
+            "precision",
+            "recall",
+            "unknown",
+            "unsupp",
+            "parse",
+            "ms",
+            "peak-KB",
+            "n",
+            "conf",
         )
         for f in report.families:
             table.add_row(
-                f.family, str(f.tp), str(f.fp), str(f.fn),
+                f.family,
+                str(f.tp),
+                str(f.fp),
+                str(f.fn),
                 "-" if f.precision is None else f"{f.precision:.2f}",
                 "-" if f.recall is None else f"{f.recall:.2f}",
                 "-" if f.unknown_rate is None else f"{f.unknown_rate:.2f}",
-                "-" if f.unsupported_rate is None
-                else f"{f.unsupported_rate:.2f}",
-                str(f.parse_failures), str(f.elapsed_ms),
-                str(f.peak_bytes // 1024), str(f.sample_size),
+                "-" if f.unsupported_rate is None else f"{f.unsupported_rate:.2f}",
+                str(f.parse_failures),
+                str(f.elapsed_ms),
+                str(f.peak_bytes // 1024),
+                str(f.sample_size),
                 f.coverage_confidence,
             )
         _console.print(table)
     if report.domains:
         _console.print("[bold]Per-domain metrics[/bold]")
         table = Table(
-            "domain", "scenarios", "tp", "fp", "fn",
-            "precision", "recall", "unknowns", "parse", "ms",
+            "domain",
+            "scenarios",
+            "tp",
+            "fp",
+            "fn",
+            "precision",
+            "recall",
+            "unknowns",
+            "parse",
+            "ms",
         )
         for d in report.domains:
             table.add_row(
-                d.domain, str(d.scenarios), str(d.tp), str(d.fp),
+                d.domain,
+                str(d.scenarios),
+                str(d.tp),
+                str(d.fp),
                 str(d.fn),
                 "-" if d.precision is None else f"{d.precision:.2f}",
                 "-" if d.recall is None else f"{d.recall:.2f}",
-                str(d.unknowns), str(d.parse_failures), str(d.elapsed_ms),
+                str(d.unknowns),
+                str(d.parse_failures),
+                str(d.elapsed_ms),
             )
         _console.print(table)
     raise typer.Exit(code=0 if report.failed == 0 else 1)
@@ -526,7 +546,9 @@ def contract_inspect(
     table = Table("method", "path", "operation_id", "deprecated")
     for op in model.operations:
         table.add_row(
-            op.method, op.path, op.operation_id or "-",
+            op.method,
+            op.path,
+            op.operation_id or "-",
             "yes" if op.deprecated else "",
         )
     _console.print(table)
@@ -538,11 +560,12 @@ def contract_inspect(
         _console.print("security schemes: " + ", ".join(schemes))
     for ref in model.unresolved_external_refs:
         _console.print(
-            f"[yellow]unresolved ref[/yellow] {ref.ref} "
-            f"({ref.location.path}) — {ref.reason.value}")
+            f"[yellow]unresolved ref[/yellow] {ref.ref} ({ref.location.path}) — {ref.reason.value}"
+        )
     for issue in model.issues:
-        _console.print(f"[yellow]issue[/yellow] {issue.code.value}: "
-                       f"{issue.message} ({issue.location.path})")
+        _console.print(
+            f"[yellow]issue[/yellow] {issue.code.value}: {issue.message} ({issue.location.path})"
+        )
 
 
 _console = Console(highlight=False)
@@ -594,8 +617,14 @@ def _config_events_for(
     old_sec = load_security_model(old_ctx, list(old_ctx.iter_files()), openapi=old)
     new_sec = load_security_model(new_ctx, list(new_ctx.iter_files()), openapi=new)
     return config_events(
-        old_rel, new_rel, old_sec, new_sec,
-        detect_version_model(old), detect_version_model(new), old, new,
+        old_rel,
+        new_rel,
+        old_sec,
+        new_sec,
+        detect_version_model(old),
+        detect_version_model(new),
+        old,
+        new,
     )
 
 
@@ -754,9 +783,7 @@ def semantic_diff(
         bool, typer.Option("--semantic", help="Emit typed change events (§65).")
     ] = True,
     json_out: Annotated[bool, typer.Option("--json", help="JSON output.")] = False,
-    pr: Annotated[
-        bool, typer.Option("--pr", help="Print the §67 PR-intel summary.")
-    ] = False,
+    pr: Annotated[bool, typer.Option("--pr", help="Print the §67 PR-intel summary.")] = False,
     clients: Annotated[
         str | None, typer.Option("--clients", help="Directory of client sources (blast radius).")
     ] = None,
@@ -775,11 +802,7 @@ def semantic_diff(
         _print_diff(diff, json_out)
     if pr:
         client_model = _load_clients(clients)
-        report = (
-            blast_radius(diff, old_model, client_model)
-            if client_model is not None
-            else None
-        )
+        report = blast_radius(diff, old_model, client_model) if client_model is not None else None
         rel = (
             load_reliability_model(new_ctx, list(new_ctx.iter_files()))
             if new_ctx is not None
@@ -814,9 +837,7 @@ def graph(
     view: Annotated[
         bool, typer.Option("--view", help="Emit ForgeGraphView/v1 (Graph Studio contract).")
     ] = False,
-    ui: Annotated[
-        bool, typer.Option("--ui", help="Open the local Graph Studio explorer.")
-    ] = False,
+    ui: Annotated[bool, typer.Option("--ui", help="Open the local Graph Studio explorer.")] = False,
     no_browser: Annotated[
         bool, typer.Option("--no-browser", help="Serve without opening a browser (SSH).")
     ] = False,
@@ -860,13 +881,9 @@ def graph(
                 state_rel=".forge-doctor-api/install",
                 user_state_rel="~/.forge-doctor-api/install",
             ):
-                _stderr.print(
-                    "Graph Studio declined at install — reinstall with graph-studio"
-                )
+                _stderr.print("Graph Studio declined at install — reinstall with graph-studio")
                 raise typer.Exit(code=2)
-            raise typer.Exit(
-                open_studio([gv], open_browser=not no_browser, port=port)
-            )
+            raise typer.Exit(open_studio([gv], open_browser=not no_browser, port=port))
         typer.echo(json.dumps(gv.to_dict(), indent=2, sort_keys=True))
         return
     if json_out:
@@ -968,9 +985,7 @@ def _load_executions(
     return tuple(executions), tuple(unknowns)
 
 
-def _summaries(
-    context: ProjectContext, files: list[str]
-) -> tuple[RequestSummary, ...]:
+def _summaries(context: ProjectContext, files: list[str]) -> tuple[RequestSummary, ...]:
     out: list[RequestSummary] = []
     for f in sorted(files):
         fh = context.open_binary(f)
@@ -997,9 +1012,7 @@ def runtime_requests(
         raise typer.Exit(code=2)
     executions, _ = loaded
     if json_out:
-        typer.echo(
-            json.dumps([e.to_dict() for e in executions], indent=2, sort_keys=True)
-        )
+        typer.echo(json.dumps([e.to_dict() for e in executions], indent=2, sort_keys=True))
         return
     table = Table(show_lines=False)
     for col in ("service", "operation", "method", "status", "ms", "downstream"):
@@ -1029,9 +1042,7 @@ def runtime_baseline(
     executions, _ = loaded
     baselines = build_baselines(executions)
     if json_out:
-        typer.echo(
-            json.dumps([b.to_dict() for b in baselines], indent=2, sort_keys=True)
-        )
+        typer.echo(json.dumps([b.to_dict() for b in baselines], indent=2, sort_keys=True))
         return
     table = Table(show_lines=False)
     for col in ("dim", "key", "window", "n", "p95", "err%"):
@@ -1060,11 +1071,7 @@ def runtime_regressions(
     executions, _ = loaded
     findings = run_perf_checks(executions)
     if json_out:
-        typer.echo(
-            json.dumps(
-                export_findings(findings).to_dict(), indent=2, sort_keys=True
-            )
-        )
+        typer.echo(json.dumps(export_findings(findings).to_dict(), indent=2, sort_keys=True))
         return
     if not findings:
         _console.print("no regressions detected")
@@ -1216,11 +1223,7 @@ def reliability_path(
         raise typer.Exit(code=2)
     findings = run_reliability_checks(scoped, hops=tuple(hops))
     if json_out:
-        typer.echo(
-            json.dumps(
-                export_findings(findings).to_dict(), indent=2, sort_keys=True
-            )
-        )
+        typer.echo(json.dumps(export_findings(findings).to_dict(), indent=2, sort_keys=True))
         return
     if not findings:
         _console.print("no reliability findings along this path")
@@ -1242,9 +1245,12 @@ def _ms_opt(value: str) -> float | None:
 
 @app.command()
 def diagnose(
-    target: Annotated[str, typer.Argument(
-        help="Directory with current-state evidence (contract + config + runtime artifacts).",
-    )],
+    target: Annotated[
+        str,
+        typer.Argument(
+            help="Directory with current-state evidence (contract + config + runtime artifacts).",
+        ),
+    ],
     before: Annotated[
         str | None, typer.Option("--before", help="Prior-state directory for the change diff.")
     ] = None,
@@ -1301,9 +1307,7 @@ def diagnose(
         if not ep.candidates:
             _console.print("  (none evidenced)")
         for c in ep.candidates:
-            _console.print(
-                f"  [{c.rank}] {c.tier.value} {c.subject} ({c.kind}) — {c.rationale}"
-            )
+            _console.print(f"  [{c.rank}] {c.tier.value} {c.subject} ({c.kind}) — {c.rationale}")
         _console.print(f"  affected services: {', '.join(ep.affected_services)}")
         if ep.slo:
             _console.print(f"  slo objectives: {', '.join(ep.slo)}")
@@ -1332,8 +1336,10 @@ def explain(
     findings = scan_project(ctx).findings
     token = finding.lower()
     matches = [
-        f for f in findings
-        if token in f.id.lower() or token in f.description.lower()
+        f
+        for f in findings
+        if token in f.id.lower()
+        or token in f.description.lower()
         or any(token in e.lower() for e in f.entity_ids)
     ]
     if not matches:
@@ -1372,12 +1378,19 @@ def explain(
 
 @app.command()
 def mcp(
-    target: Annotated[str, typer.Argument(
-        help="Project directory to serve over MCP.",
-    )] = ".",
-    transport: Annotated[str, typer.Option(
-        "--transport", help="stdio (default).",
-    )] = "stdio",
+    target: Annotated[
+        str,
+        typer.Argument(
+            help="Project directory to serve over MCP.",
+        ),
+    ] = ".",
+    transport: Annotated[
+        str,
+        typer.Option(
+            "--transport",
+            help="stdio (default).",
+        ),
+    ] = "stdio",
 ) -> None:
     """§216 serve the Doctor over MCP (requires the `mcp` extra)."""
     if transport != "stdio":
@@ -1392,6 +1405,7 @@ def mcp(
             McpDependencyError,
             serve_stdio,
         )
+
         serve_stdio(path)
     except McpDependencyError as exc:
         _stderr.print(str(exc))
@@ -1400,9 +1414,13 @@ def mcp(
 
 @plugins_app.command("list")
 def plugins_list(
-    directory: Annotated[str, typer.Option(
-        "--dir", help="Directory scanned for plugin manifests.",
-    )] = "plugins",
+    directory: Annotated[
+        str,
+        typer.Option(
+            "--dir",
+            help="Directory scanned for plugin manifests.",
+        ),
+    ] = "plugins",
 ) -> None:
     """§52 list discovered plugin manifests + rejection reasons."""
     from forge_doctor_api.plugins.registry import discover_registry
@@ -1411,9 +1429,12 @@ def plugins_list(
     table = Table("id", "version", "trust", "compat", "capabilities")
     for m in registry.list():
         table.add_row(
-            m.plugin_id, m.version, m.trust.value,
+            m.plugin_id,
+            m.version,
+            m.trust.value,
             "yes" if registry.compatible(m) else "no",
-            ",".join(m.capabilities) or "-")
+            ",".join(m.capabilities) or "-",
+        )
     _console.print(table)
     for r in registry.rejections:
         _stderr.print(f"rejected {r.path}: {r.reason}")
@@ -1424,9 +1445,13 @@ def plugins_list(
 @plugins_app.command("inspect")
 def plugins_inspect(
     plugin_id: Annotated[str, typer.Argument(help="Plugin id.")],
-    directory: Annotated[str, typer.Option(
-        "--dir", help="Directory scanned for plugin manifests.",
-    )] = "plugins",
+    directory: Annotated[
+        str,
+        typer.Option(
+            "--dir",
+            help="Directory scanned for plugin manifests.",
+        ),
+    ] = "plugins",
 ) -> None:
     """§52 manifest + compat + rejection reasons for one plugin."""
     from forge_doctor_api.plugins.registry import discover_registry
@@ -1434,8 +1459,7 @@ def plugins_inspect(
     registry = discover_registry(Path(directory))
     manifest = registry.get(plugin_id)
     if manifest is None:
-        related = [r for r in registry.rejections
-                   if plugin_id in r.path]
+        related = [r for r in registry.rejections if plugin_id in r.path]
         for r in related:
             _stderr.print(f"{r.path}: {r.reason}")
         _stderr.print(f"unknown plugin: {plugin_id}")
@@ -1446,12 +1470,19 @@ def plugins_inspect(
 @plugins_app.command("verify")
 def plugins_verify(
     plugin_id: Annotated[str, typer.Argument(help="Plugin id.")],
-    target: Annotated[str, typer.Argument(
-        help="Project the plugin analyzes during conformance.",
-    )] = ".",
-    directory: Annotated[str, typer.Option(
-        "--dir", help="Directory scanned for plugin manifests.",
-    )] = "plugins",
+    target: Annotated[
+        str,
+        typer.Argument(
+            help="Project the plugin analyzes during conformance.",
+        ),
+    ] = ".",
+    directory: Annotated[
+        str,
+        typer.Option(
+            "--dir",
+            help="Directory scanned for plugin manifests.",
+        ),
+    ] = "plugins",
 ) -> None:
     """§54 compat check + conformance preflight (never imports UNTRUSTED)."""
     from forge_doctor_api.plugins.conformance import (
@@ -1466,8 +1497,7 @@ def plugins_verify(
         _stderr.print(f"unknown plugin: {plugin_id}")
         raise typer.Exit(code=2)
     if not registry.compatible(manifest):
-        _stderr.print(
-            f"incompatible: requires {manifest.doctor_api!r}")
+        _stderr.print(f"incompatible: requires {manifest.doctor_api!r}")
         raise typer.Exit(code=1)
     try:
         module = registry.activate(plugin_id)
@@ -1491,6 +1521,7 @@ def plugins_verify(
 
 def _store(target: str) -> Any:
     from forge_doctor_api.temporal import SNAPSHOT_DIR, SnapshotStore
+
     return SnapshotStore(Path(target).resolve() / SNAPSHOT_DIR)
 
 
@@ -1502,12 +1533,10 @@ def snapshot_save(
     """Scan the project and store a snapshot under .forge-doctor/."""
     from forge_doctor_api.core.context import system_clock
     from forge_doctor_api.scan import scan_project
-    ctx = ProjectContext(root=Path(target).resolve(),
-                         clock=system_clock())
-    snap = _store(target).save(
-        scan_project(ctx), label=label, created_at=ctx.now())
-    _console.print(
-        f"snapshot {snap.id} label={snap.label} rev={snap.hash[:12]}")
+
+    ctx = ProjectContext(root=Path(target).resolve(), clock=system_clock())
+    snap = _store(target).save(scan_project(ctx), label=label, created_at=ctx.now())
+    _console.print(f"snapshot {snap.id} label={snap.label} rev={snap.hash[:12]}")
 
 
 @snapshot_app.command("list")
@@ -1523,6 +1552,7 @@ def snapshot_list(
 
 def _pair(target: str, a: str, b: str) -> tuple[Any, Any]:
     from forge_doctor_api.temporal import SnapshotError
+
     store = _store(target)
     try:
         return store.report(a), store.report(b)
@@ -1539,6 +1569,7 @@ def snapshot_diff(
 ) -> None:
     """Delta context between two snapshots (spec-049 delta)."""
     from forge_doctor_api.handoff.delta import compute_delta
+
     prev, cur = _pair(target, a, b)
     delta = compute_delta(prev, cur)
     _console.print(delta.to_json())
@@ -1552,10 +1583,11 @@ def snapshot_regressions(
 ) -> None:
     """Evidence-backed architectural regressions a -> b."""
     from forge_doctor_api.temporal import architectural_regressions
+
     prev, cur = _pair(target, a, b)
     findings = architectural_regressions(
-        prev, cur,
-        prev_ref=f"doctor://report/{a}", cur_ref=f"doctor://report/{b}")
+        prev, cur, prev_ref=f"doctor://report/{a}", cur_ref=f"doctor://report/{b}"
+    )
     table = Table("id", "severity", "title")
     for f in findings:
         table.add_row(f.id, f.severity.value, f.title)
@@ -1568,10 +1600,10 @@ def snapshot_regressions(
 
 @knowledge_app.command("list")
 def knowledge_list(
-    dirs: Annotated[list[str], typer.Argument(
-        help="Pack dirs, highest precedence first.")] = [],  # noqa: B006
-    target: Annotated[str, typer.Option(
-        "--target", help="Project dir for .forge-doctor/knowledge.")] = ".",
+    dirs: Annotated[list[str], typer.Argument(help="Pack dirs, highest precedence first.")] = [],  # noqa: B006
+    target: Annotated[
+        str, typer.Option("--target", help="Project dir for .forge-doctor/knowledge.")
+    ] = ".",
 ) -> None:
     """List pack manifests with lifecycle status.
 
@@ -1581,6 +1613,7 @@ def knowledge_list(
         PROJECT_PACK_DIR,
         list_packs,
     )
+
     ordered = [Path(d).resolve() for d in dirs]
     project_pack = Path(target).resolve() / PROJECT_PACK_DIR
     if project_pack.is_dir():
@@ -1590,8 +1623,8 @@ def knowledge_list(
     for li in listings:
         m = li.manifest
         table.add_row(
-            m.id if m else "-", m.version if m else "-",
-            li.source, li.status.value, li.details)
+            m.id if m else "-", m.version if m else "-", li.source, li.status.value, li.details
+        )
     _console.print(table)
     for u in unknowns:
         _stderr.print(f"unknown: {u.subject} - {u.missing}")
@@ -1603,6 +1636,7 @@ def knowledge_validate(
 ) -> None:
     """Strict-validate one knowledge manifest."""
     from forge_doctor_api.knowledge.manifest import compatible, load_manifest
+
     manifest, errors = load_manifest(Path(directory).resolve())
     for e in errors:
         _stderr.print(f"error: {e}")
@@ -1612,9 +1646,7 @@ def knowledge_validate(
     if not ok:
         _stderr.print(f"incompatible: {reason}")
         raise typer.Exit(code=1)
-    _console.print(
-        f"{manifest.id} {manifest.version} compat=ok "
-        f"provides={list(manifest.provides)}")
+    _console.print(f"{manifest.id} {manifest.version} compat=ok provides={list(manifest.provides)}")
 
 
 def main() -> None:

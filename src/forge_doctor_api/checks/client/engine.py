@@ -65,7 +65,7 @@ def _path_matches(template: str, concrete: str) -> bool:
     c = [s for s in concrete.split("/") if s]
     if not t or len(c) < len(t):
         return False
-    c = c[len(c) - len(t):]
+    c = c[len(c) - len(t) :]
     return all(
         (ts.startswith("{") and ts.endswith("}") and bool(cs)) or ts == cs
         for ts, cs in zip(t, c, strict=True)
@@ -78,8 +78,13 @@ def _leaf(path: str) -> str:
     return tail.rstrip("[]")
 
 
-def _finding(spec: ClientCheckSpec, description: str, site: ClientCallSite | None,
-             entity_ids: tuple[str, ...], unknowns: tuple[UnknownFact, ...] = ()) -> Finding:
+def _finding(
+    spec: ClientCheckSpec,
+    description: str,
+    site: ClientCallSite | None,
+    entity_ids: tuple[str, ...],
+    unknowns: tuple[UnknownFact, ...] = (),
+) -> Finding:
     loc = site.location if site else None
     return Finding(
         id=spec.id,
@@ -113,11 +118,7 @@ def client_impact(
 
     `model` is the *old* contract (the one clients were written against).
     """
-    ops = {
-        op.identity: op
-        for op in model.operations
-        if op.source is OperationSource.PATH
-    }
+    ops = {op.identity: op for op in model.operations if op.source is OperationSource.PATH}
     entries: list[BlastRadiusEntry] = []
     findings: list[Finding] = []
 
@@ -179,9 +180,7 @@ def client_impact(
                 change_kind=change.kind,
                 classification=change.classification,
                 clients=tuple(sorted({s.client for s in consumers})),
-                call_sites=tuple(
-                    sorted(f"{s.location.path}:{s.location.line}" for s in consumers)
-                ),
+                call_sites=tuple(sorted(f"{s.location.path}:{s.location.line}" for s in consumers)),
                 confirmed=bool(confirmed_sites),
             )
         )
@@ -191,8 +190,7 @@ def client_impact(
         findings.append(
             _finding(
                 BY_ID["CLIENT003"],
-                f"{unknown.subject}: client call could not be resolved "
-                f"({unknown.missing})",
+                f"{unknown.subject}: client call could not be resolved ({unknown.missing})",
                 None,
                 (entity_id("client", "source", path.split("/")[0] or "client"),),
                 unknowns=(

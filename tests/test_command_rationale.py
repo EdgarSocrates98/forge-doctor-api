@@ -43,10 +43,7 @@ def rationale() -> dict:
 
 
 def test_every_command_resolves_rationale(inventory, rationale):
-    missing = [
-        c["path"] for c in inventory["commands"]
-        if _resolve(rationale, c["path"]) is None
-    ]
+    missing = [c["path"] for c in inventory["commands"] if _resolve(rationale, c["path"]) is None]
     assert not missing, f"commands without rationale: {missing[:20]}"
 
 
@@ -64,11 +61,7 @@ def test_resolved_rationale_has_required_fields(inventory, rationale):
 
 def test_rationale_keys_are_real_paths(inventory, rationale):
     paths = {c["path"] for c in inventory["commands"]}
-    prefixes = {
-        " ".join(p.split()[:n])
-        for p in paths
-        for n in range(1, len(p.split()) + 1)
-    }
+    prefixes = {" ".join(p.split()[:n]) for p in paths for n in range(1, len(p.split()) + 1)}
     bogus = [k for k in rationale if k not in prefixes]
     assert not bogus, f"rationale keys matching no command: {bogus}"
 

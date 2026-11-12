@@ -51,9 +51,7 @@ def query_shape(
 
     fragments = _fragments(document)
 
-    def walk(
-        sel_set: Any, parent_type: str | None, level: int, seen: frozenset[str]
-    ) -> None:
+    def walk(sel_set: Any, parent_type: str | None, level: int, seen: frozenset[str]) -> None:
         nonlocal depth, field_count, list_expansions
         if sel_set is None:
             return
@@ -72,26 +70,18 @@ def query_shape(
                 if is_list:
                     list_expansions += 1
                 child_type = (
-                    schema_types.get(parent_type or "", {}).get(
-                        f"{sel.name.value}#type"
-                    )
+                    schema_types.get(parent_type or "", {}).get(f"{sel.name.value}#type")
                     if schema_types
                     else None
                 )
                 walk(sel.selection_set, child_type, level + 1, seen)
             elif kind == "InlineFragmentNode":
-                tname = (
-                    sel.type_condition.name.value if sel.type_condition else parent_type
-                )
+                tname = sel.type_condition.name.value if sel.type_condition else parent_type
                 walk(sel.selection_set, tname, level, seen)
             elif kind == "FragmentSpreadNode":
                 frag = fragments.get(sel.name.value)
                 if frag is not None and sel.name.value not in seen:
-                    tname = (
-                        frag.type_condition.name.value
-                        if frag.type_condition
-                        else parent_type
-                    )
+                    tname = frag.type_condition.name.value if frag.type_condition else parent_type
                     walk(frag.selection_set, tname, level, seen | {sel.name.value})
 
     for op in gql_ops:
@@ -115,11 +105,7 @@ def query_shape(
 
 
 def _operations(document: Any, operation_name: Any) -> list[Any]:
-    ops = [
-        d
-        for d in document.definitions
-        if d.__class__.__name__ == "OperationDefinitionNode"
-    ]
+    ops = [d for d in document.definitions if d.__class__.__name__ == "OperationDefinitionNode"]
     if operation_name is not None:
         ops = [o for o in ops if (o.name and o.name.value) == operation_name]
     return ops

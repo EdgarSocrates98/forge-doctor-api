@@ -18,9 +18,16 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 EXEMPT_PREFIXES = (
-    "docs/sdd/archive/", "docs/superpowers/", "docs/historico/",
-    ".claude/sdd/", ".agents/sdd/", ".devin/sdd/", "vendor/",
-    "docs/reports/", "docs/knowledge-program/", "knowledge/devin/",
+    "docs/sdd/archive/",
+    "docs/superpowers/",
+    "docs/historico/",
+    ".claude/sdd/",
+    ".agents/sdd/",
+    ".devin/sdd/",
+    "vendor/",
+    "docs/reports/",
+    "docs/knowledge-program/",
+    "knowledge/devin/",
 )
 
 # per-repo binding — same shape as test_doc_manifest.py
@@ -46,6 +53,7 @@ def _commands(mod) -> list[dict]:
         mod.walk_argparse(factory() if callable(factory) else factory, "", out)
     else:
         import typer.main
+
         mod.walk_click(typer.main.get_command(mod._resolve(spec)), "", out)
     return out
 

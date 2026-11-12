@@ -78,7 +78,8 @@ def _finding(
         evidence=(Evidence(kind=EvidenceKind.STATIC, source="f", summary="s"),),
         unknowns=(
             (UnknownFact(subject="s", missing="m", resolution="r"),)
-            if confidence is Confidence.UNKNOWN else ()
+            if confidence is Confidence.UNKNOWN
+            else ()
         ),
         evidence_kind=EvidenceKind.STATIC,
         entity_ids=("e",),
@@ -111,8 +112,7 @@ def test_gate_unknown_never_blocks() -> None:
         frozenset({GateCategory.POLICY}),
         frozenset({GateCategory.SECURITY, GateCategory.POLICY}),
     ):
-        assert evaluate_gate(
-            (unknown, unknown_low), None, categories) == ()
+        assert evaluate_gate((unknown, unknown_low), None, categories) == ()
 
 
 def test_gate_policy_category() -> None:
@@ -136,12 +136,8 @@ def test_gate_breaking_on_diff(tmp_path: Path) -> None:
         before=ProjectContext.from_root(old_dir),
     )
     assert report.diff is not None
-    assert any(
-        c.classification is CompatibilityClass.BREAKING
-        for c in report.diff.changes
-    )
-    failures = evaluate_gate(
-        report.findings, report.diff, frozenset({GateCategory.BREAKING}))
+    assert any(c.classification is CompatibilityClass.BREAKING for c in report.diff.changes)
+    failures = evaluate_gate(report.findings, report.diff, frozenset({GateCategory.BREAKING}))
     assert failures and failures[0].category is GateCategory.BREAKING
 
 
@@ -153,9 +149,9 @@ def test_scan_project_runs_all_pipelines(tmp_path: Path) -> None:
     assert "OAS004" in ids  # missing operationId
     assert report.gate_passed
     # deterministic ordering
-    assert report.findings == tuple(sorted(
-        report.findings,
-        key=lambda f: (f.id, f.entity_ids, f.description)))
+    assert report.findings == tuple(
+        sorted(report.findings, key=lambda f: (f.id, f.entity_ids, f.description))
+    )
 
 
 def test_export_scan_carries_metadata(tmp_path: Path) -> None:
@@ -175,8 +171,7 @@ def test_scan_cli_exit_codes(tmp_path: Path) -> None:
     assert ok.exit_code == 0, ok.stdout
     bad = runner.invoke(app, ["scan", str(tmp_path), "--fail-on", "bogus"])
     assert bad.exit_code == 2
-    mis = runner.invoke(
-        app, ["scan", str(tmp_path), "--fail-on", "breaking"])
+    mis = runner.invoke(app, ["scan", str(tmp_path), "--fail-on", "breaking"])
     assert mis.exit_code == 2  # breaking gate needs a baseline
 
 
@@ -185,9 +180,9 @@ def test_scan_cli_fails_gate_on_breaking(tmp_path: Path) -> None:
     new_dir = tmp_path / "new"
     _project(old_dir, _API_V2)
     _project(new_dir, _API)
-    r = runner.invoke(app, [
-        "scan", str(new_dir), "--fail-on", "breaking",
-        "--baseline", str(old_dir)])
+    r = runner.invoke(
+        app, ["scan", str(new_dir), "--fail-on", "breaking", "--baseline", str(old_dir)]
+    )
     assert r.exit_code == 1
 
 
@@ -196,30 +191,26 @@ def test_scan_cli_policy_option(tmp_path: Path) -> None:
     policy_dir = tmp_path / "policies"
     policy_dir.mkdir()
     (policy_dir / "org.policy.yaml").write_text(_POLICY, encoding="utf-8")
-    r = runner.invoke(app, [
-        "scan", str(tmp_path), "--policy", str(policy_dir),
-        "--fail-on", "policy"])
+    r = runner.invoke(
+        app, ["scan", str(tmp_path), "--policy", str(policy_dir), "--fail-on", "policy"]
+    )
     assert r.exit_code == 1, r.stdout
 
 
 def test_scan_cli_formats(tmp_path: Path) -> None:
     _project(tmp_path)
     for fmt in ("json", "jsonl", "sarif", "agent"):
-        r = runner.invoke(
-            app, ["scan", str(tmp_path), "--format", fmt])
+        r = runner.invoke(app, ["scan", str(tmp_path), "--format", fmt])
         assert r.exit_code == 0, (fmt, r.stdout)
         assert r.stdout.strip(), fmt
-    doc = json.loads(runner.invoke(
-        app, ["scan", str(tmp_path), "--format", "sarif"]).stdout)
+    doc = json.loads(runner.invoke(app, ["scan", str(tmp_path), "--format", "sarif"]).stdout)
     assert doc["version"] == "2.1.0"
 
 
 def test_scan_cli_out_file(tmp_path: Path) -> None:
     _project(tmp_path)
     out = tmp_path / "report.json"
-    r = runner.invoke(
-        app, ["scan", str(tmp_path), "--format", "json",
-              "--out", str(out)])
+    r = runner.invoke(app, ["scan", str(tmp_path), "--format", "json", "--out", str(out)])
     assert r.exit_code == 0
     assert json.loads(out.read_text())["tool_version"]
 

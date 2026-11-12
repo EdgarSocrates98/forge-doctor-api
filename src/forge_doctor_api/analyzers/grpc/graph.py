@@ -24,9 +24,7 @@ def grpc_graph(model: GrpcProjectModel, service: str = "service") -> ServiceGrap
 
     seen: set[tuple[str, str, str]] = set()
 
-    def link(
-        kind: RelationshipKind, source: str, target: str, loc: SourceLocation
-    ) -> None:
+    def link(kind: RelationshipKind, source: str, target: str, loc: SourceLocation) -> None:
         key = (source, kind.value, target)
         if key in seen:
             return
@@ -56,14 +54,10 @@ def grpc_graph(model: GrpcProjectModel, service: str = "service") -> ServiceGrap
 
     for svc in model.services:
         sid = entity_id("grpc_service", "grpc", f"{svc.package}.{svc.name}")
-        graph.add_entity(
-            Entity(id=sid, kind="grpc_service", name=f"{svc.package}.{svc.name}")
-        )
+        graph.add_entity(Entity(id=sid, kind="grpc_service", name=f"{svc.package}.{svc.name}"))
         link(RelationshipKind.EXPOSES, service_id, sid, svc.location)
         for rpc in svc.methods:
-            mid = entity_id(
-                "grpc_method", "grpc", f"{svc.package}.{svc.name}/{rpc.name}"
-            )
+            mid = entity_id("grpc_method", "grpc", f"{svc.package}.{svc.name}/{rpc.name}")
             graph.add_entity(
                 Entity(
                     id=mid,

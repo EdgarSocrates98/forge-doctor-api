@@ -8,7 +8,7 @@ import framework_conformance as fc
 from forge_doctor_api.analyzers.routes.spring import SpringBootAdapter
 from forge_doctor_api.core.context import ProjectContext
 
-CTL = '''
+CTL = """
 package com.acme.pets;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,9 +25,9 @@ public class PetsController {
     @RequestMapping(value = "/search", method = RequestMethod.GET)
     public Object search(@RequestParam String q) { return null; }
 }
-'''
+"""
 
-ADVERSARIAL = '''
+ADVERSARIAL = """
 package com.acme.fake;
 import org.springframework.web.bind.annotation.*;
 
@@ -41,9 +41,9 @@ public class FakeController {
     @GetMapping("/real")
     public Object real() { return null; }
 }
-'''
+"""
 
-CONDITIONAL = '''
+CONDITIONAL = """
 package com.acme.cond;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -54,9 +54,9 @@ public class ConditionalController {
     @GetMapping("/maybe")
     public Object maybe() { return null; }
 }
-'''
+"""
 
-DYNAMIC = '''
+DYNAMIC = """
 package com.acme.dyn;
 import org.springframework.web.bind.annotation.*;
 
@@ -67,7 +67,7 @@ public class DynamicController {
     @GetMapping(path = BASE)
     public Object all() { return null; }
 }
-'''
+"""
 
 
 def _ctx(tmp_path: Path, files: dict[str, str]):
@@ -93,8 +93,7 @@ def test_golden_routes(tmp_path: Path) -> None:
         ("POST", "/api/v1", "PetsController.create"),
     ]
     find = next(r for r in scan.routes if r.handler.endswith("findOne"))
-    assert any(p.name == "id" and p.location_in == "path"
-               for p in find.parameters)
+    assert any(p.name == "id" and p.location_in == "path" for p in find.parameters)
 
 
 def test_comments_and_strings_cannot_route(tmp_path: Path) -> None:
@@ -106,45 +105,50 @@ def test_comments_and_strings_cannot_route(tmp_path: Path) -> None:
 def test_conditional_route_is_flagged(tmp_path: Path) -> None:
     scan = _scan(tmp_path, {"Cond.java": CONDITIONAL})
     assert any(r.path == "/maybe" for r in scan.routes)
-    assert any("Conditional" in u.missing or "conditional" in u.missing
-               or "unconditional" in u.missing for u in scan.unknowns)
+    assert any(
+        "Conditional" in u.missing or "conditional" in u.missing or "unconditional" in u.missing
+        for u in scan.unknowns
+    )
 
 
 def test_dynamic_path_is_unknown(tmp_path: Path) -> None:
     scan = _scan(tmp_path, {"Dyn.java": DYNAMIC})
     assert not scan.routes
-    assert any("literal route path" in u.missing
-               for u in scan.unknowns)
+    assert any("literal route path" in u.missing for u in scan.unknowns)
 
 
 def test_requestmapping_without_method_is_unknown(tmp_path: Path) -> None:
-    src = CTL.replace(
-        "method = RequestMethod.GET", "")
+    src = CTL.replace("method = RequestMethod.GET", "")
     scan = _scan(tmp_path, {"Ctl.java": src})
     assert not any("search" in r.handler for r in scan.routes)
 
 
 def test_vendored_and_generated_excluded(tmp_path: Path) -> None:
-    scan = _scan(tmp_path, {
-        "generated/Ctl.java": CTL,
-        "src/Ctl.java": ADVERSARIAL,
-    })
+    scan = _scan(
+        tmp_path,
+        {
+            "generated/Ctl.java": CTL,
+            "src/Ctl.java": ADVERSARIAL,
+        },
+    )
     assert {r.path for r in scan.routes} == {"/real"}
 
 
 def test_detect_manifest_and_import(tmp_path: Path) -> None:
-    ctx = _ctx(tmp_path, {
-        "pom.xml": "<dep>org.springframework.boot</dep>"})
+    ctx = _ctx(tmp_path, {"pom.xml": "<dep>org.springframework.boot</dep>"})
     assert SpringBootAdapter().detect(ctx, list(ctx.iter_files()))
     ctx2 = _ctx(tmp_path / "other", {"x.txt": "nothing"})
     assert not SpringBootAdapter().detect(ctx2, list(ctx2.iter_files()))
 
 
 def test_surfaces(tmp_path: Path) -> None:
-    src = CTL + '''
+    src = (
+        CTL
+        + """
 @ControllerAdvice
 class Advice { @ExceptionHandler(Exception.class) void h() {} }
-'''
+"""
+    )
     ctx = _ctx(tmp_path, {"Ctl.java": src})
     files = list(ctx.iter_files())
     adapter = SpringBootAdapter()

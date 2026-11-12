@@ -79,11 +79,7 @@ class DriftReport(Model):
 
 
 def _evidence(route: RouteModel | None, loc: SourceLocation, summary: str) -> tuple[Evidence, ...]:
-    out = [
-        Evidence(
-            kind=EvidenceKind.STATIC, source=loc.path, summary=summary, line=loc.line
-        )
-    ]
+    out = [Evidence(kind=EvidenceKind.STATIC, source=loc.path, summary=summary, line=loc.line)]
     if route is not None:
         out.append(
             Evidence(
@@ -160,9 +156,7 @@ def contract_drift(
     params = {(p.location.path, p.pointer): p for p in model.parameters}
     responses = {(r.location.path, r.pointer): r for r in model.responses}
     bodies = {(b.location.path, b.pointer): b for b in model.request_bodies}
-    doc_requirements = [
-        r for r in model.security_requirements if r.owner_pointer == ""
-    ]
+    doc_requirements = [r for r in model.security_requirements if r.owner_pointer == ""]
     requirements = list(model.security_requirements)
 
     ops = [o for o in model.operations if o.source is OperationSource.PATH]
@@ -211,7 +205,8 @@ def contract_drift(
             severity=(
                 Severity.HIGH
                 if authority is ContractAuthority.OPENAPI
-                else Severity.LOW if authority is ContractAuthority.IMPLEMENTATION
+                else Severity.LOW
+                if authority is ContractAuthority.IMPLEMENTATION
                 else Severity.MEDIUM
             ),
             unknowns=_authority_unknown(authority),
@@ -247,7 +242,8 @@ def contract_drift(
                 severity=(
                     Severity.MEDIUM
                     if authority is ContractAuthority.OPENAPI
-                    else Severity.LOW if authority is ContractAuthority.IMPLEMENTATION
+                    else Severity.LOW
+                    if authority is ContractAuthority.IMPLEMENTATION
                     else Severity.MEDIUM
                 ),
                 unknowns=_authority_unknown(authority),
@@ -321,22 +317,11 @@ def contract_drift(
 
     error_model = ApiErrorModel(
         contract_error_statuses=tuple(
-            sorted(
-                {
-                    r.status
-                    for r in model.responses
-                    if r.status and r.status[:1] in ("4", "5")
-                }
-            )
+            sorted({r.status for r in model.responses if r.status and r.status[:1] in ("4", "5")})
         ),
         impl_error_statuses=tuple(
             sorted(
-                {
-                    code
-                    for route in routes
-                    for code in route.status_codes
-                    if code[:1] in ("4", "5")
-                }
+                {code for route in routes for code in route.status_codes if code[:1] in ("4", "5")}
             )
         ),
         contract_error_shapes=tuple(
@@ -418,9 +403,7 @@ def _pair_findings(
     route_vars = set(path_vars(route.path))
     diffs: list[str] = []
     if contract_vars != route_vars:
-        diffs.append(
-            f"path variables {sorted(contract_vars)} vs {sorted(route_vars)}"
-        )
+        diffs.append(f"path variables {sorted(contract_vars)} vs {sorted(route_vars)}")
     contract_named: dict[tuple[str, str], OpenApiParameter] = {}
     for p in contract_params:
         if p.name and p.location_in:
@@ -534,11 +517,9 @@ def _pair_findings(
         )
         if r.status
     }
-    numeric_impl = {
-        digits
-        for s in route.status_codes
-        for digits in re.findall(r"\d{3}", s)
-    } | {s for s in route.status_codes if s.isdigit()}
+    numeric_impl = {digits for s in route.status_codes for digits in re.findall(r"\d{3}", s)} | {
+        s for s in route.status_codes if s.isdigit()
+    }
     unexpected = sorted(numeric_impl - contract_statuses)
     if unexpected:
         out.append(

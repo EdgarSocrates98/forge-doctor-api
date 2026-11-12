@@ -20,8 +20,7 @@ from forge_doctor_api.checks.compat import CompatibilityClass, ContractDiff
 from forge_doctor_api.core.models import Model, UnknownFact
 from forge_doctor_api.security.model import SensitiveBusinessFlow
 
-_FLOW_EXTENSIONS = ("x-sensitive-flow", "x-business-flow", "x-protected-flow",
-                    "x-flow", "x-flows")
+_FLOW_EXTENSIONS = ("x-sensitive-flow", "x-business-flow", "x-protected-flow", "x-flow", "x-flows")
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -66,8 +65,9 @@ def _flow_extensions(op: OpenApiOperation, model: OpenApiProjectModel) -> tuple[
     return tuple(out)
 
 
-def _flow_names(op: OpenApiOperation, model: OpenApiProjectModel,
-                flows: tuple[SensitiveBusinessFlow, ...]) -> tuple[str, ...]:
+def _flow_names(
+    op: OpenApiOperation, model: OpenApiProjectModel, flows: tuple[SensitiveBusinessFlow, ...]
+) -> tuple[str, ...]:
     """Declared linkage only: extension value or flow name in the path template."""
     linked = set(_flow_extensions(op, model))
     path_tokens = {t for t in op.path.split("/") if t}
@@ -79,9 +79,13 @@ def _flow_names(op: OpenApiOperation, model: OpenApiProjectModel,
 
 
 def _node_for(
-    op: OpenApiOperation | None, subject: str, change_kind: str,
-    classification: CompatibilityClass, model: OpenApiProjectModel,
-    matching: list[ClientCallSite], flows: tuple[SensitiveBusinessFlow, ...],
+    op: OpenApiOperation | None,
+    subject: str,
+    change_kind: str,
+    classification: CompatibilityClass,
+    model: OpenApiProjectModel,
+    matching: list[ClientCallSite],
+    flows: tuple[SensitiveBusinessFlow, ...],
     confirmed: bool,
 ) -> BlastRadiusNode:
     client_names = tuple(sorted({s.client for s in matching}))
@@ -92,8 +96,12 @@ def _node_for(
             resolution="provide the pre-change contract so the operation can be matched",
         )
         return BlastRadiusNode(
-            operation=subject, method="", path="", change_kind=change_kind,
-            classification=classification, unknowns=(fact,),
+            operation=subject,
+            method="",
+            path="",
+            change_kind=change_kind,
+            classification=classification,
+            unknowns=(fact,),
         )
     return BlastRadiusNode(
         operation=op.identity,
@@ -104,10 +112,7 @@ def _node_for(
         clients=client_names,
         services=client_names,  # client module identity == consuming service
         business_paths=_flow_names(op, model, flows),
-        call_sites=tuple(
-            f"{s.client}:{s.location.path}:{s.location.line or 0}"
-            for s in matching
-        ),
+        call_sites=tuple(f"{s.client}:{s.location.path}:{s.location.line or 0}" for s in matching),
         confirmed=confirmed,
     )
 
@@ -130,11 +135,7 @@ def blast_radius(
 ) -> BlastRadiusReport:
     """§68 chain for every non-NON_BREAKING change subject."""
     impact = client_impact(diff, clients, old_model)
-    ops = {
-        op.identity: op
-        for op in old_model.operations
-        if op.source is OperationSource.PATH
-    }
+    ops = {op.identity: op for op in old_model.operations if op.source is OperationSource.PATH}
     nodes: list[BlastRadiusNode] = []
     unknowns: list[UnknownFact] = []
     seen: set[str] = set()
@@ -143,10 +144,18 @@ def blast_radius(
         op = ops.get(entry.operation)
         seen.add(entry.operation)
         matching = _matching_sites(op, clients) if op else []
-        nodes.append(_node_for(
-            op, entry.operation, entry.change_kind, entry.classification,
-            old_model, matching, flows, entry.confirmed,
-        ))
+        nodes.append(
+            _node_for(
+                op,
+                entry.operation,
+                entry.change_kind,
+                entry.classification,
+                old_model,
+                matching,
+                flows,
+                entry.confirmed,
+            )
+        )
 
     for change in diff.changes:
         if change.classification is CompatibilityClass.NON_BREAKING:
@@ -161,18 +170,34 @@ def blast_radius(
             unknowns.append(fact)
             if change.subject not in seen:
                 seen.add(change.subject)
-                nodes.append(_node_for(
-                    None, change.subject, change.kind, change.classification,
-                    old_model, [], flows, False,
-                ))
+                nodes.append(
+                    _node_for(
+                        None,
+                        change.subject,
+                        change.kind,
+                        change.classification,
+                        old_model,
+                        [],
+                        flows,
+                        False,
+                    )
+                )
             continue
         if op.identity in seen:
             continue
         seen.add(op.identity)
-        nodes.append(_node_for(
-            op, change.subject, change.kind, change.classification,
-            old_model, _matching_sites(op, clients), flows, False,
-        ))
+        nodes.append(
+            _node_for(
+                op,
+                change.subject,
+                change.kind,
+                change.classification,
+                old_model,
+                _matching_sites(op, clients),
+                flows,
+                False,
+            )
+        )
 
     nodes.sort(key=lambda n: (n.operation, n.change_kind))
     return BlastRadiusReport(nodes=tuple(nodes), unknowns=tuple(unknowns))

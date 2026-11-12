@@ -48,9 +48,7 @@ def build_view(path: str | Path) -> ForgeGraphView | None:
     )
     object.__setattr__(desc, "node_count", len(entities))
     object.__setattr__(desc, "edge_count", len(rels))
-    object.__setattr__(
-        desc, "available_layers", tuple(sorted({e.kind for e in entities}))
-    )
+    object.__setattr__(desc, "available_layers", tuple(sorted({e.kind for e in entities})))
     nodes = tuple(
         GraphNodeView(
             id=e.id,

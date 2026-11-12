@@ -50,13 +50,18 @@ policies:
     rule: require_auth
 """
 
-_OTLP = json.dumps({
-    "resourceSpans": [{
-        "resource": {"attributes": [
-            {"key": "service.name", "value": {"stringValue": "api"}}]},
-        "scopeSpans": [{"scope": {}, "spans": []}],
-    }],
-})
+_OTLP = json.dumps(
+    {
+        "resourceSpans": [
+            {
+                "resource": {
+                    "attributes": [{"key": "service.name", "value": {"stringValue": "api"}}]
+                },
+                "scopeSpans": [{"scope": {}, "spans": []}],
+            }
+        ],
+    }
+)
 
 
 def _ctx(tmp_path: Path, files: dict[str, str]) -> ProjectContext:
@@ -68,24 +73,27 @@ def _ctx(tmp_path: Path, files: dict[str, str]) -> ProjectContext:
 
 
 def test_discovery_classifies_every_domain(tmp_path: Path) -> None:
-    ctx = _ctx(tmp_path, {
-        "api/openapi.yaml": _OPENAPI,
-        "events/asyncapi.yaml": _ASYNCAPI,
-        "rpc/service.proto": "syntax = \"proto3\";",
-        "schema.graphql": "type Query { x: Int }",
-        "infra/main.tf": 'resource "aws_lb" "x" {}',
-        "deploy/app.yaml": _K8S,
-        "mesh/vs.yaml": _ISTIO,
-        "gateway/kong.yaml": _KONG,
-        "app/policy.yaml": _POLICY,
-        "CODEOWNERS": "* @team",
-        "workspace.yaml": "members: []",
-        "README.md": "# hi",
-        "src/app.py": "x = 1",
-        "web/index.ts": "const x = 1",
-        "run/otlp.json": _OTLP,
-        "misc/thing.bin": "\x00\x01",
-    })
+    ctx = _ctx(
+        tmp_path,
+        {
+            "api/openapi.yaml": _OPENAPI,
+            "events/asyncapi.yaml": _ASYNCAPI,
+            "rpc/service.proto": 'syntax = "proto3";',
+            "schema.graphql": "type Query { x: Int }",
+            "infra/main.tf": 'resource "aws_lb" "x" {}',
+            "deploy/app.yaml": _K8S,
+            "mesh/vs.yaml": _ISTIO,
+            "gateway/kong.yaml": _KONG,
+            "app/policy.yaml": _POLICY,
+            "CODEOWNERS": "* @team",
+            "workspace.yaml": "members: []",
+            "README.md": "# hi",
+            "src/app.py": "x = 1",
+            "web/index.ts": "const x = 1",
+            "run/otlp.json": _OTLP,
+            "misc/thing.bin": "\x00\x01",
+        },
+    )
     inv = discover(ctx)
 
     def classes(path: str) -> set[ArtifactClass]:
@@ -124,15 +132,16 @@ def test_markers_drive_precise_classification(tmp_path: Path) -> None:
 
 def test_random_yaml_is_not_a_contract(tmp_path: Path) -> None:
     """Adversarial: a yaml named like a contract but marker-free."""
-    ctx = _ctx(tmp_path, {
-        "openapi.yaml": "service:\n  name: unrelated\n",
-        "definitely-not-random.json": '{"hello": "world"}',
-    })
+    ctx = _ctx(
+        tmp_path,
+        {
+            "openapi.yaml": "service:\n  name: unrelated\n",
+            "definitely-not-random.json": '{"hello": "world"}',
+        },
+    )
     inv = discover(ctx)
-    assert ArtifactClass.CONTRACT not in set(
-        inv.artifact("openapi.yaml").classes)  # type: ignore[union-attr]
-    assert set(inv.artifact("definitely-not-random.json").classes) == {
-        ArtifactClass.CONFIG}  # type: ignore[union-attr]
+    assert ArtifactClass.CONTRACT not in set(inv.artifact("openapi.yaml").classes)  # type: ignore[union-attr]
+    assert set(inv.artifact("definitely-not-random.json").classes) == {ArtifactClass.CONFIG}  # type: ignore[union-attr]
 
 
 def test_commented_marker_still_enables_not_finds(tmp_path: Path) -> None:
@@ -144,19 +153,21 @@ def test_commented_marker_still_enables_not_finds(tmp_path: Path) -> None:
 
 
 def test_vendored_files_marked_not_dropped(tmp_path: Path) -> None:
-    ctx = _ctx(tmp_path, {
-        "node_modules/pkg/index.js": "x",
-        ".hidden/secret.yaml": _OPENAPI,
-        "src/app.py": "x = 1",
-    })
+    ctx = _ctx(
+        tmp_path,
+        {
+            "node_modules/pkg/index.js": "x",
+            ".hidden/secret.yaml": _OPENAPI,
+            "src/app.py": "x = 1",
+        },
+    )
     inv = discover(ctx)
     vendored = inv.artifact("node_modules/pkg/index.js")
     hidden = inv.artifact(".hidden/secret.yaml")
     assert vendored is not None and vendored.vendored
     assert hidden is not None and hidden.vendored
     # vendored excluded from analyzer-facing file lists
-    assert "node_modules/pkg/index.js" not in inv.files_in(
-        ArtifactClass.SOURCE)
+    assert "node_modules/pkg/index.js" not in inv.files_in(ArtifactClass.SOURCE)
     assert "src/app.py" in inv.files_in(ArtifactClass.SOURCE)
 
 
@@ -173,11 +184,14 @@ def test_discovery_deterministic(tmp_path: Path) -> None:
 
 
 def test_evidence_store_dedup_and_lookup(tmp_path: Path) -> None:
-    ctx = _ctx(tmp_path, {
-        "a/one.yaml": _OPENAPI,
-        "b/two.yaml": _OPENAPI,      # identical content -> one entry
-        "c/app.py": "x = 1",
-    })
+    ctx = _ctx(
+        tmp_path,
+        {
+            "a/one.yaml": _OPENAPI,
+            "b/two.yaml": _OPENAPI,  # identical content -> one entry
+            "c/app.py": "x = 1",
+        },
+    )
     inv = discover(ctx)
     store = build_evidence_store(ctx, inv)
     # dedup: two identical yamls share one hash entry
@@ -197,11 +211,14 @@ def test_evidence_store_skips_vendored(tmp_path: Path) -> None:
 
 
 def test_plan_enables_by_evidence(tmp_path: Path) -> None:
-    ctx = _ctx(tmp_path, {
-        "api/openapi.yaml": _OPENAPI,
-        "src/app.py": "x = 1",
-        "run/otlp.json": _OTLP,
-    })
+    ctx = _ctx(
+        tmp_path,
+        {
+            "api/openapi.yaml": _OPENAPI,
+            "src/app.py": "x = 1",
+            "run/otlp.json": _OTLP,
+        },
+    )
     inv = discover(ctx)
     plan = build_plan(inv)
     assert plan.enabled(AnalyzerId.OPENAPI)
@@ -209,8 +226,14 @@ def test_plan_enables_by_evidence(tmp_path: Path) -> None:
     assert plan.enabled(AnalyzerId.CLIENTS)
     assert plan.enabled(AnalyzerId.RUNTIME)
     # no evidence for these:
-    for a in (AnalyzerId.GRPC, AnalyzerId.GRAPHQL, AnalyzerId.ASYNCAPI,
-              AnalyzerId.GATEWAY, AnalyzerId.IAC, AnalyzerId.POLICY):
+    for a in (
+        AnalyzerId.GRPC,
+        AnalyzerId.GRAPHQL,
+        AnalyzerId.ASYNCAPI,
+        AnalyzerId.GATEWAY,
+        AnalyzerId.IAC,
+        AnalyzerId.POLICY,
+    ):
         assert not plan.enabled(a), a
 
 
@@ -225,8 +248,7 @@ def test_plan_records_reasons_and_skips(tmp_path: Path) -> None:
 
 
 def test_plan_force_returns_everything(tmp_path: Path) -> None:
-    plan = build_plan(discover(ProjectContext.from_root(tmp_path)),
-                      force=True)
+    plan = build_plan(discover(ProjectContext.from_root(tmp_path)), force=True)
     assert len(plan.analyzers) == len(list(AnalyzerId))
 
 
@@ -236,20 +258,23 @@ def test_plan_deterministic(tmp_path: Path) -> None:
     assert build_plan(inv).to_json() == build_plan(inv).to_json()
 
 
-@pytest.mark.parametrize("files,expected", [
-    ({"x.yaml": _OPENAPI}, [AnalyzerId.OPENAPI]),
-    ({"x.yaml": _ASYNCAPI}, [AnalyzerId.ASYNCAPI]),
-    ({"x.graphql": "type Query {x: Int}"}, [AnalyzerId.GRAPHQL]),
-    ({"x.proto": "syntax"}, [AnalyzerId.GRPC]),
-    ({"x.tf": "resource"}, [AnalyzerId.IAC]),
-    ({"x.yaml": _K8S}, [AnalyzerId.IAC]),
-    ({"x.yaml": _KONG}, [AnalyzerId.GATEWAY]),
-    ({"x.yaml": _ISTIO}, [AnalyzerId.GATEWAY]),  # mesh -> gateway analyzer
-    ({"x.yaml": _POLICY}, [AnalyzerId.POLICY]),
-    ({"x.json": _OTLP}, [AnalyzerId.RUNTIME]),
-    ({"CODEOWNERS": "* @a"}, [AnalyzerId.OWNERSHIP]),
-    ({"workspace.yaml": "members: []"}, [AnalyzerId.WORKSPACE]),
-])
+@pytest.mark.parametrize(
+    "files,expected",
+    [
+        ({"x.yaml": _OPENAPI}, [AnalyzerId.OPENAPI]),
+        ({"x.yaml": _ASYNCAPI}, [AnalyzerId.ASYNCAPI]),
+        ({"x.graphql": "type Query {x: Int}"}, [AnalyzerId.GRAPHQL]),
+        ({"x.proto": "syntax"}, [AnalyzerId.GRPC]),
+        ({"x.tf": "resource"}, [AnalyzerId.IAC]),
+        ({"x.yaml": _K8S}, [AnalyzerId.IAC]),
+        ({"x.yaml": _KONG}, [AnalyzerId.GATEWAY]),
+        ({"x.yaml": _ISTIO}, [AnalyzerId.GATEWAY]),  # mesh -> gateway analyzer
+        ({"x.yaml": _POLICY}, [AnalyzerId.POLICY]),
+        ({"x.json": _OTLP}, [AnalyzerId.RUNTIME]),
+        ({"CODEOWNERS": "* @a"}, [AnalyzerId.OWNERSHIP]),
+        ({"workspace.yaml": "members: []"}, [AnalyzerId.WORKSPACE]),
+    ],
+)
 def test_plan_per_analyzer_rule(
     tmp_path: Path, files: dict[str, str], expected: list[AnalyzerId]
 ) -> None:

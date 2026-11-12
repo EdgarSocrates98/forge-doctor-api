@@ -37,14 +37,23 @@ def test_tools_registered(server) -> None:
     tools = asyncio.run(server.list_tools())
     names = {t.name for t in tools}
     expected = {
-        "doctor.scan", "doctor.get_service", "doctor.get_api",
-        "doctor.get_operation", "doctor.get_contract",
-        "doctor.get_clients", "doctor.get_runtime",
-        "doctor.get_security", "doctor.get_reliability",
-        "doctor.get_findings", "doctor.get_unknowns",
-        "doctor.get_breaking_changes", "doctor.get_blast_radius",
-        "doctor.get_capabilities", "doctor.get_graph",
-        "doctor.get_handoff", "doctor.explain",
+        "doctor.scan",
+        "doctor.get_service",
+        "doctor.get_api",
+        "doctor.get_operation",
+        "doctor.get_contract",
+        "doctor.get_clients",
+        "doctor.get_runtime",
+        "doctor.get_security",
+        "doctor.get_reliability",
+        "doctor.get_findings",
+        "doctor.get_unknowns",
+        "doctor.get_breaking_changes",
+        "doctor.get_blast_radius",
+        "doctor.get_capabilities",
+        "doctor.get_graph",
+        "doctor.get_handoff",
+        "doctor.explain",
     }
     assert expected <= names
 
@@ -70,26 +79,22 @@ def test_tool_schema_valid(server) -> None:
 
 def test_scan_tool_round_trip(server) -> None:
     result = asyncio.run(server.call_tool("doctor.scan", {}))
-    text = result[0][0].text if isinstance(result, tuple) else (
-        result.content[0].text)
+    text = result[0][0].text if isinstance(result, tuple) else (result.content[0].text)
     payload = json.loads(text)
     assert payload["schema_version"]
     assert payload["contracts"] is not None
 
 
 def test_explain_tool_error_is_typed(server) -> None:
-    result = asyncio.run(
-        server.call_tool("doctor.explain", {"finding_id": "NOPE-9"}))
-    text = result[0][0].text if isinstance(result, tuple) else (
-        result.content[0].text)
+    result = asyncio.run(server.call_tool("doctor.explain", {"finding_id": "NOPE-9"}))
+    text = result[0][0].text if isinstance(result, tuple) else (result.content[0].text)
     error = json.loads(text)["error"]
     assert error["code"] == "DOMAIN_ERROR"
     assert "no finding" in error["message"]
 
 
 def test_service_resource(server) -> None:
-    rows = list(asyncio.run(
-        server.read_resource("doctor://service")))
+    rows = list(asyncio.run(server.read_resource("doctor://service")))
     payload = json.loads(rows[0].content)
     assert payload["kind"] == "service"
 

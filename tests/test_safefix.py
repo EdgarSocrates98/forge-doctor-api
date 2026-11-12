@@ -48,8 +48,17 @@ def _finding(check_id: str, **overrides: Any) -> Finding:
 
 
 def test_safe_members() -> None:
-    for check_id in ("OAS001", "OAS003", "OAS004", "OAS005", "OAS009",
-                     "OAS014", "OAS015", "OAS018", "OAS020"):
+    for check_id in (
+        "OAS001",
+        "OAS003",
+        "OAS004",
+        "OAS005",
+        "OAS009",
+        "OAS014",
+        "OAS015",
+        "OAS018",
+        "OAS020",
+    ):
         assert fix_types_for(check_id)
         report = classify_findings((_finding(check_id),))
         c = report.candidates[0]
@@ -59,8 +68,14 @@ def test_safe_members() -> None:
 
 
 def test_review_required_members() -> None:
-    for check_id in ("RELAPI001", "RELAPI003", "RELAPI004",
-                     "APIPERF004", "APIPERF005", "APIPERF008"):
+    for check_id in (
+        "RELAPI001",
+        "RELAPI003",
+        "RELAPI004",
+        "APIPERF004",
+        "APIPERF005",
+        "APIPERF008",
+    ):
         c = classify_findings((_finding(check_id),)).candidates[0]
         assert c.classification is FixClass.REVIEW_REQUIRED, check_id
         # REVIEW_REQUIRED justification names the reviewer-relevant risk
@@ -71,8 +86,16 @@ def test_review_required_members() -> None:
 
 
 def test_manual_only_members() -> None:
-    for check_id in ("OAS010", "OAS012", "OAS016", "OAS017",
-                     "APISEC001", "APISEC003", "APISEC005", "APISEC008"):
+    for check_id in (
+        "OAS010",
+        "OAS012",
+        "OAS016",
+        "OAS017",
+        "APISEC001",
+        "APISEC003",
+        "APISEC005",
+        "APISEC008",
+    ):
         c = classify_findings((_finding(check_id),)).candidates[0]
         assert c.classification is FixClass.MANUAL_ONLY, check_id
 
@@ -100,7 +123,8 @@ def test_combined_fix_escalates_to_strictest() -> None:
     assert classify_types((FixType.TIMEOUT, FixType.AUTH)) is FixClass.MANUAL_ONLY
     assert classify_types((FixType.METADATA_MISSING, FixType.DOC_FIELD)) is FixClass.SAFE
     fix = classify_fix(
-        "retune timeout and auth together", "gw",
+        "retune timeout and auth together",
+        "gw",
         (FixType.TIMEOUT, FixType.AUTHORIZATION),
     )
     assert fix.classification is FixClass.MANUAL_ONLY
@@ -114,10 +138,10 @@ def test_justification_from_rule_table() -> None:
 
 def test_report_grouping_and_determinism() -> None:
     findings = (
-        _finding("APISEC001"),   # MANUAL
-        _finding("OAS004"),      # SAFE
-        _finding("RELAPI001"),   # REVIEW
-        _finding("OAS020"),      # SAFE
+        _finding("APISEC001"),  # MANUAL
+        _finding("OAS004"),  # SAFE
+        _finding("RELAPI001"),  # REVIEW
+        _finding("OAS020"),  # SAFE
     )
     r1 = classify_findings(findings)
     r2 = classify_findings(findings)
@@ -128,10 +152,17 @@ def test_report_grouping_and_determinism() -> None:
 
 
 def test_remediation_serializes_with_evidence() -> None:
-    f = _finding("OAS015", evidence=(Evidence(
-        kind=EvidenceKind.STATIC, source="api.yaml", summary="deprecated without sunset",
-        line=7,
-    ),))
+    f = _finding(
+        "OAS015",
+        evidence=(
+            Evidence(
+                kind=EvidenceKind.STATIC,
+                source="api.yaml",
+                summary="deprecated without sunset",
+                line=7,
+            ),
+        ),
+    )
     c = classify_findings((f,)).candidates[0]
     d = c.to_dict()
     assert d["classification"] == "SAFE"

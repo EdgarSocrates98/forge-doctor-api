@@ -44,8 +44,17 @@ class AnalysisStats(Model):
 # -- catalog lookup -----------------------------------------------------------
 
 _CATALOG_MODULES = (
-    "oas", "apisec", "relapi", "client", "compat", "drift",
-    "graphql", "grpc", "observability", "perf", "asyncapi",
+    "oas",
+    "apisec",
+    "relapi",
+    "client",
+    "compat",
+    "drift",
+    "graphql",
+    "grpc",
+    "observability",
+    "perf",
+    "asyncapi",
 )
 
 _catalog_cache: dict[str, Any] | None = None
@@ -55,11 +64,11 @@ def _catalog() -> dict[str, Any]:
     global _catalog_cache
     if _catalog_cache is None:
         import importlib
+
         found: dict[str, Any] = {}
         for mod in _CATALOG_MODULES:
             try:
-                module = importlib.import_module(
-                    f"forge_doctor_api.checks.{mod}.catalog")
+                module = importlib.import_module(f"forge_doctor_api.checks.{mod}.catalog")
             except ImportError:
                 continue
             for cid, spec in getattr(module, "BY_ID", {}).items():
@@ -77,8 +86,7 @@ def describe_check(check_id: str) -> Any | None:
 def rule_text(spec: Any) -> str:
     """Normalized rule description across heterogeneous catalogs —
     some ship `description`, others `trigger`."""
-    return str(getattr(spec, "description",
-                       getattr(spec, "trigger", "")))
+    return str(getattr(spec, "description", getattr(spec, "trigger", "")))
 
 
 def rule_dict(spec: Any) -> dict[str, Any]:
@@ -86,9 +94,11 @@ def rule_dict(spec: Any) -> dict[str, Any]:
     return {
         "id": getattr(spec, "id", ""),
         "title": getattr(spec, "title", ""),
-        "severity": getattr(getattr(spec, "severity", None),
-                           "value", getattr(spec, "severity", None)),
-        "confidence": getattr(getattr(spec, "confidence", None),
-                             "value", getattr(spec, "confidence", None)),
+        "severity": getattr(
+            getattr(spec, "severity", None), "value", getattr(spec, "severity", None)
+        ),
+        "confidence": getattr(
+            getattr(spec, "confidence", None), "value", getattr(spec, "confidence", None)
+        ),
         "description": rule_text(spec),
     }

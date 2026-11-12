@@ -31,8 +31,9 @@ from forge_doctor_api.safefix.classify import classify_findings
 
 
 def _summarize(f: Finding) -> str:
-    subject = f.entity_ids[0] if f.entity_ids else (
-        f.source_location.path if f.source_location else "")
+    subject = (
+        f.entity_ids[0] if f.entity_ids else (f.source_location.path if f.source_location else "")
+    )
     return f"{f.id} {subject}: {f.title}".strip()
 
 
@@ -63,11 +64,13 @@ def assemble_bundle(
         )
         contracts = tuple(
             f"{d.location.path} openapi={d.openapi_version}"
-            if d.openapi_version else d.location.path
+            if d.openapi_version
+            else d.location.path
             for d in openapi.documents
         )
         service = service or next(
-            (d.title for d in openapi.documents if d.title), None,
+            (d.title for d in openapi.documents if d.title),
+            None,
         )
 
     breaking: tuple[str, ...] = ()
@@ -80,13 +83,10 @@ def assemble_bundle(
 
     clients: tuple[str, ...] = ()
     if impact is not None:
-        clients = tuple(sorted({
-            c for entry in impact.entries for c in entry.clients
-        }))
+        clients = tuple(sorted({c for entry in impact.entries for c in entry.clients}))
 
     def fam(ns: str) -> tuple[str, ...]:
-        return tuple(_summarize(f) for f in findings
-                     if check_namespace(f.id) == ns)
+        return tuple(_summarize(f) for f in findings if check_namespace(f.id) == ns)
 
     bundle = ApiHandoffBundle(
         service=service,
@@ -100,23 +100,33 @@ def assemble_bundle(
         reliability_signals=fam("RELAPI"),
         external_references=external_references,
         remediation_candidates=classify_findings(findings).candidates,
-        unknowns=unknowns + tuple(
-            u for f in findings for u in f.unknowns
-        ),
+        unknowns=unknowns + tuple(u for f in findings for u in f.unknowns),
         knowledge_versions=knowledge_versions(),
     )
     if handoff_version == 2:
         if report is None:
-            raise ValueError(
-                "handoff_version=2 requires the source DoctorReport")
+            raise ValueError("handoff_version=2 requires the source DoctorReport")
         bundle = upgrade_bundle(bundle, report)
     return bundle
 
 
 _DOMAIN_FIELDS = (
-    "contracts", "routes", "clients", "graph", "gateway", "mesh",
-    "infrastructure", "cache", "runtime", "security", "reliability",
-    "policies", "twin", "fanout", "migration", "impact",
+    "contracts",
+    "routes",
+    "clients",
+    "graph",
+    "gateway",
+    "mesh",
+    "infrastructure",
+    "cache",
+    "runtime",
+    "security",
+    "reliability",
+    "policies",
+    "twin",
+    "fanout",
+    "migration",
+    "impact",
 )
 
 
@@ -134,11 +144,9 @@ def upgrade_bundle(
     for name in _DOMAIN_FIELDS:
         summary = getattr(report, name, None)
         if summary is not None:
-            domain_hashes.append(
-                (name, content_digest(summary.to_json())))
+            domain_hashes.append((name, content_digest(summary.to_json())))
     caps = tuple(
-        ForgeCapability(name=c.capability.value, status="detected")
-        for c in report.capabilities
+        ForgeCapability(name=c.capability.value, status="detected") for c in report.capabilities
     )
     refs = (
         mint("service"),
@@ -179,8 +187,7 @@ def build_handoff(
         for r in bundle.context_refs
     )
     unknown_refs = tuple(
-        ForgeRef(ref_id=mint("unknown", i=i), kind="unknown",
-                 entity=u.subject, summary=u.missing)
+        ForgeRef(ref_id=mint("unknown", i=i), kind="unknown", entity=u.subject, summary=u.missing)
         for i, u in enumerate(report.unknowns)
     )
     return ForgeHandoff(

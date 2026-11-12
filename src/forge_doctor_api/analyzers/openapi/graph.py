@@ -60,9 +60,7 @@ def contract_graph(model: OpenApiProjectModel) -> ServiceGraph:
     for schema in model.schemas:
         graph.add_entity(
             Entity(
-                id=entity_id(
-                    EntityKind.SCHEMA, "openapi",
-                    f"{schema.location.path}#{schema.name}"),
+                id=entity_id(EntityKind.SCHEMA, "openapi", f"{schema.location.path}#{schema.name}"),
                 kind=EntityKind.SCHEMA,
                 name=schema.name,
                 attributes={"document": schema.location.path},
@@ -119,8 +117,7 @@ def contract_graph(model: OpenApiProjectModel) -> ServiceGraph:
     # monorepo can host two APIs that both define `addPet`). The identity
     # alone cannot be the graph key there — scope it by the declaring
     # document path, and by method+path when one document repeats it.
-    path_ops = [op for op in model.operations
-                if op.source is OperationSource.PATH]
+    path_ops = [op for op in model.operations if op.source is OperationSource.PATH]
     ident_counts = Counter(op.identity for op in path_ops)
     doc_counts = Counter((op.identity, op.location.path) for op in path_ops)
 
@@ -154,8 +151,7 @@ def contract_graph(model: OpenApiProjectModel) -> ServiceGraph:
             edge(
                 RelationshipKind.ACCEPTS,
                 operation_id,
-                entity_id(EntityKind.SCHEMA, "openapi",
-                          f"{op.location.path}#{name}"),
+                entity_id(EntityKind.SCHEMA, "openapi", f"{op.location.path}#{name}"),
                 op.location,
                 f"{op.method} {op.path} accepts {name}",
             )
@@ -163,8 +159,7 @@ def contract_graph(model: OpenApiProjectModel) -> ServiceGraph:
             edge(
                 RelationshipKind.RETURNS,
                 operation_id,
-                entity_id(EntityKind.SCHEMA, "openapi",
-                          f"{op.location.path}#{name}"),
+                entity_id(EntityKind.SCHEMA, "openapi", f"{op.location.path}#{name}"),
                 op.location,
                 f"{op.method} {op.path} returns {name}",
             )

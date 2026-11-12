@@ -70,13 +70,13 @@ class DoctorApi:
     def _security(self) -> ApiSecurityModel:
         if "security" not in self._cache:
             self._cache["security"] = load_security_model(
-                self._ctx, self._files(), openapi=self._openapi())
+                self._ctx, self._files(), openapi=self._openapi()
+            )
         return cast(ApiSecurityModel, self._cache["security"])
 
     def _reliability(self) -> ApiReliabilityModel:
         if "reliability" not in self._cache:
-            self._cache["reliability"] = load_reliability_model(
-                self._ctx, self._files())
+            self._cache["reliability"] = load_reliability_model(self._ctx, self._files())
         return cast(ApiReliabilityModel, self._cache["reliability"])
 
     def _clients(self) -> ApiClientModel:
@@ -87,7 +87,8 @@ class DoctorApi:
     def _runtime(self) -> RuntimeProject:
         if "runtime" not in self._cache:
             self._cache["runtime"] = load_runtime_project(
-                self._ctx, self._files(), keep_spans=False)
+                self._ctx, self._files(), keep_spans=False
+            )
         return cast(RuntimeProject, self._cache["runtime"])
 
     def _diff(self) -> ContractDiff | None:
@@ -114,9 +115,7 @@ class DoctorApi:
                 }
                 for d in api.documents
             ],
-            "operations": sum(
-                1 for o in api.operations
-                if o.source is OperationSource.PATH),
+            "operations": sum(1 for o in api.operations if o.source is OperationSource.PATH),
             "servers": [s.url for s in api.servers],
         }
 
@@ -126,9 +125,11 @@ class DoctorApi:
         return {
             "operations": [
                 {
-                    "method": o.method, "path": o.path,
+                    "method": o.method,
+                    "path": o.path,
                     "operation_id": o.operation_id,
-                    "deprecated": o.deprecated, "tags": list(o.tags),
+                    "deprecated": o.deprecated,
+                    "tags": list(o.tags),
                 }
                 for o in api.operations
                 if o.source is OperationSource.PATH
@@ -140,7 +141,8 @@ class DoctorApi:
         for o in api.operations:
             if o.operation_id == operation_id or o.identity == operation_id:
                 return {
-                    "method": o.method, "path": o.path,
+                    "method": o.method,
+                    "path": o.path,
                     "operation_id": o.operation_id,
                     "deprecated": o.deprecated,
                     "source": o.source.value,
@@ -155,7 +157,8 @@ class DoctorApi:
             "schema_version": api.schema_version,
             "documents": [
                 {
-                    "path": d.location.path, "format": d.format,
+                    "path": d.location.path,
+                    "format": d.format,
                     "status": d.status.value,
                     "openapi_version": d.openapi_version,
                     "family": d.version_family,
@@ -179,13 +182,11 @@ class DoctorApi:
             return None
         return {
             "breaking": [
-                {"kind": c.kind, "subject": c.subject, "path": c.path,
-                 "detail": c.detail}
+                {"kind": c.kind, "subject": c.subject, "path": c.path, "detail": c.detail}
                 for c in diff.changes
                 if c.classification is CompatibilityClass.BREAKING
             ],
-            "unknowns": [u.missing for f in diff.findings
-                         for u in f.unknowns],
+            "unknowns": [u.missing for f in diff.findings for u in f.unknowns],
         }
 
     def get_blast_radius(self) -> dict[str, Any] | None:
@@ -199,10 +200,7 @@ class DoctorApi:
     def get_runtime_baseline(self) -> dict[str, Any]:
         rt = self._runtime()
         data = rt.observability.to_dict()
-        data["unknowns"] = [
-            {"subject": u.subject, "missing": u.missing}
-            for u in rt.unknowns
-        ]
+        data["unknowns"] = [{"subject": u.subject, "missing": u.missing} for u in rt.unknowns]
         return data
 
     def get_regressions(self) -> dict[str, Any]:
@@ -210,10 +208,7 @@ class DoctorApi:
         findings = run_perf_checks(rt.executions)
         return {
             "findings": [f.to_dict() for f in findings],
-            "unknowns": [
-                {"subject": u.subject, "missing": u.missing}
-                for u in rt.unknowns
-            ],
+            "unknowns": [{"subject": u.subject, "missing": u.missing} for u in rt.unknowns],
         }
 
     def get_security_findings(self) -> dict[str, Any]:
@@ -227,24 +222,24 @@ class DoctorApi:
             "circuit_breakers": len(rel.circuit_breakers),
             "health_checks": len(rel.health_checks),
             "idempotency": [
-                {"subject": i.subject, "verdict": i.verdict.value}
-                for i in rel.idempotency
+                {"subject": i.subject, "verdict": i.verdict.value} for i in rel.idempotency
             ],
             "unknowns": [u.missing for u in rel.unknowns],
         }
 
     def get_unknowns(self) -> dict[str, Any]:
         unknowns: list[dict[str, str]] = []
-        for model in (self._security(), self._reliability(),
-                      self._clients()):
+        for model in (self._security(), self._reliability(), self._clients()):
             unknowns.extend(
-                {"subject": u.subject, "missing": u.missing,
-                 "resolution": u.resolution}
+                {"subject": u.subject, "missing": u.missing, "resolution": u.resolution}
                 for u in model.unknowns
             )
         unknowns.extend(
-            {"subject": r.ref, "missing": "external reference unresolved",
-             "resolution": "provide the referenced document"}
+            {
+                "subject": r.ref,
+                "missing": "external reference unresolved",
+                "resolution": "provide the referenced document",
+            }
             for r in self._openapi().unresolved_external_refs
         )
         return {"unknowns": unknowns}

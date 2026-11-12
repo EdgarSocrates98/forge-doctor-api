@@ -103,8 +103,7 @@ def wire_finding(f: CoreFinding) -> Finding:
         domain_fields["evidence_refs"] = list(evidence)
     if f.unknowns:
         domain_fields["unknowns"] = [
-            {"subject": u.subject, "missing": u.missing,
-             "resolution": u.resolution}
+            {"subject": u.subject, "missing": u.missing, "resolution": u.resolution}
             for u in f.unknowns
         ]
     if domain_fields:
@@ -152,8 +151,7 @@ def wire_relationship(r: CoreRelationship) -> Relationship:
     if r.unknowns:
         extensions[API_EXTENSION] = {
             "unknowns": [
-                {"subject": u.subject, "missing": u.missing,
-                 "resolution": u.resolution}
+                {"subject": u.subject, "missing": u.missing, "resolution": u.resolution}
                 for u in r.unknowns
             ]
         }
@@ -202,8 +200,7 @@ def wire_capability_gap(gap: CapabilityGap) -> Capability:
 def wire_edge_export(edge: EdgeExport) -> Relationship:
     """Report-level EdgeExport -> wire ``relationship``."""
     return Relationship(
-        extensions={API_EXTENSION: {
-            "evidence_ids": list(edge.evidence_ids)}},
+        extensions={API_EXTENSION: {"evidence_ids": list(edge.evidence_ids)}},
         src=edge.from_id,
         dst=edge.to_id,
         kind=edge.kind,
@@ -227,8 +224,11 @@ def entity_from_id(raw: str) -> Entity | UnknownFact:
             source=TOOL_NAME,
         )
     return Entity(
-        id=raw, kind=kind, domain=domain,
-        identifier=identifier, name=identifier,
+        id=raw,
+        kind=kind,
+        domain=domain,
+        identifier=identifier,
+        name=identifier,
     )
 
 
@@ -245,18 +245,31 @@ def report_handoff(
     domain projections become wire entities. Sorted before emission —
     the wire order is the canonical order.
     """
-    findings = tuple(sorted(
-        (wire_finding(f) for f in report.findings),
-        key=lambda w: (w.check_id, w.file or "", w.line or 0),
-    ))
+    findings = tuple(
+        sorted(
+            (wire_finding(f) for f in report.findings),
+            key=lambda w: (w.check_id, w.file or "", w.line or 0),
+        )
+    )
     entities: list[Entity] = []
     entity_unknowns: list[UnknownFact] = []
     seen: set[str] = set()
     for projection in (
-        report.contracts, report.routes, report.clients, report.graph,
-        report.gateway, report.mesh, report.infrastructure, report.cache,
-        report.runtime, report.security, report.reliability,
-        report.policies, report.twin, report.fanout, report.migration,
+        report.contracts,
+        report.routes,
+        report.clients,
+        report.graph,
+        report.gateway,
+        report.mesh,
+        report.infrastructure,
+        report.cache,
+        report.runtime,
+        report.security,
+        report.reliability,
+        report.policies,
+        report.twin,
+        report.fanout,
+        report.migration,
         report.impact,
     ):
         if projection is None:
@@ -270,18 +283,24 @@ def report_handoff(
                 entities.append(node)
             else:
                 entity_unknowns.append(node)
-    relationships = tuple(sorted(
-        (wire_edge_export(e) for e in report.graph_edges),
-        key=lambda w: (w.src, w.kind, w.dst),
-    ))
-    capabilities = tuple(sorted(
-        (wire_capability(c) for c in report.capabilities),
-        key=lambda w: w.id,
-    ))
-    unknowns = tuple(sorted(
-        (*(wire_unknown(u) for u in report.unknowns), *entity_unknowns),
-        key=lambda w: (w.subject, w.reason),
-    ))
+    relationships = tuple(
+        sorted(
+            (wire_edge_export(e) for e in report.graph_edges),
+            key=lambda w: (w.src, w.kind, w.dst),
+        )
+    )
+    capabilities = tuple(
+        sorted(
+            (wire_capability(c) for c in report.capabilities),
+            key=lambda w: w.id,
+        )
+    )
+    unknowns = tuple(
+        sorted(
+            (*(wire_unknown(u) for u in report.unknowns), *entity_unknowns),
+            key=lambda w: (w.subject, w.reason),
+        )
+    )
     summary = {
         "findings": len(findings),
         "entities": len(entities),
@@ -300,10 +319,12 @@ def report_handoff(
         relationships=relationships,
         capabilities=capabilities,
         unknowns=unknowns,
-        extensions={API_EXTENSION: {
-            "analysis_rev": report.analysis_rev,
-            "schema_version": report.schema_version,
-        }},
+        extensions={
+            API_EXTENSION: {
+                "analysis_rev": report.analysis_rev,
+                "schema_version": report.schema_version,
+            }
+        },
     )
 
 
@@ -314,9 +335,9 @@ def report_manifest(
 ) -> DiagnosticManifest:
     """``DoctorReport`` -> conforming ``diagnostic-manifest``."""
     bundle = report_handoff(report, tool_version=tool_version)
-    domains = sorted({
-        e.domain for e in bundle.entities
-    } | {f.category for f in bundle.findings} - {""})
+    domains = sorted(
+        {e.domain for e in bundle.entities} | {f.category for f in bundle.findings} - {""}
+    )
     return DiagnosticManifest(
         tool=TOOL_NAME,
         tool_version=tool_version or report.tool_version,
@@ -325,12 +346,14 @@ def report_manifest(
         finding_count=len(bundle.findings),
         unknown_count=len(bundle.unknowns),
         capabilities=bundle.capabilities,
-        evidence_refs=tuple(sorted({
-            ref
-            for f in bundle.findings
-            for ref in (f.extensions.get(API_EXTENSION, {})
-                        .get("evidence_refs", ()))
-        })),
-        extensions={API_EXTENSION: {
-            "analysis_rev": report.analysis_rev}},
+        evidence_refs=tuple(
+            sorted(
+                {
+                    ref
+                    for f in bundle.findings
+                    for ref in (f.extensions.get(API_EXTENSION, {}).get("evidence_refs", ()))
+                }
+            )
+        ),
+        extensions={API_EXTENSION: {"analysis_rev": report.analysis_rev}},
     )

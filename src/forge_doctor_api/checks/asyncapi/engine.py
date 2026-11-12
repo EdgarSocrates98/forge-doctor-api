@@ -70,24 +70,20 @@ def _finding(
 
 
 def _channel_entity(channel: AsyncApiChannel) -> str:
-    return entity_id(
-        "async_channel", "asyncapi",
-        f"{channel.location.path}#{channel.name}")
+    return entity_id("async_channel", "asyncapi", f"{channel.location.path}#{channel.name}")
 
 
 def _message_entity(message: AsyncApiMessage) -> str:
     return entity_id(
-        "message", "asyncapi",
-        f"{message.location.path}#{message.name or message.pointer}")
+        "message", "asyncapi", f"{message.location.path}#{message.name or message.pointer}"
+    )
 
 
 def _op_entity(op: AsyncApiOperation) -> str:
     return entity_id("operation", "asyncapi", f"{op.action}:{op.name}")
 
 
-def _payloads(
-    messages: list[AsyncApiMessage], schemas: dict[str, object]
-) -> list[object]:
+def _payloads(messages: list[AsyncApiMessage], schemas: dict[str, object]) -> list[object]:
     """Resolved payload contents for a set of messages (refs followed once)."""
     out: list[object] = []
     for message in messages:
@@ -231,8 +227,7 @@ def run_async_checks(model: AsyncApiProjectModel) -> tuple[Finding, ...]:
             findings.append(
                 _finding(
                     BY_ID["ASYNC004"],
-                    f"operation {op.name!r} shows retry evidence without "
-                    "DLQ/dead-letter markers",
+                    f"operation {op.name!r} shows retry evidence without DLQ/dead-letter markers",
                     op.location,
                     (_op_entity(op),),
                     (

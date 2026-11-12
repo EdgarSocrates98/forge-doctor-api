@@ -229,11 +229,14 @@ def test_no_policy_config_no_findings(tmp_path: Path) -> None:
 
 
 def test_inheritance_closest_scope_wins(tmp_path: Path) -> None:
-    root = _write(tmp_path / "p", {
-        "api.yaml": API,
-        "org.policy.yaml": POLICY_ORG,
-        "repo.policy.yaml": POLICY_REPO_OVERRIDE_OK,
-    })
+    root = _write(
+        tmp_path / "p",
+        {
+            "api.yaml": API,
+            "org.policy.yaml": POLICY_ORG,
+            "repo.policy.yaml": POLICY_REPO_OVERRIDE_OK,
+        },
+    )
     findings = _evaluate(root)
     auth = [f for f in findings if f.id == "POLICY001"]
     assert auth and all("[repo" in f.description for f in auth)
@@ -241,11 +244,14 @@ def test_inheritance_closest_scope_wins(tmp_path: Path) -> None:
 
 
 def test_widening_without_exception_keeps_org_policy(tmp_path: Path) -> None:
-    root = _write(tmp_path / "p", {
-        "api.yaml": API,
-        "org.policy.yaml": POLICY_ORG,
-        "repo.policy.yaml": POLICY_REPO_OVERRIDE_WEAK,
-    })
+    root = _write(
+        tmp_path / "p",
+        {
+            "api.yaml": API,
+            "org.policy.yaml": POLICY_ORG,
+            "repo.policy.yaml": POLICY_REPO_OVERRIDE_WEAK,
+        },
+    )
     findings = _evaluate(root)
     # repo tried to disable require_auth -> widening -> org policy kept + POLICY009
     assert any(f.id == "POLICY009" for f in findings)
@@ -253,11 +259,14 @@ def test_widening_without_exception_keeps_org_policy(tmp_path: Path) -> None:
 
 
 def test_widening_with_valid_exception_honored(tmp_path: Path) -> None:
-    root = _write(tmp_path / "p", {
-        "api.yaml": API,
-        "org.policy.yaml": POLICY_ORG,
-        "repo.policy.yaml": POLICY_REPO_OVERRIDE_WEAK.replace(
-            "exceptions: []", """exceptions:
+    root = _write(
+        tmp_path / "p",
+        {
+            "api.yaml": API,
+            "org.policy.yaml": POLICY_ORG,
+            "repo.policy.yaml": POLICY_REPO_OVERRIDE_WEAK.replace(
+                "exceptions: []",
+                """exceptions:
   - rule: require_auth
     scope: "*"
     owner: security-team
@@ -265,8 +274,10 @@ def test_widening_with_valid_exception_honored(tmp_path: Path) -> None:
     created: "2026-01-01"
     expires: "2027-01-01"
     approval: approved
-"""),
-    })
+""",
+            ),
+        },
+    )
     findings = _evaluate(root)
     # exception valid -> repo disable honored -> no require_auth violations
     assert not any(f.id == "POLICY001" for f in findings)
@@ -296,15 +307,18 @@ def test_valid_exception_suppresses(tmp_path: Path) -> None:
 
 
 def test_exception_missing_fields_is_issue(tmp_path: Path) -> None:
-    root = _write(tmp_path / "p", {
-        "api.yaml": API,
-        "policies.yaml": """policies:
+    root = _write(
+        tmp_path / "p",
+        {
+            "api.yaml": API,
+            "policies.yaml": """policies:
   - rule: require_auth
 exceptions:
   - rule: require_auth
     scope: "*"
 """,
-    })
+        },
+    )
     findings = _evaluate(root)
     assert any(f.id == "POLICY010" and "missing fields" in f.description for f in findings)
 
@@ -313,11 +327,14 @@ exceptions:
 
 
 def test_ownership_precedence_openapi_beats_codeowners(tmp_path: Path) -> None:
-    root = _write(tmp_path / "p", {
-        "api.yaml": API,
-        "CODEOWNERS": "* @platform-team\n",
-        "catalog-info.yaml": "spec: {owner: catalog-team}\n",
-    })
+    root = _write(
+        tmp_path / "p",
+        {
+            "api.yaml": API,
+            "CODEOWNERS": "* @platform-team\n",
+            "catalog-info.yaml": "spec: {owner: catalog-team}\n",
+        },
+    )
     ctx = ProjectContext.from_root(root)
     own = resolve_ownership(ctx, list(ctx.iter_files()), load_openapi_project(ctx))
     assert own[0].owner == "payments-team"  # x-owner extension wins
@@ -327,27 +344,32 @@ def test_ownership_precedence_openapi_beats_codeowners(tmp_path: Path) -> None:
 
 
 def test_ownership_falls_back_to_codeowners(tmp_path: Path) -> None:
-    root = _write(tmp_path / "p", {
-        "api.yaml": API.replace(", x-owner: payments-team", ""),
-        "CODEOWNERS": "* @platform-team\n",
-    })
+    root = _write(
+        tmp_path / "p",
+        {
+            "api.yaml": API.replace(", x-owner: payments-team", ""),
+            "CODEOWNERS": "* @platform-team\n",
+        },
+    )
     ctx = ProjectContext.from_root(root)
     own = resolve_ownership(ctx, list(ctx.iter_files()), load_openapi_project(ctx))
     assert own[0].owner == "@platform-team"
 
 
 def test_malformed_policy_file_is_finding(tmp_path: Path) -> None:
-    root = _write(tmp_path / "p", {
-        "api.yaml": API,
-        "policies.yaml": "policies: [not, a, mapping\n",
-    })
+    root = _write(
+        tmp_path / "p",
+        {
+            "api.yaml": API,
+            "policies.yaml": "policies: [not, a, mapping\n",
+        },
+    )
     findings = _evaluate(root)
     assert any(f.id == "POLICY010" for f in findings)
 
 
 def test_deterministic_ordering(tmp_path: Path) -> None:
-    root = _write(tmp_path / "p", {"api.yaml": API, "cfg.yaml": CFG,
-                                  "policies.yaml": POLICY_ALL})
+    root = _write(tmp_path / "p", {"api.yaml": API, "cfg.yaml": CFG, "policies.yaml": POLICY_ALL})
     a, b = _evaluate(root), _evaluate(root)
     assert [(f.id, f.description) for f in a] == [(f.id, f.description) for f in b]
 

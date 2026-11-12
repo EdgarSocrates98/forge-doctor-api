@@ -16,17 +16,17 @@ from forge_doctor_api.analyzers.routes import (
 )
 from forge_doctor_api.core.context import ProjectContext
 
-APP = '''
+APP = """
 from fastapi import FastAPI
 
 app = FastAPI()
-'''
+"""
 
-ROUTER = '''
+ROUTER = """
 from fastapi import APIRouter
 
 router = APIRouter(prefix="/v1")
-'''
+"""
 
 
 def _write(root: Path, files: dict[str, str]) -> Path:
@@ -90,8 +90,7 @@ def test_lookalike_framework_not_attributed(tmp_path: Path) -> None:
         tmp_path,
         {
             "a.py": (
-                "from flask import Flask\n\napp = Flask(__name__)\n\n"
-                "@app.get('/x')\ndef x(): ...\n"
+                "from flask import Flask\n\napp = Flask(__name__)\n\n@app.get('/x')\ndef x(): ...\n"
             )
         },
     )
@@ -150,8 +149,8 @@ def test_router_prefix_and_include_chain(tmp_path: Path) -> None:
             "main.py": (
                 "from fastapi import FastAPI\n"
                 "from routers import items\n\n"
-                "app = FastAPI(root_path=\"/prod\")\n"
-                "app.include_router(items.router, prefix=\"/api\")\n"
+                'app = FastAPI(root_path="/prod")\n'
+                'app.include_router(items.router, prefix="/api")\n'
             ),
             "routers/items.py": ROUTER
             + """
@@ -172,13 +171,13 @@ def test_nested_include_router(tmp_path: Path) -> None:
                 "from fastapi import FastAPI\n"
                 "import mid\n\n"
                 "app = FastAPI()\n"
-                "app.include_router(mid.outer, prefix=\"/api\")\n"
+                'app.include_router(mid.outer, prefix="/api")\n'
             ),
             "mid.py": (
                 "from fastapi import APIRouter\n"
                 "import inner\n\n"
-                "outer = APIRouter(prefix=\"/o\")\n"
-                "outer.include_router(inner.router, prefix=\"/i\")\n"
+                'outer = APIRouter(prefix="/o")\n'
+                'outer.include_router(inner.router, prefix="/i")\n'
             ),
             "inner.py": ROUTER.replace('"/v1"', '"/leaf"')
             + """
@@ -418,7 +417,7 @@ def test_deterministic_across_file_orders(tmp_path: Path) -> None:
             "from fastapi import FastAPI\n"
             "import b_router\n\n"
             "app = FastAPI()\n"
-            "app.include_router(b_router.router, prefix=\"/api\")\n"
+            'app.include_router(b_router.router, prefix="/api")\n'
         ),
         "b_router.py": ROUTER + '@router.get("/r")\ndef r(): ...\n',
         "c_extra.py": APP + '@app.post("/p")\ndef p(): ...\n',

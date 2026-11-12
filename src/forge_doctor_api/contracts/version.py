@@ -30,10 +30,7 @@ class ContractVersion:
     def parse(text: str) -> ContractVersion:
         family, sep, major = text.rpartition("/")
         if not sep or not family or not major.isdigit():
-            raise ValueError(
-                f"invalid contract version: {text!r} "
-                "(expected <family>/<major>)"
-            )
+            raise ValueError(f"invalid contract version: {text!r} (expected <family>/<major>)")
         return ContractVersion(family, int(major))
 
     def compatible_with(self, other: ContractVersion) -> bool:
@@ -52,22 +49,14 @@ def negotiate(
     supported: tuple[ContractVersion, ...] = SUPPORTED,
 ) -> ContractVersion | None:
     """Return the common version for ``offered`` or ``None`` when disjoint."""
-    version = (
-        offered
-        if isinstance(offered, ContractVersion)
-        else ContractVersion.parse(offered)
-    )
+    version = offered if isinstance(offered, ContractVersion) else ContractVersion.parse(offered)
     candidates = [v for v in supported if v.compatible_with(version)]
     return max(candidates) if candidates else None
 
 
 def within_range(offered: str | ContractVersion) -> bool:
     """Whether ``offered`` falls inside the declared ``[min, max]`` window."""
-    version = (
-        offered
-        if isinstance(offered, ContractVersion)
-        else ContractVersion.parse(offered)
-    )
+    version = offered if isinstance(offered, ContractVersion) else ContractVersion.parse(offered)
     return version.family == CURRENT.family and (
         SUPPORTED_MIN.major <= version.major <= SUPPORTED_MAX.major
     )

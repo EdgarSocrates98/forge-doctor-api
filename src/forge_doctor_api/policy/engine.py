@@ -31,9 +31,14 @@ _SPECS: dict[str, tuple[str, Severity]] = {
 }
 
 
-def _finding(check_id: str, title: str, description: str,
-             severity: Severity, policy: ApiPolicy | None,
-             violation: PolicyViolation | None) -> Finding:
+def _finding(
+    check_id: str,
+    title: str,
+    description: str,
+    severity: Severity,
+    policy: ApiPolicy | None,
+    violation: PolicyViolation | None,
+) -> Finding:
     loc = violation.location if violation else (policy.location if policy else None)
     return Finding(
         id=check_id,
@@ -51,7 +56,8 @@ def _finding(check_id: str, title: str, description: str,
                 resolution="provide the missing evidence or fix the violation",
             ),
         )
-        if severity is Severity.INFO else (),
+        if severity is Severity.INFO
+        else (),
     )
 
 
@@ -73,15 +79,18 @@ def evaluate_policies(
         reason = exception_validity(exc, today)
         if reason is not None:
             title, sev = _SPECS["POLICY008"]
-            findings.append(_finding(
-                "POLICY008", title,
-                f"exception for rule `{exc.rule}` (scope {exc.scope}) invalid: {reason}",
-                sev, None, None,
-            ))
+            findings.append(
+                _finding(
+                    "POLICY008",
+                    title,
+                    f"exception for rule `{exc.rule}` (scope {exc.scope}) invalid: {reason}",
+                    sev,
+                    None,
+                    None,
+                )
+            )
 
-    effective, widening_issues = resolve_policies(
-        policy_set.policies, policy_set.exceptions, today
-    )
+    effective, widening_issues = resolve_policies(policy_set.policies, policy_set.exceptions, today)
     for issue in widening_issues:
         title, sev = _SPECS["POLICY009"]
         findings.append(_finding("POLICY009", title, issue, sev, None, None))
@@ -101,11 +110,16 @@ def evaluate_policies(
             if covered:
                 continue
             sev = policy.severity or spec.default_severity
-            findings.append(_finding(
-                spec.check_id, spec.title,
-                f"{v.detail} [{policy.level.value} policy {policy.id} in {policy.file}]",
-                sev, policy, v,
-            ))
+            findings.append(
+                _finding(
+                    spec.check_id,
+                    spec.title,
+                    f"{v.detail} [{policy.level.value} policy {policy.id} in {policy.file}]",
+                    sev,
+                    policy,
+                    v,
+                )
+            )
     findings.sort(
         key=lambda f: (f.id, f.source_location.path if f.source_location else "", f.description)
     )

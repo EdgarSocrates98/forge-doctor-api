@@ -71,8 +71,7 @@ CATALOG: tuple[SecCheckSpec, ...] = (
         confidence=Confidence.MEDIUM,
         evidence_kind=EvidenceKind.CONFIG,
         finding_class=FindingClass.CONFIGURATION_RISK,
-        description="CORS allows any origin; with credentials it is a "
-        "configuration risk.",
+        description="CORS allows any origin; with credentials it is a configuration risk.",
     ),
     SecCheckSpec(
         id="APISEC005",

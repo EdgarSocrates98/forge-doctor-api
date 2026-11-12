@@ -55,8 +55,12 @@ _HOST_CMDS = {
 
 def _runner(argv: list[str]) -> tuple[int, str]:
     proc = subprocess.run(
-        argv, capture_output=True, text=True, timeout=_TIMEOUT_S,
-        errors="replace", check=False,
+        argv,
+        capture_output=True,
+        text=True,
+        timeout=_TIMEOUT_S,
+        errors="replace",
+        check=False,
     )
     return proc.returncode, (proc.stdout or "") + (proc.stderr or "")
 
@@ -71,9 +75,15 @@ def _logged_in(host: str, out: str) -> bool | None:
         if isinstance(data, dict) and "loggedIn" in data:
             return bool(data["loggedIn"])
     low = out.lower()
-    if any(s in low for s in (
-        "not logged", "logged out", "no credentials", "unauthorized",
-    )):
+    if any(
+        s in low
+        for s in (
+            "not logged",
+            "logged out",
+            "no credentials",
+            "unauthorized",
+        )
+    ):
         return False
     if "logged in" in low:
         return True
@@ -84,11 +94,19 @@ def _call(executable: str, argv: list[str]) -> tuple[int, str] | dict[str, Any]:
     try:
         return _runner([executable, *argv])
     except subprocess.TimeoutExpired as exc:
-        return {"status": "refused", "reason": "host_cli_timeout",
-                "command": " ".join(argv), "timeout_s": exc.timeout}
+        return {
+            "status": "refused",
+            "reason": "host_cli_timeout",
+            "command": " ".join(argv),
+            "timeout_s": exc.timeout,
+        }
     except OSError as exc:
-        return {"status": "refused", "reason": "host_cli_failed",
-                "command": " ".join(argv), "output": str(exc)[-_OUT_MAX:]}
+        return {
+            "status": "refused",
+            "reason": "host_cli_failed",
+            "command": " ".join(argv),
+            "output": str(exc)[-_OUT_MAX:],
+        }
 
 
 def _integration(repo: Path) -> dict[str, Any]:
@@ -99,7 +117,10 @@ def _integration(repo: Path) -> dict[str, Any]:
     try:
         proc = subprocess.run(
             [sys.executable, str(script), "status", "--root", str(repo)],
-            capture_output=True, text=True, timeout=30, check=False,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
         )
         st = json.loads(proc.stdout or "{}")
     except (OSError, ValueError, subprocess.TimeoutExpired) as exc:
@@ -117,11 +138,17 @@ def _integration(repo: Path) -> dict[str, Any]:
 
 def host_state(host: str, repo: Path) -> dict[str, Any]:
     if host not in _HOST_CMDS:
-        return {"host": host, "state": "refused",
-                "reason": "host_unknown", "known": list(_HOST_CMDS)}
+        return {
+            "host": host,
+            "state": "refused",
+            "reason": "host_unknown",
+            "known": list(_HOST_CMDS),
+        }
     binary, auth_status = _HOST_CMDS[host]
     state: dict[str, Any] = {
-        "host": host, "binary": binary, "launch_command": binary,
+        "host": host,
+        "binary": binary,
+        "launch_command": binary,
     }
     path = shutil.which(binary)
     if not path:
@@ -135,8 +162,7 @@ def host_state(host: str, repo: Path) -> dict[str, Any]:
         state["version_refused"] = version
     else:
         rc, out = version
-        first = next(
-            (line.strip() for line in out.splitlines() if line.strip()), "")
+        first = next((line.strip() for line in out.splitlines() if line.strip()), "")
         state["version"] = first or None
         state["state"] = "SUPPORTED" if rc == 0 else "DETECTED"
 
@@ -159,8 +185,10 @@ def host_state(host: str, repo: Path) -> dict[str, Any]:
     else:
         integ = state["integration"].get("state")
         state["state"] = (
-            "READY" if integ == "healthy"
-            else f"INTEGRATION_{integ.upper()}" if integ in {"degraded", "broken"}
+            "READY"
+            if integ == "healthy"
+            else f"INTEGRATION_{integ.upper()}"
+            if integ in {"degraded", "broken"}
             else "SUPPORTED"
         )
     return state
@@ -174,23 +202,30 @@ def main() -> int:
     args = parser.parse_args()
 
     if args.target not in (*HOST_NAMES, "all"):
-        print(json.dumps({
-            "status": "refused", "reason": "host_unknown",
-            "host": args.target, "known": [*HOST_NAMES, "all"],
-        }, indent=2))
+        print(
+            json.dumps(
+                {
+                    "status": "refused",
+                    "reason": "host_unknown",
+                    "host": args.target,
+                    "known": [*HOST_NAMES, "all"],
+                },
+                indent=2,
+            )
+        )
         return 2
 
     repo = Path(args.root)
     names = list(HOST_NAMES) if args.target == "all" else [args.target]
     states = [host_state(n, repo) for n in names]
     receipt: dict[str, Any] = {
-        "repo": repo.as_posix(), "hosts": states, "launched": False,
+        "repo": repo.as_posix(),
+        "hosts": states,
+        "launched": False,
     }
     if args.target == "all" or not args.launch:
         if args.launch:
-            receipt["launch_refused"] = (
-                "selector `all` does not launch: pick one host"
-            )
+            receipt["launch_refused"] = "selector `all` does not launch: pick one host"
         print(json.dumps(receipt, indent=2, ensure_ascii=False))
         return 0
 
@@ -205,8 +240,7 @@ def main() -> int:
     else:
         # Path came from shutil.which — same trust level as any PATH exec.
         receipt["launched"] = True
-        receipt["host_exit_code"] = subprocess.call(
-            [state["binary_path"]], cwd=str(repo))
+        receipt["host_exit_code"] = subprocess.call([state["binary_path"]], cwd=str(repo))
     print(json.dumps(receipt, indent=2, ensure_ascii=False))
     return int(receipt.get("host_exit_code") or 0)
 

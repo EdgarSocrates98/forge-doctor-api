@@ -31,15 +31,14 @@ from forge_doctor_api.security.model import ApiSecurityModel
 from forge_doctor_api.security.scan import normalize_route_path
 from forge_doctor_api.twin.model import TwinDrift, TwinDriftKind, TwinState
 
-_VERSION_ATTRS = ("service.version", "api.version", "app.version",
-                  "service_version")
+_VERSION_ATTRS = ("service.version", "api.version", "app.version", "service_version")
 _URI_VERSION_RE = re.compile(r"/v(\d+)(?:/|$)")
-_ROUTE_KEYS = ("routes", "route", "route_config", "prefix", "path",
-               "path_prefix", "match")
+_ROUTE_KEYS = ("routes", "route", "route_config", "prefix", "path", "path_prefix", "match")
 
 
-def _ev(kind: EvidenceKind, source: str, summary: str,
-        line: int | None = None) -> tuple[Evidence, ...]:
+def _ev(
+    kind: EvidenceKind, source: str, summary: str, line: int | None = None
+) -> tuple[Evidence, ...]:
     return (Evidence(kind=kind, source=source, summary=summary, line=line),)
 
 
@@ -48,22 +47,15 @@ def _norm_op_path(path: str) -> str:
 
 
 def _route_path_set(routes: RouteScan) -> dict[tuple[str, str], RouteModel]:
-    return {
-        (r.method.upper(), _norm_op_path(r.path)): r for r in routes.routes
-    }
+    return {(r.method.upper(), _norm_op_path(r.path)): r for r in routes.routes}
 
 
-def contract_drift(
-    openapi: OpenApiProjectModel, routes: RouteScan
-) -> tuple[TwinDrift, ...]:
+def contract_drift(openapi: OpenApiProjectModel, routes: RouteScan) -> tuple[TwinDrift, ...]:
     """DECLARED vs IMPLEMENTED: ops with no route / routes with no op."""
     if routes is None:
         return ()
     impl = _route_path_set(routes)
-    declared = {
-        (op.method.upper(), _norm_op_path(op.path)): op
-        for op in openapi.operations
-    }
+    declared = {(op.method.upper(), _norm_op_path(op.path)): op for op in openapi.operations}
     out: list[TwinDrift] = []
     for key in sorted(set(declared) - set(impl)):
         op = declared[key]
@@ -74,8 +66,9 @@ def contract_drift(
                 state_b=TwinState.IMPLEMENTED,
                 subject=f"{key[0]} {key[1]}",
                 detail="declared operation has no implemented route",
-                evidence_a=_ev(EvidenceKind.STATIC, op.location.path,
-                               "declared op", op.location.line),
+                evidence_a=_ev(
+                    EvidenceKind.STATIC, op.location.path, "declared op", op.location.line
+                ),
             )
         )
     for key in sorted(set(impl) - set(declared)):
@@ -87,8 +80,12 @@ def contract_drift(
                 state_b=TwinState.DECLARED,
                 subject=f"{key[0]} {key[1]}",
                 detail="implemented route has no declared operation",
-                evidence_a=_ev(EvidenceKind.STATIC, r.source_location.path,
-                               "impl route", r.source_location.line),
+                evidence_a=_ev(
+                    EvidenceKind.STATIC,
+                    r.source_location.path,
+                    "impl route",
+                    r.source_location.line,
+                ),
             )
         )
     return tuple(out)
@@ -131,8 +128,7 @@ def gateway_routes(context: ProjectContext, files: list[str]) -> dict[str, str]:
     return found
 
 
-def _collect_routes(node: Any, path: str, out: dict[str, str],
-                    depth: int = 0) -> None:
+def _collect_routes(node: Any, path: str, out: dict[str, str], depth: int = 0) -> None:
     if depth > 12:
         return
     if isinstance(node, dict):
@@ -171,14 +167,12 @@ def routing_drift(
                 UnknownFact(
                     subject=path,
                     missing="matching contract operation",
-                    resolution="confirm whether the route fronts an "
-                    "undocumented upstream",
+                    resolution="confirm whether the route fronts an undocumented upstream",
                 ),
             ),
         )
         for path, src in sorted(gw.items())
-        if _norm_op_path(path) not in declared
-        and _norm_op_path(path) != "/"
+        if _norm_op_path(path) not in declared and _norm_op_path(path) != "/"
     ]
     return tuple(out)
 
@@ -214,8 +208,7 @@ def version_drift(
                     subject=ver,
                     detail=f"observed version {ver} not in declared "
                     f"versions {sorted(declared_versions)}",
-                    evidence_b=_ev(EvidenceKind.RUNTIME,
-                                   "(spans)", f"{observed[ver]}={ver}"),
+                    evidence_b=_ev(EvidenceKind.RUNTIME, "(spans)", f"{observed[ver]}={ver}"),
                 )
             )
     return tuple(out)
@@ -229,8 +222,7 @@ def runtime_drift(
     if not executions:
         return ()
     declared_paths = {_norm_op_path(op.path) for op in openapi.operations}
-    declared_ops = {op.operation_id for op in openapi.operations
-                    if op.operation_id}
+    declared_ops = {op.operation_id for op in openapi.operations if op.operation_id}
     observed: dict[str, RequestExecution] = {}
     for e in executions:
         observed.setdefault(e.route or e.operation, e)
@@ -245,8 +237,7 @@ def runtime_drift(
                     state_a=TwinState.OBSERVED,
                     state_b=TwinState.DECLARED,
                     subject=key,
-                    detail="observed operation absent from declared "
-                    "contract",
+                    detail="observed operation absent from declared contract",
                     evidence_a=_ev(
                         EvidenceKind.RUNTIME,
                         e.evidence[0].source if e.evidence else "(runtime)",
@@ -279,8 +270,9 @@ def slo_drift(
                     detail=f"error budget exhausted: consumed "
                     f"{budget.consumed} over target {obj.target} in "
                     f"window {budget.window}",
-                    evidence_b=_ev(EvidenceKind.RUNTIME, "(executions)",
-                                   f"{budget.total} requests"),
+                    evidence_b=_ev(
+                        EvidenceKind.RUNTIME, "(executions)", f"{budget.total} requests"
+                    ),
                 )
             )
     return tuple(out)
@@ -313,20 +305,17 @@ def dependency_drift(
             state_a=TwinState.OBSERVED,
             state_b=TwinState.DECLARED,
             subject=callee,
-            detail="observed downstream callee has no declared "
-            "dependency evidence",
+            detail="observed downstream callee has no declared dependency evidence",
             evidence_a=_ev(
                 EvidenceKind.RUNTIME,
-                callees[callee].evidence[0].source
-                if callees[callee].evidence else "(runtime)",
+                callees[callee].evidence[0].source if callees[callee].evidence else "(runtime)",
                 f"calls to {callee}",
             ),
             unknowns=(
                 UnknownFact(
                     subject=callee,
                     missing="declared dependency record",
-                    resolution="declare the dependency in contract "
-                    "servers or external-api config",
+                    resolution="declare the dependency in contract servers or external-api config",
                 ),
             ),
         )
@@ -359,6 +348,4 @@ def twin_drift(
         out.extend(runtime_drift(openapi, executions))
     out.extend(slo_drift(objectives, executions))
     out.extend(dependency_drift(security, openapi, executions))
-    return tuple(
-        sorted(out, key=lambda d: (d.kind.value, d.subject))
-    )
+    return tuple(sorted(out, key=lambda d: (d.kind.value, d.subject)))

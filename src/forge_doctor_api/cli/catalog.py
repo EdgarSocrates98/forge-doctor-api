@@ -123,12 +123,14 @@ def command_inventory() -> tuple[CommandEntry, ...]:
             if hasattr(cmd, "commands"):
                 walk(cmd, f"{path} ")
             else:
-                entries.append(CommandEntry(
-                    path=path,
-                    options=_options(cmd),
-                    arguments=_arguments(cmd),
-                    stability=stability_of(path),
-                ))
+                entries.append(
+                    CommandEntry(
+                        path=path,
+                        options=_options(cmd),
+                        arguments=_arguments(cmd),
+                        stability=stability_of(path),
+                    )
+                )
 
     walk(root)
     return tuple(entries)

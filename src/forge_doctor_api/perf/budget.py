@@ -44,9 +44,7 @@ class BudgetReport(Model):
     unknowns: tuple[UnknownFact, ...] = ()
 
 
-def evaluate_budget(
-    path: RequestCriticalPath, budget: ApiLatencyBudget
-) -> BudgetReport:
+def evaluate_budget(path: RequestCriticalPath, budget: ApiLatencyBudget) -> BudgetReport:
     """Match budget hops to critical-path segments by name.
 
     `service:<name>` and `downstream:<name>` segment labels match a hop
@@ -64,19 +62,14 @@ def evaluate_budget(
                 break
         observed = seg.duration_ms if seg else None
         over = (
-            observed > hop.budget_ms
-            if observed is not None and hop.budget_ms is not None
-            else None
+            observed > hop.budget_ms if observed is not None and hop.budget_ms is not None else None
         )
         if over is None:
             unknowns.append(
                 UnknownFact(
                     subject=f"hop {hop.name}",
-                    missing=(
-                        "observed segment" if seg is None else "hop budget"
-                    ),
-                    resolution="provide a budget_ms value or a trace "
-                    "covering this hop",
+                    missing=("observed segment" if seg is None else "hop budget"),
+                    resolution="provide a budget_ms value or a trace covering this hop",
                 )
             )
         reports.append(
@@ -88,9 +81,7 @@ def evaluate_budget(
             )
         )
     known = [r for r in reports if r.over_budget is not None]
-    within = (
-        all(not r.over_budget for r in known) if known else None
-    )
+    within = all(not r.over_budget for r in known) if known else None
     return BudgetReport(
         budget=budget.name,
         trace_id=path.trace_id,

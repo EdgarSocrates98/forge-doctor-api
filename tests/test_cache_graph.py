@@ -21,16 +21,19 @@ from forge_doctor_api.core.models import SourceLocation
 LOC = SourceLocation(path="cache.yaml", line=1, column=1)
 
 
-def _policy(subject: str, *, layer: CacheLayer = CacheLayer.GATEWAY,
-            ttl: str | None = None,
-            stale: str | None = None) -> CachePolicy:
-    return CachePolicy(
-        subject=subject, layer=layer, ttl=ttl, stale_policy=stale,
-        location=LOC)
+def _policy(
+    subject: str,
+    *,
+    layer: CacheLayer = CacheLayer.GATEWAY,
+    ttl: str | None = None,
+    stale: str | None = None,
+) -> CachePolicy:
+    return CachePolicy(subject=subject, layer=layer, ttl=ttl, stale_policy=stale, location=LOC)
 
 
 def _openapi(tmp_path: Path) -> object:
-    (tmp_path / "o.yaml").write_text("""
+    (tmp_path / "o.yaml").write_text(
+        """
 openapi: 3.0.3
 info: {title: T, version: "1"}
 paths:
@@ -54,18 +57,18 @@ paths:
 components:
   schemas:
     Pet: {type: object}
-""", "utf-8")
+""",
+        "utf-8",
+    )
     return load_openapi_project(ProjectContext.from_root(tmp_path))
 
 
 def test_schema_evidence_creates_invalidation_edge(tmp_path: Path) -> None:
     openapi = _openapi(tmp_path)
-    subject = next(o.identity for o in openapi.operations
-                   if o.operation_id == "listPets")
+    subject = next(o.identity for o in openapi.operations if o.operation_id == "listPets")
     model = ApiCacheModel(policies=(_policy(subject, ttl="60s"),))
     graph, findings = build_cache_graph(model, openapi)
-    inv = [e for e in graph.edges
-           if e.kind is CacheEdgeKind.INVALIDATES]
+    inv = [e for e in graph.edges if e.kind is CacheEdgeKind.INVALIDATES]
     assert len(inv) == 1
     assert inv[0].via_schema == "Pet"
     assert inv[0].evidence
@@ -75,8 +78,7 @@ def test_schema_evidence_creates_invalidation_edge(tmp_path: Path) -> None:
 
 def test_no_schema_link_no_edge(tmp_path: Path) -> None:
     openapi = _openapi(tmp_path)
-    subject = next(o.identity for o in openapi.operations
-                   if o.operation_id == "listCars")
+    subject = next(o.identity for o in openapi.operations if o.operation_id == "listCars")
     model = ApiCacheModel(policies=(_policy(subject, ttl="60s"),))
     graph, findings = build_cache_graph(model, openapi)
     assert graph.edges == ()
@@ -99,12 +101,13 @@ def test_prefix_only_match_no_edge(tmp_path: Path) -> None:
 
 def test_cross_layer_conflict_candidate(tmp_path: Path) -> None:
     openapi = _openapi(tmp_path)
-    subject = next(o.identity for o in openapi.operations
-                   if o.operation_id == "listPets")
-    model = ApiCacheModel(policies=(
-        _policy(subject, layer=CacheLayer.GATEWAY, stale="serve-stale"),
-        _policy(subject, layer=CacheLayer.SERVICE, stale="reject-stale"),
-    ))
+    subject = next(o.identity for o in openapi.operations if o.operation_id == "listPets")
+    model = ApiCacheModel(
+        policies=(
+            _policy(subject, layer=CacheLayer.GATEWAY, stale="serve-stale"),
+            _policy(subject, layer=CacheLayer.SERVICE, stale="reject-stale"),
+        )
+    )
     _, findings = build_cache_graph(model, openapi)
     assert any(f.id == "APICACHE002" for f in findings)
     f = next(f for f in findings if f.id == "APICACHE002")
@@ -113,8 +116,7 @@ def test_cross_layer_conflict_candidate(tmp_path: Path) -> None:
 
 def test_no_ttl_no_stale_candidate(tmp_path: Path) -> None:
     openapi = _openapi(tmp_path)
-    subject = next(o.identity for o in openapi.operations
-                   if o.operation_id == "listPets")
+    subject = next(o.identity for o in openapi.operations if o.operation_id == "listPets")
     model = ApiCacheModel(policies=(_policy(subject),))
     _, findings = build_cache_graph(model, openapi)
     assert not any(f.id == "APICACHE001" for f in findings)
@@ -122,8 +124,7 @@ def test_no_ttl_no_stale_candidate(tmp_path: Path) -> None:
 
 def test_deterministic(tmp_path: Path) -> None:
     openapi = _openapi(tmp_path)
-    subject = next(o.identity for o in openapi.operations
-                   if o.operation_id == "listPets")
+    subject = next(o.identity for o in openapi.operations if o.operation_id == "listPets")
     model = ApiCacheModel(policies=(_policy(subject, ttl="60s"),))
     a = build_cache_graph(model, openapi)
     b = build_cache_graph(model, openapi)

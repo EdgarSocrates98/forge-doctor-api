@@ -72,8 +72,8 @@ def _split(
     executions: Iterable[RequestExecution],
 ) -> dict[tuple[str | None, str], _Windows]:
     """Latest populated window vs all earlier windows, per op key."""
-    by_key: dict[tuple[str | None, str], dict[str, list[RequestExecution]]] = (
-        defaultdict(lambda: defaultdict(list))
+    by_key: dict[tuple[str | None, str], dict[str, list[RequestExecution]]] = defaultdict(
+        lambda: defaultdict(list)
     )
     for e in executions:
         by_key[(e.service, e.operation)][window_key(e.start_unix_nano)].append(e)
@@ -145,8 +145,7 @@ def run_perf_checks(
         )
         if ok:
             findings.append(
-                _finding(BY_ID["APIPERF001"], f"{subj}: {detail} "
-                         f"(window {w.current_window})", subj)
+                _finding(BY_ID["APIPERF001"], f"{subj}: {detail} (window {w.current_window})", subj)
             )
 
         # APIPERF002 - error rate regression
@@ -186,26 +185,19 @@ def run_perf_checks(
                 if c.callee and c.duration_ms is not None:
                     cur_calls[c.callee].append(c.duration_ms)
         for callee in sorted(cur_calls):
-            ok, detail = _regressed(
-                base_calls.get(callee, []), cur_calls[callee]
-            )
+            ok, detail = _regressed(base_calls.get(callee, []), cur_calls[callee])
             if ok:
                 findings.append(
                     _finding(
                         BY_ID["APIPERF003"],
-                        f"{subj} -> {callee}: downstream {detail} "
-                        f"(window {w.current_window})",
+                        f"{subj} -> {callee}: downstream {detail} (window {w.current_window})",
                         subj,
                     )
                 )
 
         # APIPERF004 - retry amplification
-        bh, bt = _rates(
-            base, lambda e: (e.retries or 0) > 0 if e.retries is not None else None
-        )
-        ch, ct = _rates(
-            cur, lambda e: (e.retries or 0) > 0 if e.retries is not None else None
-        )
+        bh, bt = _rates(base, lambda e: (e.retries or 0) > 0 if e.retries is not None else None)
+        ch, ct = _rates(cur, lambda e: (e.retries or 0) > 0 if e.retries is not None else None)
         if bt >= MIN_SAMPLES and ct >= MIN_SAMPLES:
             br, cr = bh / bt, ch / ct
             if cr - br > RETRY_RATE_DELTA:
@@ -243,17 +235,14 @@ def run_perf_checks(
 
         # APIPERF006 - payload growth
         ok, detail = _regressed(
-            [float(e.response_bytes) for e in base
-             if e.response_bytes is not None],
-            [float(e.response_bytes) for e in cur
-             if e.response_bytes is not None],
+            [float(e.response_bytes) for e in base if e.response_bytes is not None],
+            [float(e.response_bytes) for e in cur if e.response_bytes is not None],
         )
         if ok:
             findings.append(
                 _finding(
                     BY_ID["APIPERF006"],
-                    f"{subj}: payload {detail} "
-                    f"(window {w.current_window})",
+                    f"{subj}: payload {detail} (window {w.current_window})",
                     subj,
                 )
             )

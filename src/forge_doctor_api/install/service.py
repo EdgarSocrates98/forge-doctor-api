@@ -449,6 +449,7 @@ def _context_manifest(ctx: kit.InstallContext) -> dict[str, Any]:
     """The ``forge/context/v1`` manifest built from real sources:
     ``forge.json`` / ``forge.agentic.json`` (repo root) and the bundled
     agent specs under ``installation/assets/agents``."""
+
     def _bundled_json(name: str) -> dict[str, Any] | None:
         for cand in (_PKG_DIR / name, _REPO_DIR / name):
             data = kit._load_json(cand, None)

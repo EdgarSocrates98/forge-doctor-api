@@ -32,9 +32,7 @@ def client_graph(model: ApiClientModel) -> ServiceGraph:
         if site.method is None or site.path is None:
             continue
         client_id = entity_id(EntityKind.CLIENT, "source", site.client)
-        endpoint_id = entity_id(
-            EntityKind.ENDPOINT, "http", f"{site.method} {site.path}"
-        )
+        endpoint_id = entity_id(EntityKind.ENDPOINT, "http", f"{site.method} {site.path}")
         graph.add_entity(
             Entity(id=endpoint_id, kind=EntityKind.ENDPOINT, name=f"{site.method} {site.path}")
         )

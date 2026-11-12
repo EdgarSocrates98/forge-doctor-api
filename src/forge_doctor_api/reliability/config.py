@@ -48,32 +48,68 @@ _LB_MAP = {
     "ring_hash": LoadBalancingKind.WEIGHTED,
     "maglev": LoadBalancingKind.WEIGHTED,
 }
-_RETRY_KEYS = ("retry_policy", "retryPolicy", "retry", "retries",
-               "attempts")
-_TIMEOUT_KEYS = ("per_try_timeout", "perTryTimeout", "timeout",
-                 "connect_timeout", "connectTimeout",
-                 "upstream_rq_timeout", "request_timeout", "deadline")
-_CB_KEYS = ("circuit_breakers", "circuitBreakers", "outlier_detection",
-            "circuitbreaker")
-_HEALTH_KEYS = ("health_checks", "healthChecks", "health_check",
-                "healthCheck")
-_SHUTDOWN_KEYS = ("drain_listeners", "parent_shutdown_time_ms",
-                  "graceful_shutdown", "shutdown")
+_RETRY_KEYS = ("retry_policy", "retryPolicy", "retry", "retries", "attempts")
+_TIMEOUT_KEYS = (
+    "per_try_timeout",
+    "perTryTimeout",
+    "timeout",
+    "connect_timeout",
+    "connectTimeout",
+    "upstream_rq_timeout",
+    "request_timeout",
+    "deadline",
+)
+_CB_KEYS = ("circuit_breakers", "circuitBreakers", "outlier_detection", "circuitbreaker")
+_HEALTH_KEYS = ("health_checks", "healthChecks", "health_check", "healthCheck")
+_SHUTDOWN_KEYS = ("drain_listeners", "parent_shutdown_time_ms", "graceful_shutdown", "shutdown")
 _SLO_KEYS = ("slo", "slos", "objectives", "serviceObjectives")
-_NAME_KEYS = ("scope", "subject", "name", "cluster", "cluster_name",
-              "route", "route_config", "virtual_host", "service")
+_NAME_KEYS = (
+    "scope",
+    "subject",
+    "name",
+    "cluster",
+    "cluster_name",
+    "route",
+    "route_config",
+    "virtual_host",
+    "service",
+)
 _IDEM_KEYS = ("idempotency", "idempotent", "x_idempotent", "xIdempotent")
 # Keys whose subtrees carry documentation/sample/schema content, never
 # declared policy (OpenAPI `examples`, schema `properties`, narrative
 # fields). The walker must not descend into them — a `retries: 5`
 # inside an example is not a retry policy (spec 088).
-_NON_EVIDENCE_KEYS = frozenset({
-    "example", "examples", "description", "documentation", "docs",
-    "comment", "comments", "note", "notes", "summary", "default",
-    "properties", "schema", "schemas", "items", "definitions",
-    "components", "value", "content", "requestbody", "responses",
-    "parameters", "headers", "allof", "anyof", "oneof", "enum",
-})
+_NON_EVIDENCE_KEYS = frozenset(
+    {
+        "example",
+        "examples",
+        "description",
+        "documentation",
+        "docs",
+        "comment",
+        "comments",
+        "note",
+        "notes",
+        "summary",
+        "default",
+        "properties",
+        "schema",
+        "schemas",
+        "items",
+        "definitions",
+        "components",
+        "value",
+        "content",
+        "requestbody",
+        "responses",
+        "parameters",
+        "headers",
+        "allof",
+        "anyof",
+        "oneof",
+        "enum",
+    }
+)
 
 
 def _ms(value: Any) -> float | None:
@@ -130,8 +166,7 @@ def _walk(
         return
     low_keys = {str(k).lower(): k for k in node}
     node_name = next(
-        (str(node[k]) for k in _NAME_KEYS
-         if isinstance(node.get(k), str) and node.get(k)),
+        (str(node[k]) for k in _NAME_KEYS if isinstance(node.get(k), str) and node.get(k)),
         None,
     )
 
@@ -151,29 +186,25 @@ def _walk(
             or retry.get("max_attempts")
             or retry.get("attempts")
         )
-        statuses = (
-            retry.get("retry_on") or retry.get("retryOn")
-            or retry.get("retryable_statuses")
-        )
+        statuses = retry.get("retry_on") or retry.get("retryOn") or retry.get("retryable_statuses")
         scope = str(
-            retry.get("scope") or retry.get("name")
-            or _nearest_name(node, ()) or parent_name
-            or _nearest_name(node, trail) or Path(path).stem)
+            retry.get("scope")
+            or retry.get("name")
+            or _nearest_name(node, ())
+            or parent_name
+            or _nearest_name(node, trail)
+            or Path(path).stem
+        )
         out["retries"].append(
             RetryPolicy(
                 scope=str(scope),
                 max_attempts=attempts,
                 backoff=str(retry.get("backoff") or "") or None,
                 retryable_statuses=(
-                    tuple(str(s) for s in str(statuses).split(","))
-                    if statuses
-                    else ()
+                    tuple(str(s) for s in str(statuses).split(",")) if statuses else ()
                 ),
-                location=SourceLocation(
-                    path=path, line=_line_of(text, "retry")
-                ),
-                evidence=_ev(path, _line_of(text, "retry"),
-                             f"retry policy at {scope}"),
+                location=SourceLocation(path=path, line=_line_of(text, "retry")),
+                evidence=_ev(path, _line_of(text, "retry"), f"retry policy at {scope}"),
             )
         )
         consumed = retry
@@ -181,20 +212,15 @@ def _walk(
     # body already consumed by the dict branch above (no double count);
     # a `retries:` *list* of policy records is not a body, so its items
     # still reach this branch.
-    attempts = _num(get("num_retries", "numRetries", "maxAttempts",
-                        "max_attempts", "retries"))
-    if (attempts is not None and not isinstance(retry, dict)
-            and not structural):
+    attempts = _num(get("num_retries", "numRetries", "maxAttempts", "max_attempts", "retries"))
+    if attempts is not None and not isinstance(retry, dict) and not structural:
         scope = _nearest_name(node, trail) or Path(path).stem
         out["retries"].append(
             RetryPolicy(
                 scope=str(scope),
                 max_attempts=attempts,
-                location=SourceLocation(
-                    path=path, line=_line_of(text, "retries")
-                ),
-                evidence=_ev(path, _line_of(text, "retries"),
-                             f"retry attempts at {scope}"),
+                location=SourceLocation(path=path, line=_line_of(text, "retries")),
+                evidence=_ev(path, _line_of(text, "retries"), f"retry attempts at {scope}"),
             )
         )
 
@@ -210,16 +236,14 @@ def _walk(
                 _nearest_name(node, ())
                 or (parent_name if structural else None)
                 or _nearest_name(node, trail)
-                or Path(path).stem)
+                or Path(path).stem
+            )
             out["timeouts"].append(
                 TimeoutConfig(
                     scope=str(scope),
                     timeout_ms=ms,
-                    location=SourceLocation(
-                        path=path, line=_line_of(text, tk)
-                    ),
-                    evidence=_ev(path, _line_of(text, tk),
-                                 f"timeout at {scope}"),
+                    location=SourceLocation(path=path, line=_line_of(text, tk)),
+                    evidence=_ev(path, _line_of(text, tk), f"timeout at {scope}"),
                 )
             )
             break
@@ -236,43 +260,34 @@ def _walk(
                 CircuitBreakerConfig(
                     scope=str(scope),
                     provider=provider,
-                    location=SourceLocation(
-                        path=path, line=_line_of(text, ck)
-                    ),
-                    evidence=_ev(path, _line_of(text, ck),
-                                 f"circuit breaker at {scope}"),
+                    location=SourceLocation(path=path, line=_line_of(text, ck)),
+                    evidence=_ev(path, _line_of(text, ck), f"circuit breaker at {scope}"),
                 )
             )
             break
 
-    lb = get("lb_policy", "lbPolicy", "loadBalancingPolicy",
-             "load_balancing_policy")
+    lb = get("lb_policy", "lbPolicy", "loadBalancingPolicy", "load_balancing_policy")
     if lb is not None:
         scope = _nearest_name(node, trail) or Path(path).stem
-        kind = _LB_MAP.get(str(lb).lower().replace("-", "_"),
-                           LoadBalancingKind.CUSTOM)
+        kind = _LB_MAP.get(str(lb).lower().replace("-", "_"), LoadBalancingKind.CUSTOM)
         out["lbs"].append(
             LoadBalancing(
                 scope=str(scope),
                 kind=kind,
                 detail=str(lb),
-                evidence=_ev(path, _line_of(text, "lb_policy"),
-                             f"lb {lb} at {scope}"),
+                evidence=_ev(path, _line_of(text, "lb_policy"), f"lb {lb} at {scope}"),
             )
         )
 
     for hk in _HEALTH_KEYS:
         if get(hk) is not None:
             scope = _nearest_name(node, trail) or Path(path).stem
-            proto = (
-                "grpc-health-v1" if "grpc" in text.lower() else "config"
-            )
+            proto = "grpc-health-v1" if "grpc" in text.lower() else "config"
             out["health"].append(
                 HealthCheckEvidence(
                     scope=str(scope),
                     protocol=proto,
-                    evidence=_ev(path, _line_of(text, hk),
-                                 f"health check at {scope}"),
+                    evidence=_ev(path, _line_of(text, hk), f"health check at {scope}"),
                 )
             )
             break
@@ -280,17 +295,15 @@ def _walk(
     idem = get("idempotency", "idempotent", "x_idempotent", "xIdempotent")
     in_idem_block = any(t in _IDEM_KEYS for t in trail)
     if (idem is not None and not isinstance(idem, dict)) or in_idem_block:
-        block_key = next(
-            (t for t in reversed(trail) if t in _IDEM_KEYS), None
-        )
+        block_key = next((t for t in reversed(trail) if t in _IDEM_KEYS), None)
         if block_key is None and isinstance(node, dict):
             block_key = next(
-                (str(k) for k in node
-                 if str(k).lower() in {k.lower() for k in _IDEM_KEYS}),
+                (str(k) for k in node if str(k).lower() in {k.lower() for k in _IDEM_KEYS}),
                 None,
             )
         block_ev = _ev(
-            path, _line_of(text, str(block_key or "idempotency")),
+            path,
+            _line_of(text, str(block_key or "idempotency")),
             "idempotency config",
         )
         sources: list[IdempotencySource] = []
@@ -298,12 +311,13 @@ def _walk(
         if method is not None:
             sources.append(
                 IdempotencySource(
-                    kind="http_method", detail=str(method), supports=None,
+                    kind="http_method",
+                    detail=str(method),
+                    supports=None,
                     evidence=block_ev,
                 )
             )
-        key = get("key_header", "idempotency_key", "idempotencyKey",
-                  "x_idempotency_key")
+        key = get("key_header", "idempotency_key", "idempotencyKey", "x_idempotency_key")
         if key is not None:
             sources.append(
                 IdempotencySource(
@@ -341,9 +355,7 @@ def _walk(
             or _nearest_name(node, trail)
             or Path(path).stem
         )
-        out["idem"].append(
-            aggregate_idempotency(subject, tuple(sources))
-        )
+        out["idem"].append(aggregate_idempotency(subject, tuple(sources)))
 
     for sk in _SHUTDOWN_KEYS:
         raw = get(sk)
@@ -354,8 +366,7 @@ def _walk(
                     scope=str(scope),
                     signal=sk,
                     drain_seconds=_ms(raw),
-                    evidence=_ev(path, _line_of(text, sk),
-                                 f"shutdown evidence at {scope}"),
+                    evidence=_ev(path, _line_of(text, sk), f"shutdown evidence at {scope}"),
                 )
             )
             break
@@ -370,11 +381,12 @@ def _walk(
                 if isinstance(item, dict):
                     low = {str(k).lower(): k for k in item}
                     name = item.get(low.get("name", "name"))
-                    metric = item.get(low.get("metric", "metric")) or \
-                        item.get(low.get("type", "type"))
-                    target = item.get(low.get("target", "target")) or \
-                        item.get(low.get("target_percentage",
-                                         "target_percentage"))
+                    metric = item.get(low.get("metric", "metric")) or item.get(
+                        low.get("type", "type")
+                    )
+                    target = item.get(low.get("target", "target")) or item.get(
+                        low.get("target_percentage", "target_percentage")
+                    )
                     if metric is not None and target is not None:
                         try:
                             tval = float(target)
@@ -387,11 +399,7 @@ def _walk(
                                 name=str(name or metric),
                                 metric=str(metric),
                                 target=tval,
-                                window=(
-                                    str(item[low["window"]])
-                                    if "window" in low
-                                    else None
-                                ),
+                                window=(str(item[low["window"]]) if "window" in low else None),
                                 evidence=_ev(
                                     path,
                                     _line_of(text, str(key)),
@@ -401,17 +409,27 @@ def _walk(
                         )
             continue
         if isinstance(val, dict):
-            _walk(val, path, ktrail, out, text,
-                  parent_name=node_name or parent_name,
-                  structural=(structural or val is consumed
-                              or ktrail[-1] in _IDEM_KEYS))
+            _walk(
+                val,
+                path,
+                ktrail,
+                out,
+                text,
+                parent_name=node_name or parent_name,
+                structural=(structural or val is consumed or ktrail[-1] in _IDEM_KEYS),
+            )
         elif isinstance(val, list):
             for item in val:
                 if isinstance(item, dict):
-                    _walk(item, path, ktrail, out, text,
-                          parent_name=node_name or parent_name,
-                          structural=(structural
-                                      or ktrail[-1] in _IDEM_KEYS))
+                    _walk(
+                        item,
+                        path,
+                        ktrail,
+                        out,
+                        text,
+                        parent_name=node_name or parent_name,
+                        structural=(structural or ktrail[-1] in _IDEM_KEYS),
+                    )
 
 
 def _num(value: Any) -> int | None:
@@ -425,8 +443,10 @@ def _num(value: Any) -> int | None:
 
 
 def load_reliability_model(
-    context: ProjectContext, files: list[str],
-    *, openapi: Any = None,
+    context: ProjectContext,
+    files: list[str],
+    *,
+    openapi: Any = None,
 ) -> ApiReliabilityModel:
     """Extract declared reliability evidence from config artifacts.
 
@@ -463,8 +483,12 @@ def load_reliability_model(
     # a gRPC-specific marker so generic `timeout:` keys in Envoy/app
     # YAML aren't double-counted as gRPC service configs.
     _grpc_markers = (
-        "methodConfig", "loadBalancingConfig", "waitForReady",
-        "grpc.health", "serviceConfig", "retryThrottling",
+        "methodConfig",
+        "loadBalancingConfig",
+        "waitForReady",
+        "grpc.health",
+        "serviceConfig",
+        "retryThrottling",
     )
     stub_calls = extract_stub_calls(context, files)
     for cfg in extract_service_configs(context, files):
@@ -482,9 +506,11 @@ def load_reliability_model(
                     max_attempts=rp.max_attempts,
                     backoff=rp.initial_backoff,
                     location=rp.location,
-                    evidence=_ev(cfg.path, rp.location.line
-                                 if rp.location else None,
-                                 f"gRPC retry policy in {cfg.path}"),
+                    evidence=_ev(
+                        cfg.path,
+                        rp.location.line if rp.location else None,
+                        f"gRPC retry policy in {cfg.path}",
+                    ),
                 )
             )
         if cfg.has_deadline:
@@ -500,8 +526,7 @@ def load_reliability_model(
                 HealthCheckEvidence(
                     scope=scope,
                     protocol="grpc-health-v1",
-                    evidence=_ev(cfg.path, None,
-                                 "gRPC health protocol config"),
+                    evidence=_ev(cfg.path, None, "gRPC health protocol config"),
                 )
             )
         if cfg.has_load_balancing:
@@ -539,26 +564,27 @@ def load_reliability_model(
                 continue
             name = ext.name.lower().replace("_", "-")
             subject = op.operation_id or op.identity
-            ev = _ev(ext.location.path, ext.location.line,
-                     f"{ext.name} on {subject}")
+            ev = _ev(ext.location.path, ext.location.line, f"{ext.name} on {subject}")
             if name in {"x-idempotent", "xidempotent"} or (
-                    name in {"x-idempotency", "x-idempotency-key"}
-                    and isinstance(ext.value, bool)):
+                name in {"x-idempotency", "x-idempotency-key"} and isinstance(ext.value, bool)
+            ):
                 by_subject.setdefault(subject, []).append(
                     IdempotencySource(
                         kind="contract_metadata",
                         detail=f"{ext.name}={ext.value}",
-                        supports=(ext.value
-                                  if isinstance(ext.value, bool) else None),
-                        evidence=ev))
+                        supports=(ext.value if isinstance(ext.value, bool) else None),
+                        evidence=ev,
+                    )
+                )
             elif name in {"x-idempotency-key", "x-idempotency"}:
                 by_subject.setdefault(subject, []).append(
                     IdempotencySource(
                         kind="idempotency_key",
-                        detail=(str(ext.value)
-                                if isinstance(ext.value, str)
-                                else "present"),
-                        supports=True, evidence=ev))
+                        detail=(str(ext.value) if isinstance(ext.value, str) else "present"),
+                        supports=True,
+                        evidence=ev,
+                    )
+                )
         existing = {i.subject: i for i in out["idem"]}
         for subject, sources in sorted(by_subject.items()):
             prev = existing.get(subject)
@@ -582,12 +608,8 @@ def load_reliability_model(
         load_balancing=lbs,
         health_checks=health,
         shutdown_evidence=shutdown,
-        idempotency=tuple(
-            sorted(out["idem"], key=lambda i: i.subject)
-        ),
-        objectives=tuple(
-            sorted(out["slos"], key=lambda o: o.name)
-        ),
+        idempotency=tuple(sorted(out["idem"], key=lambda i: i.subject)),
+        objectives=tuple(sorted(out["slos"], key=lambda o: o.name)),
         evidence=(
             Evidence(
                 kind=EvidenceKind.CONFIG,
@@ -626,35 +648,53 @@ def gateway_edge_policies(
     for gw in gateways:
         prefix = gw.dialect.value
         for e in gw.retries:
-            retries.append(RetryPolicy(
-                scope=f"{prefix}->{e.name}",
-                max_attempts=_detail_int(e.detail),
-                location=e.location,
-                evidence=_ev(e.location.path, e.location.line,
-                             f"gateway retry ({e.detail}) on {e.name}")))
+            retries.append(
+                RetryPolicy(
+                    scope=f"{prefix}->{e.name}",
+                    max_attempts=_detail_int(e.detail),
+                    location=e.location,
+                    evidence=_ev(
+                        e.location.path, e.location.line, f"gateway retry ({e.detail}) on {e.name}"
+                    ),
+                )
+            )
         for e in gw.timeouts:
-            timeouts.append(TimeoutConfig(
-                scope=f"{prefix}->{e.name}",
-                timeout_ms=_detail_ms(e.detail),
-                location=e.location,
-                evidence=_ev(e.location.path, e.location.line,
-                             f"gateway timeout ({e.detail}) on {e.name}")))
+            timeouts.append(
+                TimeoutConfig(
+                    scope=f"{prefix}->{e.name}",
+                    timeout_ms=_detail_ms(e.detail),
+                    location=e.location,
+                    evidence=_ev(
+                        e.location.path,
+                        e.location.line,
+                        f"gateway timeout ({e.detail}) on {e.name}",
+                    ),
+                )
+            )
     for mesh in meshes:
         prefix = mesh.vendor.value
         for e in mesh.retries:
-            retries.append(RetryPolicy(
-                scope=f"{prefix}->{e.name}",
-                max_attempts=_detail_int(e.detail),
-                location=e.location,
-                evidence=_ev(e.location.path, e.location.line,
-                             f"mesh retry ({e.detail}) on {e.name}")))
+            retries.append(
+                RetryPolicy(
+                    scope=f"{prefix}->{e.name}",
+                    max_attempts=_detail_int(e.detail),
+                    location=e.location,
+                    evidence=_ev(
+                        e.location.path, e.location.line, f"mesh retry ({e.detail}) on {e.name}"
+                    ),
+                )
+            )
         for e in mesh.timeouts:
-            timeouts.append(TimeoutConfig(
-                scope=f"{prefix}->{e.name}",
-                timeout_ms=_detail_ms(e.detail),
-                location=e.location,
-                evidence=_ev(e.location.path, e.location.line,
-                             f"mesh timeout ({e.detail}) on {e.name}")))
+            timeouts.append(
+                TimeoutConfig(
+                    scope=f"{prefix}->{e.name}",
+                    timeout_ms=_detail_ms(e.detail),
+                    location=e.location,
+                    evidence=_ev(
+                        e.location.path, e.location.line, f"mesh timeout ({e.detail}) on {e.name}"
+                    ),
+                )
+            )
     return (
         tuple(sorted(retries, key=lambda r: r.scope)),
         tuple(sorted(timeouts, key=lambda t: t.scope)),

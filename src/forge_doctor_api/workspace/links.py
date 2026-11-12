@@ -84,10 +84,7 @@ def _contract_edges(
     services = [m for m in members if m.role in _SERVICE_ROLES and m.name in ops]
     contracts = [m for m in members if m.role in _CONTRACT_ROLES and m.name in ops]
     for svc in services:
-        svc_keys = {
-            (op.method.upper(), normalize_route_path(op.path)): op
-            for op in ops[svc.name]
-        }
+        svc_keys = {(op.method.upper(), normalize_route_path(op.path)): op for op in ops[svc.name]}
         for con in contracts:
             if con.name == svc.name:
                 continue
@@ -96,20 +93,23 @@ def _contract_edges(
                 impl = svc_keys.get(key)
                 if impl is None:
                     continue
-                out.append(CrossRepoEdge(
-                    kind=EdgeKind.CONTRACT_IMPLEMENTS,
-                    from_repo=svc.name, to_repo=con.name,
-                    subject=f"{key[0]} {key[1]}",
-                    detail=(
-                        f"{svc.name} implements contract op declared in {con.name}"
-                    ),
-                    evidence=(
-                        _ev(f"{svc.name}:{impl.location.path}", "implementation",
-                            impl.location.line)
-                        + _ev(f"{con.name}:{op.location.path}", "contract",
-                              op.location.line)
-                    ),
-                ))
+                out.append(
+                    CrossRepoEdge(
+                        kind=EdgeKind.CONTRACT_IMPLEMENTS,
+                        from_repo=svc.name,
+                        to_repo=con.name,
+                        subject=f"{key[0]} {key[1]}",
+                        detail=(f"{svc.name} implements contract op declared in {con.name}"),
+                        evidence=(
+                            _ev(
+                                f"{svc.name}:{impl.location.path}",
+                                "implementation",
+                                impl.location.line,
+                            )
+                            + _ev(f"{con.name}:{op.location.path}", "contract", op.location.line)
+                        ),
+                    )
+                )
     return out
 
 
@@ -135,22 +135,29 @@ def _client_call_edges(
                         continue
                     if site.method is not None and site.method != op.method:
                         continue
-                    out.append(CrossRepoEdge(
-                        kind=EdgeKind.CLIENT_CALLS,
-                        from_repo=member.name, to_repo=svc.name,
-                        subject=f"{op.method} {normalize_route_path(op.path)}",
-                        detail=(
-                            f"call site {site.location.path}:"
-                            f"{site.location.line or 0} in {member.name} calls "
-                            f"{svc.name}"
-                        ),
-                        evidence=(
-                            _ev(f"{member.name}:{site.location.path}",
-                                f"{site.library} call", site.location.line)
-                            + _ev(f"{svc.name}:{op.location.path}",
-                                  "operation", op.location.line)
-                        ),
-                    ))
+                    out.append(
+                        CrossRepoEdge(
+                            kind=EdgeKind.CLIENT_CALLS,
+                            from_repo=member.name,
+                            to_repo=svc.name,
+                            subject=f"{op.method} {normalize_route_path(op.path)}",
+                            detail=(
+                                f"call site {site.location.path}:"
+                                f"{site.location.line or 0} in {member.name} calls "
+                                f"{svc.name}"
+                            ),
+                            evidence=(
+                                _ev(
+                                    f"{member.name}:{site.location.path}",
+                                    f"{site.library} call",
+                                    site.location.line,
+                                )
+                                + _ev(
+                                    f"{svc.name}:{op.location.path}", "operation", op.location.line
+                                )
+                            ),
+                        )
+                    )
     return out
 
 
@@ -177,26 +184,29 @@ def _gateway_edges(
                     if norm != op_path and not op_path.startswith(norm.rstrip("/") + "/"):
                         continue
                     matched = True
-                    out.append(CrossRepoEdge(
-                        kind=EdgeKind.GATEWAY_ROUTES,
-                        from_repo=member.name, to_repo=svc.name,
-                        subject=f"{op.method} {op_path}",
-                        detail=(
-                            f"gateway route {route} in {member.name} fronts "
-                            f"{svc.name}"
-                        ),
-                        evidence=(
-                            _ev(f"{member.name}:{src}", "gateway route")
-                            + _ev(f"{svc.name}:{op.location.path}",
-                                  "operation", op.location.line)
-                        ),
-                    ))
+                    out.append(
+                        CrossRepoEdge(
+                            kind=EdgeKind.GATEWAY_ROUTES,
+                            from_repo=member.name,
+                            to_repo=svc.name,
+                            subject=f"{op.method} {op_path}",
+                            detail=(f"gateway route {route} in {member.name} fronts {svc.name}"),
+                            evidence=(
+                                _ev(f"{member.name}:{src}", "gateway route")
+                                + _ev(
+                                    f"{svc.name}:{op.location.path}", "operation", op.location.line
+                                )
+                            ),
+                        )
+                    )
             if not matched and norm != "/":
-                unknowns.append(UnknownFact(
-                    subject=route,
-                    missing=f"service repo fronted by gateway route in {member.name}",
-                    resolution="declare the upstream service repo or the route's contract",
-                ))
+                unknowns.append(
+                    UnknownFact(
+                        subject=route,
+                        missing=f"service repo fronted by gateway route in {member.name}",
+                        resolution="declare the upstream service repo or the route's contract",
+                    )
+                )
     return out, unknowns
 
 
@@ -226,21 +236,23 @@ def _sdk_edges(
                     if prov.name == member.name:
                         continue
                     hit = next(
-                        (mod for mod in mods if any(
-                            _norm(mod) == _norm(p) for p in prov.provides)),
+                        (mod for mod in mods if any(_norm(mod) == _norm(p) for p in prov.provides)),
                         None,
                     )
                     key = (member.name, prov.name, rel)
                     if hit is None or key in seen:
                         continue
                     seen.add(key)
-                    out.append(CrossRepoEdge(
-                        kind=EdgeKind.SDK_CONSUMED_BY,
-                        from_repo=member.name, to_repo=prov.name,
-                        subject=f"import {hit}",
-                        detail=f"{member.name} consumes {prov.name} via {rel}:{lineno}",
-                        evidence=_ev(f"{member.name}:{rel}", "import", lineno),
-                    ))
+                    out.append(
+                        CrossRepoEdge(
+                            kind=EdgeKind.SDK_CONSUMED_BY,
+                            from_repo=member.name,
+                            to_repo=prov.name,
+                            subject=f"import {hit}",
+                            detail=f"{member.name} consumes {prov.name} via {rel}:{lineno}",
+                            evidence=_ev(f"{member.name}:{rel}", "import", lineno),
+                        )
+                    )
     return out
 
 
@@ -250,7 +262,7 @@ def resolve_chains(edges: tuple[CrossRepoEdge, ...]) -> tuple[CrossRepoChain, ..
     for e in edges:
         by_pair.setdefault((e.from_repo, e.to_repo), []).append(e)
     adjacency: dict[str, list[str]] = {}
-    for (frm, to) in by_pair:
+    for frm, to in by_pair:
         adjacency.setdefault(frm, []).append(to)
 
     chains: list[CrossRepoChain] = []
@@ -260,12 +272,15 @@ def resolve_chains(edges: tuple[CrossRepoEdge, ...]) -> tuple[CrossRepoChain, ..
             hops = []
             for i in range(len(path) - 1):
                 pair_edges = by_pair[(path[i], path[i + 1])]
-                hops.append(ChainHop(
-                    from_repo=path[i], to_repo=path[i + 1],
-                    edge_kind=pair_edges[0].kind,
-                    subjects=tuple(sorted({e.subject for e in pair_edges})),
-                    evidence=tuple(ev for e in pair_edges for ev in e.evidence),
-                ))
+                hops.append(
+                    ChainHop(
+                        from_repo=path[i],
+                        to_repo=path[i + 1],
+                        edge_kind=pair_edges[0].kind,
+                        subjects=tuple(sorted({e.subject for e in pair_edges})),
+                        evidence=tuple(ev for e in pair_edges for ev in e.evidence),
+                    )
+                )
             chains.append(CrossRepoChain(repos=tuple(path), hops=tuple(hops)))
         for nxt in sorted(adjacency.get(repo, [])):
             if nxt not in path:
@@ -295,7 +310,8 @@ def scan_workspace(context: ProjectContext, workspace: Workspace) -> WorkspaceSc
         files = list(ctx.iter_files())
         if m.role in _SERVICE_ROLES | _CONTRACT_ROLES:
             ops[m.name] = [
-                op for op in load_openapi_project(ctx).operations
+                op
+                for op in load_openapi_project(ctx).operations
                 if op.source is OperationSource.PATH
             ]
         if m.role in _CLIENT_ROLES:

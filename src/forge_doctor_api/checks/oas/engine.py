@@ -171,9 +171,7 @@ class _Index:
         )
 
     def doc_requirements(self, path: str, owner: str = "") -> tuple[Any, ...]:
-        return tuple(
-            r for r in self.requirements_by_doc.get(path, ()) if r.owner_pointer == owner
-        )
+        return tuple(r for r in self.requirements_by_doc.get(path, ()) if r.owner_pointer == owner)
 
 
 def _op_entity(op: OpenApiOperation) -> str:
@@ -275,9 +273,7 @@ def _oas005(model: OpenApiProjectModel, index: _Index) -> Iterator[Finding]:
             spec,
             description=f"response at {response.pointer} has no description",
             location=response.location,
-            entity_ids=(
-                _entity_id("response", response.location.path, response.pointer),
-            ),
+            entity_ids=(_entity_id("response", response.location.path, response.pointer),),
             remediation="add a description to the response object",
         )
     for op in model.operations:
@@ -400,8 +396,7 @@ def _oas010(model: OpenApiProjectModel, index: _Index) -> Iterator[Finding]:
             continue
         ops = [o for o in model.operations if o.location.path == path]
         if ops and all(
-            any(r.schemes for r in index.doc_requirements(path, owner=o.pointer))
-            for o in ops
+            any(r.schemes for r in index.doc_requirements(path, owner=o.pointer)) for o in ops
         ):
             continue  # every operation carries its own named requirement
         doc = next(d for d in model.documents if d.location.path == path)
@@ -608,9 +603,7 @@ def _oas016(model: OpenApiProjectModel, index: _Index) -> Iterator[Finding]:
         urls = ", ".join(sorted(s.url for s in servers_by_doc[path]))
         yield _finding(
             spec,
-            description=(
-                f"{path}: server URLs span environments {sorted(classes)}: {urls}"
-            ),
+            description=(f"{path}: server URLs span environments {sorted(classes)}: {urls}"),
             location=servers_by_doc[path][0].location,
             entity_ids=(_doc_entity(path),),
             unknowns=(

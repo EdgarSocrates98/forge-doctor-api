@@ -36,7 +36,8 @@ def _reject_unknown(data: dict[str, Any], known: set[str], model: str) -> None:
     if unknown:
         raise ProtocolError(
             f"{model}: unknown field(s) {sorted(unknown)} "
-            "(extension fields must use the x-* namespace)")
+            "(extension fields must use the x-* namespace)"
+        )
 
 
 def _req(data: dict[str, Any], key: str, model: str) -> Any:
@@ -50,7 +51,8 @@ def _version_check(data: dict[str, Any], model: str) -> None:
     if version not in _SUPPORTED_VERSIONS:
         raise ProtocolError(
             f"{model}: protocol_version {version!r} unsupported "
-            f"(expected one of {_SUPPORTED_VERSIONS})")
+            f"(expected one of {_SUPPORTED_VERSIONS})"
+        )
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -65,8 +67,7 @@ class ForgeRef(Model):
 
     @classmethod
     def parse(cls, data: dict[str, Any]) -> Self:
-        _reject_unknown(data, {
-            "ref_id", "kind", "entity", "sha256", "summary"}, "ForgeRef")
+        _reject_unknown(data, {"ref_id", "kind", "entity", "sha256", "summary"}, "ForgeRef")
         return cls(
             ref_id=str(_req(data, "ref_id", "ForgeRef")),
             kind=str(_req(data, "kind", "ForgeRef")),
@@ -86,13 +87,11 @@ class ForgeCapability(Model):
 
     @classmethod
     def parse(cls, data: dict[str, Any]) -> Self:
-        _reject_unknown(data, {"name", "status", "unknowns"},
-                        "ForgeCapability")
+        _reject_unknown(data, {"name", "status", "unknowns"}, "ForgeCapability")
         return cls(
             name=str(_req(data, "name", "ForgeCapability")),
             status=str(_req(data, "status", "ForgeCapability")),
-            unknowns=tuple(
-                ForgeRef.parse(u) for u in data.get("unknowns", ())),
+            unknowns=tuple(ForgeRef.parse(u) for u in data.get("unknowns", ())),
         )
 
 
@@ -111,12 +110,10 @@ class RequestDelta(Model):
 
     @classmethod
     def parse(cls, data: dict[str, Any]) -> Self:
-        _reject_unknown(data, {"baseline_ref", "changed_files"},
-                        "RequestDelta")
+        _reject_unknown(data, {"baseline_ref", "changed_files"}, "RequestDelta")
         return cls(
             baseline_ref=str(_req(data, "baseline_ref", "RequestDelta")),
-            changed_files=tuple(sorted(
-                str(f) for f in data.get("changed_files", ()))),
+            changed_files=tuple(sorted(str(f) for f in data.get("changed_files", ()))),
         )
 
 
@@ -139,29 +136,36 @@ class ForgeRequest(Model):
 
     @classmethod
     def parse(cls, data: dict[str, Any]) -> Self:
-        _reject_unknown(data, {
-            "protocol_version", "request_id", "target", "capabilities",
-            "requested_capabilities", "context_refs", "delta", "clock"},
-            "ForgeRequest")
+        _reject_unknown(
+            data,
+            {
+                "protocol_version",
+                "request_id",
+                "target",
+                "capabilities",
+                "requested_capabilities",
+                "context_refs",
+                "delta",
+                "clock",
+            },
+            "ForgeRequest",
+        )
         _version_check(data, "ForgeRequest")
         caps = tuple(str(c) for c in data.get("capabilities", ()))
-        legacy = tuple(
-            str(c) for c in data.get("requested_capabilities", ()))
+        legacy = tuple(str(c) for c in data.get("requested_capabilities", ()))
         if caps and legacy:
             raise ProtocolError(
                 "ForgeRequest: 'capabilities' and v1 alias "
-                "'requested_capabilities' must not both be set")
+                "'requested_capabilities' must not both be set"
+            )
         delta_raw = data.get("delta")
         return cls(
-            protocol_version=int(
-                data.get("protocol_version", PROTOCOL_VERSION)),
+            protocol_version=int(data.get("protocol_version", PROTOCOL_VERSION)),
             request_id=str(data.get("request_id", "")),
             target=str(_req(data, "target", "ForgeRequest")),
             capabilities=caps or legacy,
-            context_refs=tuple(
-                str(r) for r in data.get("context_refs", ())),
-            delta=RequestDelta.parse(delta_raw)
-                  if delta_raw is not None else None,
+            context_refs=tuple(str(r) for r in data.get("context_refs", ())),
+            delta=RequestDelta.parse(delta_raw) if delta_raw is not None else None,
             clock=data.get("clock"),
         )
 
@@ -180,23 +184,28 @@ class ForgeHandoff(Model):
 
     @classmethod
     def parse(cls, data: dict[str, Any]) -> Self:
-        _reject_unknown(data, {
-            "protocol_version", "handoff_id", "bundle_ref",
-            "analysis_rev", "refs", "capabilities", "unknowns"},
-            "ForgeHandoff")
+        _reject_unknown(
+            data,
+            {
+                "protocol_version",
+                "handoff_id",
+                "bundle_ref",
+                "analysis_rev",
+                "refs",
+                "capabilities",
+                "unknowns",
+            },
+            "ForgeHandoff",
+        )
         _version_check(data, "ForgeHandoff")
         return cls(
-            protocol_version=int(
-                data.get("protocol_version", PROTOCOL_VERSION)),
+            protocol_version=int(data.get("protocol_version", PROTOCOL_VERSION)),
             handoff_id=str(_req(data, "handoff_id", "ForgeHandoff")),
             bundle_ref=str(_req(data, "bundle_ref", "ForgeHandoff")),
             analysis_rev=data.get("analysis_rev"),
             refs=tuple(ForgeRef.parse(r) for r in data.get("refs", ())),
-            capabilities=tuple(
-                ForgeCapability.parse(c)
-                for c in data.get("capabilities", ())),
-            unknowns=tuple(
-                ForgeRef.parse(u) for u in data.get("unknowns", ())),
+            capabilities=tuple(ForgeCapability.parse(c) for c in data.get("capabilities", ())),
+            unknowns=tuple(ForgeRef.parse(u) for u in data.get("unknowns", ())),
         )
 
 
@@ -212,13 +221,14 @@ class ForgeReceipt(Model):
 
     @classmethod
     def parse(cls, data: dict[str, Any]) -> Self:
-        _reject_unknown(data, {
-            "protocol_version", "analysis_rev", "handoff_id",
-            "consumer", "result_link"}, "ForgeReceipt")
+        _reject_unknown(
+            data,
+            {"protocol_version", "analysis_rev", "handoff_id", "consumer", "result_link"},
+            "ForgeReceipt",
+        )
         _version_check(data, "ForgeReceipt")
         return cls(
-            protocol_version=int(
-                data.get("protocol_version", PROTOCOL_VERSION)),
+            protocol_version=int(data.get("protocol_version", PROTOCOL_VERSION)),
             analysis_rev=str(_req(data, "analysis_rev", "ForgeReceipt")),
             handoff_id=str(_req(data, "handoff_id", "ForgeReceipt")),
             consumer=str(_req(data, "consumer", "ForgeReceipt")),
@@ -237,13 +247,10 @@ class ForgeResult(Model):
 
     @classmethod
     def parse(cls, data: dict[str, Any]) -> Self:
-        _reject_unknown(data, {
-            "protocol_version", "status", "summary", "refs"},
-            "ForgeResult")
+        _reject_unknown(data, {"protocol_version", "status", "summary", "refs"}, "ForgeResult")
         _version_check(data, "ForgeResult")
         return cls(
-            protocol_version=int(
-                data.get("protocol_version", PROTOCOL_VERSION)),
+            protocol_version=int(data.get("protocol_version", PROTOCOL_VERSION)),
             status=str(_req(data, "status", "ForgeResult")),
             summary=str(data.get("summary", "")),
             refs=tuple(ForgeRef.parse(r) for r in data.get("refs", ())),
@@ -262,13 +269,14 @@ class ForgeRoute(Model):
 
     @classmethod
     def parse(cls, data: dict[str, Any]) -> Self:
-        _reject_unknown(data, {
-            "protocol_version", "route_id", "source", "destination",
-            "capability"}, "ForgeRoute")
+        _reject_unknown(
+            data,
+            {"protocol_version", "route_id", "source", "destination", "capability"},
+            "ForgeRoute",
+        )
         _version_check(data, "ForgeRoute")
         return cls(
-            protocol_version=int(
-                data.get("protocol_version", PROTOCOL_VERSION)),
+            protocol_version=int(data.get("protocol_version", PROTOCOL_VERSION)),
             route_id=str(_req(data, "route_id", "ForgeRoute")),
             source=str(_req(data, "source", "ForgeRoute")),
             destination=str(_req(data, "destination", "ForgeRoute")),
@@ -332,5 +340,5 @@ def build_result(
     refs: tuple[ForgeRef, ...] = (),
 ) -> ForgeResult:
     return ForgeResult(
-        status=status, summary=summary,
-        refs=tuple(sorted(refs, key=lambda r: r.ref_id)))
+        status=status, summary=summary, refs=tuple(sorted(refs, key=lambda r: r.ref_id))
+    )

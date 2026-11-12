@@ -107,8 +107,7 @@ class Doctor:
         try:
             ctx = ProjectContext.from_root(path)
         except Exception as exc:
-            raise ProjectUnreadableError(
-                f"cannot open project at {root}: {exc}") from exc
+            raise ProjectUnreadableError(f"cannot open project at {root}: {exc}") from exc
         return cls(ctx, clock=clock, profile=profile)
 
     # -- core ---------------------------------------------------------------
@@ -131,23 +130,21 @@ class Doctor:
 
         report = self._cached()
         for f in report.findings:
-            if f.id == finding_id or (f.entity_ids and (
-                finding_id in f.entity_ids
-            )):
+            if f.id == finding_id or (f.entity_ids and (finding_id in f.entity_ids)):
                 rule = describe_check(f.id)
                 return Explanation(
                     finding=f,
                     evidence=tuple(e.summary for e in f.evidence),
-                    why=(f"{f.id}: {rule.title} — {rule_text(rule)}"
-                         if rule is not None
-                         else f"{f.id}: {f.title} — {f.description}"),
+                    why=(
+                        f"{f.id}: {rule.title} — {rule_text(rule)}"
+                        if rule is not None
+                        else f"{f.id}: {f.title} — {f.description}"
+                    ),
                     unknowns=f.unknowns,
                     rule=rule,
-                    next_evidence=tuple(
-                        u.resolution for u in f.unknowns if u.resolution),
+                    next_evidence=tuple(u.resolution for u in f.unknowns if u.resolution),
                 )
-        raise FindingNotFoundError(
-            f"no finding {finding_id!r} in this report")
+        raise FindingNotFoundError(f"no finding {finding_id!r} in this report")
 
     # -- projections ----------------------------------------------------------
 
@@ -184,17 +181,14 @@ class Doctor:
     def _run(self, before_ctx: ProjectContext | None) -> DoctorReport:
         from forge_doctor_api.scan import scan_project
 
-        return scan_project(
-            self._ctx, before=before_ctx, today=self._clock)
+        return scan_project(self._ctx, before=before_ctx, today=self._clock)
 
     def _cached(self) -> DoctorReport:
         if self._report is None:
             self._report = self._run(None)
         return self._report
 
-    def _before_ctx(
-        self, before: Doctor | Path | None
-    ) -> ProjectContext | None:
+    def _before_ctx(self, before: Doctor | Path | None) -> ProjectContext | None:
         if before is None:
             return None
         if isinstance(before, Doctor):

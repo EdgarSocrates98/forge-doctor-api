@@ -41,15 +41,16 @@ def _exec(
         retries=retries,
         timed_out=timed_out,
         downstream_calls=tuple(
-            DownstreamCall(caller=service, callee="db", operation="q")
-            for _ in range(downstream)
+            DownstreamCall(caller=service, callee="db", operation="q") for _ in range(downstream)
         ),
     )
 
 
 def test_aggregates_per_operation() -> None:
     ex = [
-        _exec(dur=10.0), _exec(dur=20.0), _exec(dur=30.0, status="500"),
+        _exec(dur=10.0),
+        _exec(dur=20.0),
+        _exec(dur=30.0, status="500"),
         _exec(op="POST /y", dur=5.0, retries=2, downstream=3),
     ]
     agg = aggregate_executions(ex)
@@ -108,12 +109,9 @@ def test_window_counters() -> None:
 
 def test_summary_aggregation() -> None:
     rows = [
-        RequestSummary(method="GET", path="/a", status=200,
-                       duration_ms=10.0),
-        RequestSummary(method="GET", path="/a", status=200,
-                       duration_ms=30.0),
-        RequestSummary(method="GET", path="/b", status=200,
-                       duration_ms=None),
+        RequestSummary(method="GET", path="/a", status=200, duration_ms=10.0),
+        RequestSummary(method="GET", path="/a", status=200, duration_ms=30.0),
+        RequestSummary(method="GET", path="/b", status=200, duration_ms=None),
     ]
     out = dict(aggregate_summaries(rows))
     assert set(out) == {"/a"}

@@ -41,9 +41,7 @@ from forge_doctor_api.core.models import (
     UnknownFact,
 )
 
-HTTP_METHODS = frozenset(
-    {"get", "put", "post", "delete", "options", "head", "patch", "trace"}
-)
+HTTP_METHODS = frozenset({"get", "put", "post", "delete", "options", "head", "patch", "trace"})
 _PATH_VARS = re.compile(r"\{([^{}/]+)\}")
 _DYNAMIC_ROUTERS = ("add_route", "mount", "add_websocket_route")
 _SCHEMA_WRAPPERS = ("Security", "Depends")
@@ -399,9 +397,7 @@ class _FileScan(ast.NodeVisitor):
             response_schema = _unparse(node.returns)
             source = ResponseSchemaSource.RETURN_ANNOTATION
         status = self._kw(decorator, "status_code")
-        status_codes = (
-            (_unparse(status),) if status is not None else ()
-        )
+        status_codes = (_unparse(status),) if status is not None else ()
         return _RawRoute(
             owner=owner,
             method=method.upper(),
@@ -426,9 +422,7 @@ class _FileScan(ast.NodeVisitor):
                 if isinstance(item, ast.Call):
                     wrapper = (_call_name(item.func) or "").rsplit(".", 1)[-1]
                     inner = item.args[0] if item.args else None
-                    name = (
-                        (_call_name(inner) or _unparse(inner)) if inner is not None else "?"
-                    )
+                    name = (_call_name(inner) or _unparse(inner)) if inner is not None else "?"
                     if wrapper == "Security":
                         auth.append(name)
                     elif wrapper == "Depends":
@@ -458,9 +452,7 @@ class _FileScan(ast.NodeVisitor):
         for arg, default in pairs:
             if arg.arg in ("self", "cls"):
                 continue
-            annotation = (
-                _unparse(arg.annotation) if arg.annotation is not None else None
-            )
+            annotation = _unparse(arg.annotation) if arg.annotation is not None else None
             if annotation is not None:
                 head = annotation.split(".", 1)[0]
                 resolved = self.facts.imports.get(head, head)
@@ -474,9 +466,7 @@ class _FileScan(ast.NodeVisitor):
             if isinstance(default, ast.Call):
                 wrapper = (_call_name(default.func) or "").rsplit(".", 1)[-1]
                 inner = default.args[0] if default.args else None
-                target = (
-                    (_call_name(inner) or _unparse(inner)) if inner is not None else "?"
-                )
+                target = (_call_name(inner) or _unparse(inner)) if inner is not None else "?"
                 if wrapper == "Security":
                     auth.append(target)
                     location = "dependency"
@@ -590,12 +580,8 @@ class FastApiAdapter(AstFrameworkAdapter):
             RouteScan(
                 service=service,
                 routes=tuple(sorted(set(routes), key=self._key)),
-                attributions=tuple(
-                    sorted({p.attribution for p in parsed}, key=lambda a: a.path)
-                ),
-                unknowns=tuple(
-                    sorted(unknowns, key=lambda u: (u.subject, u.missing))
-                ),
+                attributions=tuple(sorted({p.attribution for p in parsed}, key=lambda a: a.path)),
+                unknowns=tuple(sorted(unknowns, key=lambda u: (u.subject, u.missing))),
             ),
             all_facts,
         )
@@ -611,99 +597,96 @@ class FastApiAdapter(AstFrameworkAdapter):
     ) -> SurfaceResult:
         scan, facts = self._analyze(context, "", files)
         items = sorted(
-            {(i.label, i.kind, i.location.path, i.location.line or 0): i
-             for i in extract(scan, facts)}.values(),
-            key=lambda i: (i.kind, i.label, i.location.path,
-                           i.location.line or 0))
+            {
+                (i.label, i.kind, i.location.path, i.location.line or 0): i
+                for i in extract(scan, facts)
+            }.values(),
+            key=lambda i: (i.kind, i.label, i.location.path, i.location.line or 0),
+        )
         if not items:
             return unknown_surface(surface, self.framework)
         return SurfaceResult(surface=surface, items=tuple(items))
 
-    def discover_auth(
-        self, context: ProjectContext, files: Sequence[str]
-    ) -> SurfaceResult:
+    def discover_auth(self, context: ProjectContext, files: Sequence[str]) -> SurfaceResult:
         def _ex(scan: RouteScan, _: list[_Facts]) -> list[SurfaceItem]:
             return [
-                SurfaceItem(
-                    label=name, kind="auth-dependency",
-                    location=r.source_location)
-                for r in scan.routes for name in r.auth
+                SurfaceItem(label=name, kind="auth-dependency", location=r.source_location)
+                for r in scan.routes
+                for name in r.auth
             ]
+
         return self._surface("auth", context, files, _ex)
 
-    def discover_schemas(
-        self, context: ProjectContext, files: Sequence[str]
-    ) -> SurfaceResult:
+    def discover_schemas(self, context: ProjectContext, files: Sequence[str]) -> SurfaceResult:
         def _ex(scan: RouteScan, _: list[_Facts]) -> list[SurfaceItem]:
             items = [
                 SurfaceItem(
-                    label=r.request_schema or "", kind="request-schema",
-                    location=r.source_location)
-                for r in scan.routes if r.request_schema
+                    label=r.request_schema or "", kind="request-schema", location=r.source_location
+                )
+                for r in scan.routes
+                if r.request_schema
             ]
             items += [
                 SurfaceItem(
-                    label=r.response_schema or "", kind="response-schema",
-                    location=r.source_location)
-                for r in scan.routes if r.response_schema
+                    label=r.response_schema or "",
+                    kind="response-schema",
+                    location=r.source_location,
+                )
+                for r in scan.routes
+                if r.response_schema
             ]
             return items
+
         return self._surface("schemas", context, files, _ex)
 
-    def discover_dependencies(
-        self, context: ProjectContext, files: Sequence[str]
-    ) -> SurfaceResult:
+    def discover_dependencies(self, context: ProjectContext, files: Sequence[str]) -> SurfaceResult:
         def _ex(scan: RouteScan, _: list[_Facts]) -> list[SurfaceItem]:
             items = [
                 SurfaceItem(
-                    label=p.annotation or p.name, kind="dependency",
-                    location=r.source_location)
-                for r in scan.routes for p in r.parameters
+                    label=p.annotation or p.name, kind="dependency", location=r.source_location
+                )
+                for r in scan.routes
+                for p in r.parameters
                 if p.location_in == "dependency"
             ]
             # Depends(...) targets land on RouteModel.middleware —
             # they are injected dependencies, evidenced by name.
             items += [
-                SurfaceItem(
-                    label=name, kind="depends-target",
-                    location=r.source_location)
-                for r in scan.routes for name in r.middleware
+                SurfaceItem(label=name, kind="depends-target", location=r.source_location)
+                for r in scan.routes
+                for name in r.middleware
             ]
             return items
+
         return self._surface("dependencies", context, files, _ex)
 
-    def discover_middleware(
-        self, context: ProjectContext, files: Sequence[str]
-    ) -> SurfaceResult:
+    def discover_middleware(self, context: ProjectContext, files: Sequence[str]) -> SurfaceResult:
         def _ex(scan: RouteScan, facts: list[_Facts]) -> list[SurfaceItem]:
             items = [
-                SurfaceItem(
-                    label=name, kind="route-middleware",
-                    location=r.source_location)
-                for r in scan.routes for name in r.middleware
+                SurfaceItem(label=name, kind="route-middleware", location=r.source_location)
+                for r in scan.routes
+                for name in r.middleware
             ]
             for f in facts:
                 items += [
                     SurfaceItem(
-                        label=name, kind="app-middleware",
-                        location=SourceLocation(path=f.path))
+                        label=name, kind="app-middleware", location=SourceLocation(path=f.path)
+                    )
                     for name in f.app_middleware
                 ]
             return items
+
         return self._surface("middleware", context, files, _ex)
 
     def discover_error_handlers(
         self, context: ProjectContext, files: Sequence[str]
     ) -> SurfaceResult:
-        items = _walk_surface(
-            self, context, files, "error-handlers")
+        items = _walk_surface(self, context, files, "error-handlers")
         if not items:
             return unknown_surface("error_handlers", self.framework)
         return SurfaceResult(surface="error_handlers", items=items)
 
-    def discover_validation(
-        self, context: ProjectContext, files: Sequence[str]
-    ) -> SurfaceResult:
+    def discover_validation(self, context: ProjectContext, files: Sequence[str]) -> SurfaceResult:
         items = _walk_surface(self, context, files, "validation")
         if not items:
             return unknown_surface("validation", self.framework)
@@ -715,19 +698,17 @@ class FastApiAdapter(AstFrameworkAdapter):
         def _ex(scan: RouteScan, _: list[_Facts]) -> list[SurfaceItem]:
             return [
                 SurfaceItem(
-                    label=(
-                        f"{r.response_schema} "
-                        f"({r.response_schema_source.value})"),
+                    label=(f"{r.response_schema} ({r.response_schema_source.value})"),
                     kind="response-serialization",
-                    location=r.source_location)
+                    location=r.source_location,
+                )
                 for r in scan.routes
                 if r.response_schema and r.response_schema_source
             ]
+
         return self._surface("serialization", context, files, _ex)
 
-    def discover_client_calls(
-        self, context: ProjectContext, files: Sequence[str]
-    ) -> SurfaceResult:
+    def discover_client_calls(self, context: ProjectContext, files: Sequence[str]) -> SurfaceResult:
         items = _walk_surface(self, context, files, "client-calls")
         if not items:
             return unknown_surface("client_calls", self.framework)
@@ -855,8 +836,7 @@ class FastApiAdapter(AstFrameworkAdapter):
 
 # -- §39 surface walkers (module level; shared by discover_*) ------------------
 
-_HTTP_VERBS = frozenset(
-    {"get", "put", "post", "delete", "patch", "head", "options", "request"})
+_HTTP_VERBS = frozenset({"get", "put", "post", "delete", "patch", "head", "options", "request"})
 _HTTP_CLIENTS = frozenset({"httpx", "requests", "aiohttp", "urllib3"})
 
 
@@ -886,15 +866,14 @@ def _walk_surface(
                     call = dec if isinstance(dec, ast.Call) else None
                     name = _call_name(call.func if call else dec)
                     if name and name.endswith(".exception_handler"):
-                        exc = (
-                            _unparse(call.args[0])
-                            if call and call.args else "?"
+                        exc = _unparse(call.args[0]) if call and call.args else "?"
+                        items.append(
+                            SurfaceItem(
+                                label=f"{exc} -> {node.name}",
+                                kind="error-handler",
+                                location=SourceLocation(path=pf.path, line=node.lineno),
+                            )
                         )
-                        items.append(SurfaceItem(
-                            label=f"{exc} -> {node.name}",
-                            kind="error-handler",
-                            location=SourceLocation(
-                                path=pf.path, line=node.lineno)))
             elif surface == "validation" and isinstance(
                 node, ast.FunctionDef | ast.AsyncFunctionDef
             ):
@@ -903,46 +882,58 @@ def _walk_surface(
                     if isinstance(default, ast.Call):
                         default_name = _call_name(default.func) or ""
                         head = default_name.rsplit(".", 1)[-1]
-                        if head in ("Query", "Path", "Body", "Field",
-                                    "Param", "Cookie", "Header"):
-                            items.append(SurfaceItem(
-                                label=f"{head}({arg.arg})",
-                                kind="bound-param",
-                                location=SourceLocation(
-                                    path=pf.path, line=arg.lineno)))
-            elif surface == "error-handlers" and isinstance(
-                node, ast.Raise
-            ):
+                        if head in ("Query", "Path", "Body", "Field", "Param", "Cookie", "Header"):
+                            items.append(
+                                SurfaceItem(
+                                    label=f"{head}({arg.arg})",
+                                    kind="bound-param",
+                                    location=SourceLocation(path=pf.path, line=arg.lineno),
+                                )
+                            )
+            elif surface == "error-handlers" and isinstance(node, ast.Raise):
                 raised = node.exc
                 rcall = raised if isinstance(raised, ast.Call) else None
-                raise_head = _call_name(rcall.func) if rcall else (
-                    _call_name(raised) if raised is not None else None)
+                raise_head = (
+                    _call_name(rcall.func)
+                    if rcall
+                    else (_call_name(raised) if raised is not None else None)
+                )
                 if raise_head and raise_head.endswith("HTTPException"):
                     status = ""
                     if rcall:
                         status = next(
-                            (_unparse(kw.value) for kw in rcall.keywords
-                             if kw.arg == "status_code"),
-                            _unparse(rcall.args[0]) if rcall.args else "")
-                    items.append(SurfaceItem(
-                        label=(f"raise HTTPException({status})" if status
-                               else "raise HTTPException"),
-                        kind="http-error",
-                        location=SourceLocation(
-                            path=pf.path, line=node.lineno)))
-            elif surface == "client-calls" and client_mods and isinstance(
-                node, ast.Call
-            ):
+                            (
+                                _unparse(kw.value)
+                                for kw in rcall.keywords
+                                if kw.arg == "status_code"
+                            ),
+                            _unparse(rcall.args[0]) if rcall.args else "",
+                        )
+                    items.append(
+                        SurfaceItem(
+                            label=(
+                                f"raise HTTPException({status})"
+                                if status
+                                else "raise HTTPException"
+                            ),
+                            kind="http-error",
+                            location=SourceLocation(path=pf.path, line=node.lineno),
+                        )
+                    )
+            elif surface == "client-calls" and client_mods and isinstance(node, ast.Call):
                 name = _call_name(node.func) or ""
                 head, _, verb = name.partition(".")
                 if head in client_mods and verb in _HTTP_VERBS:
-                    items.append(SurfaceItem(
-                        label=name, kind="http-client-call",
-                        location=SourceLocation(
-                            path=pf.path, line=node.lineno)))
-    return tuple(sorted(
-        items, key=lambda i: (i.kind, i.label, i.location.path,
-                              i.location.line or 0)))
+                    items.append(
+                        SurfaceItem(
+                            label=name,
+                            kind="http-client-call",
+                            location=SourceLocation(path=pf.path, line=node.lineno),
+                        )
+                    )
+    return tuple(
+        sorted(items, key=lambda i: (i.kind, i.label, i.location.path, i.location.line or 0))
+    )
 
 
 def _imported_client_roots(tree: ast.Module) -> frozenset[str]:
@@ -957,9 +948,7 @@ def _imported_client_roots(tree: ast.Module) -> frozenset[str]:
     return frozenset(roots)
 
 
-def _arg_default(
-    fn: ast.FunctionDef | ast.AsyncFunctionDef, arg: ast.arg
-) -> ast.AST | None:
+def _arg_default(fn: ast.FunctionDef | ast.AsyncFunctionDef, arg: ast.arg) -> ast.AST | None:
     if arg in fn.args.args:
         idx = fn.args.args.index(arg)
         offset = len(fn.args.args) - len(fn.args.defaults)
