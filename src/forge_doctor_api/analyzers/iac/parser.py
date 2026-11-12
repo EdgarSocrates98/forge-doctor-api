@@ -42,8 +42,7 @@ def _labels(meta: dict[str, Any]) -> tuple[tuple[str, str], ...]:
     labels = meta.get("labels") or {}
     if not isinstance(labels, dict):
         return ()
-    return tuple(sorted(
-        (str(k), str(v)) for k, v in labels.items()))
+    return tuple(sorted((str(k), str(v)) for k, v in labels.items()))
 
 
 def _k8s_resource(path: str, doc: dict[str, Any]) -> KubernetesResource | None:
@@ -60,11 +59,10 @@ def _k8s_resource(path: str, doc: dict[str, Any]) -> KubernetesResource | None:
     if kind is K8sKind.SERVICE:
         sel = spec.get("selector") or {}
         if isinstance(sel, dict):
-            selectors = tuple(sorted(
-                (str(k), str(v)) for k, v in sel.items()))
+            selectors = tuple(sorted((str(k), str(v)) for k, v in sel.items()))
     if kind is K8sKind.INGRESS:
         for rule in spec.get("rules") or ():
-            for p in ((rule.get("http") or {}).get("paths") or ()):
+            for p in (rule.get("http") or {}).get("paths") or ():
                 backend = p.get("backend") or {}
                 svc = backend.get("service") or {}
                 if svc.get("name"):
@@ -84,14 +82,17 @@ def _k8s_resource(path: str, doc: dict[str, Any]) -> KubernetesResource | None:
         sel = spec.get("selector") or {}
         match = sel.get("matchLabels") or {}
         if isinstance(match, dict):
-            selectors = tuple(sorted(
-                (str(k), str(v)) for k, v in match.items()))
+            selectors = tuple(sorted((str(k), str(v)) for k, v in match.items()))
     return KubernetesResource(
-        kind=kind, api_version=api, name=str(name),
+        kind=kind,
+        api_version=api,
+        name=str(name),
         namespace=(str(meta["namespace"]) if meta.get("namespace") else None),
-        labels=_labels(meta), selectors=selectors,
+        labels=_labels(meta),
+        selectors=selectors,
         backends=tuple(dict.fromkeys(backends)),
-        location=_loc(path))
+        location=_loc(path),
+    )
 
 
 def _chains(
@@ -100,50 +101,61 @@ def _chains(
     links: list[ChainLink] = []
     unknowns: list[UnknownFact] = []
     services = {r.name: r for r in resources if r.kind is K8sKind.SERVICE}
-    deployments = [
-        r for r in resources if r.kind is K8sKind.DEPLOYMENT]
-    front = [r for r in resources
-             if r.kind in (K8sKind.INGRESS, K8sKind.HTTPROUTE,
-                           K8sKind.GATEWAY)]
+    deployments = [r for r in resources if r.kind is K8sKind.DEPLOYMENT]
+    front = [
+        r for r in resources if r.kind in (K8sKind.INGRESS, K8sKind.HTTPROUTE, K8sKind.GATEWAY)
+    ]
     for f in front:
         fid = f"{f.kind.value}/{f.name}"
         if not f.backends and f.kind is not K8sKind.GATEWAY:
-            unknowns.append(UnknownFact(
-                subject=fid, missing="backend service reference",
-                resolution="declare backend.service.name / backendRefs"))
+            unknowns.append(
+                UnknownFact(
+                    subject=fid,
+                    missing="backend service reference",
+                    resolution="declare backend.service.name / backendRefs",
+                )
+            )
             continue
         for be in f.backends:
             svc = services.get(be)
             if svc is None:
-                unknowns.append(UnknownFact(
-                    subject=fid,
-                    missing=f"backend service '{be}' in manifests",
-                    resolution="the referenced Service is not in scope"))
+                unknowns.append(
+                    UnknownFact(
+                        subject=fid,
+                        missing=f"backend service '{be}' in manifests",
+                        resolution="the referenced Service is not in scope",
+                    )
+                )
                 continue
             sid = f"Service/{svc.name}"
-            links.append(ChainLink(
-                source=fid, target=sid, via="backend",
-                location=svc.location))
+            links.append(ChainLink(source=fid, target=sid, via="backend", location=svc.location))
             matched = False
             for dep in deployments:
                 shared = set(svc.selectors) & set(dep.selectors)
                 if shared:
-                    links.append(ChainLink(
-                        source=sid, target=f"Deployment/{dep.name}",
-                        via="selector:" + ",".join(
-                            f"{k}={v}" for k, v in sorted(shared)),
-                        location=dep.location))
+                    links.append(
+                        ChainLink(
+                            source=sid,
+                            target=f"Deployment/{dep.name}",
+                            via="selector:" + ",".join(f"{k}={v}" for k, v in sorted(shared)),
+                            location=dep.location,
+                        )
+                    )
                     matched = True
             if not matched and svc.selectors:
-                unknowns.append(UnknownFact(
-                    subject=sid,
-                    missing="Deployment matching the selector",
-                    resolution="no Deployment selector overlaps"))
+                unknowns.append(
+                    UnknownFact(
+                        subject=sid,
+                        missing="Deployment matching the selector",
+                        resolution="no Deployment selector overlaps",
+                    )
+                )
     return tuple(links), tuple(unknowns)
 
 
 def load_infra_model(
-    context: ProjectContext, files: list[str],
+    context: ProjectContext,
+    files: list[str],
 ) -> InfraModel:
     """Scan committed manifests + IaC into an `InfraModel` (§74-76)."""
     kube: list[KubernetesResource] = []
@@ -161,25 +173,35 @@ def load_infra_model(
             blocks, tf_unknowns = parse_hcl(rel, text)
             unknowns.extend(tf_unknowns)
             for b in blocks:
-                iac.append(IacResource(
-                    iac_kind="terraform", type_name=b.type_name,
-                    name=b.name, location=b.location,
-                    attrs=tuple(IacAttr(
-                        name=a.name, value=a.value,
-                        location=a.location, dynamic=a.dynamic)
-                        for a in b.attrs),
-                    existence_known=b.existence_known))
+                iac.append(
+                    IacResource(
+                        iac_kind="terraform",
+                        type_name=b.type_name,
+                        name=b.name,
+                        location=b.location,
+                        attrs=tuple(
+                            IacAttr(
+                                name=a.name, value=a.value, location=a.location, dynamic=a.dynamic
+                            )
+                            for a in b.attrs
+                        ),
+                        existence_known=b.existence_known,
+                    )
+                )
             continue
         if name == "Chart.yaml":
             try:
                 doc = yaml.safe_load(context.read_text(rel)) or {}
             except (yaml.YAMLError, OSError, UnicodeDecodeError):
                 doc = {}
-            iac.append(IacResource(
-                iac_kind="helm",
-                type_name="chart",
-                name=str(doc.get("name") or Path(rel).parent.name),
-                location=_loc(rel)))
+            iac.append(
+                IacResource(
+                    iac_kind="helm",
+                    type_name="chart",
+                    name=str(doc.get("name") or Path(rel).parent.name),
+                    location=_loc(rel),
+                )
+            )
             continue
         if suffix not in (".yaml", ".yml", ".json"):
             continue
@@ -191,13 +213,20 @@ def load_infra_model(
             cfn_resources, cfn_unknowns = parse_cfn(rel, text)
             unknowns.extend(cfn_unknowns)
             for r in cfn_resources:
-                iac.append(IacResource(
-                    iac_kind="cloudformation", type_name=r.type_name,
-                    name=r.logical_id, location=r.location,
-                    attrs=tuple(IacAttr(
-                        name=a.name, value=a.value,
-                        location=a.location, dynamic=a.dynamic)
-                        for a in r.attrs)))
+                iac.append(
+                    IacResource(
+                        iac_kind="cloudformation",
+                        type_name=r.type_name,
+                        name=r.logical_id,
+                        location=r.location,
+                        attrs=tuple(
+                            IacAttr(
+                                name=a.name, value=a.value, location=a.location, dynamic=a.dynamic
+                            )
+                            for a in r.attrs
+                        ),
+                    )
+                )
             continue
         try:
             docs = list(yaml.safe_load_all(text))
@@ -211,6 +240,9 @@ def load_infra_model(
                 kube.append(res)
     chains, chain_unknowns = _chains(tuple(kube))
     return InfraModel(
-        kubernetes=tuple(kube), chains=chains, iac=tuple(iac),
+        kubernetes=tuple(kube),
+        chains=chains,
+        iac=tuple(iac),
         issues=tuple(issues),
-        unknowns=tuple([*unknowns, *chain_unknowns]))
+        unknowns=tuple([*unknowns, *chain_unknowns]),
+    )

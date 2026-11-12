@@ -1,0 +1,3 @@
+Usage: forge-doctor-api obsidian sync-plan [OPTIONS] {path} {file} Dry-run a sync of local FILE into
+the vault at PATH. Arguments * path <str> [required] * file <path> [required] Options --baseline-
+hash <str> --classification <str> [default: internal] --help Show this message and exit.

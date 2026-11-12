@@ -83,9 +83,7 @@ class _Builder:
                 return SourceLocation(path=path)
             probe = probe.rsplit("/", 1)[0]
 
-    def issue(
-        self, code: AsyncIssueCode, message: str, path: str, pointer: str = ""
-    ) -> None:
+    def issue(self, code: AsyncIssueCode, message: str, path: str, pointer: str = "") -> None:
         self.issues.append(
             AsyncApiIssue(code=code, message=message, location=self.loc(path, pointer))
         )
@@ -107,8 +105,12 @@ class _Builder:
             return doc
         loaded = load_document(text, "json" if path.endswith(".json") else "yaml")
         if not loaded.ok:
-            if not explicit and '"asyncapi"' not in text and "'asyncapi'" not in text \
-                    and "asyncapi:" not in text:
+            if (
+                not explicit
+                and '"asyncapi"' not in text
+                and "'asyncapi'" not in text
+                and "asyncapi:" not in text
+            ):
                 return None
             doc = _Doc(path, AsyncDocumentStatus.MALFORMED)
             self.docs[path] = doc
@@ -284,9 +286,7 @@ class _Builder:
                     name=address,
                     address=address,
                     parameters=(
-                        tuple(sorted(str(k) for k in params))
-                        if isinstance(params, dict)
-                        else ()
+                        tuple(sorted(str(k) for k in params)) if isinstance(params, dict) else ()
                     ),
                     message_pointers=tuple(message_ptrs),
                     bindings=self._binding_names(node.get("bindings")),
@@ -319,9 +319,7 @@ class _Builder:
                     name=name,
                     address=node.get("address") if isinstance(node.get("address"), str) else None,
                     parameters=(
-                        tuple(sorted(str(k) for k in params))
-                        if isinstance(params, dict)
-                        else ()
+                        tuple(sorted(str(k) for k in params)) if isinstance(params, dict) else ()
                     ),
                     message_pointers=tuple(msg_ptrs),
                     bindings=self._binding_names(node.get("bindings")),
@@ -340,7 +338,9 @@ class _Builder:
             action = (
                 AsyncAction.SEND
                 if raw_action == "send"
-                else AsyncAction.RECEIVE if raw_action == "receive" else None
+                else AsyncAction.RECEIVE
+                if raw_action == "receive"
+                else None
             )
             if action is None:
                 self.issue(
@@ -355,7 +355,7 @@ class _Builder:
             if isinstance(channel, dict) and isinstance(channel.get("$ref"), str):
                 ref = channel["$ref"]
                 if ref.startswith("#/channels/"):
-                    channel_ptr = "/channels/" + ref[len("#/channels/"):]
+                    channel_ptr = "/channels/" + ref[len("#/channels/") :]
                 else:
                     self.issue(
                         AsyncIssueCode.INVALID_REF,
@@ -438,9 +438,7 @@ class _Builder:
                     name=name,
                     host=host if isinstance(host, str) else None,
                     protocol=(
-                        node.get("protocol")
-                        if isinstance(node.get("protocol"), str)
-                        else None
+                        node.get("protocol") if isinstance(node.get("protocol"), str) else None
                     ),
                 ),
             )
@@ -466,6 +464,7 @@ class _Builder:
                 self._channels_3x(doc)
             self._components(doc)
             self._servers(doc)
+
         def _info(d: _Doc) -> dict[str, Any]:
             info = d.value.get("info") if isinstance(d.value, dict) else None
             return info if isinstance(info, dict) else {}
@@ -476,20 +475,17 @@ class _Builder:
                 status=d.status,
                 asyncapi_version=d.version,
                 version_family=d.family,
-                title=_info(d).get("title")
-                if isinstance(_info(d).get("title"), str)
-                else None,
+                title=_info(d).get("title") if isinstance(_info(d).get("title"), str) else None,
                 api_version=_info(d).get("version")
                 if isinstance(_info(d).get("version"), str)
                 else None,
             )
             for p, d in sorted(self.docs.items())
         )
+
         def _ordered(bucket: str) -> tuple[Any, ...]:
             items = self.out.get(bucket, [])
-            return tuple(
-                sorted(items, key=lambda i: (i.location.path, i.pointer))
-            )
+            return tuple(sorted(items, key=lambda i: (i.location.path, i.pointer)))
 
         return AsyncApiProjectModel(
             documents=documents,

@@ -46,21 +46,28 @@ HANDOFF_BUDGET: dict[str, int] = {
 }
 
 _V2_FIELDS = (
-    "handoff_version", "handoff_id", "analysis_rev", "domain_sha256",
-    "context_refs", "capabilities", "graph_edges", "delta",
+    "handoff_version",
+    "handoff_id",
+    "analysis_rev",
+    "domain_sha256",
+    "context_refs",
+    "capabilities",
+    "graph_edges",
+    "delta",
 )
 
 
 def _budget_unknown(
-    section: str, *, dropped: int, total: int, limit: int,
+    section: str,
+    *,
+    dropped: int,
+    total: int,
+    limit: int,
 ) -> UnknownFact:
     return UnknownFact(
         subject=f"handoff:{section}",
-        missing=f"budget_exceeded: {dropped} of {total} entries "
-                f"truncated (limit {limit})",
-        resolution=(
-            f"raise the {section} handoff budget or split the "
-            "handoff"),
+        missing=f"budget_exceeded: {dropped} of {total} entries truncated (limit {limit})",
+        resolution=(f"raise the {section} handoff budget or split the handoff"),
     )
 
 
@@ -69,17 +76,14 @@ def _budget_unknown(
 _BUDGET_KEYS: dict[str, Any] = {
     "operations": lambda s: s,
     "contracts": lambda s: s,
-    "findings": lambda f: (
-        f.id, f.entity_ids[0] if f.entity_ids else "", f.title),
+    "findings": lambda f: (f.id, f.entity_ids[0] if f.entity_ids else "", f.title),
     "breaking_changes": lambda s: s,
     "clients_affected": lambda s: s,
     "runtime_regressions": lambda s: s,
     "security_candidates": lambda s: s,
     "reliability_signals": lambda s: s,
-    "external_references": lambda r: (
-        r.target_domain, r.target_ref, r.source_id, r.relation),
-    "remediation_candidates": lambda r: (
-        r.finding_id or "", r.target, r.proposed_change),
+    "external_references": lambda r: (r.target_domain, r.target_ref, r.source_id, r.relation),
+    "remediation_candidates": lambda r: (r.finding_id or "", r.target, r.proposed_change),
     "unknowns": lambda u: (u.subject, u.missing, u.resolution),
     "domain_sha256": lambda p: p,
     "context_refs": lambda s: s,
@@ -147,12 +151,12 @@ class ApiHandoffBundle(Model):
         body = self.to_dict()
         for k in _V2_FIELDS:
             body.pop(k, None)
-        canonical = json.dumps(
-            body, sort_keys=True, separators=(",", ":"))
+        canonical = json.dumps(body, sort_keys=True, separators=(",", ":"))
         return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
     def bounded(
-        self, budget: dict[str, int] | None = None,
+        self,
+        budget: dict[str, int] | None = None,
     ) -> ApiHandoffBundle:
         """§135 deterministic size cap — sort then take N per section.
 
@@ -173,22 +177,26 @@ class ApiHandoffBundle(Model):
                 continue
             ordered = tuple(sorted(value, key=_BUDGET_KEYS[name]))
             if len(ordered) > limit:
-                updates[name] = ordered[:max(0, limit)]
-                markers.append(_budget_unknown(
-                    name, dropped=len(ordered) - limit,
-                    total=len(ordered), limit=limit))
+                updates[name] = ordered[: max(0, limit)]
+                markers.append(
+                    _budget_unknown(
+                        name, dropped=len(ordered) - limit, total=len(ordered), limit=limit
+                    )
+                )
             elif ordered != value:
                 updates[name] = ordered
-        unknowns = tuple(sorted(
-            (*self.unknowns, *markers),
-            key=_BUDGET_KEYS["unknowns"]))
+        unknowns = tuple(sorted((*self.unknowns, *markers), key=_BUDGET_KEYS["unknowns"]))
         u_limit = caps["unknowns"]
         if len(unknowns) > u_limit:
             unknowns = (
-                *unknowns[:max(0, u_limit - 1)],
+                *unknowns[: max(0, u_limit - 1)],
                 _budget_unknown(
-                    "unknowns", dropped=len(unknowns) - u_limit + 1,
-                    total=len(unknowns), limit=u_limit))
+                    "unknowns",
+                    dropped=len(unknowns) - u_limit + 1,
+                    total=len(unknowns),
+                    limit=u_limit,
+                ),
+            )
         updates["unknowns"] = unknowns
         result = replace(self, **updates)
         if result.handoff_version == 2:

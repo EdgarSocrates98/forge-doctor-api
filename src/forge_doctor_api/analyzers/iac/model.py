@@ -15,8 +15,8 @@ from forge_doctor_api.core.models import Model, SourceLocation, UnknownFact
 class K8sKind(StrEnum):
     SERVICE = "Service"
     INGRESS = "Ingress"
-    GATEWAY = "Gateway"          # gateway.networking.k8s.io
-    HTTPROUTE = "HTTPRoute"      # gateway.networking.k8s.io
+    GATEWAY = "Gateway"  # gateway.networking.k8s.io
+    HTTPROUTE = "HTTPRoute"  # gateway.networking.k8s.io
     DEPLOYMENT = "Deployment"
     HPA = "HorizontalPodAutoscaler"
     CONFIGMAP = "ConfigMap"
@@ -33,7 +33,7 @@ class KubernetesResource(Model):
     namespace: str | None = None
     labels: tuple[tuple[str, str], ...] = ()
     selectors: tuple[tuple[str, str], ...] = ()
-    backends: tuple[str, ...] = ()   # explicit serviceName/name references
+    backends: tuple[str, ...] = ()  # explicit serviceName/name references
     location: SourceLocation
 
 
@@ -41,9 +41,9 @@ class KubernetesResource(Model):
 class ChainLink(Model):
     """One §76 hop — resolved by declared identifiers only."""
 
-    source: str   # "Kind/name" e.g. "Ingress/web"
-    target: str   # "Kind/name" or "api-operations"
-    via: str      # "backend" | "selector:<k>=<v>" | "label:<k>=<v>"
+    source: str  # "Kind/name" e.g. "Ingress/web"
+    target: str  # "Kind/name" or "api-operations"
+    via: str  # "backend" | "selector:<k>=<v>" | "label:<k>=<v>"
     location: SourceLocation
 
 
@@ -52,7 +52,7 @@ class IacAttr(Model):
     """One literal attribute candidate with evidence location."""
 
     name: str
-    value: str | None          # None + dynamic=True => not a literal
+    value: str | None  # None + dynamic=True => not a literal
     location: SourceLocation
     dynamic: bool = False
 
@@ -61,11 +61,11 @@ class IacAttr(Model):
 class IacResource(Model):
     """One declared IaC resource (Terraform `resource`, Helm chart)."""
 
-    iac_kind: str        # "terraform" | "helm" | "cloudformation"
-    type_name: str       # resource type or chart name
+    iac_kind: str  # "terraform" | "helm" | "cloudformation"
+    type_name: str  # resource type or chart name
     name: str
     location: SourceLocation
-    parsed: bool = True          # False => recorded-not-parsed (CFN)
+    parsed: bool = True  # False => recorded-not-parsed (CFN)
     attrs: tuple[IacAttr, ...] = ()
     existence_known: bool = True  # False under dynamic count/for_each
 

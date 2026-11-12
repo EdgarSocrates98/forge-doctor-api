@@ -37,12 +37,12 @@ def _ids(report) -> list[str]:
 # -- Python extraction -----------------------------------------------------------
 
 
-PY_BASIC = '''
+PY_BASIC = """
 import requests
 
 def load():
     return requests.get("https://api.example.com/users/42")
-'''
+"""
 
 
 def test_python_requests_get(tmp_path: Path) -> None:
@@ -57,19 +57,19 @@ def test_python_requests_get(tmp_path: Path) -> None:
 
 def test_python_alias_and_httpx(tmp_path: Path) -> None:
     files = {
-        "app/a.py": '''
+        "app/a.py": """
 import requests as r
 r.post("http://x.internal/pets")
-''',
-        "app/b.py": '''
+""",
+        "app/b.py": """
 from requests import get
 get("/users/1")
-''',
-        "app/c.py": '''
+""",
+        "app/c.py": """
 import httpx
 client = httpx.Client()
 client.delete("https://api/x/pets/9")
-''',
+""",
     }
     model = _clients(tmp_path, files)
     methods = {(s.library, s.method, s.path) for s in model.call_sites}
@@ -79,34 +79,49 @@ client.delete("https://api/x/pets/9")
 
 
 def test_python_dynamic_url_is_unknown(tmp_path: Path) -> None:
-    model = _clients(tmp_path, {"web/c.py": '''
+    model = _clients(
+        tmp_path,
+        {
+            "web/c.py": """
 import requests
 uid = 5
 requests.get(f"https://api/users/{uid}")
 requests.get(BASE + "/pets")
-'''})
+"""
+        },
+    )
     assert model.call_sites == ()
     assert len(model.unknowns) == 2
 
 
 def test_python_response_fields(tmp_path: Path) -> None:
-    model = _clients(tmp_path, {"frontend-service/u.py": '''
+    model = _clients(
+        tmp_path,
+        {
+            "frontend-service/u.py": """
 import requests
 resp = requests.get("https://api.example.com/users/42")
 data = resp.json()
 print(data["email"], data.get("name"), data.id)
-'''})
+"""
+        },
+    )
     (site,) = model.call_sites
     assert set(site.response_fields) == {"email", "name", "id"}
 
 
 def test_python_comment_is_not_a_call(tmp_path: Path) -> None:
-    model = _clients(tmp_path, {"x/c.py": '''
+    model = _clients(
+        tmp_path,
+        {
+            "x/c.py": """
 # requests.get("https://api/fake")
 s = "httpx.post(\\"https://api/fake\\")"
 import requests
 requests.get("/real")
-'''})
+"""
+        },
+    )
     assert [s.path for s in model.call_sites] == ["/real"]
 
 
@@ -114,14 +129,19 @@ requests.get("/real")
 
 
 def test_js_fetch_and_axios(tmp_path: Path) -> None:
-    model = _clients(tmp_path, {"web/lib.ts": '''
+    model = _clients(
+        tmp_path,
+        {
+            "web/lib.ts": """
 const a = fetch("https://api.example.com/users/7")
 const b = fetch('/pets', { method: 'POST' })
 axios.delete("https://api/pets/3")
 axios({ method: 'put', url: '/pets/4' })
 fetch(`https://api/users/${id}`)
 // fetch("https://api/commented")
-'''})
+"""
+        },
+    )
     by_method = {(s.library, s.method, s.path) for s in model.call_sites}
     assert ("fetch", "GET", "/users/7") in by_method
     assert ("fetch", "POST", "/pets") in by_method
@@ -132,12 +152,17 @@ fetch(`https://api/users/${id}`)
 
 
 def test_js_response_fields(tmp_path: Path) -> None:
-    model = _clients(tmp_path, {"web/u.js": '''
+    model = _clients(
+        tmp_path,
+        {
+            "web/u.js": """
 const resp = await fetch("https://api/users/42")
 const data = await resp.json()
 console.log(data.email, data["name"])
 fetch("https://api/pets").then(r => r.json()).then(d => d.tag)
-'''})
+"""
+        },
+    )
     by_path = {s.path: s for s in model.call_sites}
     assert {"email", "name"} <= set(by_path["/users/42"].response_fields)
     assert "tag" in by_path["/pets"].response_fields
@@ -147,9 +172,7 @@ fetch("https://api/pets").then(r => r.json()).then(d => d.tag)
 
 
 def test_template_path_matching(tmp_path: Path) -> None:
-    diff = diff_models(
-        _spec(tmp_path / "o", USER_OLD), _spec(tmp_path / "n", USER_NEW)
-    )
+    diff = diff_models(_spec(tmp_path / "o", USER_OLD), _spec(tmp_path / "n", USER_NEW))
     clients = _clients(tmp_path / "c", {"frontend-service/u.py": PY_BASIC})
     report = client_impact(diff, clients, _spec(tmp_path / "o", USER_OLD))
     assert [e.clients for e in report.entries] == [("frontend-service",)]
@@ -164,23 +187,24 @@ def _spec(root: Path, text: str):
 
 
 def test_confirmed_impact_when_client_reads_removed_field(tmp_path: Path) -> None:
-    diff = diff_models(
-        _spec(tmp_path / "o", USER_OLD), _spec(tmp_path / "n", USER_NEW)
-    )
-    clients = _clients(tmp_path / "c", {"frontend-service/u.py": '''
+    diff = diff_models(_spec(tmp_path / "o", USER_OLD), _spec(tmp_path / "n", USER_NEW))
+    clients = _clients(
+        tmp_path / "c",
+        {
+            "frontend-service/u.py": """
 import requests
 resp = requests.get("https://api.example.com/users/42")
 print(resp.json()["email"])
-'''})
+"""
+        },
+    )
     report = client_impact(diff, clients, _spec(tmp_path / "o", USER_OLD))
     assert "CLIENT001" in _ids(report)
     assert report.entries[0].confirmed
 
 
 def test_potential_impact_without_field_usage(tmp_path: Path) -> None:
-    diff = diff_models(
-        _spec(tmp_path / "o", USER_OLD), _spec(tmp_path / "n", USER_NEW)
-    )
+    diff = diff_models(_spec(tmp_path / "o", USER_OLD), _spec(tmp_path / "n", USER_NEW))
     clients = _clients(tmp_path / "c", {"frontend-service/u.py": PY_BASIC})
     report = client_impact(diff, clients, _spec(tmp_path / "o", USER_OLD))
     assert "CLIENT002" in _ids(report)
@@ -189,26 +213,32 @@ def test_potential_impact_without_field_usage(tmp_path: Path) -> None:
 
 
 def test_unrelated_client_is_not_in_blast_radius(tmp_path: Path) -> None:
-    diff = diff_models(
-        _spec(tmp_path / "o", USER_OLD), _spec(tmp_path / "n", USER_NEW)
-    )
-    clients = _clients(tmp_path / "c", {"other/x.py": '''
+    diff = diff_models(_spec(tmp_path / "o", USER_OLD), _spec(tmp_path / "n", USER_NEW))
+    clients = _clients(
+        tmp_path / "c",
+        {
+            "other/x.py": """
 import requests
 requests.get("https://api.example.com/orders/1")
-'''})
+"""
+        },
+    )
     report = client_impact(diff, clients, _spec(tmp_path / "o", USER_OLD))
     assert report.entries == ()
     assert report.findings == ()
 
 
 def test_unresolvable_site_finding(tmp_path: Path) -> None:
-    diff = diff_models(
-        _spec(tmp_path / "o", USER_OLD), _spec(tmp_path / "n", USER_NEW)
-    )
-    clients = _clients(tmp_path / "c", {"svc/x.py": '''
+    diff = diff_models(_spec(tmp_path / "o", USER_OLD), _spec(tmp_path / "n", USER_NEW))
+    clients = _clients(
+        tmp_path / "c",
+        {
+            "svc/x.py": """
 import requests
 requests.get(BASE + path)
-'''})
+"""
+        },
+    )
     report = client_impact(diff, clients, _spec(tmp_path / "o", USER_OLD))
     assert "CLIENT003" in _ids(report)
     assert report.findings[0].unknowns
@@ -222,14 +252,12 @@ def test_client_graph_consumes_edges(tmp_path: Path) -> None:
     graph = client_graph(model)
     kinds = {r.kind for r in graph.relationships()}
     assert RelationshipKind.CONSUMES in kinds
-    assert any(
-        e.kind == "client" and e.name == "frontend-service" for e in graph.entities()
-    )
+    assert any(e.kind == "client" and e.name == "frontend-service" for e in graph.entities())
 
 
 def test_section_226_demo(tmp_path: Path) -> None:
     """FastAPI service + openapi.yaml + client repo -> breaking + known client."""
-    service = '''
+    service = """
 from fastapi import FastAPI
 
 app = FastAPI()
@@ -237,21 +265,24 @@ app = FastAPI()
 @app.get("/users/{id}")
 def get_user(id: int):
     return {}
-'''
+"""
     root = tmp_path / "repo"
     _write(root, {"service/main.py": service, "openapi.yaml": USER_OLD})
-    _write(root, {"frontend-service/client.py": '''
+    _write(
+        root,
+        {
+            "frontend-service/client.py": """
 import requests
 resp = requests.get("https://api.example.com/users/42")
 email = resp.json()["email"]
-'''})
+"""
+        },
+    )
     ctx = ProjectContext.from_root(root)
     old = load_openapi_project(ctx, ["openapi.yaml"])
     new_root = tmp_path / "repo-next"
     _write(new_root, {"openapi.yaml": USER_NEW})
-    new = load_openapi_project(
-        ProjectContext.from_root(new_root), ["openapi.yaml"]
-    )
+    new = load_openapi_project(ProjectContext.from_root(new_root), ["openapi.yaml"])
     diff = diff_models(old, new)
     breaking = [c for c in diff.changes if c.classification.value == "BREAKING"]
     assert breaking and "getUser" in breaking[0].subject
@@ -267,6 +298,4 @@ def test_deterministic(tmp_path: Path) -> None:
     files = {"c/u.py": PY_BASIC, "w/a.ts": 'fetch("/pets/1")\n'}
     one = _clients(tmp_path / "a", files)
     two = _clients(tmp_path / "b", files)
-    assert [s.to_dict() for s in one.call_sites] == [
-        s.to_dict() for s in two.call_sites
-    ]
+    assert [s.to_dict() for s in one.call_sites] == [s.to_dict() for s in two.call_sites]

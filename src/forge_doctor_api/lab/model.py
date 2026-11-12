@@ -86,7 +86,7 @@ class LabResult(Model):
     # oss/realworld result proves which upstream artifact it exercised
     provenance: tuple[tuple[str, str], ...] = ()
     # spec-058 measurement fields (harness metrics, never compared)
-    sample_size: int = 0         # fixture files scanned
+    sample_size: int = 0  # fixture files scanned
     elapsed_ms: int = 0
     peak_bytes: int = 0
     unknowns: int = 0
@@ -135,13 +135,11 @@ class FamilyScore(Model):
 
     @property
     def unknown_rate(self) -> float | None:
-        return (self.unknowns / self.sample_size
-                if self.sample_size else None)
+        return self.unknowns / self.sample_size if self.sample_size else None
 
     @property
     def unsupported_rate(self) -> float | None:
-        return (self.unsupported / self.sample_size
-                if self.sample_size else None)
+        return self.unsupported / self.sample_size if self.sample_size else None
 
     @property
     def coverage_confidence(self) -> str:
@@ -154,13 +152,18 @@ class FamilyScore(Model):
 
     def to_dict(self) -> dict[str, Any]:
         out = super().to_dict()
-        out.update({
-            "tp": self.tp, "fp": self.fp, "fn": self.fn,
-            "precision": self.precision, "recall": self.recall,
-            "unknown_rate": self.unknown_rate,
-            "unsupported_rate": self.unsupported_rate,
-            "coverage_confidence": self.coverage_confidence,
-        })
+        out.update(
+            {
+                "tp": self.tp,
+                "fp": self.fp,
+                "fn": self.fn,
+                "precision": self.precision,
+                "recall": self.recall,
+                "unknown_rate": self.unknown_rate,
+                "unsupported_rate": self.unsupported_rate,
+                "coverage_confidence": self.coverage_confidence,
+            }
+        )
         return out
 
 
@@ -207,10 +210,15 @@ class DomainScore(Model):
 
     def to_dict(self) -> dict[str, Any]:
         out = super().to_dict()
-        out.update({
-            "tp": self.tp, "fp": self.fp, "fn": self.fn,
-            "precision": self.precision, "recall": self.recall,
-        })
+        out.update(
+            {
+                "tp": self.tp,
+                "fp": self.fp,
+                "fn": self.fn,
+                "precision": self.precision,
+                "recall": self.recall,
+            }
+        )
         return out
 
 

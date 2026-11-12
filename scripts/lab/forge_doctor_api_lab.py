@@ -43,9 +43,7 @@ def _emit_result(r: dict, elapsed_ms: int) -> dict:
     recall = (matched / expected) if expected else None
     return {
         "scenario_id": _slug(r.get("name", "unknown")),
-        "verdict": "skipped"
-        if r.get("skipped")
-        else ("pass" if r.get("passed") else "fail"),
+        "verdict": "skipped" if r.get("skipped") else ("pass" if r.get("passed") else "fail"),
         "duration_ms": int(r.get("elapsed_ms", elapsed_ms)),
         "detail": str(r.get("skip_reason", "") or ""),
         "evidence_ref": str(r.get("domain", "")) or "",
@@ -57,9 +55,7 @@ def _emit_result(r: dict, elapsed_ms: int) -> dict:
             "precision": m("measured", precision, "ratio")
             if precision is not None
             else m("not_available"),
-            "recall": m("measured", recall, "ratio")
-            if recall is not None
-            else m("not_available"),
+            "recall": m("measured", recall, "ratio") if recall is not None else m("not_available"),
             "false_positives": m("measured", forbidden),
             "cost_usd": m("not_applicable"),
             "tokens": m("not_applicable"),

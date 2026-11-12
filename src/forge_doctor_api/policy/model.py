@@ -67,7 +67,7 @@ class PolicyException(Model):
     """§107 exception — all fields mandatory; expired/unapproved is invalid."""
 
     rule: str
-    scope: str          # subject pattern the exception covers ("*" = all)
+    scope: str  # subject pattern the exception covers ("*" = all)
     owner: str
     justification: str
     created: str

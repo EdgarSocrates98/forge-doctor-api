@@ -299,9 +299,7 @@ def test_gql004_nullable_to_nonnull_output(tmp_path: Path) -> None:
     new = OLD.replace("name: String", "name: String!")
     old = _model(tmp_path / "o", {"s.graphql": OLD})
     new_m = _model(tmp_path / "n", {"s.graphql": new})
-    f = next(
-        f for f in graphql_breaking_changes(old, new_m) if f.id == "GQL004"
-    )
+    f = next(f for f in graphql_breaking_changes(old, new_m) if f.id == "GQL004")
     assert "response" in f.description or "RESPONSE" in f.description
 
 
@@ -314,8 +312,9 @@ type Mutation { run(f: Filter): String }
     old = _model(tmp_path / "o", {"s.graphql": old_sdl})
     new_m = _model(tmp_path / "n", {"s.graphql": new_sdl})
     findings = [f for f in graphql_breaking_changes(old, new_m) if f.id == "GQL004"]
-    assert findings and all("request" in f.description.lower() or "input" in f.description
-                            for f in findings)
+    assert findings and all(
+        "request" in f.description.lower() or "input" in f.description for f in findings
+    )
 
 
 def test_gql005_enum_value_removed(tmp_path: Path) -> None:

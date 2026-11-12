@@ -35,7 +35,7 @@ ENTRY_POINT_GROUP = "forge_doctor_api.plugins"
 class PluginConflict(Model):
     """A surfaced collision between registered plugins."""
 
-    kind: str          # "duplicate-id" | "capability"
+    kind: str  # "duplicate-id" | "capability"
     detail: str
     plugins: tuple[str, ...]
 
@@ -51,9 +51,7 @@ class PluginRegistry(Model):
         return self.manifests
 
     def get(self, plugin_id: str) -> PluginManifest | None:
-        return next(
-            (m for m in self.manifests if m.plugin_id == plugin_id),
-            None)
+        return next((m for m in self.manifests if m.plugin_id == plugin_id), None)
 
     def compatible(self, manifest: PluginManifest) -> bool:
         return manifest_compatible(manifest, SDK_VERSION)
@@ -70,14 +68,20 @@ class PluginRegistry(Model):
             PluginConflict(
                 kind="duplicate-id",
                 detail=f"id {pid} declared {len(srcs)} times",
-                plugins=tuple(sorted(srcs)))
-            for pid, srcs in ids.items() if len(srcs) > 1]
+                plugins=tuple(sorted(srcs)),
+            )
+            for pid, srcs in ids.items()
+            if len(srcs) > 1
+        ]
         out += [
             PluginConflict(
                 kind="capability",
                 detail=f"capability {cap} claimed by {plugins}",
-                plugins=tuple(sorted(plugins)))
-            for cap, plugins in caps.items() if len(plugins) > 1]
+                plugins=tuple(sorted(plugins)),
+            )
+            for cap, plugins in caps.items()
+            if len(plugins) > 1
+        ]
         return tuple(sorted(out, key=lambda c: (c.kind, c.detail)))
 
     def activate(self, plugin_id: str) -> ModuleType:
@@ -90,40 +94,47 @@ class PluginRegistry(Model):
         if manifest is None:
             raise ModelError(f"unknown plugin {plugin_id!r}")
         if manifest.trust is TrustClass.UNTRUSTED:
-            raise ModelError(
-                f"plugin {plugin_id!r} is UNTRUSTED: listed but never "
-                "loaded")
+            raise ModelError(f"plugin {plugin_id!r} is UNTRUSTED: listed but never loaded")
         if not self.compatible(manifest):
             raise ModelError(
                 f"plugin {plugin_id!r} requires doctor_api "
-                f"{manifest.doctor_api!r}, sdk is {SDK_VERSION}")
+                f"{manifest.doctor_api!r}, sdk is {SDK_VERSION}"
+            )
         from forge_doctor_api.plugins.trust import PluginDescriptor
-        return load_plugin(PluginDescriptor(
-            name=manifest.plugin_id, module=manifest.module,
-            trust=manifest.trust, kind="manifest",
-            signature=manifest.signature, source=manifest.source))
+
+        return load_plugin(
+            PluginDescriptor(
+                name=manifest.plugin_id,
+                module=manifest.module,
+                trust=manifest.trust,
+                kind="manifest",
+                signature=manifest.signature,
+                source=manifest.source,
+            )
+        )
 
 
 def discover_registry(plugins_dir: Path | None = None) -> PluginRegistry:
     """Manifests from entry-points + `plugins_dir` scan, sorted."""
     manifests: list[PluginManifest] = []
     rejections: list[ManifestError] = []
-    for ep in sorted(
-            entry_points(group=ENTRY_POINT_GROUP), key=lambda e: e.name):
+    for ep in sorted(entry_points(group=ENTRY_POINT_GROUP), key=lambda e: e.name):
         # Entry points carry metadata only; the manifest table lives in
         # the dist's own metadata — never an import. A dist without a
         # readable manifest is a rejection, not a guess.
-        rejections.append(ManifestError(
-            path=f"entry-point:{ep.name}",
-            reason="entry-point plugins must also ship a readable "
-            "manifest file; nothing was imported"))
+        rejections.append(
+            ManifestError(
+                path=f"entry-point:{ep.name}",
+                reason="entry-point plugins must also ship a readable "
+                "manifest file; nothing was imported",
+            )
+        )
     if plugins_dir is not None and plugins_dir.is_dir():
         for manifest, errors in discover_manifests(plugins_dir):
             if manifest is not None:
                 manifests.append(manifest)
             rejections.extend(errors)
     return PluginRegistry(
-        manifests=tuple(sorted(
-            manifests, key=lambda m: (m.plugin_id, m.source))),
-        rejections=tuple(sorted(
-            rejections, key=lambda r: (r.path, r.reason))))
+        manifests=tuple(sorted(manifests, key=lambda m: (m.plugin_id, m.source))),
+        rejections=tuple(sorted(rejections, key=lambda r: (r.path, r.reason))),
+    )

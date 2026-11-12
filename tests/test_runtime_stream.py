@@ -42,9 +42,9 @@ def _span(
         trace_id=trace,
         duration_ms=dur,
         kind=kind,
-        evidence=(Evidence(
-            kind=EvidenceKind.RUNTIME, source="t.json",
-            summary="s", line=line or 1),),
+        evidence=(
+            Evidence(kind=EvidenceKind.RUNTIME, source="t.json", summary="s", line=line or 1),
+        ),
     )
 
 
@@ -81,8 +81,7 @@ def test_evicted_trace_emits_incomplete_plus_unknown() -> None:
     assert t1.incomplete is True
     assert any("evicted" in u.missing for u in t1.unknowns)
     # t2/t3 flush complete
-    assert all(
-        t.incomplete is False for t in traces if t.trace_id != "t1")
+    assert all(t.incomplete is False for t in traces if t.trace_id != "t1")
 
 
 def test_late_spans_for_evicted_trace_are_counted() -> None:
@@ -111,8 +110,7 @@ def test_max_spans_per_trace_caps_retention() -> None:
     traces, _e, _unknowns = asm.finish()
     assert len(traces[0].spans) == 1
     assert traces[0].span_count == 2
-    assert any("max_spans_per_trace" in u.missing
-               for u in traces[0].unknowns)
+    assert any("max_spans_per_trace" in u.missing for u in traces[0].unknowns)
 
 
 def test_empty_input() -> None:
@@ -125,7 +123,8 @@ def _gen_spans(traces: int, per_trace: int):
     for t in range(traces):
         for s in range(per_trace):
             yield _span(
-                f"trace-{t:05d}", f"s{t}-{s}",
+                f"trace-{t:05d}",
+                f"s{t}-{s}",
                 parent=f"s{t}-{s - 1}" if s else None,
                 kind=SpanKind.SERVER if s == 0 else SpanKind.CLIENT,
                 line=t * per_trace + s,
@@ -153,8 +152,8 @@ def test_memory_bound_scales_with_window_not_dataset() -> None:
         assert len(asm._open) <= 20  # structural invariant
         return pk
 
-    small = peak(2)     # 4_000 spans
-    large = peak(8)     # 16_000 spans (4x dataset)
+    small = peak(2)  # 4_000 spans
+    large = peak(8)  # 16_000 spans (4x dataset)
     alpha = math.log(large / small) / math.log(4)
     assert alpha < 1.0, f"peak scaled ~N^{alpha:.2f} (must be sublinear)"
 
@@ -183,8 +182,7 @@ def test_missing_parent_marks_trace_incomplete() -> None:
     traces, _execs, _unknowns = asm.finish()
     assert traces[0].incomplete is True
     assert traces[0].critical_path == ()
-    assert any("complete span tree" in u.missing
-               for u in traces[0].unknowns)
+    assert any("complete span tree" in u.missing for u in traces[0].unknowns)
     assert asm.orphan_spans == 1
 
 
@@ -228,8 +226,7 @@ def test_tombstone_overflow_is_accounted() -> None:
     asm.add(_span("t1", "s6"))  # t1 forgotten -> new trace
     traces, _execs, unknowns = asm.finish()
     assert any("tombstone capacity for 2" in u.missing for u in unknowns)
-    assert any("1 span(s)" in u.missing and "evicted" in u.missing
-               for u in unknowns)
+    assert any("1 span(s)" in u.missing and "evicted" in u.missing for u in unknowns)
     t3s = [t for t in traces if t.trace_id == "t3"]
     assert len(t3s) == 1  # tombstoned, never reassembled
     t1s = [t for t in traces if t.trace_id == "t1"]
@@ -244,22 +241,30 @@ def test_loader_bounded_end_to_end(tmp_path: Path) -> None:
     def _otlp(spans: list[Span]) -> str:
         objs = [
             {
-                "traceId": s.trace_id, "spanId": s.span_id,
+                "traceId": s.trace_id,
+                "spanId": s.span_id,
                 "parentSpanId": s.parent_id or "",
-                "name": s.operation, "kind": 1,
+                "name": s.operation,
+                "kind": 1,
                 "startTimeUnixNano": "1",
                 "endTimeUnixNano": "10000000",
             }
             for s in spans
         ]
-        return json.dumps({"resourceSpans": [{
-            "resource": {"attributes": [{
-                "key": "service.name",
-                "value": {"stringValue": "svc"}}]},
-            "scopeSpans": [{"spans": objs}]}]})
+        return json.dumps(
+            {
+                "resourceSpans": [
+                    {
+                        "resource": {
+                            "attributes": [{"key": "service.name", "value": {"stringValue": "svc"}}]
+                        },
+                        "scopeSpans": [{"spans": objs}],
+                    }
+                ]
+            }
+        )
 
     (tmp_path / "t.json").write_text(_otlp(spans), encoding="utf-8")
-    rt = load_runtime_project(
-        ProjectContext.from_root(tmp_path), ["t.json"], window=64)
+    rt = load_runtime_project(ProjectContext.from_root(tmp_path), ["t.json"], window=64)
     assert len(rt.traces) == 300
     assert rt.observability.span_count == 900

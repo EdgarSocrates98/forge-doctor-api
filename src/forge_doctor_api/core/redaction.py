@@ -49,7 +49,8 @@ _JWT = re.compile(r"\beyJ[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]*")
 _PROVIDER_TOKEN = re.compile(
     r"\b(?:sk-(?:live|test)-[A-Za-z0-9]{8,}|sk_(?:live|test)_[A-Za-z0-9]{8,}"
     r"|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{20,}|gho_[A-Za-z0-9]{20,}"
-    r"|xox[baprs]-[A-Za-z0-9-]{10,})\b")
+    r"|xox[baprs]-[A-Za-z0-9-]{10,})\b"
+)
 
 
 def is_sensitive_key(key: object) -> bool:

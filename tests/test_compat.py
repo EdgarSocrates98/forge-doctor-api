@@ -184,9 +184,7 @@ def test_required_parameter_added(tmp_path: Path) -> None:
 
 
 def test_parameter_removed(tmp_path: Path) -> None:
-    new = BASE.replace(
-        "        - {name: limit, in: query, schema: {type: integer}}\n", ""
-    )
+    new = BASE.replace("        - {name: limit, in: query, schema: {type: integer}}\n", "")
     diff = _diff(tmp_path, {"api.yaml": BASE}, {"api.yaml": new})
     assert "COMPAT004" in _ids(diff)
 
@@ -211,9 +209,7 @@ def test_response_type_narrowed(tmp_path: Path) -> None:
     old = BASE + (
         "    Count:\n      type: object\n      properties:\n        total: {type: number}\n"
     )
-    old = old.replace(
-        "#/components/schemas/Kind", "#/components/schemas/Count"
-    )
+    old = old.replace("#/components/schemas/Kind", "#/components/schemas/Count")
     new = old.replace("total: {type: number}", "total: {type: integer}")
     diff = _diff(tmp_path, {"api.yaml": old}, {"api.yaml": new})
     assert "COMPAT008" in _ids(diff)
@@ -280,9 +276,7 @@ def test_optional_query_parameter_added(tmp_path: Path) -> None:
     )
     diff = _diff(tmp_path, {"api.yaml": BASE}, {"api.yaml": new})
     assert "COMPAT022" in _ids(diff)
-    assert "param_added_optional" in _classified(
-        diff, CompatibilityClass.POTENTIALLY_BREAKING
-    )
+    assert "param_added_optional" in _classified(diff, CompatibilityClass.POTENTIALLY_BREAKING)
 
 
 def test_enum_value_added_is_candidate(tmp_path: Path) -> None:
@@ -345,9 +339,9 @@ def test_composition_branch_count_change_is_unknown(tmp_path: Path) -> None:
     old = USER_OLD + (
         "    Variant:\n      oneOf:\n        - {type: string}\n        - {type: 'null'}\n"
     )
-    old = old.replace(
-        "#/components/schemas/User", "#/components/schemas/Variant"
-    ).replace("        '200':", "        '200':")
+    old = old.replace("#/components/schemas/User", "#/components/schemas/Variant").replace(
+        "        '200':", "        '200':"
+    )
     new = old.replace(
         "        - {type: 'null'}\n",
         "        - {type: 'null'}\n        - {type: integer}\n",
@@ -364,9 +358,7 @@ def test_oneof_branch_type_change_detected(tmp_path: Path) -> None:
     new = old.replace("{type: 'null'}", "{type: integer}")
     diff = _diff(tmp_path, {"api.yaml": old}, {"api.yaml": new})
     assert diff.changes  # pairwise composition diff must surface something
-    assert "COMPAT030" in _ids(diff) or _classified(
-        diff, CompatibilityClass.BREAKING
-    )
+    assert "COMPAT030" in _ids(diff) or _classified(diff, CompatibilityClass.BREAKING)
 
 
 def test_unresolvable_schema_change_is_unknown(tmp_path: Path) -> None:
@@ -384,17 +376,14 @@ def test_additional_properties_tightened_request(tmp_path: Path) -> None:
     # absent additionalProperties == free-form; closing it is a breaking narrowing
     new = BASE.replace(
         "    Pet:\n      type: object\n      required: [name]",
-        "    Pet:\n      type: object\n      additionalProperties: false\n"
-        "      required: [name]",
+        "    Pet:\n      type: object\n      additionalProperties: false\n      required: [name]",
     )
     diff = _diff(tmp_path, {"api.yaml": BASE}, {"api.yaml": new})
     assert "type_changed_request" in _classified(diff, CompatibilityClass.BREAKING)
 
 
 def test_type_union_change(tmp_path: Path) -> None:
-    old = BASE.replace(
-        "tag: {type: string}", "tag: {type: [string, 'null']}"
-    )
+    old = BASE.replace("tag: {type: string}", "tag: {type: [string, 'null']}")
     new = BASE
     diff = _diff(tmp_path, {"api.yaml": old}, {"api.yaml": new})
     assert "COMPAT005" in _ids(diff) or _classified(diff, CompatibilityClass.BREAKING)
@@ -411,9 +400,9 @@ def test_malformed_new_contract_flags_unknown(tmp_path: Path) -> None:
 
 
 def test_ref_rename_single_pair_is_diffed(tmp_path: Path) -> None:
-    old = USER_OLD.replace(
-        "#/components/schemas/User", "#/components/schemas/Account"
-    ).replace("    User:", "    Account:")
+    old = USER_OLD.replace("#/components/schemas/User", "#/components/schemas/Account").replace(
+        "    User:", "    Account:"
+    )
     new = old.replace("        email: {type: string}\n", "").replace(
         "required: [id, name, email]", "required: [id, name]"
     )
@@ -483,9 +472,9 @@ def test_diff_is_deterministic(tmp_path: Path) -> None:
 
 
 def test_change_order_independent_of_input_order(tmp_path: Path) -> None:
-    new = BASE.replace(
-        "        - {name: limit, in: query, schema: {type: integer}}\n", ""
-    ).replace("        '404': {description: missing}\n", "")
+    new = BASE.replace("        - {name: limit, in: query, schema: {type: integer}}\n", "").replace(
+        "        '404': {description: missing}\n", ""
+    )
     a = _diff(tmp_path / "a", {"api.yaml": BASE}, {"api.yaml": new})
     b = _diff(tmp_path / "b", {"x.yaml": BASE}, {"y.yaml": new})
     assert _kinds(a) == _kinds(b)
@@ -542,7 +531,5 @@ def test_cli_fingerprint(tmp_path: Path) -> None:
 
 
 def test_cli_diff_missing_input(tmp_path: Path) -> None:
-    result = runner.invoke(
-        app, ["contract", "diff", str(tmp_path / "nope.yaml"), str(tmp_path)]
-    )
+    result = runner.invoke(app, ["contract", "diff", str(tmp_path / "nope.yaml"), str(tmp_path)])
     assert result.exit_code == 2

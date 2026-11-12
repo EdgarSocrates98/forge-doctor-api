@@ -63,19 +63,15 @@ def _stream(context: ProjectContext, path: str) -> BinaryIO | None:
         return None
 
 
-def build_traces(
-    spans: list[Span], *, keep_spans: bool = False
-) -> tuple[TraceModel, ...]:
+def build_traces(spans: list[Span], *, keep_spans: bool = False) -> tuple[TraceModel, ...]:
     """Group spans by trace_id -> §31 TraceModel with honest critical path."""
-    traces, _executions, _unknowns = analyze_spans(
-        spans, keep_spans=keep_spans)
+    traces, _executions, _unknowns = analyze_spans(spans, keep_spans=keep_spans)
     return traces
 
 
 def analyze_spans(
     spans: list[Span], *, keep_spans: bool = False
-) -> tuple[tuple[TraceModel, ...], tuple[RequestExecution, ...],
-           tuple[UnknownFact, ...]]:
+) -> tuple[tuple[TraceModel, ...], tuple[RequestExecution, ...], tuple[UnknownFact, ...]]:
     """Traces + executions + execution-unknowns from one span pass.
 
     Executions are emitted while each trace's spans are in hand, so
@@ -101,16 +97,13 @@ def analyze_spans(
         ids = {s.span_id for s in ts}
         incomplete = any(s.parent_id and s.parent_id not in ids for s in ts)
         errors = sum(1 for s in ts if s.status is SpanStatus.ERROR)
-        duration = (
-            max((s.duration_ms or 0) for s in ts) if ts else None
-        )
+        duration = max((s.duration_ms or 0) for s in ts) if ts else None
         unknowns: list[UnknownFact] = []
         if incomplete or len(roots) != 1:
             unknowns.append(
                 UnknownFact(
                     subject=f"trace {trace_id}",
-                    missing="a complete span tree (single root, all parents "
-                    "present)",
+                    missing="a complete span tree (single root, all parents present)",
                     resolution="critical_path is recorded only for complete trees",
                 )
             )
@@ -167,9 +160,7 @@ def build_observability(
     errors_no_ctx = 0
     no_duration = 0
     span_ids = {s.span_id for s in spans}
-    orphans = sum(
-        1 for s in spans if s.parent_id and s.parent_id not in span_ids
-    )
+    orphans = sum(1 for s in spans if s.parent_id and s.parent_id not in span_ids)
     names: set[str] = set()
 
     for s in spans:
@@ -183,14 +174,17 @@ def build_observability(
             if k in s.attributes or k in {a.lower() for a in s.attributes}:
                 signals["correlation_ids"] += 1
                 corr_keys.add(k)
-        if s.parent_id or any(
-            k in s.attributes for k in ("traceparent", "b3")
-        ):
+        if s.parent_id or any(k in s.attributes for k in ("traceparent", "b3")):
             signals["trace_propagation"] += 1
         if s.status is SpanStatus.ERROR and not any(
             k in s.attributes
-            for k in ("error", "error.type", "error.message", "exception.type",
-                      "otel.status_description")
+            for k in (
+                "error",
+                "error.type",
+                "error.message",
+                "exception.type",
+                "otel.status_description",
+            )
         ):
             errors_no_ctx += 1
 

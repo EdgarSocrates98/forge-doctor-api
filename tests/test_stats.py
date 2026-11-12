@@ -45,8 +45,7 @@ def _project(tmp_path: Path, files: dict[str, str] | None = None) -> Path:
 
 
 def test_stats_present_and_totals_match(tmp_path: Path) -> None:
-    report = scan_project(
-        ProjectContext.from_root(_project(tmp_path)))
+    report = scan_project(ProjectContext.from_root(_project(tmp_path)))
     stats = report.stats
     assert stats is not None
     assert stats.total_findings == len(report.findings)
@@ -59,23 +58,19 @@ def test_stats_present_and_totals_match(tmp_path: Path) -> None:
 
 
 def test_stats_analyzer_rows(tmp_path: Path) -> None:
-    report = scan_project(
-        ProjectContext.from_root(_project(tmp_path)))
+    report = scan_project(ProjectContext.from_root(_project(tmp_path)))
     by_name = {a.analyzer: a for a in report.stats.analyzers}
     openapi = by_name["openapi"]
     assert openapi.ran is True
     assert openapi.artifacts == 1
     # never-ran analyzers are still reported when the plan enables them
-    assert all(a.findings >= 0 and a.unknowns >= 0
-               for a in report.stats.analyzers)
+    assert all(a.findings >= 0 and a.unknowns >= 0 for a in report.stats.analyzers)
 
 
 def test_stats_timing_opt_in_only(tmp_path: Path) -> None:
     root = _project(tmp_path)
-    quiet = scan_project(
-        ProjectContext.from_root(root), stats_timing=False)
-    timed = scan_project(
-        ProjectContext.from_root(root), stats_timing=True)
+    quiet = scan_project(ProjectContext.from_root(root), stats_timing=False)
+    timed = scan_project(ProjectContext.from_root(root), stats_timing=True)
     assert all(a.duration_ms is None for a in quiet.stats.analyzers)
     assert any(a.duration_ms is not None for a in timed.stats.analyzers)
 
@@ -85,13 +80,11 @@ def test_timing_never_enters_deterministic_output(tmp_path: Path) -> None:
     a = scan_project(ProjectContext.from_root(root)).to_json()
     b = scan_project(ProjectContext.from_root(root)).to_json()
     assert a == b
-    assert "duration_ms" not in a or '"duration_ms":null' in a.replace(
-        " ", "")
+    assert "duration_ms" not in a or '"duration_ms":null' in a.replace(" ", "")
 
 
 def test_stats_in_json_payload(tmp_path: Path) -> None:
-    report = scan_project(
-        ProjectContext.from_root(_project(tmp_path)))
+    report = scan_project(ProjectContext.from_root(_project(tmp_path)))
     payload = json.loads(report.to_json())
     assert payload["stats"]["total_findings"] == len(report.findings)
     names = {a["analyzer"] for a in payload["stats"]["analyzers"]}

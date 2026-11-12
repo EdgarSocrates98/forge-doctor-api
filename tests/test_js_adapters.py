@@ -11,7 +11,7 @@ from forge_doctor_api.analyzers.routes.javascript import (
 )
 from forge_doctor_api.core.context import ProjectContext
 
-EXPRESS_APP = '''
+EXPRESS_APP = """
 const express = require("express");
 const app = express();
 const api = express.Router();
@@ -24,9 +24,9 @@ app.use("/v1", api);
 /* app.delete("/gone", x) */
 const fake = "app.put("/str/", x)";
 app.get(`/tpl/${id}`, handler);
-'''
+"""
 
-NEST_APP = '''
+NEST_APP = """
 import { Body, Controller, Delete, Get, Post, UseGuards } from "@nestjs/common";
 import { AuthGuard } from "./auth";
 
@@ -42,7 +42,7 @@ export class PetsController {
   @Delete(`/tpl/${id}`)
   dynamic() {}
 }
-'''
+"""
 
 
 def _ctx(tmp_path: Path, files: dict[str, str]):
@@ -73,13 +73,11 @@ def test_express_adversarial_never_routes(tmp_path: Path) -> None:
     paths = {r.path for r in scan.routes}
     assert "/commented" not in paths and "/gone" not in paths
     assert not any("str" in p for p in paths)
-    assert any("literal route path" in u.missing
-               for u in scan.unknowns)  # template literal
+    assert any("literal route path" in u.missing for u in scan.unknowns)  # template literal
 
 
 def test_express_detect_package_json(tmp_path: Path) -> None:
-    ctx = _ctx(tmp_path, {
-        "package.json": '{"dependencies": {"express": "^4.0.0"}}'})
+    ctx = _ctx(tmp_path, {"package.json": '{"dependencies": {"express": "^4.0.0"}}'})
     assert ExpressAdapter().detect(ctx, list(ctx.iter_files()))
 
 
@@ -90,8 +88,7 @@ def test_nest_routes(tmp_path: Path) -> None:
         ("GET", "/pets/{id}", "PetsController.findOne"),
         ("POST", "/pets", "PetsController.create"),
     ]
-    assert any("literal route path" in u.missing
-               for u in scan.unknowns)  # @Delete(`/tpl/${id}`)
+    assert any("literal route path" in u.missing for u in scan.unknowns)  # @Delete(`/tpl/${id}`)
 
 
 def test_nest_auth_surface(tmp_path: Path) -> None:
@@ -108,11 +105,14 @@ def test_nest_comments_cannot_route(tmp_path: Path) -> None:
 
 
 def test_node_modules_excluded(tmp_path: Path) -> None:
-    scan = _scan(ExpressAdapter(), tmp_path, {
-        "node_modules/pkg/index.js": EXPRESS_APP,
-        "server.js": 'const e = require("express");\n'
-                     'const app = e();\napp.get("/ok", h);\n',
-    })
+    scan = _scan(
+        ExpressAdapter(),
+        tmp_path,
+        {
+            "node_modules/pkg/index.js": EXPRESS_APP,
+            "server.js": 'const e = require("express");\nconst app = e();\napp.get("/ok", h);\n',
+        },
+    )
     assert {r.path for r in scan.routes} == {"/ok"}
 
 

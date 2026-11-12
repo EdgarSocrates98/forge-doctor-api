@@ -37,12 +37,8 @@ def runtime_graph(executions: tuple[RequestExecution, ...]) -> ServiceGraph:
                 continue
             src = entity_id(EntityKind.SERVICE, "runtime", caller)
             dst = entity_id(EntityKind.SERVICE, "runtime", callee)
-            graph.add_entity(
-                Entity(id=src, kind=EntityKind.SERVICE, name=caller)
-            )
-            graph.add_entity(
-                Entity(id=dst, kind=EntityKind.SERVICE, name=callee)
-            )
+            graph.add_entity(Entity(id=src, kind=EntityKind.SERVICE, name=caller))
+            graph.add_entity(Entity(id=dst, kind=EntityKind.SERVICE, name=callee))
             key = (src, dst, RelationshipKind.CALLS)
             if key not in seen:
                 seen.add(key)
@@ -56,10 +52,7 @@ def runtime_graph(executions: tuple[RequestExecution, ...]) -> ServiceGraph:
                             Evidence(
                                 kind=EvidenceKind.RUNTIME,
                                 source=_src(call),
-                                summary=(
-                                    f"observed {caller} -> {callee} "
-                                    f"({call.operation})"
-                                ),
+                                summary=(f"observed {caller} -> {callee} ({call.operation})"),
                             ),
                         ),
                     )
@@ -79,8 +72,7 @@ def runtime_graph(executions: tuple[RequestExecution, ...]) -> ServiceGraph:
                                     kind=EvidenceKind.RUNTIME,
                                     source=_src(call),
                                     summary=(
-                                        f"observed {call.retries} resend(s) "
-                                        f"{caller} -> {callee}"
+                                        f"observed {call.retries} resend(s) {caller} -> {callee}"
                                     ),
                                 ),
                             ),

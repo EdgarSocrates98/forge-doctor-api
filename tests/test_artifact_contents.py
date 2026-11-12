@@ -31,8 +31,14 @@ def wheel(tmp_path_factory) -> zipfile.ZipFile:
         # retry against the installed backend before conceding the gate.
         result = subprocess.run(
             [
-                sys.executable, "-m", "build", "--wheel", "--no-isolation",
-                "--outdir", str(out), str(ROOT),
+                sys.executable,
+                "-m",
+                "build",
+                "--wheel",
+                "--no-isolation",
+                "--outdir",
+                str(out),
+                str(ROOT),
             ],
             capture_output=True,
             text=True,

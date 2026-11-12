@@ -113,27 +113,45 @@ class ForgeDoctorApiPortal(fp.PortalAdapter):
             fp.Operation("GET", "/docs/search", lambda ctx: self._docs_search(ctx)),
             fp.Operation("POST", "/installation/plan", self._install_plan, mutating=True),
             fp.Operation(
-                "POST", "/installation/apply", self._install_apply,
-                mutating=True, confirm="apply", needs_plan_token=True,
+                "POST",
+                "/installation/apply",
+                self._install_apply,
+                mutating=True,
+                confirm="apply",
+                needs_plan_token=True,
             ),
             fp.Operation(
-                "POST", "/installation/repair", self._install_repair,
-                mutating=True, confirm="repair",
+                "POST",
+                "/installation/repair",
+                self._install_repair,
+                mutating=True,
+                confirm="repair",
             ),
             fp.Operation(
-                "POST", "/installation/uninstall", self._install_uninstall,
-                mutating=True, confirm="uninstall",
+                "POST",
+                "/installation/uninstall",
+                self._install_uninstall,
+                mutating=True,
+                confirm="uninstall",
             ),
             fp.Operation(
-                "POST", "/profiles/apply", self._profiles_apply,
-                mutating=True, confirm="apply",
+                "POST",
+                "/profiles/apply",
+                self._profiles_apply,
+                mutating=True,
+                confirm="apply",
             ),
             fp.Operation("POST", "/hosts/launch", self._hosts_launch, mutating=False),
             fp.Operation("POST", "/mcp/verify", self._mcp_verify, mutating=True, confirm="verify"),
             fp.Operation("POST", "/tasks/plan", self._tasks_plan, mutating=True),
             fp.Operation(
-                "POST", "/tasks/execute", self._tasks_execute,
-                mutating=True, confirm="execute", needs_plan_token=True, timeout=180,
+                "POST",
+                "/tasks/execute",
+                self._tasks_execute,
+                mutating=True,
+                confirm="execute",
+                needs_plan_token=True,
+                timeout=180,
             ),
         ]
 
@@ -184,11 +202,13 @@ class ForgeDoctorApiPortal(fp.PortalAdapter):
             doctor_error = f"{type(e).__name__}: {e}"
         checks = []
         for c in (doctor or {}).get("checks", []):
-            checks.append({
-                "id": c.get("id", "check"),
-                "state": c.get("status", "UNVERIFIED"),
-                "detail": c.get("detail"),
-            })
+            checks.append(
+                {
+                    "id": c.get("id", "check"),
+                    "state": c.get("status", "UNVERIFIED"),
+                    "detail": c.get("detail"),
+                }
+            )
         if doctor_error:
             checks.append({"id": "doctor", "state": "UNVERIFIED", "detail": doctor_error})
         return {
@@ -216,7 +236,8 @@ class ForgeDoctorApiPortal(fp.PortalAdapter):
         scope = (ctx.body or {}).get("scope", "project")
         if scope not in _SCOPES:
             raise fp.PortalError(
-                "PORTAL-BAD-FIELD", f"scope must be one of {_SCOPES}",
+                "PORTAL-BAD-FIELD",
+                f"scope must be one of {_SCOPES}",
                 details={"field": "scope", "got": scope},
             )
         host = (ctx.body or {}).get("host", "all")
@@ -225,18 +246,19 @@ class ForgeDoctorApiPortal(fp.PortalAdapter):
             h.strip() in forge_install.HOSTS for h in str(host).split(",")
         ):
             raise fp.PortalError(
-                "PORTAL-BAD-FIELD", f"host must be one of {known}",
+                "PORTAL-BAD-FIELD",
+                f"host must be one of {known}",
                 details={"field": "host", "got": host},
             )
         profile = (ctx.body or {}).get("profile", "recommended")
         if profile not in _PROFILES:
             raise fp.PortalError(
-                "PORTAL-BAD-FIELD", f"profile must be one of {_PROFILES}",
+                "PORTAL-BAD-FIELD",
+                f"profile must be one of {_PROFILES}",
                 details={"field": "profile", "got": profile},
             )
         plan_input = {"scope": scope, "profile": profile, "host": host}
-        ictx = forge_install._ctx(
-            _ctx_args(scope, self._root, profile), forge_install._hosts(host))
+        ictx = forge_install._ctx(_ctx_args(scope, self._root, profile), forge_install._hosts(host))
         with kit.acquire_lock(ictx.state_dir):
             receipt = kit.apply_install(ictx, approved=False)
         return {
@@ -256,13 +278,19 @@ class ForgeDoctorApiPortal(fp.PortalAdapter):
             raise fp.PortalError(
                 "PORTAL-PLAN-STALE",
                 "plan token does not match this plan or expired — regenerate the plan",
-                http=409, retryable=True, action="regenerate_plan",
+                http=409,
+                retryable=True,
+                action="regenerate_plan",
             )
         ictx = forge_install._ctx(
             _ctx_args(
-                plan.get("scope", "project"), self._root,
-                plan.get("profile", "recommended"), dry_run=False),
-            forge_install._hosts(plan.get("host", "all")))
+                plan.get("scope", "project"),
+                self._root,
+                plan.get("profile", "recommended"),
+                dry_run=False,
+            ),
+            forge_install._hosts(plan.get("host", "all")),
+        )
         # same orchestration as forge_install.cmd_install: lock → apply →
         # receipt → registry
         with kit.acquire_lock(ictx.state_dir):
@@ -273,8 +301,7 @@ class ForgeDoctorApiPortal(fp.PortalAdapter):
         return receipt
 
     def _install_repair(self, ctx: fp.RequestContext) -> dict[str, Any]:
-        ictx = forge_install._ctx(
-            _ctx_args("project", self._root, "full"), forge_install.HOSTS)
+        ictx = forge_install._ctx(_ctx_args("project", self._root, "full"), forge_install.HOSTS)
         with kit.acquire_lock(ictx.state_dir):
             return kit.repair(ictx)
 
@@ -295,8 +322,11 @@ class ForgeDoctorApiPortal(fp.PortalAdapter):
                 "description_key": "profiles.economy.desc",
                 "current": current == "minimal",
                 "components": {
-                    "skills": False, "agents": False, "mcp": True,
-                    "tui": False, "graph_studio": False,
+                    "skills": False,
+                    "agents": False,
+                    "mcp": True,
+                    "tui": False,
+                    "graph_studio": False,
                 },
             },
             {
@@ -305,8 +335,11 @@ class ForgeDoctorApiPortal(fp.PortalAdapter):
                 "description_key": "profiles.balanced.desc",
                 "current": current == "recommended",
                 "components": {
-                    "skills": True, "agents": False, "mcp": True,
-                    "tui": False, "graph_studio": False,
+                    "skills": True,
+                    "agents": False,
+                    "mcp": True,
+                    "tui": False,
+                    "graph_studio": False,
                 },
             },
             {
@@ -315,8 +348,11 @@ class ForgeDoctorApiPortal(fp.PortalAdapter):
                 "description_key": "profiles.full.desc",
                 "current": current == "full",
                 "components": {
-                    "skills": True, "agents": True, "mcp": True,
-                    "tui": False, "graph_studio": True,
+                    "skills": True,
+                    "agents": True,
+                    "mcp": True,
+                    "tui": False,
+                    "graph_studio": True,
                 },
             },
         ]
@@ -348,8 +384,8 @@ class ForgeDoctorApiPortal(fp.PortalAdapter):
                 details={"field": "profile", "got": profile},
             )
         ictx = forge_install._ctx(
-            _ctx_args("project", self._root, real, dry_run=False),
-            forge_install._hosts("all"))
+            _ctx_args("project", self._root, real, dry_run=False), forge_install._hosts("all")
+        )
         with kit.acquire_lock(ictx.state_dir):
             receipt = kit.apply_install(ictx, approved=True)
         if receipt.get("status") == "completed":
@@ -366,33 +402,42 @@ class ForgeDoctorApiPortal(fp.PortalAdapter):
             try:
                 h = forge_hosts.host_state(name, self._root)
             except Exception as e:
-                out.append({
-                    "host": name, "detected": False, "version": None,
-                    "supported": False, "logged_in": None,
-                    "integration": "unverified", "launchable": False,
-                    "detail": f"probe failed: {type(e).__name__}",
-                })
+                out.append(
+                    {
+                        "host": name,
+                        "detected": False,
+                        "version": None,
+                        "supported": False,
+                        "logged_in": None,
+                        "integration": "unverified",
+                        "launchable": False,
+                        "detail": f"probe failed: {type(e).__name__}",
+                    }
+                )
                 continue
             integration = h.get("integration") or {}
             detected = h.get("binary_path") is not None
-            out.append({
-                "host": h.get("host", name),
-                "detected": detected,
-                "version": h.get("version"),
-                "supported": h.get("state") in ("READY", "SUPPORTED"),
-                "logged_in": h.get("logged_in"),
-                "integration": integration.get("state", "unverified"),
-                "launchable": detected,
-                "command_hint": h.get("launch_command") if detected else None,
-                "detail": h.get("detail") or h.get("login_hint") or h.get("auth_note"),
-            })
+            out.append(
+                {
+                    "host": h.get("host", name),
+                    "detected": detected,
+                    "version": h.get("version"),
+                    "supported": h.get("state") in ("READY", "SUPPORTED"),
+                    "logged_in": h.get("logged_in"),
+                    "integration": integration.get("state", "unverified"),
+                    "launchable": detected,
+                    "command_hint": h.get("launch_command") if detected else None,
+                    "detail": h.get("detail") or h.get("login_hint") or h.get("auth_note"),
+                }
+            )
         return out
 
     def _hosts_launch(self, ctx: fp.RequestContext) -> dict[str, Any]:
         host = (ctx.body or {}).get("host")
         if host not in _HOSTS:
             raise fp.PortalError(
-                "PORTAL-BAD-FIELD", f"host must be one of {_HOSTS}",
+                "PORTAL-BAD-FIELD",
+                f"host must be one of {_HOSTS}",
                 details={"field": "host", "got": host},
             )
         state = forge_hosts.host_state(host, self._root)
@@ -431,14 +476,16 @@ class ForgeDoctorApiPortal(fp.PortalAdapter):
             "BLOCKED": "DEGRADED",
             "NOT_APPLICABLE": "DEGRADED",
         }.get(status, "DEGRADED")
-        return [{
-            "id": "forge-doctor-api",
-            "state": state,
-            "host": None,
-            "tools_count": None,
-            "last_verify": None,
-            "detail": doc.get("detail"),
-        }]
+        return [
+            {
+                "id": "forge-doctor-api",
+                "state": state,
+                "host": None,
+                "tools_count": None,
+                "last_verify": None,
+                "detail": doc.get("detail"),
+            }
+        ]
 
     def _mcp_verify(self, ctx: fp.RequestContext) -> dict[str, Any]:
         doc = self._mcp_verify_doc()
@@ -500,18 +547,20 @@ class ForgeDoctorApiPortal(fp.PortalAdapter):
                     key, value = line.split(":", 1)
                     fields[key.strip()] = value.strip().strip('"')
             aid = path.stem
-            out.append({
-                "id": aid,
-                "name": fields.get("name", aid),
-                "role": "specialist",
-                "description": fields.get("description", ""),
-                "authority": None,
-                "domains": ["api-diagnostics"],
-                "skills": [],
-                "hosts": [],
-                "state": "available",
-                "source": "catalog",
-            })
+            out.append(
+                {
+                    "id": aid,
+                    "name": fields.get("name", aid),
+                    "role": "specialist",
+                    "description": fields.get("description", ""),
+                    "authority": None,
+                    "domains": ["api-diagnostics"],
+                    "skills": [],
+                    "hosts": [],
+                    "state": "available",
+                    "source": "catalog",
+                }
+            )
         return out
 
     # ------------------------------------------------------------------
@@ -536,7 +585,8 @@ class ForgeDoctorApiPortal(fp.PortalAdapter):
         intent = ((ctx.body or {}).get("intent") or "").strip()
         if not intent:
             raise fp.PortalError(
-                "PORTAL-MISSING-FIELD", "field 'intent' is required",
+                "PORTAL-MISSING-FIELD",
+                "field 'intent' is required",
                 details={"field": "intent"},
             )
         mapped = self._intent_to_task(intent)
@@ -564,13 +614,19 @@ class ForgeDoctorApiPortal(fp.PortalAdapter):
             raise fp.PortalError(
                 "PORTAL-PLAN-STALE",
                 "plan token does not match — regenerate the plan",
-                http=409, retryable=True, action="regenerate_plan",
+                http=409,
+                retryable=True,
+                action="regenerate_plan",
             )
         self._task_seq += 1
         task_id = f"task-{self._task_seq}"
         record: dict[str, Any] = {
-            "id": task_id, "verb": verb, "label": plan.get("label", verb),
-            "stage": "running", "started_at": _now(), "finished_at": None,
+            "id": task_id,
+            "verb": verb,
+            "label": plan.get("label", verb),
+            "stage": "running",
+            "started_at": _now(),
+            "finished_at": None,
             "exit_code": None,
         }
         try:
@@ -607,7 +663,8 @@ class ForgeDoctorApiPortal(fp.PortalAdapter):
             view = self._graph_view()
             if view is None:
                 raise fp.PortalError(
-                    "FDA-PORTAL-NO-GRAPH", "no service graph could be built for this workspace",
+                    "FDA-PORTAL-NO-GRAPH",
+                    "no service graph could be built for this workspace",
                     action="add API contracts or detectable sources, then retry",
                 )
             return view
@@ -664,8 +721,11 @@ class ForgeDoctorApiPortal(fp.PortalAdapter):
             return None
         if view is None:
             return None
-        return view.to_dict() if hasattr(view, "to_dict") else json.loads(
-            json.dumps(view, default=str))
+        return (
+            view.to_dict()
+            if hasattr(view, "to_dict")
+            else json.loads(json.dumps(view, default=str))
+        )
 
     def _graphs(self) -> dict[str, Any]:
         view = self._graph_view()
@@ -707,12 +767,14 @@ class ForgeDoctorApiPortal(fp.PortalAdapter):
             hay = " ".join(str(row.get(k) or "") for k in ("title", "path", "category")).lower()
             if not all(t in hay for t in terms):
                 continue
-            hits.append({
-                "path": row.get("path", ""),
-                "title": row.get("title") or Path(row.get("path", "")).stem,
-                "excerpt": "",
-                "category": row.get("category") or "doc",
-            })
+            hits.append(
+                {
+                    "path": row.get("path", ""),
+                    "title": row.get("title") or Path(row.get("path", "")).stem,
+                    "excerpt": "",
+                    "category": row.get("category") or "doc",
+                }
+            )
             if len(hits) >= limit:
                 break
         return hits

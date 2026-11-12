@@ -41,7 +41,7 @@ class GatewayUpstream(Model):
     """A declared upstream/cluster/service target."""
 
     name: str
-    host: str | None           # literal host/url when declared
+    host: str | None  # literal host/url when declared
     location: SourceLocation
 
 
@@ -66,10 +66,10 @@ class GatewayPolicy(Model):
 class MeshEdge(Model):
     """A declared traffic-policy edge — never name-inferred."""
 
-    source: str                # e.g. "VirtualService/reviews"
-    target: str                # declared destination host/subset
-    kind: str                  # "route" | "subset" | "profile"
-    via: str                   # declaring field, e.g. "destination.host"
+    source: str  # e.g. "VirtualService/reviews"
+    target: str  # declared destination host/subset
+    kind: str  # "route" | "subset" | "profile"
+    via: str  # declaring field, e.g. "destination.host"
     location: SourceLocation
 
 

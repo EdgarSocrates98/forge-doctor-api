@@ -33,8 +33,7 @@ CATALOG: tuple[GqlCheckSpec, ...] = (
         severity=Severity.HIGH,
         confidence=Confidence.HIGH,
         evidence_kind=EvidenceKind.STATIC,
-        description="A deprecated schema field is still selected by a "
-        "parsed client query (§184).",
+        description="A deprecated schema field is still selected by a parsed client query (§184).",
     ),
     GqlCheckSpec(
         id="GQL002",

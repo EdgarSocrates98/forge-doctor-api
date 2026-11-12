@@ -41,8 +41,7 @@ def test_contract_inspect_console(tmp_path) -> None:
 
 def test_contract_inspect_json(tmp_path) -> None:
     (tmp_path / "openapi.yaml").write_text(_CONTRACT)
-    result = runner.invoke(
-        app, ["contract", "inspect", str(tmp_path), "--json"])
+    result = runner.invoke(app, ["contract", "inspect", str(tmp_path), "--json"])
     assert result.exit_code == 0
     payload = json.loads(result.output)
     assert payload["summary"]["operations"] == 1
@@ -54,15 +53,13 @@ def test_contract_inspect_json(tmp_path) -> None:
 
 def test_contract_inspect_never_emits_schema_bodies(tmp_path) -> None:
     (tmp_path / "openapi.yaml").write_text(_CONTRACT)
-    result = runner.invoke(
-        app, ["contract", "inspect", str(tmp_path), "--json"])
+    result = runner.invoke(app, ["contract", "inspect", str(tmp_path), "--json"])
     assert "type" not in json.dumps(result.output)
     assert "properties" not in result.output
 
 
 def test_contract_inspect_missing_target_exits_2(tmp_path) -> None:
-    result = runner.invoke(
-        app, ["contract", "inspect", str(tmp_path / "nope")])
+    result = runner.invoke(app, ["contract", "inspect", str(tmp_path / "nope")])
     assert result.exit_code == 2
 
 

@@ -86,15 +86,12 @@ def strip_source(text: str) -> StrippedSource:
                 while j < n and text[j] != quote:
                     j += 2 if text[j] == "\\" else 1
                 j = min(n, j + 1)
-            literals.append(
-                (i, j,
-                 text[i + len(quote): max(i + len(quote), j - len(quote))]))
+            literals.append((i, j, text[i + len(quote) : max(i + len(quote), j - len(quote))]))
             blank(i + len(quote), max(i + len(quote), j - len(quote)))
             i = j
         else:
             i += 1
-    return StrippedSource(
-        text=text, safe="".join(safe), literals=tuple(literals))
+    return StrippedSource(text=text, safe="".join(safe), literals=tuple(literals))
 
 
 def line_of(text: str, pos: int) -> int:

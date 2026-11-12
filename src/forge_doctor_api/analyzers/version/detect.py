@@ -62,9 +62,7 @@ def _uri_versions(model: OpenApiProjectModel) -> list[ApiVersion]:
                 ApiVersion(
                     identifier=f"v{match.group(1)}",
                     mechanism=VersionMechanism.URI,
-                    evidence=(
-                        _ev(server.location.path, f"URI version segment in {server.url}"),
-                    ),
+                    evidence=(_ev(server.location.path, f"URI version segment in {server.url}"),),
                     location=server.location,
                 )
             )

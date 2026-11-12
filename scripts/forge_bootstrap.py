@@ -543,14 +543,11 @@ def _shell_label() -> str:
 
 
 def _posix_env_paths() -> tuple[Path, Path]:
-    # Git Bash and test/portable environments may intentionally provide HOME;
-    # Path.home() on native Windows ignores that shell-level contract.
-    home = Path(os.environ.get("HOME") or Path.home())
-    config_home = Path(os.environ.get("XDG_CONFIG_HOME") or (home / ".config"))
+    config_home = Path(os.environ.get("XDG_CONFIG_HOME") or (Path.home() / ".config"))
     env_file = config_home / ENV_DIR_NAME / ENV_FILE_NAME
     shell = Path(os.environ.get("SHELL", "/bin/sh")).name.lower().removesuffix(".exe")
     rc_name = {"bash": ".bashrc", "zsh": ".zshrc"}.get(shell, ".profile")
-    return env_file, home / rc_name
+    return env_file, Path.home() / rc_name
 
 
 def _is_git_bash() -> bool:

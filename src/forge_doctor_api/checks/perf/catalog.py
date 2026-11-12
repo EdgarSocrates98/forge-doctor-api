@@ -42,8 +42,7 @@ CATALOG: tuple[PerfCheckSpec, ...] = (
         severity=Severity.HIGH,
         confidence=Confidence.MEDIUM,
         evidence_kind=EvidenceKind.DERIVED,
-        description="Current-window error rate exceeds baseline beyond "
-        "the declared threshold.",
+        description="Current-window error rate exceeds baseline beyond the declared threshold.",
     ),
     PerfCheckSpec(
         id="APIPERF003",
@@ -51,8 +50,7 @@ CATALOG: tuple[PerfCheckSpec, ...] = (
         severity=Severity.HIGH,
         confidence=Confidence.MEDIUM,
         evidence_kind=EvidenceKind.DERIVED,
-        description="Downstream-call p95 to a callee regressed beyond "
-        "the declared threshold.",
+        description="Downstream-call p95 to a callee regressed beyond the declared threshold.",
     ),
     PerfCheckSpec(
         id="APIPERF004",
@@ -60,8 +58,7 @@ CATALOG: tuple[PerfCheckSpec, ...] = (
         severity=Severity.MEDIUM,
         confidence=Confidence.LOW,
         evidence_kind=EvidenceKind.RUNTIME,
-        description="Observed retry rate increased vs baseline - "
-        "candidate.",
+        description="Observed retry rate increased vs baseline - candidate.",
     ),
     PerfCheckSpec(
         id="APIPERF005",
@@ -69,8 +66,7 @@ CATALOG: tuple[PerfCheckSpec, ...] = (
         severity=Severity.MEDIUM,
         confidence=Confidence.LOW,
         evidence_kind=EvidenceKind.DERIVED,
-        description="Observed timeout rate increased vs baseline - "
-        "candidate.",
+        description="Observed timeout rate increased vs baseline - candidate.",
     ),
     PerfCheckSpec(
         id="APIPERF006",
@@ -78,8 +74,7 @@ CATALOG: tuple[PerfCheckSpec, ...] = (
         severity=Severity.MEDIUM,
         confidence=Confidence.MEDIUM,
         evidence_kind=EvidenceKind.DERIVED,
-        description="Response payload p95 grew beyond the declared "
-        "threshold.",
+        description="Response payload p95 grew beyond the declared threshold.",
     ),
     PerfCheckSpec(
         id="APIPERF007",
@@ -87,8 +82,7 @@ CATALOG: tuple[PerfCheckSpec, ...] = (
         severity=Severity.MEDIUM,
         confidence=Confidence.LOW,
         evidence_kind=EvidenceKind.DERIVED,
-        description="Mean downstream fan-out per request increased - "
-        "candidate.",
+        description="Mean downstream fan-out per request increased - candidate.",
     ),
     PerfCheckSpec(
         id="APIPERF008",
@@ -96,8 +90,7 @@ CATALOG: tuple[PerfCheckSpec, ...] = (
         severity=Severity.MEDIUM,
         confidence=Confidence.LOW,
         evidence_kind=EvidenceKind.RUNTIME,
-        description="Observed cache-hit rate declined vs baseline - "
-        "candidate.",
+        description="Observed cache-hit rate declined vs baseline - candidate.",
     ),
 )
 

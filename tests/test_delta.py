@@ -66,8 +66,8 @@ def test_changed_contract_produces_delta(tmp_path: Path) -> None:
 
 def test_changed_operation_digest(tmp_path: Path) -> None:
     v2_changed = OPENAPI_V1.replace(
-        "operationId: listPets",
-        "operationId: listPets\n      deprecated: true")
+        "operationId: listPets", "operationId: listPets\n      deprecated: true"
+    )
     a = _report(tmp_path / "a", OPENAPI_V1)
     b = _report(tmp_path / "b", v2_changed)
     delta = compute_delta(a, b)
@@ -84,8 +84,11 @@ def test_finding_add_remove(tmp_path: Path) -> None:
 
     base = _report(tmp_path, OPENAPI_V1)
     f1 = Finding(
-        id="OAS001", title="t", description="d1",
-        severity=Severity.LOW, confidence=__import__(
+        id="OAS001",
+        title="t",
+        description="d1",
+        severity=Severity.LOW,
+        confidence=__import__(
             "forge_doctor_api.core.models", fromlist=["Confidence"]
         ).Confidence.MEDIUM,
         evidence_kind=EvidenceKind.STATIC,
@@ -104,7 +107,6 @@ def test_delta_sorted_and_deterministic(tmp_path: Path) -> None:
     d1 = compute_delta(a, b)
     d2 = compute_delta(a, b)
     assert d1 == d2
-    for field in ("findings_added", "findings_removed",
-                  "unknowns_added", "unknowns_removed"):
+    for field in ("findings_added", "findings_removed", "unknowns_added", "unknowns_removed"):
         vals = getattr(d1, field)
         assert list(vals) == sorted(vals)

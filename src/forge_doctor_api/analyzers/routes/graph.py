@@ -62,6 +62,7 @@ def scan_graph(scan: RouteScan) -> ServiceGraph:
                 attributes={"framework": route.framework, "service": route.service},
             )
         )
+
         # Two routes may declare the same edge identity (duplicate
         # method+path across files/adapters) — the fact is one, so its
         # evidence merges; a strict add would raise on the second.
@@ -72,30 +73,35 @@ def scan_graph(scan: RouteScan) -> ServiceGraph:
                 extra = tuple(e for e in rel.evidence if e not in seen)
                 if extra:
                     merged[key] = Relationship(
-                        kind=rel.kind, source_id=rel.source_id,
+                        kind=rel.kind,
+                        source_id=rel.source_id,
                         target_id=rel.target_id,
                         confidence=rel.confidence,
-                        evidence=tuple(sorted(
-                            seen + extra,
-                            key=lambda e: (e.source, e.line or 0,
-                                           e.summary))))
+                        evidence=tuple(
+                            sorted(seen + extra, key=lambda e: (e.source, e.line or 0, e.summary))
+                        ),
+                    )
             else:
                 merged[key] = rel
 
-        merge(Relationship(
-            kind=RelationshipKind.EXPOSES,
-            source_id=service_id,
-            target_id=endpoint_id,
-            confidence=Confidence.HIGH,
-            evidence=evidence,
-        ))
-        merge(Relationship(
-            kind=RelationshipKind.IMPLEMENTS,
-            source_id=operation_id,
-            target_id=endpoint_id,
-            confidence=Confidence.HIGH,
-            evidence=evidence,
-        ))
+        merge(
+            Relationship(
+                kind=RelationshipKind.EXPOSES,
+                source_id=service_id,
+                target_id=endpoint_id,
+                confidence=Confidence.HIGH,
+                evidence=evidence,
+            )
+        )
+        merge(
+            Relationship(
+                kind=RelationshipKind.IMPLEMENTS,
+                source_id=operation_id,
+                target_id=endpoint_id,
+                confidence=Confidence.HIGH,
+                evidence=evidence,
+            )
+        )
     for key in sorted(merged):
         graph.add_relationship(merged[key])
     return graph

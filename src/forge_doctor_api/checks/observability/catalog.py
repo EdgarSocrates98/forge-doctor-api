@@ -42,8 +42,7 @@ CATALOG: tuple[ObsCheckSpec, ...] = (
         severity=Severity.MEDIUM,
         confidence=Confidence.LOW,
         evidence_kind=EvidenceKind.RUNTIME,
-        description="Spans exist but parent linkage/propagation headers "
-        "are absent — candidate.",
+        description="Spans exist but parent linkage/propagation headers are absent — candidate.",
     ),
     ObsCheckSpec(
         id="OBSAPI003",
@@ -51,8 +50,7 @@ CATALOG: tuple[ObsCheckSpec, ...] = (
         severity=Severity.LOW,
         confidence=Confidence.MEDIUM,
         evidence_kind=EvidenceKind.RUNTIME,
-        description="Operation names mix naming conventions "
-        "(camelCase/snake_case/kebab-case).",
+        description="Operation names mix naming conventions (camelCase/snake_case/kebab-case).",
     ),
     ObsCheckSpec(
         id="OBSAPI004",

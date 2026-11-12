@@ -113,9 +113,7 @@ class FrameworkAdapter(Protocol):
         """Strong-marker gate: is this framework genuinely in play?"""
         ...
 
-    def attribute(
-        self, context: ProjectContext, files: Sequence[str]
-    ) -> tuple[Attribution, ...]:
+    def attribute(self, context: ProjectContext, files: Sequence[str]) -> tuple[Attribution, ...]:
         """Per-file framework attributions with evidence."""
         ...
 
@@ -128,27 +126,19 @@ class FrameworkAdapter(Protocol):
         """RouteModels for attributed files."""
         ...
 
-    def discover_auth(
-        self, context: ProjectContext, files: Sequence[str]
-    ) -> SurfaceResult:
+    def discover_auth(self, context: ProjectContext, files: Sequence[str]) -> SurfaceResult:
         """Auth-relevant evidence (decorators, deps, guards)."""
         ...
 
-    def discover_schemas(
-        self, context: ProjectContext, files: Sequence[str]
-    ) -> SurfaceResult:
+    def discover_schemas(self, context: ProjectContext, files: Sequence[str]) -> SurfaceResult:
         """Request/response schema candidate names + locations."""
         ...
 
-    def discover_dependencies(
-        self, context: ProjectContext, files: Sequence[str]
-    ) -> SurfaceResult:
+    def discover_dependencies(self, context: ProjectContext, files: Sequence[str]) -> SurfaceResult:
         """Injected/depended-upon components."""
         ...
 
-    def discover_middleware(
-        self, context: ProjectContext, files: Sequence[str]
-    ) -> SurfaceResult:
+    def discover_middleware(self, context: ProjectContext, files: Sequence[str]) -> SurfaceResult:
         """Middleware registrations applying to routes."""
         ...
 
@@ -158,9 +148,7 @@ class FrameworkAdapter(Protocol):
         """Exception/error handler registrations."""
         ...
 
-    def discover_validation(
-        self, context: ProjectContext, files: Sequence[str]
-    ) -> SurfaceResult:
+    def discover_validation(self, context: ProjectContext, files: Sequence[str]) -> SurfaceResult:
         """Validation constraints on inputs."""
         ...
 
@@ -170,9 +158,7 @@ class FrameworkAdapter(Protocol):
         """Serialization shaping (response models, encoders)."""
         ...
 
-    def discover_client_calls(
-        self, context: ProjectContext, files: Sequence[str]
-    ) -> SurfaceResult:
+    def discover_client_calls(self, context: ProjectContext, files: Sequence[str]) -> SurfaceResult:
         """Outbound HTTP client calls inside route code."""
         ...
 
@@ -196,15 +182,10 @@ class AstFrameworkAdapter(ABC):
 
     # -- §39 protocol defaults -------------------------------------------------
 
-    def attribute(
-        self, context: ProjectContext, files: Sequence[str]
-    ) -> tuple[Attribution, ...]:
+    def attribute(self, context: ProjectContext, files: Sequence[str]) -> tuple[Attribution, ...]:
         """Concrete §39 attribution: the ast gate, per file, sorted."""
         unknowns: list[UnknownFact] = []
-        attrs = {
-            pf.attribution
-            for pf in self.parse_files(context, files, unknowns)
-        }
+        attrs = {pf.attribution for pf in self.parse_files(context, files, unknowns)}
         return tuple(sorted(attrs, key=lambda a: a.path))
 
     def detect(self, context: ProjectContext, files: Sequence[str]) -> bool:
@@ -280,7 +261,9 @@ def available_adapters(
     from forge_doctor_api.analyzers.routes.spring import SpringBootAdapter
 
     adapters: list[FrameworkAdapter] = [
-        FastApiAdapter(), ExpressAdapter(), NestJsAdapter(),
+        FastApiAdapter(),
+        ExpressAdapter(),
+        NestJsAdapter(),
         SpringBootAdapter(),
     ]
     return tuple(

@@ -28,8 +28,13 @@ class ExperimentVerdict(StrEnum):
     CONSTRAINT_VIOLATED = "CONSTRAINT_VIOLATED"
 
 
-_OPS = {"<=": float.__le__, ">=": float.__ge__, "<": float.__lt__,
-        ">": float.__gt__, "==": float.__eq__}
+_OPS = {
+    "<=": float.__le__,
+    ">=": float.__ge__,
+    "<": float.__lt__,
+    ">": float.__gt__,
+    "==": float.__eq__,
+}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -115,8 +120,7 @@ def evaluate_experiment(experiment: Experiment) -> ExperimentReport:
         Evidence(
             kind=EvidenceKind.DERIVED,
             source="(experiment)",
-            summary=f"scenario {experiment.scenario.route} "
-            f"adjustments={experiment.adjustments}",
+            summary=f"scenario {experiment.scenario.route} adjustments={experiment.adjustments}",
         ),
     )
     projected = _projected(experiment)
@@ -154,9 +158,7 @@ def evaluate_experiment(experiment: Experiment) -> ExperimentReport:
     ]
     hypothesis = experiment.hypothesis
     hyp_result = (
-        hypothesis.holds(projected.get(hypothesis.metric))
-        if hypothesis is not None
-        else None
+        hypothesis.holds(projected.get(hypothesis.metric)) if hypothesis is not None else None
     )
     if hypothesis is not None and hyp_result is False:
         return ExperimentReport(
@@ -170,8 +172,7 @@ def evaluate_experiment(experiment: Experiment) -> ExperimentReport:
             UnknownFact(
                 subject=f"constraint {c.metric} {c.op} {c.value}",
                 missing=f"projected metric '{c.metric}'",
-                resolution="declare the metric in adjustments or "
-                "baseline rates",
+                resolution="declare the metric in adjustments or baseline rates",
             )
             for c in undecidable
         ]
@@ -180,8 +181,7 @@ def evaluate_experiment(experiment: Experiment) -> ExperimentReport:
                 UnknownFact(
                     subject=f"hypothesis {hypothesis.metric}",
                     missing=f"projected metric '{hypothesis.metric}'",
-                    resolution="declare the metric in adjustments or "
-                    "baseline rates",
+                    resolution="declare the metric in adjustments or baseline rates",
                 )
             )
         return ExperimentReport(
@@ -199,10 +199,8 @@ def evaluate_experiment(experiment: Experiment) -> ExperimentReport:
             unknowns=(
                 UnknownFact(
                     subject=experiment.name,
-                    missing="expected_constraints or a hypothesis on the "
-                    "scenario",
-                    resolution="declare constraints so a verdict can "
-                    "be supported",
+                    missing="expected_constraints or a hypothesis on the scenario",
+                    resolution="declare constraints so a verdict can be supported",
                 ),
             ),
             evidence=evidence,

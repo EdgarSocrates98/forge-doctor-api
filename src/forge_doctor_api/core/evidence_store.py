@@ -100,14 +100,13 @@ class EvidenceStoreBuilder:
     def build(self) -> EvidenceStore:
         entries = tuple(
             ContentEntry(
-                sha256=sha, size=size, paths=tuple(sorted(paths)),
+                sha256=sha,
+                size=size,
+                paths=tuple(sorted(paths)),
             )
             for sha, (size, paths) in sorted(self._by_hash.items())
         )
-        origins = tuple(
-            (path, classes)
-            for path, classes in sorted(self._origins.items())
-        )
+        origins = tuple((path, classes) for path, classes in sorted(self._origins.items()))
         index = tuple(sorted(self._by_path.items()))
         return EvidenceStore(entries=entries, origins=origins, index=index)
 

@@ -68,13 +68,16 @@ def _workspace(tmp_path: Path, files: dict[str, str]):
 
 
 def _full(tmp_path: Path):
-    return _workspace(tmp_path, {
-        "forge-doctor-api.workspace.yaml": MANIFEST,
-        "payments-api/api.yaml": API,
-        "payments-sdk/sdk.py": SDK,
-        "checkout/app.py": CHECKOUT,
-        "gw/envoy.yaml": GW_CFG,
-    })
+    return _workspace(
+        tmp_path,
+        {
+            "forge-doctor-api.workspace.yaml": MANIFEST,
+            "payments-api/api.yaml": API,
+            "payments-sdk/sdk.py": SDK,
+            "checkout/app.py": CHECKOUT,
+            "gw/envoy.yaml": GW_CFG,
+        },
+    )
 
 
 # -- manifest -------------------------------------------------------------------
@@ -102,30 +105,34 @@ def test_members_declared_with_roles(tmp_path: Path) -> None:
 
 
 def test_missing_member_recorded_not_invented(tmp_path: Path) -> None:
-    ctx, ws = _workspace(tmp_path, {
-        "forge-doctor-api.workspace.yaml": MANIFEST,
-        # payments-sdk checkout absent
-        "payments-api/api.yaml": API,
-    })
+    ctx, ws = _workspace(
+        tmp_path,
+        {
+            "forge-doctor-api.workspace.yaml": MANIFEST,
+            # payments-sdk checkout absent
+            "payments-api/api.yaml": API,
+        },
+    )
     assert ws is not None
     missing = {m.name for m in ws.members if not m.present}
     assert "payments-sdk" in missing and "checkout" in missing
     assert any("not found" in i for i in ws.issues)
     scan = scan_workspace(ctx, ws)
     # absent members produce no edges, no crash
-    assert not any(
-        e.from_repo in missing or e.to_repo in missing for e in scan.edges
-    )
+    assert not any(e.from_repo in missing or e.to_repo in missing for e in scan.edges)
 
 
 def test_duplicate_member_first_wins(tmp_path: Path) -> None:
-    ws = _workspace(tmp_path, {
-        "forge-doctor-api.workspace.yaml": """members:
+    ws = _workspace(
+        tmp_path,
+        {
+            "forge-doctor-api.workspace.yaml": """members:
   - {name: a, path: a, role: service}
   - {name: a, path: a, role: client}
 """,
-        "a/api.yaml": API,
-    })[1]
+            "a/api.yaml": API,
+        },
+    )[1]
     assert ws is not None
     assert len(ws.members) == 1
     assert ws.members[0].role is MemberRole.SERVICE
@@ -133,10 +140,13 @@ def test_duplicate_member_first_wins(tmp_path: Path) -> None:
 
 
 def test_missing_role_is_unknown_never_inferred(tmp_path: Path) -> None:
-    ctx, ws = _workspace(tmp_path, {
-        "forge-doctor-api.workspace.yaml": "members:\n  - {name: x, path: x}\n",
-        "x/api.yaml": API,
-    })
+    ctx, ws = _workspace(
+        tmp_path,
+        {
+            "forge-doctor-api.workspace.yaml": "members:\n  - {name: x, path: x}\n",
+            "x/api.yaml": API,
+        },
+    )
     assert ws is not None
     assert ws.members[0].role is MemberRole.UNKNOWN
     scan = scan_workspace(ctx, ws)
@@ -144,10 +154,12 @@ def test_missing_role_is_unknown_never_inferred(tmp_path: Path) -> None:
 
 
 def test_member_path_escape_rejected(tmp_path: Path) -> None:
-    ws = _workspace(tmp_path, {
-        "forge-doctor-api.workspace.yaml":
-            "members:\n  - {name: bad, path: ../outside, role: service}\n",
-    })[1]
+    ws = _workspace(
+        tmp_path,
+        {
+            "forge-doctor-api.workspace.yaml": "members:\n  - {name: bad, path: ../outside, role: service}\n",  # noqa: E501
+        },
+    )[1]
     assert ws is not None and ws.members == ()
     assert any("escapes" in i for i in ws.issues)
 
@@ -180,30 +192,35 @@ def test_chain_resolution_api_sdk_consumer(tmp_path: Path) -> None:
 
 
 def test_contract_repo_links_implementation(tmp_path: Path) -> None:
-    ctx, ws = _workspace(tmp_path, {
-        "forge-doctor-api.workspace.yaml": """members:
+    ctx, ws = _workspace(
+        tmp_path,
+        {
+            "forge-doctor-api.workspace.yaml": """members:
   - {name: contracts, path: contracts, role: contracts}
   - {name: svc, path: svc, role: service}
 """,
-        "contracts/payments.yaml": API,
-        "svc/api.yaml": API,
-    })
+            "contracts/payments.yaml": API,
+            "svc/api.yaml": API,
+        },
+    )
     scan = scan_workspace(ctx, ws)
     impl = [e for e in scan.edges if e.kind is EdgeKind.CONTRACT_IMPLEMENTS]
-    assert impl and all(e.from_repo == "svc" and e.to_repo == "contracts"
-                        for e in impl)
+    assert impl and all(e.from_repo == "svc" and e.to_repo == "contracts" for e in impl)
     assert any("charges" in e.subject for e in impl)
 
 
 def test_gateway_route_without_upstream_is_unknown(tmp_path: Path) -> None:
-    ctx, ws = _workspace(tmp_path, {
-        "forge-doctor-api.workspace.yaml": """members:
+    ctx, ws = _workspace(
+        tmp_path,
+        {
+            "forge-doctor-api.workspace.yaml": """members:
   - {name: gw, path: gw, role: gateway}
   - {name: svc, path: svc, role: service}
 """,
-        "gw/envoy.yaml": "routes:\n  - prefix: /orphan\n",
-        "svc/api.yaml": API,
-    })
+            "gw/envoy.yaml": "routes:\n  - prefix: /orphan\n",
+            "svc/api.yaml": API,
+        },
+    )
     scan = scan_workspace(ctx, ws)
     assert any(u.subject == "/orphan" for u in scan.unknowns)
     assert not any(e.kind is EdgeKind.GATEWAY_ROUTES for e in scan.edges)
@@ -211,14 +228,17 @@ def test_gateway_route_without_upstream_is_unknown(tmp_path: Path) -> None:
 
 def test_sdk_import_normalization(tmp_path: Path) -> None:
     """`import payments_sdk` matches declared `payments-sdk`."""
-    ctx, ws = _workspace(tmp_path, {
-        "forge-doctor-api.workspace.yaml": """members:
+    ctx, ws = _workspace(
+        tmp_path,
+        {
+            "forge-doctor-api.workspace.yaml": """members:
   - {name: payments-sdk, path: sdk, role: client, provides: [payments-sdk]}
   - {name: consumer, path: consumer, role: client}
 """,
-        "sdk/s.py": SDK,
-        "consumer/c.py": CHECKOUT,
-    })
+            "sdk/s.py": SDK,
+            "consumer/c.py": CHECKOUT,
+        },
+    )
     scan = scan_workspace(ctx, ws)
     edges = [e for e in scan.edges if e.kind is EdgeKind.SDK_CONSUMED_BY]
     assert len(edges) == 1  # deduped per file
@@ -227,13 +247,16 @@ def test_sdk_import_normalization(tmp_path: Path) -> None:
 
 def test_no_edges_between_undeclared_repos(tmp_path: Path) -> None:
     """A stray directory beside members is invisible — membership is declared."""
-    ctx, ws = _workspace(tmp_path, {
-        "forge-doctor-api.workspace.yaml": """members:
+    ctx, ws = _workspace(
+        tmp_path,
+        {
+            "forge-doctor-api.workspace.yaml": """members:
   - {name: svc, path: svc, role: service}
 """,
-        "svc/api.yaml": API,
-        "sneaky/client.py": SDK,  # exists on disk but not a member
-    })
+            "svc/api.yaml": API,
+            "sneaky/client.py": SDK,  # exists on disk but not a member
+        },
+    )
     scan = scan_workspace(ctx, ws)
     assert all("sneaky" not in e.from_repo + e.to_repo for e in scan.edges)
 
@@ -253,14 +276,17 @@ def test_blast_radius_spans_repos(tmp_path: Path) -> None:
 
 
 def test_blast_subject_without_consumers_is_unknown(tmp_path: Path) -> None:
-    ctx, ws = _workspace(tmp_path, {
-        "forge-doctor-api.workspace.yaml": """members:
+    ctx, ws = _workspace(
+        tmp_path,
+        {
+            "forge-doctor-api.workspace.yaml": """members:
   - {name: svc, path: svc, role: service}
   - {name: contracts, path: contracts, role: contracts}
 """,
-        "svc/api.yaml": API,
-        "contracts/api.yaml": API,  # implements edges exist but no callers
-    })
+            "svc/api.yaml": API,
+            "contracts/api.yaml": API,  # implements edges exist but no callers
+        },
+    )
     scan = scan_workspace(ctx, ws)
     rep = workspace_blast_radius(scan, ("GET /charges/{id}",))
     assert rep.nodes[0].repo == "svc"

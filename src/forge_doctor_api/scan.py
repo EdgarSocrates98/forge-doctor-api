@@ -120,12 +120,11 @@ __all__ = [
 ]
 
 
-def _files_marked(
-    inventory: Any, *markers: str
-) -> list[str]:
+def _files_marked(inventory: Any, *markers: str) -> list[str]:
     """Non-vendored paths whose strong markers include any of `markers`."""
     return [
-        a.path for a in inventory.artifacts
+        a.path
+        for a in inventory.artifacts
         if not a.vendored and any(m in a.markers for m in markers)
     ]
 
@@ -157,9 +156,7 @@ def scan_project(
     inventory = discover(context)
     store = build_evidence_store(context, inventory)
     plan = build_plan(inventory)
-    all_files = [
-        a.path for a in inventory.artifacts if not a.vendored
-    ]
+    all_files = [a.path for a in inventory.artifacts if not a.vendored]
     service = context.root.name
 
     findings: list[Finding] = []
@@ -172,27 +169,36 @@ def scan_project(
 
     def _mark() -> tuple[int, int, float | None, int | None]:
         traced = stats_timing and tracemalloc.is_tracing()
-        return (len(findings), len(unknowns),
-                perf_counter() if stats_timing else None,
-                tracemalloc.get_traced_memory()[0] if traced else None)
+        return (
+            len(findings),
+            len(unknowns),
+            perf_counter() if stats_timing else None,
+            tracemalloc.get_traced_memory()[0] if traced else None,
+        )
 
-    def _rec(name: str, ran: bool, artifacts: int,
-             mark: tuple[int, int, float | None, int | None]) -> None:
+    def _rec(
+        name: str, ran: bool, artifacts: int, mark: tuple[int, int, float | None, int | None]
+    ) -> None:
         f0, u0, t0, m0 = mark
-        stats.append(AnalyzerStat(
-            analyzer=name, ran=ran, artifacts=artifacts,
-            findings=len(findings) - f0,
-            unknowns=len(unknowns) - u0,
-            duration_ms=((perf_counter() - t0) * 1000)
-            if t0 is not None else None,
-            allocated_bytes=(tracemalloc.get_traced_memory()[0] - m0)
-            if m0 is not None else None))
+        stats.append(
+            AnalyzerStat(
+                analyzer=name,
+                ran=ran,
+                artifacts=artifacts,
+                findings=len(findings) - f0,
+                unknowns=len(unknowns) - u0,
+                duration_ms=((perf_counter() - t0) * 1000) if t0 is not None else None,
+                allocated_bytes=(tracemalloc.get_traced_memory()[0] - m0)
+                if m0 is not None
+                else None,
+            )
+        )
 
     # spec 065: opt-in analyzer-level model cache. Never stores
     # findings/unknowns — checks always recompute over the models.
     analysis_cache: AnalysisCache | None = (
-        AnalysisCache(context.root, tool_version=_tool_version())
-        if incremental else None)
+        AnalysisCache(context.root, tool_version=_tool_version()) if incremental else None
+    )
 
     def _shas(files: list[str]) -> list[str]:
         return [s for f in files if (s := store.hash_of(f)) is not None]
@@ -218,18 +224,19 @@ def scan_project(
         return model
 
     # -- contracts -----------------------------------------------------------
-    openapi_files = _files_marked(
-        inventory, MARKER_OPENAPI, MARKER_SWAGGER)
+    openapi_files = _files_marked(inventory, MARKER_OPENAPI, MARKER_SWAGGER)
     m = _mark()
     openapi: OpenApiProjectModel = _cached_load(
-        AnalyzerId.OPENAPI.value, openapi_files, "",
+        AnalyzerId.OPENAPI.value,
+        openapi_files,
+        "",
         lambda: load_openapi_project(context, openapi_files),
-        OpenApiProjectModel)
+        OpenApiProjectModel,
+    )
     if openapi.documents:
         findings.extend(run_openapi_checks(openapi))
     _merge_graph(graphs, contract_graph(openapi))
-    _rec(AnalyzerId.OPENAPI.value, bool(openapi.documents),
-         len(openapi_files), m)
+    _rec(AnalyzerId.OPENAPI.value, bool(openapi.documents), len(openapi_files), m)
 
     graphql = None
     if plan.enabled(AnalyzerId.GRAPHQL):
@@ -238,8 +245,7 @@ def scan_project(
         graphql = load_graphql_project(context, gql_files)
         if graphql.documents:
             findings.extend(run_graphql_checks(graphql))
-        _rec(AnalyzerId.GRAPHQL.value, bool(graphql.documents),
-             len(gql_files), m)
+        _rec(AnalyzerId.GRAPHQL.value, bool(graphql.documents), len(gql_files), m)
     grpc = None
     if plan.enabled(AnalyzerId.GRPC):
         grpc_files = _files_marked(inventory, MARKER_PROTO)
@@ -255,8 +261,7 @@ def scan_project(
         asyncapi = load_asyncapi_project(context, async_files)
         if asyncapi.documents:
             findings.extend(run_async_checks(asyncapi))
-        _rec(AnalyzerId.ASYNCAPI.value, bool(asyncapi.documents),
-             len(async_files), m)
+        _rec(AnalyzerId.ASYNCAPI.value, bool(asyncapi.documents), len(async_files), m)
 
     # -- source ---------------------------------------------------------------
     routes: RouteScan | None = None
@@ -268,41 +273,47 @@ def scan_project(
         except Exception:
             adapters = ()
         if not adapters:
-            unknowns.append(UnknownFact(
-                subject="routes",
-                missing="recognized framework in source files",
-                resolution="no builtin adapter detected the framework; "
-                "implementation-side route evidence is absent",
-            ))
+            unknowns.append(
+                UnknownFact(
+                    subject="routes",
+                    missing="recognized framework in source files",
+                    resolution="no builtin adapter detected the framework; "
+                    "implementation-side route evidence is absent",
+                )
+            )
         scans: list[RouteScan] = []
         for adapter in adapters:
             try:
-                scans.append(adapter.discover_routes(
-                    context, service, source_files))
+                scans.append(adapter.discover_routes(context, service, source_files))
             except Exception:
-                unknowns.append(UnknownFact(
-                    subject=f"routes:{adapter.name}",
-                    missing="framework route scan",
-                    resolution="route adapter failed; partial route "
-                    "evidence may be absent",
-                ))
+                unknowns.append(
+                    UnknownFact(
+                        subject=f"routes:{adapter.name}",
+                        missing="framework route scan",
+                        resolution="route adapter failed; partial route evidence may be absent",
+                    )
+                )
         if scans:
             routes = RouteScan(
                 service=service,
-                routes=tuple(sorted(
-                    {r for s in scans for r in s.routes},
-                    key=lambda r: (r.method, r.path, r.handler))),
-                attributions=tuple(sorted(
-                    {a for s in scans for a in s.attributions},
-                    key=lambda a: a.path)),
-                unknowns=tuple(sorted(
-                    {u for s in scans for u in s.unknowns},
-                    key=lambda u: (u.subject, u.missing))),
+                routes=tuple(
+                    sorted(
+                        {r for s in scans for r in s.routes},
+                        key=lambda r: (r.method, r.path, r.handler),
+                    )
+                ),
+                attributions=tuple(
+                    sorted({a for s in scans for a in s.attributions}, key=lambda a: a.path)
+                ),
+                unknowns=tuple(
+                    sorted(
+                        {u for s in scans for u in s.unknowns}, key=lambda u: (u.subject, u.missing)
+                    )
+                ),
             )
             _merge_graph(graphs, scan_graph(routes))
             unknowns.extend(routes.unknowns)
-        _rec(AnalyzerId.ROUTES.value, bool(routes and routes.routes),
-             len(source_files), m)
+        _rec(AnalyzerId.ROUTES.value, bool(routes and routes.routes), len(source_files), m)
 
     clients = None
     if plan.enabled(AnalyzerId.CLIENTS):
@@ -311,26 +322,23 @@ def scan_project(
         clients = scan_clients(context, client_files)
         unknowns.extend(clients.unknowns)
         _merge_graph(graphs, client_graph(clients))
-        _rec(AnalyzerId.CLIENTS.value, bool(clients.clients),
-             len(client_files), m)
+        _rec(AnalyzerId.CLIENTS.value, bool(clients.clients), len(client_files), m)
 
     # -- config/config-plane models -------------------------------------------
-    sec_files = inventory.files_in(
-        ArtifactClass.SOURCE, ArtifactClass.CONFIG)
+    sec_files = inventory.files_in(ArtifactClass.SOURCE, ArtifactClass.CONFIG)
     m = _mark()
-    security = load_security_model(
-        context, sec_files, openapi=openapi, routes=routes)
+    security = load_security_model(context, sec_files, openapi=openapi, routes=routes)
     findings.extend(run_security_checks(security, openapi))
     _rec(AnalyzerId.SECURITY.value, True, len(sec_files), m)
 
-    rel_files = inventory.files_in(
-        ArtifactClass.CONFIG, ArtifactClass.IAC)
+    rel_files = inventory.files_in(ArtifactClass.CONFIG, ArtifactClass.IAC)
     m = _mark()
-    reliability = load_reliability_model(
-        context, rel_files, openapi=openapi)
-    findings.extend(run_reliability_checks(
-        reliability,
-        operations=openapi.operations if openapi is not None else None))
+    reliability = load_reliability_model(context, rel_files, openapi=openapi)
+    findings.extend(
+        run_reliability_checks(
+            reliability, operations=openapi.operations if openapi is not None else None
+        )
+    )
     _rec(AnalyzerId.RELIABILITY.value, True, len(rel_files), m)
 
     cache = None
@@ -344,38 +352,34 @@ def scan_project(
             from forge_doctor_api.analyzers.cache.graph import (
                 build_cache_graph,
             )
-            cache_graph, cache_findings = build_cache_graph(
-                cache, openapi)
+
+            cache_graph, cache_findings = build_cache_graph(cache, openapi)
             findings.extend(cache_findings)
             unknowns.extend(cache_graph.unknowns)
-        _rec(AnalyzerId.CACHE.value, bool(cache.policies),
-             len(cache_files), m)
+        _rec(AnalyzerId.CACHE.value, bool(cache.policies), len(cache_files), m)
 
     # -- infrastructure --------------------------------------------------------
     gateways: tuple[Any, ...] = ()
     meshes: tuple[Any, ...] = ()
     if plan.enabled(AnalyzerId.GATEWAY):
-        gw_files = inventory.files_in(
-            ArtifactClass.GATEWAY, ArtifactClass.MESH,
-            ArtifactClass.IAC)
+        gw_files = inventory.files_in(ArtifactClass.GATEWAY, ArtifactClass.MESH, ArtifactClass.IAC)
         m = _mark()
-        gateways, meshes, gw_unknowns = load_gateway_models(
-            context, gw_files)
+        gateways, meshes, gw_unknowns = load_gateway_models(context, gw_files)
         unknowns.extend(gw_unknowns)
-        _rec(AnalyzerId.GATEWAY.value, bool(gateways or meshes),
-             len(gw_files), m)
+        _rec(AnalyzerId.GATEWAY.value, bool(gateways or meshes), len(gw_files), m)
 
     # spec 062: depth checks over *evidenced* caller->callee edges only
     # (CALLS relationships + resolved gateway route targets). Name
     # similarity never creates a hop.
     from forge_doctor_api.checks.relapi.engine import run_depth_checks
+
     chain_edges: list[tuple[str, str]] = []
     for r in graphs.relationships():
         if r.kind == "CALLS":
             try:
-                chain_edges.append((
-                    parse_entity_id(r.source_id)[2],
-                    parse_entity_id(r.target_id)[2]))
+                chain_edges.append(
+                    (parse_entity_id(r.source_id)[2], parse_entity_id(r.target_id)[2])
+                )
             except ModelError:
                 continue
     for gw in gateways:
@@ -385,17 +389,17 @@ def scan_project(
     # spec 079: declared gateway/mesh retry+timeout evidence becomes
     # edge-scoped policies (`dialect->subject`) for the depth checks.
     if gateways or meshes:
-        extra_retries, extra_timeouts = gateway_edge_policies(
-            gateways, meshes)
+        extra_retries, extra_timeouts = gateway_edge_policies(gateways, meshes)
         if extra_retries or extra_timeouts:
             reliability = replace(
                 reliability,
-                retry_policies=tuple(sorted(
-                    (*reliability.retry_policies, *extra_retries),
-                    key=lambda r: r.scope)),
-                timeouts=tuple(sorted(
-                    (*reliability.timeouts, *extra_timeouts),
-                    key=lambda t: t.scope)))
+                retry_policies=tuple(
+                    sorted((*reliability.retry_policies, *extra_retries), key=lambda r: r.scope)
+                ),
+                timeouts=tuple(
+                    sorted((*reliability.timeouts, *extra_timeouts), key=lambda t: t.scope)
+                ),
+            )
     findings.extend(run_depth_checks(reliability, tuple(chain_edges)))
 
     infra = None
@@ -403,13 +407,19 @@ def scan_project(
         iac_files = inventory.files_in(ArtifactClass.IAC)
         m = _mark()
         infra = _cached_load(
-            AnalyzerId.IAC.value, iac_files, "",
+            AnalyzerId.IAC.value,
+            iac_files,
+            "",
             lambda: load_infra_model(context, iac_files),
-            InfraModel)
+            InfraModel,
+        )
         unknowns.extend(infra.unknowns)
-        _rec(AnalyzerId.IAC.value, bool(
-            infra.iac or infra.kubernetes or infra.chains),
-            len(iac_files), m)
+        _rec(
+            AnalyzerId.IAC.value,
+            bool(infra.iac or infra.kubernetes or infra.chains),
+            len(iac_files),
+            m,
+        )
 
     # -- runtime ---------------------------------------------------------------
     runtime: RuntimeProject | None = None
@@ -417,17 +427,16 @@ def scan_project(
         rt_files = inventory.files_in(ArtifactClass.RUNTIME)
         m = _mark()
         runtime = _cached_load(
-            AnalyzerId.RUNTIME.value, rt_files,
+            AnalyzerId.RUNTIME.value,
+            rt_files,
             f"keep_spans={keep_spans}",
-            lambda: load_runtime_project(
-                context, rt_files, keep_spans=keep_spans),
-            RuntimeProject)
+            lambda: load_runtime_project(context, rt_files, keep_spans=keep_spans),
+            RuntimeProject,
+        )
         findings.extend(run_observability_checks(runtime.observability))
         findings.extend(run_perf_checks(runtime.executions))
         unknowns.extend(runtime.unknowns)
-        _rec(AnalyzerId.RUNTIME.value, bool(
-            runtime.traces or runtime.executions),
-            len(rt_files), m)
+        _rec(AnalyzerId.RUNTIME.value, bool(runtime.traces or runtime.executions), len(rt_files), m)
 
     # -- correlation ------------------------------------------------------------
     drift = None
@@ -435,21 +444,26 @@ def scan_project(
         drift = contract_drift(openapi, routes)
         findings.extend(drift.findings)
 
-    inputs_present = sum([
-        bool(openapi.documents),
-        bool(routes and routes.routes),
-        bool(runtime and runtime.executions),
-        bool(reliability.retry_policies or reliability.timeouts
-             or reliability.objectives),
-        bool(security.auth_schemes or security.authorization),
-    ])
-    twin = assemble_twin(
-        openapi=openapi if openapi.documents else None,
-        routes=routes,
-        reliability=reliability,
-        executions=runtime.executions if runtime else None,
-        security=security,
-    ) if inputs_present >= 2 else None
+    inputs_present = sum(
+        [
+            bool(openapi.documents),
+            bool(routes and routes.routes),
+            bool(runtime and runtime.executions),
+            bool(reliability.retry_policies or reliability.timeouts or reliability.objectives),
+            bool(security.auth_schemes or security.authorization),
+        ]
+    )
+    twin = (
+        assemble_twin(
+            openapi=openapi if openapi.documents else None,
+            routes=routes,
+            reliability=reliability,
+            executions=runtime.executions if runtime else None,
+            security=security,
+        )
+        if inputs_present >= 2
+        else None
+    )
     if twin is not None:
         unknowns.extend(twin.unknowns)
 
@@ -475,6 +489,7 @@ def scan_project(
     if extra_policy is not None:
         extra = load_policies(extra_policy, list(extra_policy.iter_files()))
         from forge_doctor_api.policy.model import PolicySet
+
         policy_set = PolicySet(
             policies=policy_set.policies + extra.policies,
             exceptions=policy_set.exceptions + extra.exceptions,
@@ -484,24 +499,31 @@ def scan_project(
     if policy_set.policies or policy_set.exceptions or policy_set.issues:
         version = detect_version_model(openapi)
         ownership = resolve_ownership(context, all_files, openapi)
-        findings.extend(evaluate_policies(
-            policy_set,
-            RuleContext(openapi=openapi, security=security,
-                        reliability=reliability, version=version,
-                        ownership=ownership),
-            today or date.min,
-        ))
-    _rec(AnalyzerId.POLICY.value, bool(
-        policy_set.policies or policy_set.exceptions
-        or policy_set.issues), len(pol_files), m)
+        findings.extend(
+            evaluate_policies(
+                policy_set,
+                RuleContext(
+                    openapi=openapi,
+                    security=security,
+                    reliability=reliability,
+                    version=version,
+                    ownership=ownership,
+                ),
+                today or date.min,
+            )
+        )
+    _rec(
+        AnalyzerId.POLICY.value,
+        bool(policy_set.policies or policy_set.exceptions or policy_set.issues),
+        len(pol_files),
+        m,
+    )
 
     # -- fan-out signals (§59) -----------------------------------------------------
     fanout: tuple[FanoutSignal, ...] = ()
     m = _mark()
     if routes is not None and clients is not None:
-        fanout = fanout_signals(
-            routes, clients,
-            runtime.executions if runtime else ())
+        fanout = fanout_signals(routes, clients, runtime.executions if runtime else ())
         unknowns.extend(u for s in fanout for u in s.unknowns)
     _rec("fanout", bool(fanout), 0, m)
 
@@ -527,13 +549,13 @@ def scan_project(
             build_migration_graph,
             migration_paths,
         )
+
         migration = build_migration_graph(openapi, clients)
         unknowns.extend(migration.unknowns)
         migration_path_count = len(migration_paths(migration))
     _rec("migration", migration is not None, 0, m)
 
-    findings_sorted = tuple(sorted(
-        findings, key=lambda f: (f.id, f.entity_ids, f.description)))
+    findings_sorted = tuple(sorted(findings, key=lambda f: (f.id, f.entity_ids, f.description)))
     unknowns.extend(
         UnknownFact(
             subject=r.ref,
@@ -551,9 +573,8 @@ def scan_project(
     ).hexdigest()
 
     analysis_stats = AnalysisStats(
-        analyzers=tuple(stats),
-        total_findings=len(findings_sorted),
-        total_unknowns=len(unknowns))
+        analyzers=tuple(stats), total_findings=len(findings_sorted), total_unknowns=len(unknowns)
+    )
 
     return DoctorReport(
         tool_version=_tool_version(),
@@ -582,21 +603,23 @@ def scan_project(
         capabilities=capabilities,
         findings=findings_sorted,
         unknowns=tuple(unknowns),
-        operations=tuple(sorted(
-            f"{o.method.upper()} {o.path}" for o in openapi.operations)),
-        changes=tuple(sorted(
-            f"{c.classification.value}:{c.kind}:{c.subject}"
-            for c in diff.changes
-        )) if diff is not None else (),
+        operations=tuple(sorted(f"{o.method.upper()} {o.path}" for o in openapi.operations)),
+        changes=tuple(
+            sorted(f"{c.classification.value}:{c.kind}:{c.subject}" for c in diff.changes)
+        )
+        if diff is not None
+        else (),
         impact=_impact_summary(blast),
         remediation_candidates=tuple(
-            c.target for c in classify_findings(findings_sorted).candidates),
+            c.target for c in classify_findings(findings_sorted).candidates
+        ),
         diff=diff,
     )
 
 
 def _tool_version() -> str:
     from forge_doctor_api import __version__
+
     return __version__
 
 
@@ -611,13 +634,17 @@ def _contracts_summary(openapi: OpenApiProjectModel) -> DomainSummary | None:
             ("unresolved_refs", len(openapi.unresolved_external_refs)),
         ),
         ids=tuple(d.location.path for d in openapi.documents),
-        digests=tuple(sorted(
-            (o.identity or f"{o.method} {o.path}",
-             hashlib.sha256(o.to_json().encode("utf-8")).hexdigest()[:16])
-            for o in openapi.operations)),
+        digests=tuple(
+            sorted(
+                (
+                    o.identity or f"{o.method} {o.path}",
+                    hashlib.sha256(o.to_json().encode("utf-8")).hexdigest()[:16],
+                )
+                for o in openapi.operations
+            )
+        ),
         summaries=tuple(
-            f"{d.title or d.location.path} {d.api_version or ''}".strip()
-            for d in openapi.documents
+            f"{d.title or d.location.path} {d.api_version or ''}".strip() for d in openapi.documents
         ),
     )
 
@@ -630,8 +657,7 @@ def _routes_summary(routes: RouteScan | None) -> DomainSummary | None:
             ("routes", len(routes.routes)),
             ("attributions", len(routes.attributions)),
         ),
-        ids=tuple(
-            f"{r.method} {r.path}" for r in routes.routes),
+        ids=tuple(f"{r.method} {r.path}" for r in routes.routes),
         summaries=(f"service={routes.service}",),
         unknowns=len(routes.unknowns),
     )
@@ -655,8 +681,7 @@ def _graph_summary(graphs: ServiceGraph) -> DomainSummary | None:
     if not entities:
         return None
     rels = tuple(graphs.relationships())
-    service_ids = tuple(sorted(
-        e.id for e in entities if e.kind == "service"))
+    service_ids = tuple(sorted(e.id for e in entities if e.kind == "service"))
     return DomainSummary(
         counts=(
             ("entities", len(entities)),
@@ -717,14 +742,14 @@ def _cache_summary(cache: Any, cache_graph: Any = None) -> DomainSummary | None:
             ("risks", len(cache.risks)),
             ("graph_edges", edge_count),
         ),
-        ids=(tuple(cache_graph.cached_operations)
-             if cache_graph is not None else ()),
+        ids=(tuple(cache_graph.cached_operations) if cache_graph is not None else ()),
         unknowns=len(cache.unknowns),
     )
 
 
 def _migration_summary(
-    graph: Any, path_count: int,
+    graph: Any,
+    path_count: int,
 ) -> DomainSummary | None:
     if graph is None:
         return None
@@ -756,9 +781,13 @@ def _runtime_summary(runtime: RuntimeProject | None) -> DomainSummary | None:
 
 
 def _security_summary(security: Any) -> DomainSummary | None:
-    if not (security.auth_schemes or security.authorization
-            or security.rate_limits or security.cors
-            or security.external_apis):
+    if not (
+        security.auth_schemes
+        or security.authorization
+        or security.rate_limits
+        or security.cors
+        or security.external_apis
+    ):
         return None
     return DomainSummary(
         counts=(
@@ -773,8 +802,12 @@ def _security_summary(security: Any) -> DomainSummary | None:
 
 
 def _reliability_summary(reliability: Any) -> DomainSummary | None:
-    if not (reliability.retry_policies or reliability.timeouts
-            or reliability.circuit_breakers or reliability.objectives):
+    if not (
+        reliability.retry_policies
+        or reliability.timeouts
+        or reliability.circuit_breakers
+        or reliability.objectives
+    ):
         return None
     return DomainSummary(
         counts=(
@@ -787,8 +820,7 @@ def _reliability_summary(reliability: Any) -> DomainSummary | None:
 
 
 def _policy_summary(policy_set: Any) -> DomainSummary | None:
-    if not (policy_set.policies or policy_set.exceptions
-            or policy_set.issues):
+    if not (policy_set.policies or policy_set.exceptions or policy_set.issues):
         return None
     return DomainSummary(
         counts=(
@@ -847,8 +879,7 @@ def export_scan(report: DoctorReport) -> dict[str, object]:
     return {
         "schema_version": "1.0",
         "tool_version": report.tool_version or _tool_version(),
-        "knowledge_versions": dict(report.knowledge_versions)
-        or knowledge_versions(),
+        "knowledge_versions": dict(report.knowledge_versions) or knowledge_versions(),
         "gate_passed": report.gate_passed,
         "gate_failures": [f.to_dict() for f in report.gate_failures],
     }

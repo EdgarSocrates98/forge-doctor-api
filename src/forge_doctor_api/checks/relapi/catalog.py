@@ -33,8 +33,7 @@ CATALOG: tuple[RelCheckSpec, ...] = (
         severity=Severity.HIGH,
         confidence=Confidence.MEDIUM,
         evidence_kind=EvidenceKind.CONFIG,
-        description="Stacked explicit retry policies multiply potential "
-        "attempts along a path.",
+        description="Stacked explicit retry policies multiply potential attempts along a path.",
     ),
     RelCheckSpec(
         id="RELAPI002",
@@ -42,8 +41,7 @@ CATALOG: tuple[RelCheckSpec, ...] = (
         severity=Severity.MEDIUM,
         confidence=Confidence.LOW,
         evidence_kind=EvidenceKind.CONFIG,
-        description="A retried scope has no idempotency evidence - "
-        "manual review required.",
+        description="A retried scope has no idempotency evidence - manual review required.",
     ),
     RelCheckSpec(
         id="RELAPI003",
@@ -60,8 +58,7 @@ CATALOG: tuple[RelCheckSpec, ...] = (
         severity=Severity.MEDIUM,
         confidence=Confidence.LOW,
         evidence_kind=EvidenceKind.CONFIG,
-        description="Call-chain hop lacks deadline/timeout propagation "
-        "evidence - candidate.",
+        description="Call-chain hop lacks deadline/timeout propagation evidence - candidate.",
     ),
     RelCheckSpec(
         id="RELAPI005",
@@ -69,8 +66,7 @@ CATALOG: tuple[RelCheckSpec, ...] = (
         severity=Severity.LOW,
         confidence=Confidence.LOW,
         evidence_kind=EvidenceKind.CONFIG,
-        description="Retry/timeout evidence exists but no declared "
-        "circuit breaker - candidate.",
+        description="Retry/timeout evidence exists but no declared circuit breaker - candidate.",
     ),
     RelCheckSpec(
         id="RELAPI006",
@@ -78,8 +74,7 @@ CATALOG: tuple[RelCheckSpec, ...] = (
         severity=Severity.LOW,
         confidence=Confidence.LOW,
         evidence_kind=EvidenceKind.CONFIG,
-        description="Service/API evidence exists but no declared health "
-        "check - candidate.",
+        description="Service/API evidence exists but no declared health check - candidate.",
     ),
     RelCheckSpec(
         id="RELAPI007",
@@ -87,8 +82,7 @@ CATALOG: tuple[RelCheckSpec, ...] = (
         severity=Severity.LOW,
         confidence=Confidence.LOW,
         evidence_kind=EvidenceKind.CONFIG,
-        description="No graceful-shutdown/drain configuration evidence - "
-        "candidate.",
+        description="No graceful-shutdown/drain configuration evidence - candidate.",
     ),
     RelCheckSpec(
         id="RELAPI008",

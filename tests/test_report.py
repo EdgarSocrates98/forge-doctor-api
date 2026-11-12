@@ -33,9 +33,22 @@ paths:
 """
 
 DOMAIN_FIELDS = (
-    "contracts", "routes", "clients", "graph", "gateway", "mesh",
-    "infrastructure", "cache", "runtime", "security", "reliability",
-    "policies", "twin", "fanout", "migration", "impact",
+    "contracts",
+    "routes",
+    "clients",
+    "graph",
+    "gateway",
+    "mesh",
+    "infrastructure",
+    "cache",
+    "runtime",
+    "security",
+    "reliability",
+    "policies",
+    "twin",
+    "fanout",
+    "migration",
+    "impact",
 )
 
 
@@ -103,10 +116,7 @@ def test_plan_and_inventory_present(tmp_path: Path) -> None:
     report = _scan(tmp_path, {"api.yaml": OPENAPI})
     assert report.plan is not None
     assert report.inventory is not None
-    analyzers = [a.value if hasattr(a, "value") else str(a)
-                 for a in report.plan.analyzers]
+    analyzers = [a.value if hasattr(a, "value") else str(a) for a in report.plan.analyzers]
     # registry order is deterministic, not alphabetical
     again = _scan(tmp_path, {"api.yaml": OPENAPI})
-    assert analyzers == [
-        a.value if hasattr(a, "value") else str(a)
-        for a in again.plan.analyzers]
+    assert analyzers == [a.value if hasattr(a, "value") else str(a) for a in again.plan.analyzers]

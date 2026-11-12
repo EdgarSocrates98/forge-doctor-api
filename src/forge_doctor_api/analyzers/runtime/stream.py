@@ -113,8 +113,7 @@ class TraceAssembler:
                     subject="runtime traces",
                     missing=f"{self._late_spans} span(s) for traces already "
                     "evicted from the assembly window",
-                    resolution="increase the trace window or pre-sort the "
-                    "export by trace_id",
+                    resolution="increase the trace window or pre-sort the export by trace_id",
                 )
             )
         if self._tombstone_overflow:
@@ -123,8 +122,7 @@ class TraceAssembler:
                     subject="runtime traces",
                     missing="tombstone capacity for "
                     f"{self._tombstone_overflow} evicted trace id(s)",
-                    resolution="late spans for these ids may start new "
-                    "incomplete traces",
+                    resolution="late spans for these ids may start new incomplete traces",
                 )
             )
         self._traces.sort(key=lambda t: t.trace_id)
@@ -158,14 +156,11 @@ class TraceAssembler:
         self._unknowns.extend(exec_unknowns)
 
         ids = {s.span_id for s in ts}
-        self._orphan_spans += sum(
-            1 for s in ts if s.parent_id and s.parent_id not in ids
-        )
+        self._orphan_spans += sum(1 for s in ts if s.parent_id and s.parent_id not in ids)
         roots = [s for s in ts if not s.parent_id]
         broken = any(
-            s.parent_id
-            and (s.parent_id == s.span_id or s.parent_id not in ids)
-            for s in ts)
+            s.parent_id and (s.parent_id == s.span_id or s.parent_id not in ids) for s in ts
+        )
         incomplete = evicted or broken or len(roots) != 1
 
         unknowns: list[UnknownFact] = []
@@ -175,24 +170,19 @@ class TraceAssembler:
                     subject=f"trace {trace_id}",
                     missing="the complete span set (assembly window evicted "
                     "this trace before the artifact ended)",
-                    resolution="increase the trace window or pre-sort the "
-                    "export by trace_id",
+                    resolution="increase the trace window or pre-sort the export by trace_id",
                 )
             )
         if broken or len(roots) != 1:
             unknowns.append(
                 UnknownFact(
                     subject=f"trace {trace_id}",
-                    missing="a complete span tree (single root, all parents "
-                    "present)",
-                    resolution="critical_path is recorded only for complete "
-                    "trees",
+                    missing="a complete span tree (single root, all parents present)",
+                    resolution="critical_path is recorded only for complete trees",
                 )
             )
         retained = ts
-        if self._keep_spans and self._max_spans is not None and (
-            len(ts) > self._max_spans
-        ):
+        if self._keep_spans and self._max_spans is not None and (len(ts) > self._max_spans):
             retained = ts[: self._max_spans]
             unknowns.append(
                 UnknownFact(
@@ -210,9 +200,7 @@ class TraceAssembler:
                 trace_id=trace_id,
                 spans=tuple(retained) if self._keep_spans else (),
                 root_service=roots[0].service if len(roots) == 1 else None,
-                duration_ms=max((s.duration_ms or 0) for s in ts)
-                if ts
-                else None,
+                duration_ms=max((s.duration_ms or 0) for s in ts) if ts else None,
                 critical_path=critical,
                 errors=sum(1 for s in ts if s.status is SpanStatus.ERROR),
                 span_count=len(ts),
@@ -231,8 +219,7 @@ def _critical_path(root: Span, spans: list[Span]) -> tuple[str, ...]:
     node = root
     seen = {root.span_id}
     while True:
-        kids = [s for s in children.get(node.span_id, [])
-                if s.span_id not in seen]
+        kids = [s for s in children.get(node.span_id, []) if s.span_id not in seen]
         if not kids:
             return tuple(path)
         node = max(kids, key=lambda s: (s.duration_ms or 0, s.operation))
@@ -266,13 +253,9 @@ class ObservabilityAccumulator:
             if k in s.attributes or k in lowered:
                 self._signals["correlation_ids"] += 1
                 self._corr_keys.add(k)
-        if s.parent_id or "traceparent" in s.attributes or (
-            "b3" in s.attributes
-        ):
+        if s.parent_id or "traceparent" in s.attributes or ("b3" in s.attributes):
             self._signals["trace_propagation"] += 1
-        if s.status is SpanStatus.ERROR and not any(
-            k in s.attributes for k in _ERROR_ATTR_KEYS
-        ):
+        if s.status is SpanStatus.ERROR and not any(k in s.attributes for k in _ERROR_ATTR_KEYS):
             self._errors_no_ctx += 1
 
     def add_summary(self, r: RequestSummary) -> None:

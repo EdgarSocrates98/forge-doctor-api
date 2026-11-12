@@ -86,8 +86,7 @@ def test_registry_discovers_and_lists(tmp_path: Path) -> None:
     _write(tmp_path, "a", VALID)
     _write(tmp_path, "b", UNTRUSTED_TOML)
     registry = discover_registry(tmp_path)
-    assert {m.plugin_id for m in registry.list()} == {
-        "demo-plugin", "shady"}
+    assert {m.plugin_id for m in registry.list()} == {"demo-plugin", "shady"}
 
 
 def test_untrusted_never_imported(tmp_path: Path) -> None:
@@ -100,8 +99,10 @@ def test_untrusted_never_imported(tmp_path: Path) -> None:
         imported.append(name)
         return real_import(name, *a, **k)
 
-    with patch("builtins.__import__", side_effect=_spy), \
-            pytest.raises(ModelError, match="UNTRUSTED"):
+    with (
+        patch("builtins.__import__", side_effect=_spy),
+        pytest.raises(ModelError, match="UNTRUSTED"),
+    ):
         registry.activate("shady")
     assert "nonexistent_module_xyz" not in imported
     assert "nonexistent_module_xyz" not in sys.modules
@@ -117,9 +118,14 @@ def test_activation_of_trusted_builtin(tmp_path: Path) -> None:
 def test_conflicts_surface(tmp_path: Path) -> None:
     dup = VALID.replace('id = "demo-plugin"', 'id = "demo-plugin"')
     _write(tmp_path, "a", dup)
-    _write(tmp_path, "b", dup.replace(
-        'module = "forge_doctor_api.analyzers.routes.fastapi"',
-        'module = "forge_doctor_api.sdk"'))
+    _write(
+        tmp_path,
+        "b",
+        dup.replace(
+            'module = "forge_doctor_api.analyzers.routes.fastapi"',
+            'module = "forge_doctor_api.sdk"',
+        ),
+    )
     registry = discover_registry(tmp_path)
     assert any(c.kind == "duplicate-id" for c in registry.conflicts())
 
@@ -129,13 +135,15 @@ def test_conflicts_surface(tmp_path: Path) -> None:
 
 def _clean_run(ctx, files):
     from forge_doctor_api.analyzers.routes.fastapi import FastApiAdapter
+
     return FastApiAdapter().discover_routes(ctx, "conf", files)
 
 
 def test_conformance_clean_plugin_passes(tmp_path: Path) -> None:
     (tmp_path / "app.py").write_text(
-        "from fastapi import FastAPI\napp = FastAPI()\n"
-        "@app.get('/x')\ndef x(): pass\n", encoding="utf-8")
+        "from fastapi import FastAPI\napp = FastAPI()\n@app.get('/x')\ndef x(): pass\n",
+        encoding="utf-8",
+    )
     report = run_conformance("clean", _clean_run, tmp_path)
     for c in report.checks:
         assert c.status == "pass", f"{c.name}: {c.details}"
@@ -185,17 +193,20 @@ def test_conformance_evidence_check_passes_valid(tmp_path: Path) -> None:
     )
 
     def _valid(ctx, files):
-        return [Finding(
-            id="TST001", title="t", description="d",
-            severity=Severity.LOW, confidence=Confidence.MEDIUM,
-            evidence_kind=EvidenceKind.STATIC,
-            evidence=(Evidence(
-                kind=EvidenceKind.STATIC, source="x",
-                summary="seen"),),
-            unknowns=(UnknownFact(
-                subject="x", missing="y", resolution="z"),),
-            entity_ids=("op:x",),
-            source_location=SourceLocation(path="x"))]
+        return [
+            Finding(
+                id="TST001",
+                title="t",
+                description="d",
+                severity=Severity.LOW,
+                confidence=Confidence.MEDIUM,
+                evidence_kind=EvidenceKind.STATIC,
+                evidence=(Evidence(kind=EvidenceKind.STATIC, source="x", summary="seen"),),
+                unknowns=(UnknownFact(subject="x", missing="y", resolution="z"),),
+                entity_ids=("op:x",),
+                source_location=SourceLocation(path="x"),
+            )
+        ]
 
     report = run_conformance("valid", _valid, tmp_path)
     ev = next(c for c in report.checks if c.name == "evidence")
@@ -205,6 +216,7 @@ def test_conformance_evidence_check_passes_valid(tmp_path: Path) -> None:
 def test_conformance_offline_fails_for_network(tmp_path: Path) -> None:
     def _net(ctx, files):
         import socket as s
+
         return s.getaddrinfo("example.com", 80)
 
     report = run_conformance("net", _net, tmp_path)
@@ -214,5 +226,6 @@ def test_conformance_offline_fails_for_network(tmp_path: Path) -> None:
 
 def test_plugin_run_surface_adapter(tmp_path: Path) -> None:
     from forge_doctor_api.analyzers.routes.fastapi import FastApiAdapter
+
     run = plugin_run_surface(FastApiAdapter())
     assert callable(run)

@@ -343,11 +343,19 @@ def slice_graph(
     """
     if root_id not in graph:
         return GraphSlice(
-            root_id=root_id, depth=depth, direction=direction,
-            nodes=(), edges=(),
-            unknowns=(UnknownFact(
-                subject=root_id, missing="entity in graph",
-                resolution="slice roots must be known entity ids"),))
+            root_id=root_id,
+            depth=depth,
+            direction=direction,
+            nodes=(),
+            edges=(),
+            unknowns=(
+                UnknownFact(
+                    subject=root_id,
+                    missing="entity in graph",
+                    resolution="slice roots must be known entity ids",
+                ),
+            ),
+        )
     seen: set[str] = {root_id}
     frontier = {root_id}
     kept_edges: dict[tuple[str, str, str], Relationship] = {}
@@ -356,8 +364,7 @@ def slice_graph(
         nxt: set[str] = set()
         for current in sorted(frontier):
             for rel in graph.edges(current, direction=direction):
-                other = (rel.target_id if rel.source_id == current
-                         else rel.source_id)
+                other = rel.target_id if rel.source_id == current else rel.source_id
                 kept_edges[rel.key] = rel
                 if other not in seen:
                     nxt.add(other)
@@ -367,21 +374,26 @@ def slice_graph(
         seen |= nxt
         frontier = nxt
     return GraphSlice(
-        root_id=root_id, depth=depth, direction=direction,
-        nodes=tuple(
-            e for e in (graph.get(i) for i in sorted(seen))
-            if e is not None),
+        root_id=root_id,
+        depth=depth,
+        direction=direction,
+        nodes=tuple(e for e in (graph.get(i) for i in sorted(seen)) if e is not None),
         edges=tuple(kept_edges[k] for k in sorted(kept_edges)),
-        boundary_ids=tuple(sorted(boundary)))
+        boundary_ids=tuple(sorted(boundary)),
+    )
 
 
 def export_edges(graph: ServiceGraph) -> tuple[EdgeExport, ...]:
     """All relationships as flat exports, sorted, evidence ids attached."""
     out: list[EdgeExport] = []
     for rel in graph.relationships():
-        out.append(EdgeExport(
-            from_id=rel.source_id, to_id=rel.target_id, kind=rel.kind,
-            evidence_ids=tuple(
-                f"{e.kind}:{e.source}" for e in rel.evidence),
-            confidence=rel.confidence))
+        out.append(
+            EdgeExport(
+                from_id=rel.source_id,
+                to_id=rel.target_id,
+                kind=rel.kind,
+                evidence_ids=tuple(f"{e.kind}:{e.source}" for e in rel.evidence),
+                confidence=rel.confidence,
+            )
+        )
     return tuple(out)

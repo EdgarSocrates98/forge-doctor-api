@@ -29,8 +29,8 @@ def _run(*args: str, env_home: Path | None = None) -> subprocess.CompletedProces
     if env_home is not None:
         env["FORGE_HOME_OVERRIDE"] = str(env_home)
     return subprocess.run(
-        [sys.executable, str(SCRIPT), *args],
-        capture_output=True, text=True, env=env, timeout=60)
+        [sys.executable, str(SCRIPT), *args], capture_output=True, text=True, env=env, timeout=60
+    )
 
 
 @pytest.fixture()
@@ -54,8 +54,7 @@ def _json(proc: subprocess.CompletedProcess) -> dict:
 
 
 def test_dry_run_plans_without_mutating(target: Path, home: Path) -> None:
-    proc = _run("install", "--root", str(target), "--dry-run",
-                env_home=home)
+    proc = _run("install", "--root", str(target), "--dry-run", env_home=home)
     assert proc.returncode == 0, proc.stderr
     doc = _json(proc)
     assert doc["status"] == "planned"
@@ -74,18 +73,28 @@ def test_apply_requires_approval(target: Path, home: Path) -> None:
 def test_apply_writes_managed_regions(target: Path, home: Path) -> None:
     proc = _run("install", "--root", str(target), "--yes", env_home=home)
     assert proc.returncode == 0, proc.stderr
-    assert _json(proc)["status"] == "completed"
+    receipt = _json(proc)
+    assert receipt["status"] == "completed"
     mcp = json.loads((target / ".mcp.json").read_text())
     entry = mcp["mcpServers"]["forge-doctor-api"]
     assert entry["command"] == "forge-doctor-api"
     assert entry["args"] == ["mcp"]
-    assert "forge-doctor-api:managed:begin" in (
-        target / "AGENTS.md").read_text(encoding="utf-8")
+    # Consumer docs moved to the forge_context layer: `forge:*` blocks +
+    # the shared workspace registry, not `forge-doctor-api:managed`.
+    agents = (target / "AGENTS.md").read_text(encoding="utf-8")
+    assert "forge:forge-doctor-api:begin" in agents
+    assert "forge:ecosystem:begin" in agents
+    reg = json.loads((target / ".forge" / "context" / "registry.json").read_text())
+    assert reg["schema"] == "forge/context-registry/v1"
+    entry = next(e for e in reg["forges"] if e["forge_id"] == "forge-doctor-api")
+    assert entry["kind"] == "diagnostic-provider"
+    assert {c["id"] for c in receipt["checks"]} >= {"context-registry", "consumer-docs"}
 
 
 def test_apply_preserves_foreign_mcp_servers(target: Path, home: Path) -> None:
-    (target / ".mcp.json").write_text(json.dumps(
-        {"mcpServers": {"other": {"command": "x"}}, "unrelated": True}))
+    (target / ".mcp.json").write_text(
+        json.dumps({"mcpServers": {"other": {"command": "x"}}, "unrelated": True})
+    )
     proc = _run("install", "--root", str(target), "--yes", env_home=home)
     assert proc.returncode == 0
     doc = json.loads((target / ".mcp.json").read_text())
@@ -105,12 +114,10 @@ def test_status_doctor_round_trip(target: Path, home: Path) -> None:
     assert {c["id"] for c in doc["checks"]} >= {"ledger", "mcp-config"}
 
 
-def test_user_text_outside_marker_is_not_drift(target: Path,
-                                               home: Path) -> None:
+def test_user_text_outside_marker_is_not_drift(target: Path, home: Path) -> None:
     _run("install", "--root", str(target), "--yes", env_home=home)
     ag = target / "AGENTS.md"
-    ag.write_text(ag.read_text(encoding="utf-8") + "\n# mine\n",
-                  encoding="utf-8")
+    ag.write_text(ag.read_text(encoding="utf-8") + "\n# mine\n", encoding="utf-8")
     proc = _run("status", "--root", str(target), env_home=home)
     assert _json(proc)["status"] == "healthy"
 
@@ -127,8 +134,7 @@ def test_repair_restores_missing_mcp(target: Path, home: Path) -> None:
     out = _json(proc)
     assert ".mcp.json" in out["repaired"]
     new = json.loads(mcp.read_text())
-    assert new["mcpServers"]["forge-doctor-api"]["command"] == (
-        "forge-doctor-api")
+    assert new["mcpServers"]["forge-doctor-api"]["command"] == ("forge-doctor-api")
     assert new["mcpServers"]["mine"] == {"command": "y"}
 
 
@@ -178,6 +184,15 @@ def test_package_carries_install_surface() -> None:
         "src/_installkit.py drifted from scripts/forge_installkit.py — "
         "re-vendor the canonical copy, never fork it"
     )
+    # Same parity rule for the forge/context/v1 engine — the wheel copy
+    # (`_forgecontext.py`) and the checkout adapter copy
+    # (`scripts/forge_context.py`) never drift.
+    assert (src / "_forgecontext.py").read_bytes() == (
+        ROOT / "scripts" / "forge_context.py"
+    ).read_bytes(), (
+        "src/_forgecontext.py drifted from scripts/forge_context.py — "
+        "re-vendor the canonical copy, never fork it"
+    )
 
 
 def test_hosts_none_e_csv():
@@ -187,9 +202,10 @@ def test_hosts_none_e_csv():
     from pathlib import Path
 
     import pytest
+
     spec = importlib.util.spec_from_file_location(
-        "forge_install_script",
-        Path(__file__).parents[1] / "scripts" / "forge_install.py")
+        "forge_install_script", Path(__file__).parents[1] / "scripts" / "forge_install.py"
+    )
     mod = importlib.util.module_from_spec(spec)
     sys.modules["forge_install_script"] = mod
     spec.loader.exec_module(mod)

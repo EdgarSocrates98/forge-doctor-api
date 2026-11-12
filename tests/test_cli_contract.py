@@ -62,11 +62,12 @@ def test_inventory_covers_registry_and_vice_versa() -> None:
 
     registered = set(STABILITY)
     assert registered - paths == set(), (
-        f"registry entries with no command: {sorted(registered - paths)}")
+        f"registry entries with no command: {sorted(registered - paths)}"
+    )
     unregistered = paths - registered
     assert unregistered == set(), (
-        f"commands without a declared stability level: "
-        f"{sorted(unregistered)}")
+        f"commands without a declared stability level: {sorted(unregistered)}"
+    )
 
 
 def test_every_command_documented() -> None:
@@ -107,10 +108,7 @@ def test_documented_options_exist() -> None:
     group_opts = _group_options()
 
     def heading_cmds(heading: str) -> set[str]:
-        names = {
-            e.path for e in inventory
-            if e.path == heading or e.path.startswith(heading + " ")
-        }
+        names = {e.path for e in inventory if e.path == heading or e.path.startswith(heading + " ")}
         opts: set[str] = set()
         for e in inventory:
             if e.path in names:
@@ -126,8 +124,7 @@ def test_documented_options_exist() -> None:
         real = heading_cmds(heading)
         for opt in sorted(documented - real):
             bad.append(f"{heading}: {opt} documented but not a real option")
-    assert bad == [], "documented options missing from CLI:\n" + "\n".join(
-        bad)
+    assert bad == [], "documented options missing from CLI:\n" + "\n".join(bad)
 
 
 def test_stable_command_options_documented() -> None:
@@ -148,16 +145,18 @@ def test_stability_levels_rendered_in_docs() -> None:
     for entry in command_inventory():
         tokens = entry.path.split()
         heading = next(
-            (" ".join(tokens[:d]) for d in range(len(tokens), 0, -1)
-             if " ".join(tokens[:d]) in sections),
+            (
+                " ".join(tokens[:d])
+                for d in range(len(tokens), 0, -1)
+                if " ".join(tokens[:d]) in sections
+            ),
             None,
         )
         if heading is None:
             bad.append(f"{entry.path}: no docs section")
             continue
         if entry.stability.value not in sections[heading]:
-            bad.append(f"{heading}: stability {entry.stability.value} "
-                       "not rendered")
+            bad.append(f"{heading}: stability {entry.stability.value} not rendered")
     assert bad == [], "sections missing stability markers:\n" + "\n".join(bad)
 
 
@@ -182,11 +181,10 @@ def test_help_golden_snapshot(entry) -> None:
     if not golden.exists():
         golden.parent.mkdir(parents=True, exist_ok=True)
         golden.write_text(actual, encoding="utf-8")
-        pytest.fail(
-            f"missing golden snapshot created: {golden.name} — "
-            "review and commit it")
+        pytest.fail(f"missing golden snapshot created: {golden.name} — review and commit it")
     expected = golden.read_text(encoding="utf-8")
     assert actual == expected, (
         f"`{entry.path} --help` drifted from golden snapshot; "
         "if intentional, run `python tests/golden/_regen.py` and review "
-        "the diff")
+        "the diff"
+    )

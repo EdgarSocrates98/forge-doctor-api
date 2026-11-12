@@ -45,25 +45,56 @@ paths:
 # Import roots banned across the whole src/ tree — presence anywhere
 # is a boundary violation (the Doctor never calls out).
 _FORBIDDEN_IMPORT_ROOTS = {
-    "socket", "urllib", "http", "requests", "httpx",
-    "subprocess", "shutil", "ctypes", "pickle", "os",
+    "socket",
+    "urllib",
+    "http",
+    "requests",
+    "httpx",
+    "subprocess",
+    "shutil",
+    "ctypes",
+    "pickle",
+    "os",
     # spec 084: sibling-product / orchestration packages — the Doctor
     # boundary is one-directional and never imports them.
-    "forge_doctor_data", "forger", "the_forger", "api_forge",
-    "api_forge_studio", "orchestrator",
+    "forge_doctor_data",
+    "forger",
+    "the_forger",
+    "api_forge",
+    "api_forge_studio",
+    "orchestrator",
 }
 # Bare-name calls banned everywhere — dynamic execution surfaces.
 _FORBIDDEN_NAME_CALLS = {
-    "exec", "eval", "compile", "__import__", "system", "popen",
-    "fork", "execl", "execv", "execve", "execvp",
+    "exec",
+    "eval",
+    "compile",
+    "__import__",
+    "system",
+    "popen",
+    "fork",
+    "execl",
+    "execv",
+    "execve",
+    "execvp",
 }
 _FORBIDDEN_NAME_PREFIXES = ("spawn", "execv", "fork")
 # Attribute calls banned by root object (os.system et al. — `os` is
 # import-banned anyway; this list is defense in depth and documents
 # intent for allowlisted modules).
 _FORBIDDEN_ATTR_CALLS = {
-    "os": {"system", "popen", "fork", "forkpty", "execl", "execv",
-           "execve", "execvp", "spawnl", "spawnv"},
+    "os": {
+        "system",
+        "popen",
+        "fork",
+        "forkpty",
+        "execl",
+        "execv",
+        "execve",
+        "execvp",
+        "spawnl",
+        "spawnv",
+    },
     "pickle": {"load", "loads"},
     "ctypes": {"CDLL", "PyDLL", "WinDLL", "cdll", "pydll", "windll"},
     "importlib": {"import_module"},
@@ -83,31 +114,53 @@ _BOUNDARY_EXTRA_CALLS = {"getattr"}
 # Vendored upstream surfaces (byte-parity with the-forge): their imports
 # are sanctioned host surfaces — loopback-only Studio server, terminal UI
 # kit. Audited upstream; re-banning them here would pin a false invariant.
-_VENDORED = frozenset({
-    "_graphstudio.py",
-    "ui/i18n.py", "ui/kit.py", "ui/wizard.py", "ui/home.py",
-    "ui/app.py", "ui/screen.py", "ui/tui.py",
-})
+_VENDORED = frozenset(
+    {
+        "_graphstudio.py",
+        "ui/i18n.py",
+        "ui/kit.py",
+        "ui/wizard.py",
+        "ui/home.py",
+        "ui/app.py",
+        "ui/screen.py",
+        "ui/tui.py",
+    }
+)
 # Install surface (cyc11.2 P2-002, RC exception): the wheel-carried
 # ``forge/*`` install lifecycle. These modules own the only
 # ``os``/``subprocess`` surface in ``src/`` — subprocess is confined to
 # ``_installkit._spawn`` and ``install.service.update``; the scan/engine
 # path never imports them (``test_install_surface_isolation`` guards it).
-_INSTALL_SURFACE = frozenset({
-    "_installkit.py",
-    "install/__init__.py",
-    "install/service.py",
-    "cli/install_cmd.py",
-})
+# ``_forgecontext.py`` is the vendored forge/context/v1 engine the
+# install surface uses for workspace registration — byte-parity with
+# the-forge, stdlib-only, vendored in e5dea6d.
+_INSTALL_SURFACE = frozenset(
+    {
+        "_installkit.py",
+        "_forgecontext.py",
+        # vendored forge-obsidian engine — byte-parity with the canonical
+        # the-forge copy; os/fs access is its documented vault surface.
+        "_forge_obsidian/__init__.py",
+        "_forge_obsidian/cli.py",
+        "_forge_obsidian/notes.py",
+        "_forge_obsidian/obsidian.py",
+        "install/__init__.py",
+        "install/service.py",
+        "cli/install_cmd.py",
+    }
+)
 # Module paths only the install surface may import — any other src module
 # reaching them is a boundary violation.
-_INSTALL_MODULES = ("forge_doctor_api._installkit", "forge_doctor_api.install")
+_INSTALL_MODULES = (
+    "forge_doctor_api._installkit",
+    "forge_doctor_api._forgecontext",
+    "forge_doctor_api.install",
+)
 
 
 def _member(tmp_path: Path) -> WorkspaceMember:
     (tmp_path / "api.yaml").write_text(OPENAPI, encoding="utf-8")
-    return WorkspaceMember(
-        name="svc", path=str(tmp_path), role=MemberRole.SERVICE)
+    return WorkspaceMember(name="svc", path=str(tmp_path), role=MemberRole.SERVICE)
 
 
 def _call_name(node: ast.Call) -> tuple[str, str]:
@@ -116,8 +169,7 @@ def _call_name(node: ast.Call) -> tuple[str, str]:
         return "", func.id
     if isinstance(func, ast.Attribute):
         root = func.value
-        return (root.id if isinstance(root, ast.Name) else "",
-                func.attr)
+        return (root.id if isinstance(root, ast.Name) else "", func.attr)
     return "", ""
 
 
@@ -135,39 +187,28 @@ def test_package_ast_purity() -> None:
                     root = alias.name.split(".")[0]
                     if root in _FORBIDDEN_IMPORT_ROOTS:
                         offenders.append(f"{rel}: import {alias.name}")
-                    elif root == "importlib" and rel not in (
-                            _IMPORTLIB_ALLOWLIST):
-                        offenders.append(
-                            f"{rel}: import {alias.name} (not "
-                            "allowlisted)")
+                    elif root == "importlib" and rel not in (_IMPORTLIB_ALLOWLIST):
+                        offenders.append(f"{rel}: import {alias.name} (not allowlisted)")
             elif isinstance(node, ast.ImportFrom):
                 root = (node.module or "").split(".")[0]
                 if root in _FORBIDDEN_IMPORT_ROOTS:
-                    offenders.append(
-                        f"{rel}: from {node.module} import ...")
-                elif root == "importlib" and rel not in (
-                        _IMPORTLIB_ALLOWLIST):
-                    offenders.append(
-                        f"{rel}: from {node.module} import ... "
-                        "(not allowlisted)")
+                    offenders.append(f"{rel}: from {node.module} import ...")
+                elif root == "importlib" and rel not in (_IMPORTLIB_ALLOWLIST):
+                    offenders.append(f"{rel}: from {node.module} import ... (not allowlisted)")
             elif isinstance(node, ast.Call):
                 root, name = _call_name(node)
                 if not root and (
-                        name in _FORBIDDEN_NAME_CALLS or any(
-                            name.startswith(p)
-                            for p in _FORBIDDEN_NAME_PREFIXES)):
+                    name in _FORBIDDEN_NAME_CALLS
+                    or any(name.startswith(p) for p in _FORBIDDEN_NAME_PREFIXES)
+                ):
                     offenders.append(f"{rel}: call {name}()")
-                if root in _FORBIDDEN_ATTR_CALLS and (
-                        name in _FORBIDDEN_ATTR_CALLS[root]):
-                    if root == "importlib" and rel in (
-                            _IMPORTLIB_ALLOWLIST):
+                if root in _FORBIDDEN_ATTR_CALLS and (name in _FORBIDDEN_ATTR_CALLS[root]):
+                    if root == "importlib" and rel in (_IMPORTLIB_ALLOWLIST):
                         continue
                     offenders.append(f"{rel}: call {root}.{name}()")
-                if rel == "handoff/boundary.py" and (
-                        name in _BOUNDARY_EXTRA_CALLS):
+                if rel == "handoff/boundary.py" and (name in _BOUNDARY_EXTRA_CALLS):
                     offenders.append(f"{rel}: call {name}()")
-    assert offenders == [], "package boundary violations:\n" + "\n".join(
-        offenders)
+    assert offenders == [], "package boundary violations:\n" + "\n".join(offenders)
 
 
 def test_install_surface_isolation() -> None:
@@ -183,12 +224,12 @@ def test_install_surface_isolation() -> None:
             if isinstance(node, ast.Import):
                 for alias in node.names:
                     if alias.name in _INSTALL_MODULES or alias.name.startswith(
-                            "forge_doctor_api.install."):
+                        "forge_doctor_api.install."
+                    ):
                         offenders.append(f"{rel}: import {alias.name}")
             elif isinstance(node, ast.ImportFrom):
                 mod = node.module or ""
-                if mod in _INSTALL_MODULES or mod.startswith(
-                        "forge_doctor_api.install"):
+                if mod in _INSTALL_MODULES or mod.startswith("forge_doctor_api.install"):
                     offenders.append(f"{rel}: from {mod} import ...")
     assert offenders == [], "install surface leaks:\n" + "\n".join(offenders)
 
@@ -208,13 +249,15 @@ def test_boundary_ast_purity() -> None:
                 offenders.append(f"from {node.module} import ...")
         elif isinstance(node, ast.Call):
             root, name = _call_name(node)
-            if (not root and (name in _FORBIDDEN_NAME_CALLS or any(
-                    name.startswith(p)
-                    for p in _FORBIDDEN_NAME_PREFIXES))) or (
-                    name in _BOUNDARY_EXTRA_CALLS):
+            if (
+                not root
+                and (
+                    name in _FORBIDDEN_NAME_CALLS
+                    or any(name.startswith(p) for p in _FORBIDDEN_NAME_PREFIXES)
+                )
+            ) or (name in _BOUNDARY_EXTRA_CALLS):
                 offenders.append(f"call {name}()")
-    assert offenders == [], "boundary imports/calls: " + ", ".join(
-        offenders)
+    assert offenders == [], "boundary imports/calls: " + ", ".join(offenders)
 
 
 def test_boundary_no_dynamic_imports() -> None:
@@ -225,11 +268,8 @@ def test_boundary_no_dynamic_imports() -> None:
 
 def test_request_to_handoff_round_trip(tmp_path: Path) -> None:
     _member(tmp_path)
-    boundary = DoctorBoundary(
-        context=ProjectContext.from_root(tmp_path))
-    request = build_request(
-        target="svc", request_id="r1",
-        capabilities=("OPENAPI_32", "MTLS"))
+    boundary = DoctorBoundary(context=ProjectContext.from_root(tmp_path))
+    request = build_request(target="svc", request_id="r1", capabilities=("OPENAPI_32", "MTLS"))
     bundle = boundary.handle(request)
     assert isinstance(bundle, ApiHandoffBundle)
     assert bundle.handoff_version == 2
@@ -243,28 +283,25 @@ def test_request_to_handoff_round_trip(tmp_path: Path) -> None:
 
 def test_summarize_and_capabilities(tmp_path: Path) -> None:
     _member(tmp_path)
-    boundary = DoctorBoundary(
-        context=ProjectContext.from_root(tmp_path))
-    request = build_request(
-        target="svc", capabilities=("OPENAPI_32", "MTLS", "NOPE"))
+    boundary = DoctorBoundary(context=ProjectContext.from_root(tmp_path))
+    request = build_request(target="svc", capabilities=("OPENAPI_32", "MTLS", "NOPE"))
     handoff = boundary.envelope(request)
     result = boundary.summarize(handoff)
     assert result.status in ("ok", "partial")
     assert result.refs
     caps = boundary.capabilities(request)
     assert caps.status == "partial"  # NOPE is not a real capability
-    assert "not evidenced" in caps.summary or not caps.summary.endswith(
-        "detected")
+    assert "not evidenced" in caps.summary or not caps.summary.endswith("detected")
 
 
 def test_bounded_handoff_caps_growth(tmp_path: Path) -> None:
     """Over-budget sections truncate deterministically into unknowns."""
     _member(tmp_path)
-    boundary = DoctorBoundary(
-        context=ProjectContext.from_root(tmp_path))
+    boundary = DoctorBoundary(context=ProjectContext.from_root(tmp_path))
     bundle = boundary.handle(build_request(target="svc"))
     # default budgets cap every carried section
     from forge_doctor_api.handoff.model import HANDOFF_BUDGET
+
     for name, limit in HANDOFF_BUDGET.items():
         value = getattr(bundle, name, None)
         assert value is None or len(value) <= limit, name
@@ -275,12 +312,12 @@ def test_bounded_handoff_caps_growth(tmp_path: Path) -> None:
         operations=tuple(f"GET /o{i}" for i in range(10)),
         findings=boundary.handle(build_request(target="svc")).findings,
         handoff_version=2,
-        handoff_id="x")
+        handoff_id="x",
+    )
     trimmed = huge.bounded({"operations": 3})
     assert len(trimmed.operations) == 3
     assert list(trimmed.operations) == sorted(trimmed.operations)
-    marker = [u for u in trimmed.unknowns
-              if u.subject == "handoff:operations"]
+    marker = [u for u in trimmed.unknowns if u.subject == "handoff:operations"]
     assert marker and "budget_exceeded" in marker[0].missing
     assert trimmed.handoff_id != "x"  # identity recomputed
 
@@ -288,19 +325,18 @@ def test_bounded_handoff_caps_growth(tmp_path: Path) -> None:
 def test_delta_wired_into_bundle(tmp_path: Path) -> None:
     """request.delta + resolved baseline -> first-class DeltaContext."""
     _member(tmp_path)
-    boundary = DoctorBoundary(
-        context=ProjectContext.from_root(tmp_path))
+    boundary = DoctorBoundary(context=ProjectContext.from_root(tmp_path))
     request = build_request(
         target="svc",
-        delta=RequestDelta(
-            baseline_ref="doctor://handoff/base",
-            changed_files=("api.yaml",)))
+        delta=RequestDelta(baseline_ref="doctor://handoff/base", changed_files=("api.yaml",)),
+    )
     # no baseline -> explicit unknown, never a fabricated delta
     unresolved = boundary.handle(request)
     assert unresolved.delta is None
     assert any(u.subject == "delta" for u in unresolved.unknowns)
     # resolved baseline -> computed delta on the bundle
     from forge_doctor_api.scan import scan_project
+
     baseline = scan_project(ProjectContext.from_root(tmp_path))
     resolved = boundary.handle(request, baseline=baseline)
     assert resolved.delta is not None
@@ -311,24 +347,21 @@ def test_delta_wired_into_bundle(tmp_path: Path) -> None:
 def test_endpoint_dict_shape(tmp_path: Path) -> None:
     """DoctorEndpoint: {request, handoff, capabilities, manifest}."""
     _member(tmp_path)
-    boundary = DoctorBoundary(
-        context=ProjectContext.from_root(tmp_path))
+    boundary = DoctorBoundary(context=ProjectContext.from_root(tmp_path))
     request = build_request(target="svc", request_id="ep1")
     endpoint = boundary.endpoint_dict(request)
-    assert set(endpoint) == {
-        "request", "handoff", "capabilities", "manifest"}
+    assert set(endpoint) == {"request", "handoff", "capabilities", "manifest"}
     assert endpoint["request"]["request_id"] == "ep1"
     assert endpoint["handoff"]["handoff_id"]
     # manifest is a conforming forge-contracts/1 diagnostic-manifest
     from forge_doctor_api.contracts.validate import validate_named
-    assert validate_named(
-        endpoint["manifest"], "diagnostic-manifest") == []
+
+    assert validate_named(endpoint["manifest"], "diagnostic-manifest") == []
 
 
 def test_handoff_to_fleet_member(tmp_path: Path) -> None:
     member = _member(tmp_path)
-    boundary = DoctorBoundary(
-        context=ProjectContext.from_root(tmp_path))
+    boundary = DoctorBoundary(context=ProjectContext.from_root(tmp_path))
     handoff = boundary.envelope(build_request(target="svc"))
     data = collect_handoff(member, handoff)
     # only compact fields — unevidenced models stay absent (unknown)
@@ -337,16 +370,23 @@ def test_handoff_to_fleet_member(tmp_path: Path) -> None:
     assert data.reliability is None
     fields = handoff_to_member_fields(handoff)
     assert fields["analysis_rev"] == handoff.analysis_rev
-    assert set(fields) <= {"styles", "unknown_subjects",
-                          "analysis_rev", "handoff_id"}
+    assert set(fields) <= {"styles", "unknown_subjects", "analysis_rev", "handoff_id"}
 
 
 def test_boundary_doc_exists_and_links() -> None:
     doc = ROOT / "docs" / "forger-boundary.md"
     text = doc.read_text(encoding="utf-8")
-    for cap in ("observe", "normalize", "detect", "measure",
-                "diagnose", "classify", "impact", "unknowns",
-                "context"):
+    for cap in (
+        "observe",
+        "normalize",
+        "detect",
+        "measure",
+        "diagnose",
+        "classify",
+        "impact",
+        "unknowns",
+        "context",
+    ):
         assert cap in text
     for shape in ("ForgeRequest", "ForgeHandoff", "ForgeReceipt"):
         assert shape in text

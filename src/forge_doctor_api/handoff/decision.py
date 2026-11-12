@@ -25,8 +25,9 @@ def answer_move_to_grpc(
 ) -> DecisionBrief:
     """§167 'can this move to gRPC' — §79 dimensions as the brief."""
     migration = assess_rest_to_grpc(openapi, reliability)
-    return decide(DecisionQuestion.CAN_MOVE_TO_GRPC, subject,
-                  migration=migration, capabilities=capabilities)
+    return decide(
+        DecisionQuestion.CAN_MOVE_TO_GRPC, subject, migration=migration, capabilities=capabilities
+    )
 
 
 def answer_become_async(
@@ -38,8 +39,7 @@ def answer_become_async(
     """§167 'can this become async' — §81 dimensions as the brief."""
     if migration is None and openapi is not None:
         migration = assess_sync_to_async(openapi, reliability=reliability)
-    return decide(DecisionQuestion.CAN_BECOME_ASYNC, subject,
-                  migration=migration)
+    return decide(DecisionQuestion.CAN_BECOME_ASYNC, subject, migration=migration)
 
 
 def answer_retire_version(
@@ -48,13 +48,15 @@ def answer_retire_version(
     observed_traffic: int | None = None,
 ) -> DecisionBrief:
     """§167 'can v1 be retired' — client evidence + traffic, no verdict."""
-    brief = decide(DecisionQuestion.CAN_RETIRE_VERSION, subject,
-                   remaining_clients=remaining_clients)
+    brief = decide(
+        DecisionQuestion.CAN_RETIRE_VERSION, subject, remaining_clients=remaining_clients
+    )
     extra_facts = (
-        f"observed traffic count: {observed_traffic}",
-    ) if observed_traffic is not None else ()
+        (f"observed traffic count: {observed_traffic}",) if observed_traffic is not None else ()
+    )
     return DecisionBrief(
-        question=brief.question, subject=brief.subject,
+        question=brief.question,
+        subject=brief.subject,
         facts=brief.facts + extra_facts,
         constraints=brief.constraints,
         capabilities=brief.capabilities,
@@ -68,5 +70,4 @@ def answer_enable_retry_safely(
     capabilities: CapabilityReport,
 ) -> DecisionBrief:
     """§167 'can retry be enabled safely' — capability gaps as constraints."""
-    return decide(DecisionQuestion.CAN_ENABLE_RETRY_SAFELY, subject,
-                  capabilities=capabilities)
+    return decide(DecisionQuestion.CAN_ENABLE_RETRY_SAFELY, subject, capabilities=capabilities)

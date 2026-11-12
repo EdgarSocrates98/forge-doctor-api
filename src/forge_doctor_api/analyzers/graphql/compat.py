@@ -60,8 +60,7 @@ def diff_graphql_schemas(
                         side=ChangeSide.RESPONSE,
                         subject=_subject("union", name),
                         path=f"union:{name}.{member}",
-                        detail=f"union member removed: {name} no longer "
-                        f"admits {member}",
+                        detail=f"union member removed: {name} no longer admits {member}",
                         before=member,
                         after=None,
                         location=ot.location,
@@ -84,11 +83,15 @@ def diff_graphql_schemas(
                 )
             continue
 
-        if ot.kind not in {
-            GraphQLTypeKind.OBJECT,
-            GraphQLTypeKind.INTERFACE,
-            GraphQLTypeKind.INPUT_OBJECT,
-        } or nt.kind is not ot.kind:
+        if (
+            ot.kind
+            not in {
+                GraphQLTypeKind.OBJECT,
+                GraphQLTypeKind.INTERFACE,
+                GraphQLTypeKind.INPUT_OBJECT,
+            }
+            or nt.kind is not ot.kind
+        ):
             continue
 
         # type-level directive drift — semantics may shift even when the
@@ -113,9 +116,7 @@ def diff_graphql_schemas(
         old_fields = {f.name: f for f in ot.fields}
         new_fields = {f.name: f for f in nt.fields}
         side = (
-            ChangeSide.REQUEST
-            if ot.kind is GraphQLTypeKind.INPUT_OBJECT
-            else ChangeSide.RESPONSE
+            ChangeSide.REQUEST if ot.kind is GraphQLTypeKind.INPUT_OBJECT else ChangeSide.RESPONSE
         )
         label = "input field" if side is ChangeSide.REQUEST else "field"
         for fname in sorted(set(old_fields) - set(new_fields)):
@@ -144,8 +145,7 @@ def diff_graphql_schemas(
                         subject=_subject("graphql_type", name),
                         path=f"field:{name}.{fname}",
                         detail=(
-                            f"{label} nullable->non-null: {name}.{fname} "
-                            f"({side.value} position)"
+                            f"{label} nullable->non-null: {name}.{fname} ({side.value} position)"
                         ),
                         before="nullable",
                         after="non-null",
@@ -182,8 +182,7 @@ def diff_graphql_schemas(
                             subject=_subject("graphql_field", f"{name}.{fname}"),
                             path=f"argument:{name}.{fname}({aname})",
                             detail=(
-                                f"required argument added: {name}.{fname}({aname}: "
-                                f"{na.type.name}!)"
+                                f"required argument added: {name}.{fname}({aname}: {na.type.name}!)"
                             ),
                             before=None,
                             after=aname,
@@ -198,9 +197,7 @@ def diff_graphql_schemas(
                             side=ChangeSide.REQUEST,
                             subject=_subject("graphql_field", f"{name}.{fname}"),
                             path=f"argument:{name}.{fname}({aname})",
-                            detail=(
-                                f"optional argument added: {name}.{fname}({aname})"
-                            ),
+                            detail=(f"optional argument added: {name}.{fname}({aname})"),
                             before=None,
                             after=aname,
                             location=nf.location,

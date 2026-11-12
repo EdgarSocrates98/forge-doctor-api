@@ -32,9 +32,7 @@ def payload_shape_from_schema(schema: dict[str, Any] | None) -> PayloadShape:
     fields = 0
     collections = 0
     max_depth = 0
-    stack: list[tuple[dict[str, Any], int, frozenset[int]]] = [
-        (schema, 1, frozenset())
-    ]
+    stack: list[tuple[dict[str, Any], int, frozenset[int]]] = [(schema, 1, frozenset())]
     while stack:
         node, depth, seen = stack.pop()
         if id(node) in seen or depth > 32:

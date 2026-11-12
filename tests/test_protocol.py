@@ -23,32 +23,32 @@ from forge_doctor_api.handoff.protocol import (
 
 
 def test_request_round_trip() -> None:
-    req = build_request(
-        "svc", request_id="r1",
-        capabilities=("b", "a"), clock="2026-01-01")
+    req = build_request("svc", request_id="r1", capabilities=("b", "a"), clock="2026-01-01")
     assert req.protocol_version == PROTOCOL_VERSION
     assert req.capabilities == ("a", "b")  # sorted
     text = req.to_json()
     back = ForgeRequest.parse(req.to_dict())
     assert back == req
     # deterministic serialization
-    assert text == build_request(
-        "svc", request_id="r1",
-        capabilities=("a", "b"), clock="2026-01-01").to_json()
+    assert (
+        text
+        == build_request(
+            "svc", request_id="r1", capabilities=("a", "b"), clock="2026-01-01"
+        ).to_json()
+    )
 
 
 def test_request_slim_shape() -> None:
     req = build_request(
-        "svc", request_id="r2",
+        "svc",
+        request_id="r2",
         capabilities=("OPENAPI_32",),
         context_refs=("doctor://handoff/h1", "doctor://service"),
-        delta=RequestDelta(
-            baseline_ref="doctor://handoff/h1",
-            changed_files=("api.yaml",)))
+        delta=RequestDelta(baseline_ref="doctor://handoff/h1", changed_files=("api.yaml",)),
+    )
     data = req.to_dict()
     assert data["capabilities"] == ["OPENAPI_32"]
-    assert data["context_refs"] == [
-        "doctor://handoff/h1", "doctor://service"]
+    assert data["context_refs"] == ["doctor://handoff/h1", "doctor://service"]
     assert data["delta"]["baseline_ref"] == "doctor://handoff/h1"
     back = ForgeRequest.parse(data)
     assert back == req
@@ -58,19 +58,22 @@ def test_request_slim_shape() -> None:
 
 def test_request_v1_alias_compat() -> None:
     """v1 payloads: `requested_capabilities` parses into `capabilities`."""
-    req = ForgeRequest.parse({
-        "protocol_version": 1,
-        "request_id": "r1", "target": "svc",
-        "requested_capabilities": ["MTLS", "OPENAPI_32"]})
+    req = ForgeRequest.parse(
+        {
+            "protocol_version": 1,
+            "request_id": "r1",
+            "target": "svc",
+            "requested_capabilities": ["MTLS", "OPENAPI_32"],
+        }
+    )
     assert req.capabilities == ("MTLS", "OPENAPI_32")
     assert req.context_refs == ()
     assert req.delta is None
     # both spellings in one payload is a conflict, not a merge
     with pytest.raises(ProtocolError):
-        ForgeRequest.parse({
-            "target": "svc",
-            "capabilities": ["A"],
-            "requested_capabilities": ["B"]})
+        ForgeRequest.parse(
+            {"target": "svc", "capabilities": ["A"], "requested_capabilities": ["B"]}
+        )
 
 
 def test_parse_rejects_unknown_fields() -> None:
@@ -83,9 +86,7 @@ def test_parse_rejects_unknown_fields() -> None:
 
 def test_version_mismatch_rejected() -> None:
     with pytest.raises(ProtocolError):
-        ForgeHandoff.parse({
-            "protocol_version": 99, "handoff_id": "h",
-            "bundle_ref": "b"})
+        ForgeHandoff.parse({"protocol_version": 99, "handoff_id": "h", "bundle_ref": "b"})
 
 
 def test_missing_required_rejected() -> None:
@@ -95,7 +96,8 @@ def test_missing_required_rejected() -> None:
 
 def test_handoff_receipt_link() -> None:
     handoff = ForgeHandoff(
-        handoff_id="h1", bundle_ref="doctor://handoff/h1",
+        handoff_id="h1",
+        bundle_ref="doctor://handoff/h1",
         analysis_rev="abc",
         refs=(ForgeRef(ref_id="doctor://service", kind="service"),),
         capabilities=(ForgeCapability(name="RETRY", status="detected"),),
@@ -108,10 +110,13 @@ def test_handoff_receipt_link() -> None:
 
 
 def test_result_sorted_refs() -> None:
-    res = build_result("ok", refs=(
-        ForgeRef(ref_id="b", kind="finding"),
-        ForgeRef(ref_id="a", kind="finding"),
-    ))
+    res = build_result(
+        "ok",
+        refs=(
+            ForgeRef(ref_id="b", kind="finding"),
+            ForgeRef(ref_id="a", kind="finding"),
+        ),
+    )
     assert [r.ref_id for r in res.refs] == ["a", "b"]
 
 
@@ -124,7 +129,5 @@ def test_parse_payload_strict() -> None:
 
 
 def test_route_model() -> None:
-    route = ForgeRoute(
-        route_id="r1", source="doctor", destination="api-forge",
-            capability="scan")
+    route = ForgeRoute(route_id="r1", source="doctor", destination="api-forge", capability="scan")
     assert ForgeRoute.parse(route.to_dict()) == route

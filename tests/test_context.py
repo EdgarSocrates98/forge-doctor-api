@@ -108,7 +108,8 @@ def test_slice_deterministic(tmp_path: Path) -> None:
     r1 = _report(tmp_path)
     r2 = _report(tmp_path)
     assert context_slice(r1, mint("service")).to_json() == (
-        context_slice(r2, mint("service")).to_json())
+        context_slice(r2, mint("service")).to_json()
+    )
 
 
 def test_ops_cap_documented() -> None:

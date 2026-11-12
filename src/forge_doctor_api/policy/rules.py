@@ -66,11 +66,13 @@ def _require_auth(ctx: RuleContext, policy: ApiPolicy) -> tuple[PolicyViolation,
     for op in _ops(ctx):
         if not _selected(policy, op) or op.has_security:
             continue
-        out.append(PolicyViolation(
-            subject=op.identity,
-            detail=f"{op.method} {op.path} has no security requirement",
-            location=op.location,
-        ))
+        out.append(
+            PolicyViolation(
+                subject=op.identity,
+                detail=f"{op.method} {op.path} has no security requirement",
+                location=op.location,
+            )
+        )
     return tuple(out)
 
 
@@ -79,11 +81,13 @@ def _require_operation_id(ctx: RuleContext, policy: ApiPolicy) -> tuple[PolicyVi
     for op in _ops(ctx):
         if not _selected(policy, op) or op.operation_id:
             continue
-        out.append(PolicyViolation(
-            subject=op.identity,
-            detail=f"{op.method} {op.path} has no operationId",
-            location=op.location,
-        ))
+        out.append(
+            PolicyViolation(
+                subject=op.identity,
+                detail=f"{op.method} {op.path} has no operationId",
+                location=op.location,
+            )
+        )
     return tuple(out)
 
 
@@ -91,10 +95,12 @@ def _require_owner(ctx: RuleContext, policy: ApiPolicy) -> tuple[PolicyViolation
     out = []
     for own in ctx.ownership:
         if own.owner is None:
-            out.append(PolicyViolation(
-                subject=own.subject,
-                detail=f"{own.subject} has no resolved owner (§186 sources exhausted)",
-            ))
+            out.append(
+                PolicyViolation(
+                    subject=own.subject,
+                    detail=f"{own.subject} has no resolved owner (§186 sources exhausted)",
+                )
+            )
     return tuple(out)
 
 
@@ -105,19 +111,23 @@ def _require_slo(ctx: RuleContext, policy: ApiPolicy) -> tuple[PolicyViolation, 
     # objectives are named; a policy may scope which services must have one
     critical_tags = {p for p in policy.applies_to if p != "*"}
     if not named and "*" in (policy.applies_to or ("*",)):
-        return (PolicyViolation(
-            subject="(project)",
-            detail="no service objectives (SLOs) declared anywhere in config",
-        ),)
+        return (
+            PolicyViolation(
+                subject="(project)",
+                detail="no service objectives (SLOs) declared anywhere in config",
+            ),
+        )
     out = []
     for own in ctx.ownership:
         if own.owner and not any(own.owner in n or own.subject in n for n in named):
             match = not critical_tags or own.subject in critical_tags or own.domain in critical_tags
             if match:
-                out.append(PolicyViolation(
-                    subject=own.subject,
-                    detail=f"{own.subject} has no matching SLO objective name",
-                ))
+                out.append(
+                    PolicyViolation(
+                        subject=own.subject,
+                        detail=f"{own.subject} has no matching SLO objective name",
+                    )
+                )
     return tuple(out)
 
 
@@ -147,30 +157,37 @@ def _min_deprecation_days(ctx: RuleContext, policy: ApiPolicy) -> tuple[PolicyVi
     except ValueError:
         min_days = 180
     if dep.sunset_date is None:
-        return (PolicyViolation(
-            subject="(api)",
-            detail="deprecated API has no sunset date",
-            evidence=dep.evidence,
-        ),)
+        return (
+            PolicyViolation(
+                subject="(api)",
+                detail="deprecated API has no sunset date",
+                evidence=dep.evidence,
+            ),
+        )
     from datetime import date
+
     try:
         sunset = date.fromisoformat(dep.sunset_date[:10])
         created = date.fromisoformat((dep.deprecation_date or "")[:10])
     except ValueError:
-        return (PolicyViolation(
-            subject="(api)",
-            detail=f"sunset date {dep.sunset_date!r} not ISO-parseable",
-            evidence=dep.evidence,
-        ),)
-    if dep.deprecation_date and (sunset - created).days < min_days:
-        return (PolicyViolation(
-            subject="(api)",
-            detail=(
-                f"sunset {dep.sunset_date} is {(sunset - created).days} days "
-                f"after deprecation {dep.deprecation_date} (< {min_days})"
+        return (
+            PolicyViolation(
+                subject="(api)",
+                detail=f"sunset date {dep.sunset_date!r} not ISO-parseable",
+                evidence=dep.evidence,
             ),
-            evidence=dep.evidence,
-        ),)
+        )
+    if dep.deprecation_date and (sunset - created).days < min_days:
+        return (
+            PolicyViolation(
+                subject="(api)",
+                detail=(
+                    f"sunset {dep.sunset_date} is {(sunset - created).days} days "
+                    f"after deprecation {dep.deprecation_date} (< {min_days})"
+                ),
+                evidence=dep.evidence,
+            ),
+        )
     return ()
 
 
@@ -184,17 +201,21 @@ def _doc_coverage(ctx: RuleContext, policy: ApiPolicy) -> tuple[PolicyViolation,
         if not _selected(policy, op):
             continue
         if not op.description and not op.summary:
-            out.append(PolicyViolation(
-                subject=op.identity,
-                detail=f"{op.method} {op.path} has no description/summary",
-                location=op.location,
-            ))
+            out.append(
+                PolicyViolation(
+                    subject=op.identity,
+                    detail=f"{op.method} {op.path} has no description/summary",
+                    location=op.location,
+                )
+            )
         if op.deprecated and not op.description:
-            out.append(PolicyViolation(
-                subject=op.identity,
-                detail=f"{op.method} {op.path} is deprecated without deprecation notes",
-                location=op.location,
-            ))
+            out.append(
+                PolicyViolation(
+                    subject=op.identity,
+                    detail=f"{op.method} {op.path} is deprecated without deprecation notes",
+                    location=op.location,
+                )
+            )
         for ptr in op.response_pointers:
             resp = resp_by_pointer.get(ptr)
             if (
@@ -203,53 +224,81 @@ def _doc_coverage(ctx: RuleContext, policy: ApiPolicy) -> tuple[PolicyViolation,
                 and resp.status.startswith(("4", "5"))
                 and not resp.description
             ):
-                out.append(PolicyViolation(
-                    subject=ptr,
-                    detail=(
-                        f"error response {resp.status} of {op.method} {op.path} "
-                        "has no description"
-                    ),
-                    location=resp.location,
-                ))
+                out.append(
+                    PolicyViolation(
+                        subject=ptr,
+                        detail=(
+                            f"error response {resp.status} of {op.method} {op.path} "
+                            "has no description"
+                        ),
+                        location=resp.location,
+                    )
+                )
     if ctx.openapi is not None:
         for schema in ctx.openapi.schemas:
-            desc = (
-                schema.content.get("description")
-                if isinstance(schema.content, dict)
-                else None
-            )
+            desc = schema.content.get("description") if isinstance(schema.content, dict) else None
             if not desc:
-                out.append(PolicyViolation(
-                    subject=schema.pointer,
-                    detail=f"schema {schema.name or schema.pointer} has no description",
-                    location=schema.location,
-                ))
+                out.append(
+                    PolicyViolation(
+                        subject=schema.pointer,
+                        detail=f"schema {schema.name or schema.pointer} has no description",
+                        location=schema.location,
+                    )
+                )
     return tuple(out)
 
 
 RULES: dict[str, RuleSpec] = {
     s.rule: s
     for s in (
-        RuleSpec(rule="require_auth", check_id="POLICY001",
-                 title="Public operation requires authentication",
-                 default_severity=Severity.HIGH, predicate=_require_auth),
-        RuleSpec(rule="require_slo", check_id="POLICY002",
-                 title="Critical API requires a declared SLO",
-                 default_severity=Severity.MEDIUM, predicate=_require_slo),
-        RuleSpec(rule="no_wildcard_cors", check_id="POLICY003",
-                 title="Wildcard CORS origin not allowed",
-                 default_severity=Severity.HIGH, predicate=_no_wildcard_cors),
-        RuleSpec(rule="min_deprecation_days", check_id="POLICY004",
-                 title="Deprecated API exceeds minimum deprecation period",
-                 default_severity=Severity.MEDIUM, predicate=_min_deprecation_days),
-        RuleSpec(rule="require_operation_id", check_id="POLICY005",
-                 title="Operation requires an operationId",
-                 default_severity=Severity.MEDIUM, predicate=_require_operation_id),
-        RuleSpec(rule="require_owner", check_id="POLICY006",
-                 title="API requires a resolved owner",
-                 default_severity=Severity.MEDIUM, predicate=_require_owner),
-        RuleSpec(rule="doc_coverage", check_id="POLICY007",
-                 title="Documentation coverage opportunity (§189)",
-                 default_severity=Severity.INFO, predicate=_doc_coverage),
+        RuleSpec(
+            rule="require_auth",
+            check_id="POLICY001",
+            title="Public operation requires authentication",
+            default_severity=Severity.HIGH,
+            predicate=_require_auth,
+        ),
+        RuleSpec(
+            rule="require_slo",
+            check_id="POLICY002",
+            title="Critical API requires a declared SLO",
+            default_severity=Severity.MEDIUM,
+            predicate=_require_slo,
+        ),
+        RuleSpec(
+            rule="no_wildcard_cors",
+            check_id="POLICY003",
+            title="Wildcard CORS origin not allowed",
+            default_severity=Severity.HIGH,
+            predicate=_no_wildcard_cors,
+        ),
+        RuleSpec(
+            rule="min_deprecation_days",
+            check_id="POLICY004",
+            title="Deprecated API exceeds minimum deprecation period",
+            default_severity=Severity.MEDIUM,
+            predicate=_min_deprecation_days,
+        ),
+        RuleSpec(
+            rule="require_operation_id",
+            check_id="POLICY005",
+            title="Operation requires an operationId",
+            default_severity=Severity.MEDIUM,
+            predicate=_require_operation_id,
+        ),
+        RuleSpec(
+            rule="require_owner",
+            check_id="POLICY006",
+            title="API requires a resolved owner",
+            default_severity=Severity.MEDIUM,
+            predicate=_require_owner,
+        ),
+        RuleSpec(
+            rule="doc_coverage",
+            check_id="POLICY007",
+            title="Documentation coverage opportunity (§189)",
+            default_severity=Severity.INFO,
+            predicate=_doc_coverage,
+        ),
     )
 }

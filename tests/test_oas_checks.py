@@ -133,10 +133,10 @@ PRECISION: tuple[Case, ...] = (
         name="dup-operationid-multi-file",
         files={
             "a.yaml": HEADER
-            + 'paths:\n  /a:\n    get:\n      operationId: shared\n'
+            + "paths:\n  /a:\n    get:\n      operationId: shared\n"
             + '      responses: {"200": {description: ok}}\n',
             "b.yaml": HEADER
-            + 'paths:\n  /b:\n    post:\n      operationId: shared\n'
+            + "paths:\n  /b:\n    post:\n      operationId: shared\n"
             + '      responses: {"200": {description: ok}}\n',
         },
         expect={"OAS003": 1},
@@ -154,16 +154,14 @@ PRECISION: tuple[Case, ...] = (
     # -- OAS004: missing operationId ------------------------------------------
     Case(
         name="missing-operationid",
-        files=_spec(
-            "", 'paths:\n  /a:\n    get:\n      responses: {"200": {description: ok}}\n'
-        ),
+        files=_spec("", 'paths:\n  /a:\n    get:\n      responses: {"200": {description: ok}}\n'),
         expect={"OAS004": 1},
     ),
     Case(
         name="webhook-operationid-exempt",
         files=_spec(
             "",
-            'paths: {}\nwebhooks:\n  onPayment:\n    post:\n'
+            "paths: {}\nwebhooks:\n  onPayment:\n    post:\n"
             '      responses: {"200": {description: ok}}\n',
         ),
         forbid=frozenset({"OAS004"}),
@@ -173,7 +171,7 @@ PRECISION: tuple[Case, ...] = (
         name="response-no-description",
         files=_spec(
             "",
-            'paths:\n  /a:\n    get:\n      operationId: a\n      responses:\n'
+            "paths:\n  /a:\n    get:\n      operationId: a\n      responses:\n"
             '        "200": {}\n        "404": {description: nf}\n',
         ),
         expect={"OAS005": 1},
@@ -181,15 +179,15 @@ PRECISION: tuple[Case, ...] = (
     ),
     Case(
         name="operation-no-responses",
-        files=_spec("", 'paths:\n  /a:\n    get:\n      operationId: a\n'),
+        files=_spec("", "paths:\n  /a:\n    get:\n      operationId: a\n"),
         expect={"OAS005": 1},
     ),
     Case(
         name="default-only-response",
         files=_spec(
             "",
-            'paths:\n  /a:\n    get:\n      operationId: a\n'
-            '      responses: {default: {description: d}}\n',
+            "paths:\n  /a:\n    get:\n      operationId: a\n"
+            "      responses: {default: {description: d}}\n",
         ),
         expect={"OAS006": 1},
         forbid=frozenset({"OAS005"}),
@@ -198,7 +196,7 @@ PRECISION: tuple[Case, ...] = (
         name="mixed-status-responses",
         files=_spec(
             "",
-            'paths:\n  /a:\n    get:\n      operationId: a\n      responses:\n'
+            "paths:\n  /a:\n    get:\n      operationId: a\n      responses:\n"
             '        "200": {description: ok}\n        default: {description: d}\n',
         ),
         forbid=frozenset({"OAS006"}),
@@ -207,21 +205,21 @@ PRECISION: tuple[Case, ...] = (
         name="inconsistent-error-schema",
         files=_spec(
             "",
-            'paths:\n'
-            '  /a:\n    get:\n      operationId: a\n      responses:\n'
+            "paths:\n"
+            "  /a:\n    get:\n      operationId: a\n      responses:\n"
             '        "404": {description: e, content: {application/json:\n'
             '          {schema: {$ref: "#/components/schemas/Error"}}}}\n'
-            '  /b:\n    get:\n      operationId: b\n      responses:\n'
+            "  /b:\n    get:\n      operationId: b\n      responses:\n"
             '        "404": {description: e, content: {application/json:\n'
             '          {schema: {$ref: "#/components/schemas/Error"}}}}\n'
-            '  /c:\n    get:\n      operationId: c\n      responses:\n'
+            "  /c:\n    get:\n      operationId: c\n      responses:\n"
             '        "500": {description: e, content: {application/json:\n'
             '          {schema: {$ref: "#/components/schemas/Error"}}}}\n'
-            '  /d:\n    get:\n      operationId: d\n      responses:\n'
+            "  /d:\n    get:\n      operationId: d\n      responses:\n"
             '        "404": {description: e, content: {application/json:\n'
-            '          {schema: {type: string}}}}\n'
-            'components:\n  schemas:\n'
-            '    Error: {type: object, properties: {code: {type: string}}}\n',
+            "          {schema: {type: string}}}}\n"
+            "components:\n  schemas:\n"
+            "    Error: {type: object, properties: {code: {type: string}}}\n",
         ),
         expect={"OAS007": 1},
     ),
@@ -229,16 +227,16 @@ PRECISION: tuple[Case, ...] = (
         name="consistent-error-schemas",
         files=_spec(
             "",
-            'paths:\n'
-            '  /a:\n    get:\n      operationId: a\n      responses:\n'
+            "paths:\n"
+            "  /a:\n    get:\n      operationId: a\n      responses:\n"
             '        "404": {description: e, content: {application/json:\n'
-            '          {schema: {type: object}}}}\n'
-            '  /b:\n    get:\n      operationId: b\n      responses:\n'
+            "          {schema: {type: object}}}}\n"
+            "  /b:\n    get:\n      operationId: b\n      responses:\n"
             '        "500": {description: e, content: {application/json:\n'
-            '          {schema: {type: object}}}}\n'
-            '  /c:\n    get:\n      operationId: c\n      responses:\n'
+            "          {schema: {type: object}}}}\n"
+            "  /c:\n    get:\n      operationId: c\n      responses:\n"
             '        "404": {description: e, content: {application/json:\n'
-            '          {schema: {type: object}}}}\n',
+            "          {schema: {type: object}}}}\n",
         ),
         forbid=frozenset({"OAS007"}),
     ),
@@ -247,8 +245,8 @@ PRECISION: tuple[Case, ...] = (
         name="request-body-no-schema",
         files=_spec(
             "",
-            'paths:\n  /a:\n    post:\n      operationId: a\n'
-            '      requestBody:\n        content:\n          application/json: {}\n'
+            "paths:\n  /a:\n    post:\n      operationId: a\n"
+            "      requestBody:\n        content:\n          application/json: {}\n"
             '      responses: {"200": {description: ok}}\n',
         ),
         expect={"OAS008": 1},
@@ -257,9 +255,9 @@ PRECISION: tuple[Case, ...] = (
         name="request-body-with-schema",
         files=_spec(
             "",
-            'paths:\n  /a:\n    post:\n      operationId: a\n'
-            '      requestBody:\n        content:\n'
-            '          application/json: {schema: {type: object}}\n'
+            "paths:\n  /a:\n    post:\n      operationId: a\n"
+            "      requestBody:\n        content:\n"
+            "          application/json: {schema: {type: object}}\n"
             '      responses: {"200": {description: ok}}\n',
         ),
         forbid=frozenset({"OAS008"}),
@@ -268,7 +266,7 @@ PRECISION: tuple[Case, ...] = (
         name="unresolved-requestbody-ref",
         files=_spec(
             "",
-            'paths:\n  /a:\n    post:\n      operationId: a\n'
+            "paths:\n  /a:\n    post:\n      operationId: a\n"
             "      requestBody:\n        $ref: '#/components/requestBodies/Gone'\n"
             '      responses: {"200": {description: ok}}\n',
         ),
@@ -279,7 +277,7 @@ PRECISION: tuple[Case, ...] = (
         name="response-content-no-schema",
         files=_spec(
             "",
-            'paths:\n  /a:\n    get:\n      operationId: a\n      responses:\n'
+            "paths:\n  /a:\n    get:\n      operationId: a\n      responses:\n"
             '        "200": {description: ok, content: {application/json: {}}}\n',
         ),
         expect={"OAS009": 1},
@@ -288,7 +286,7 @@ PRECISION: tuple[Case, ...] = (
         name="empty-204-no-content",
         files=_spec(
             "",
-            'paths:\n  /a:\n    get:\n      operationId: a\n      responses:\n'
+            "paths:\n  /a:\n    get:\n      operationId: a\n      responses:\n"
             '        "204": {description: gone}\n',
         ),
         forbid=frozenset({"OAS009"}),
@@ -298,7 +296,7 @@ PRECISION: tuple[Case, ...] = (
         name="no-security-candidate",
         files=_spec(
             "",
-            'paths:\n  /a:\n    get:\n      operationId: a\n'
+            "paths:\n  /a:\n    get:\n      operationId: a\n"
             '      responses: {"200": {description: ok}}\n',
         ),
         expect={"OAS010": 1},
@@ -307,11 +305,11 @@ PRECISION: tuple[Case, ...] = (
         name="doc-security-satisfied",
         files=_spec(
             "",
-            'security:\n  - bearerAuth: []\n'
-            'paths:\n  /a:\n    get:\n      operationId: a\n'
+            "security:\n  - bearerAuth: []\n"
+            "paths:\n  /a:\n    get:\n      operationId: a\n"
             '      responses: {"200": {description: ok}}\n'
-            'components:\n  securitySchemes:\n'
-            '    bearerAuth: {type: http, scheme: bearer}\n',
+            "components:\n  securitySchemes:\n"
+            "    bearerAuth: {type: http, scheme: bearer}\n",
         ),
         forbid=frozenset({"OAS010", "OAS011"}),
     ),
@@ -319,8 +317,8 @@ PRECISION: tuple[Case, ...] = (
         name="anonymous-doc-requirement",
         files=_spec(
             "",
-            'security:\n  - {}\n'
-            'paths:\n  /a:\n    get:\n      operationId: a\n'
+            "security:\n  - {}\n"
+            "paths:\n  /a:\n    get:\n      operationId: a\n"
             '      responses: {"200": {description: ok}}\n',
         ),
         expect={"OAS010": 1},
@@ -329,11 +327,11 @@ PRECISION: tuple[Case, ...] = (
         name="op-security-opt-out",
         files=_spec(
             "",
-            'security:\n  - bearerAuth: []\n'
-            'paths:\n  /a:\n    get:\n      operationId: a\n      security: []\n'
+            "security:\n  - bearerAuth: []\n"
+            "paths:\n  /a:\n    get:\n      operationId: a\n      security: []\n"
             '      responses: {"200": {description: ok}}\n'
-            'components:\n  securitySchemes:\n'
-            '    bearerAuth: {type: http, scheme: bearer}\n',
+            "components:\n  securitySchemes:\n"
+            "    bearerAuth: {type: http, scheme: bearer}\n",
         ),
         expect={"OAS011": 1},
         forbid=frozenset({"OAS010"}),
@@ -342,8 +340,8 @@ PRECISION: tuple[Case, ...] = (
         name="undeclared-scheme",
         files=_spec(
             "",
-            'security:\n  - ghostAuth: []\n'
-            'paths:\n  /a:\n    get:\n      operationId: a\n'
+            "security:\n  - ghostAuth: []\n"
+            "paths:\n  /a:\n    get:\n      operationId: a\n"
             '      responses: {"200": {description: ok}}\n',
         ),
         expect={"OAS011": 1},
@@ -353,11 +351,11 @@ PRECISION: tuple[Case, ...] = (
         name="op-adds-security-no-default",
         files=_spec(
             "",
-            'paths:\n  /a:\n    get:\n      operationId: a\n'
-            '      security:\n        - bearerAuth: []\n'
+            "paths:\n  /a:\n    get:\n      operationId: a\n"
+            "      security:\n        - bearerAuth: []\n"
             '      responses: {"200": {description: ok}}\n'
-            'components:\n  securitySchemes:\n'
-            '    bearerAuth: {type: http, scheme: bearer}\n',
+            "components:\n  securitySchemes:\n"
+            "    bearerAuth: {type: http, scheme: bearer}\n",
         ),
         forbid=frozenset({"OAS011"}),
     ),
@@ -366,7 +364,7 @@ PRECISION: tuple[Case, ...] = (
         name="undeclared-template-var",
         files=_spec(
             "",
-            'paths:\n  /pets/{petId}:\n    get:\n      operationId: a\n'
+            "paths:\n  /pets/{petId}:\n    get:\n      operationId: a\n"
             '      responses: {"200": {description: ok}}\n',
         ),
         expect={"OAS013": 1},
@@ -376,9 +374,9 @@ PRECISION: tuple[Case, ...] = (
         name="param-not-in-template",
         files=_spec(
             "",
-            'paths:\n  /pets/{petId}:\n    get:\n      operationId: a\n      parameters:\n'
-            '        - {name: petId, in: path, required: true}\n'
-            '        - {name: ghost, in: path, required: true}\n'
+            "paths:\n  /pets/{petId}:\n    get:\n      operationId: a\n      parameters:\n"
+            "        - {name: petId, in: path, required: true}\n"
+            "        - {name: ghost, in: path, required: true}\n"
             '      responses: {"200": {description: ok}}\n',
         ),
         expect={"OAS012": 1},
@@ -388,8 +386,8 @@ PRECISION: tuple[Case, ...] = (
         name="param-wrong-location-no-double-report",
         files=_spec(
             "",
-            'paths:\n  /pets/{petId}:\n    get:\n      operationId: a\n      parameters:\n'
-            '        - {name: petId, in: query, required: true}\n'
+            "paths:\n  /pets/{petId}:\n    get:\n      operationId: a\n      parameters:\n"
+            "        - {name: petId, in: query, required: true}\n"
             '      responses: {"200": {description: ok}}\n',
         ),
         expect={"OAS012": 1},
@@ -399,8 +397,8 @@ PRECISION: tuple[Case, ...] = (
         name="path-param-not-required",
         files=_spec(
             "",
-            'paths:\n  /pets/{petId}:\n    get:\n      operationId: a\n      parameters:\n'
-            '        - {name: petId, in: path}\n'
+            "paths:\n  /pets/{petId}:\n    get:\n      operationId: a\n      parameters:\n"
+            "        - {name: petId, in: path}\n"
             '      responses: {"200": {description: ok}}\n',
         ),
         expect={"OAS012": 1},
@@ -410,9 +408,9 @@ PRECISION: tuple[Case, ...] = (
         name="path-param-declared-at-item-level",
         files=_spec(
             "",
-            'paths:\n  /pets/{petId}:\n    parameters:\n'
-            '      - {name: petId, in: path, required: true}\n'
-            '    get:\n      operationId: a\n'
+            "paths:\n  /pets/{petId}:\n    parameters:\n"
+            "      - {name: petId, in: path, required: true}\n"
+            "    get:\n      operationId: a\n"
             '      responses: {"200": {description: ok}}\n',
         ),
         forbid=frozenset({"OAS012", "OAS013"}),
@@ -422,9 +420,9 @@ PRECISION: tuple[Case, ...] = (
         name="schema-no-type",
         files=_spec(
             "",
-            'paths: {}\ncomponents:\n  schemas:\n'
-            '    Empty: {description: nothing, title: e}\n'
-            '    Typed: {type: object}\n'
+            "paths: {}\ncomponents:\n  schemas:\n"
+            "    Empty: {description: nothing, title: e}\n"
+            "    Typed: {type: object}\n"
             '    Composed: {allOf: [{$ref: "#/components/schemas/Typed"}]}\n',
         ),
         expect={"OAS014": 1},
@@ -433,7 +431,7 @@ PRECISION: tuple[Case, ...] = (
         name="boolean-schema-exempt",
         files=_spec(
             "",
-            'paths: {}\ncomponents:\n  schemas:\n    Anything: true\n',
+            "paths: {}\ncomponents:\n  schemas:\n    Anything: true\n",
         ),
         forbid=frozenset({"OAS014"}),
     ),
@@ -442,7 +440,7 @@ PRECISION: tuple[Case, ...] = (
         name="deprecated-no-sunset",
         files=_spec(
             "",
-            'paths:\n  /a:\n    get:\n      operationId: a\n      deprecated: true\n'
+            "paths:\n  /a:\n    get:\n      operationId: a\n      deprecated: true\n"
             '      responses: {"200": {description: ok}}\n',
         ),
         expect={"OAS015": 1},
@@ -451,7 +449,7 @@ PRECISION: tuple[Case, ...] = (
         name="deprecated-with-x-sunset",
         files=_spec(
             "",
-            'paths:\n  /a:\n    get:\n      operationId: a\n      deprecated: true\n'
+            "paths:\n  /a:\n    get:\n      operationId: a\n      deprecated: true\n"
             '      x-sunset: "2026-01-01"\n'
             '      responses: {"200": {description: ok}}\n',
         ),
@@ -461,9 +459,9 @@ PRECISION: tuple[Case, ...] = (
         name="deprecated-with-sunset-header",
         files=_spec(
             "",
-            'paths:\n  /a:\n    get:\n      operationId: a\n      deprecated: true\n'
+            "paths:\n  /a:\n    get:\n      operationId: a\n      deprecated: true\n"
             '      responses:\n        "200":\n          description: ok\n'
-            '          headers:\n            Sunset: {schema: {type: string}}\n',
+            "          headers:\n            Sunset: {schema: {type: string}}\n",
         ),
         forbid=frozenset({"OAS015"}),
     ),
@@ -496,10 +494,10 @@ PRECISION: tuple[Case, ...] = (
         name="open-additionalproperties",
         files=_spec(
             "",
-            'paths: {}\ncomponents:\n  schemas:\n'
-            '    Wild: {type: object, additionalProperties: true}\n'
-            '    Bounded: {type: object, additionalProperties: {type: string}}\n'
-            '    Closed: {type: object, additionalProperties: false}\n',
+            "paths: {}\ncomponents:\n  schemas:\n"
+            "    Wild: {type: object, additionalProperties: true}\n"
+            "    Bounded: {type: object, additionalProperties: {type: string}}\n"
+            "    Closed: {type: object, additionalProperties: false}\n",
         ),
         expect={"OAS017": 1},
     ),
@@ -507,9 +505,9 @@ PRECISION: tuple[Case, ...] = (
         name="example-data-not-scanned",
         files=_spec(
             "",
-            'paths: {}\ncomponents:\n  schemas:\n'
-            '    S:\n      type: object\n'
-            '      example: {additionalProperties: true}\n',
+            "paths: {}\ncomponents:\n  schemas:\n"
+            "    S:\n      type: object\n"
+            "      example: {additionalProperties: true}\n",
         ),
         forbid=frozenset({"OAS017"}),
     ),
@@ -518,7 +516,7 @@ PRECISION: tuple[Case, ...] = (
         name="unused-schema",
         files=_spec(
             "",
-            'paths: {}\ncomponents:\n  schemas:\n    Orphan: {type: object}\n',
+            "paths: {}\ncomponents:\n  schemas:\n    Orphan: {type: object}\n",
         ),
         expect={"OAS018": 1},
     ),
@@ -526,11 +524,11 @@ PRECISION: tuple[Case, ...] = (
         name="referenced-schema",
         files=_spec(
             "",
-            'paths:\n  /a:\n    get:\n      operationId: a\n      responses:\n'
+            "paths:\n  /a:\n    get:\n      operationId: a\n      responses:\n"
             '        "200":\n          description: ok\n          content:\n'
-            '            application/json:\n'
+            "            application/json:\n"
             '              schema: {$ref: "#/components/schemas/Used"}\n'
-            'components:\n  schemas:\n    Used: {type: object}\n',
+            "components:\n  schemas:\n    Used: {type: object}\n",
         ),
         forbid=frozenset({"OAS018"}),
     ),
@@ -538,13 +536,13 @@ PRECISION: tuple[Case, ...] = (
         name="schema-referenced-by-schema",
         files=_spec(
             "",
-            'paths:\n  /a:\n    get:\n      operationId: a\n      responses:\n'
+            "paths:\n  /a:\n    get:\n      operationId: a\n      responses:\n"
             '        "200":\n          description: ok\n          content:\n'
-            '            application/json:\n'
+            "            application/json:\n"
             '              schema: {$ref: "#/components/schemas/Root"}\n'
-            'components:\n  schemas:\n'
+            "components:\n  schemas:\n"
             '    Root: {type: object, properties: {child: {$ref: "#/components/schemas/Child"}}}\n'
-            '    Child: {type: string}\n',
+            "    Child: {type: string}\n",
         ),
         forbid=frozenset({"OAS018"}),
     ),
@@ -553,7 +551,7 @@ PRECISION: tuple[Case, ...] = (
         name="alias-cycle",
         files=_spec(
             "",
-            'paths: {}\ncomponents:\n  schemas:\n'
+            "paths: {}\ncomponents:\n  schemas:\n"
             '    A: {$ref: "#/components/schemas/B"}\n'
             '    B: {$ref: "#/components/schemas/A"}\n',
         ),
@@ -563,11 +561,11 @@ PRECISION: tuple[Case, ...] = (
         name="recursive-schema",
         files=_spec(
             "",
-            'paths:\n  /a:\n    get:\n      operationId: a\n      responses:\n'
+            "paths:\n  /a:\n    get:\n      operationId: a\n      responses:\n"
             '        "200":\n          description: ok\n          content:\n'
-            '            application/json:\n'
+            "            application/json:\n"
             '              schema: {$ref: "#/components/schemas/Node"}\n'
-            'components:\n  schemas:\n'
+            "components:\n  schemas:\n"
             '    Node: {type: object, properties: {next: {$ref: "#/components/schemas/Node"}}}\n',
         ),
         expect={"OAS019": 1},
@@ -578,7 +576,7 @@ PRECISION: tuple[Case, ...] = (
         name="untagged-operation",
         files=_spec(
             "",
-            'paths:\n  /a:\n    get:\n      operationId: a\n'
+            "paths:\n  /a:\n    get:\n      operationId: a\n"
             '      responses: {"200": {description: ok}}\n',
         ),
         expect={"OAS020": 1},
@@ -587,7 +585,7 @@ PRECISION: tuple[Case, ...] = (
         name="tagged-operation",
         files=_spec(
             "",
-            'paths:\n  /a:\n    get:\n      operationId: a\n      tags: [billing]\n'
+            "paths:\n  /a:\n    get:\n      operationId: a\n      tags: [billing]\n"
             '      responses: {"200": {description: ok}}\n',
         ),
         forbid=frozenset({"OAS020"}),
@@ -596,7 +594,7 @@ PRECISION: tuple[Case, ...] = (
         name="untagged-webhook-exempt",
         files=_spec(
             "",
-            'paths: {}\nwebhooks:\n  onPay:\n    post:\n'
+            "paths: {}\nwebhooks:\n  onPay:\n    post:\n"
             '      responses: {"200": {description: ok}}\n',
         ),
         forbid=frozenset({"OAS020", "OAS004"}),
@@ -627,8 +625,8 @@ def test_every_finding_carries_contract_fields(tmp_path: Path) -> None:
         name="contract-fields",
         files=_spec(
             "",
-            'paths:\n  /a/{id}:\n    get:\n      parameters:\n'
-            '        - {name: g, in: path}\n      responses: {default: {}}\n',
+            "paths:\n  /a/{id}:\n    get:\n      parameters:\n"
+            "        - {name: g, in: path}\n      responses: {default: {}}\n",
         ),
     )
     findings = _run(tmp_path, case)
@@ -667,10 +665,10 @@ def test_determinism_over_repeated_runs(tmp_path: Path) -> None:
     files = _spec(
         "",
         'servers:\n  - {url: "https://api.example.com"}\n  - {url: "http://localhost"}\n'
-        'paths:\n  /pets/{petId}:\n    get:\n      deprecated: true\n'
-        '      parameters:\n        - {name: ghost, in: path, required: true}\n'
-        '      responses: {default: {}}\n'
-        'components:\n  schemas:\n    Wild: {type: object, additionalProperties: true}\n',
+        "paths:\n  /pets/{petId}:\n    get:\n      deprecated: true\n"
+        "      parameters:\n        - {name: ghost, in: path, required: true}\n"
+        "      responses: {default: {}}\n"
+        "components:\n  schemas:\n    Wild: {type: object, additionalProperties: true}\n",
     )
     _write(tmp_path, files)
     model = load_openapi_project(ProjectContext.from_root(tmp_path))
@@ -681,8 +679,8 @@ def test_determinism_over_repeated_runs(tmp_path: Path) -> None:
 
 def test_determinism_over_input_order(tmp_path: Path) -> None:
     files = {
-        "a.yaml": HEADER + 'paths:\n  /a:\n    get:\n      responses: {default: {}}\n',
-        "b.yaml": HEADER + 'paths:\n  /b:\n    get: {operationId: x}\n',
+        "a.yaml": HEADER + "paths:\n  /a:\n    get:\n      responses: {default: {}}\n",
+        "b.yaml": HEADER + "paths:\n  /b:\n    get: {operationId: x}\n",
     }
     _write(tmp_path, files)
     ctx = ProjectContext.from_root(tmp_path)

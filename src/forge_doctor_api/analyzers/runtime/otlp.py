@@ -171,9 +171,7 @@ def _attr_map(attrs: Any) -> dict[str, str]:
     return out
 
 
-def _to_span(
-    service: str | None, raw: str, path: str, offset: int
-) -> Span | None:
+def _to_span(service: str | None, raw: str, path: str, offset: int) -> Span | None:
     try:
         data = json.loads(raw)
     except json.JSONDecodeError:

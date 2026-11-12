@@ -51,8 +51,7 @@ CATALOG: tuple[GrpcCheckSpec, ...] = (
         severity=Severity.HIGH,
         confidence=Confidence.HIGH,
         evidence_kind=EvidenceKind.STATIC,
-        description="A field was removed without a `reserved` statement "
-        "covering its number/name.",
+        description="A field was removed without a `reserved` statement covering its number/name.",
     ),
     GrpcCheckSpec(
         id="GRPC004",
@@ -78,8 +77,7 @@ CATALOG: tuple[GrpcCheckSpec, ...] = (
         severity=Severity.HIGH,
         confidence=Confidence.HIGH,
         evidence_kind=EvidenceKind.STATIC,
-        description="A method's unary/streaming mode changed between "
-        "schema versions (§26).",
+        description="A method's unary/streaming mode changed between schema versions (§26).",
     ),
     GrpcCheckSpec(
         id="GRPC007",

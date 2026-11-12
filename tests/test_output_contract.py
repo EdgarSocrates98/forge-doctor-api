@@ -30,8 +30,8 @@ from forge_doctor_api.output.writers import (
 from forge_doctor_api.scan import scan_project
 
 SCHEMA = json.loads(
-    (Path(__file__).parent / "schemas" / "sarif-2.1.0-schema.json")
-    .read_text(encoding="utf-8"))
+    (Path(__file__).parent / "schemas" / "sarif-2.1.0-schema.json").read_text(encoding="utf-8")
+)
 
 OPENAPI = """\
 openapi: 3.0.3
@@ -61,13 +61,16 @@ def _finding(**kw: Any) -> Finding:
 # supports: type, required, properties, items, enum, const, minItems, minimum
 
 _TYPE_MAP = {
-    "object": dict, "array": list, "string": str,
-    "integer": int, "boolean": bool, "number": (int, float),
+    "object": dict,
+    "array": list,
+    "string": str,
+    "integer": int,
+    "boolean": bool,
+    "number": (int, float),
 }
 
 
-def _validate(instance: Any, schema: dict[str, Any], path: str = "$"
-              ) -> list[str]:
+def _validate(instance: Any, schema: dict[str, Any], path: str = "$") -> list[str]:
     errors: list[str] = []
     if "const" in schema and instance != schema["const"]:
         errors.append(f"{path}: expected const {schema['const']!r}")
@@ -79,8 +82,7 @@ def _validate(instance: Any, schema: dict[str, Any], path: str = "$"
         if tp in ("integer", "number") and isinstance(instance, bool):
             errors.append(f"{path}: bool is not {tp}")
         elif not isinstance(instance, py):
-            errors.append(f"{path}: expected {tp}, got "
-                          f"{type(instance).__name__}")
+            errors.append(f"{path}: expected {tp}, got {type(instance).__name__}")
             return errors
     if isinstance(instance, dict):
         for key in schema.get("required", []):
@@ -88,35 +90,43 @@ def _validate(instance: Any, schema: dict[str, Any], path: str = "$"
                 errors.append(f"{path}: missing required {key!r}")
         for key, sub in schema.get("properties", {}).items():
             if key in instance:
-                errors.extend(
-                    _validate(instance[key], sub, f"{path}.{key}"))
+                errors.extend(_validate(instance[key], sub, f"{path}.{key}"))
     if isinstance(instance, list):
         if "minItems" in schema and len(instance) < schema["minItems"]:
             errors.append(f"{path}: fewer than {schema['minItems']} items")
         for i, item in enumerate(instance):
             if "items" in schema:
-                errors.extend(
-                    _validate(item, schema["items"], f"{path}[{i}]"))
-    if ("minimum" in schema and isinstance(instance, int | float)
-            and not isinstance(instance, bool)
-            and instance < schema["minimum"]):
+                errors.extend(_validate(item, schema["items"], f"{path}[{i}]"))
+    if (
+        "minimum" in schema
+        and isinstance(instance, int | float)
+        and not isinstance(instance, bool)
+        and instance < schema["minimum"]
+    ):
         errors.append(f"{path}: {instance} < minimum {schema['minimum']}")
     return errors
 
 
 # -- json --------------------------------------------------------------------
 
+
 def test_json_envelope_contract() -> None:
     doc = json.loads(write_json([_finding()]))
-    assert set(doc) == {
-        "schema_version", "tool_version",
-        "knowledge_versions", "findings"}
+    assert set(doc) == {"schema_version", "tool_version", "knowledge_versions", "findings"}
     assert isinstance(doc["schema_version"], str)
     assert isinstance(doc["knowledge_versions"], dict)
     f = doc["findings"][0]
-    for field in ("id", "title", "description", "severity",
-                  "confidence", "evidence_kind", "evidence",
-                  "entity_ids", "unknowns"):
+    for field in (
+        "id",
+        "title",
+        "description",
+        "severity",
+        "confidence",
+        "evidence_kind",
+        "evidence",
+        "entity_ids",
+        "unknowns",
+    ):
         assert field in f, field
 
 
@@ -133,6 +143,7 @@ def test_jsonl_contract() -> None:
 
 
 # -- sarif -------------------------------------------------------------------
+
 
 def _sarif_doc() -> dict[str, Any]:
     findings = [
@@ -163,6 +174,7 @@ def test_sarif_is_valid_210() -> None:
 
 # -- agent -------------------------------------------------------------------
 
+
 def test_agent_contract_and_bounded_size() -> None:
     findings = [_finding(id=f"OAS0{i:02d}") for i in range(90, 50, -1)]
     unknowns: list[Any] = []
@@ -181,22 +193,30 @@ def test_agent_contract_and_bounded_size() -> None:
 
 # -- report ------------------------------------------------------------------
 
+
 def test_report_contract_surface(tmp_path: Path) -> None:
     (tmp_path / "api.yaml").write_text(OPENAPI, encoding="utf-8")
     report = scan_project(ProjectContext.from_root(tmp_path))
     payload = json.loads(report.to_json())
-    for field in ("schema_version", "tool_version",
-                  "knowledge_versions", "project", "inventory", "plan",
-                  "analysis_rev", "stats", "findings", "unknowns",
-                  "capabilities"):
+    for field in (
+        "schema_version",
+        "tool_version",
+        "knowledge_versions",
+        "project",
+        "inventory",
+        "plan",
+        "analysis_rev",
+        "stats",
+        "findings",
+        "unknowns",
+        "capabilities",
+    ):
         assert field in payload, field
     # stats fields are the frozen analyzer-stat shape
     for a in payload["stats"]["analyzers"]:
-        assert set(a) >= {"analyzer", "ran", "artifacts",
-                          "findings", "unknowns"}
+        assert set(a) >= {"analyzer", "ran", "artifacts", "findings", "unknowns"}
     # no duration without the opt-in flag
-    assert all(a.get("duration_ms") is None
-               for a in payload["stats"]["analyzers"])
+    assert all(a.get("duration_ms") is None for a in payload["stats"]["analyzers"])
 
 
 def test_report_v1_frozen_shape(tmp_path: Path) -> None:

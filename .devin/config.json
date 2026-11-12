@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Exec(forge-doctor-api --version)",
+      "Exec(forge-doctor-api doctor)",
+      "Exec(forge-doctor-api obsidian status)",
+      "Exec(forge-doctor-api obsidian scan)",
+      "Exec(forge-doctor-api obsidian preview)",
+      "Exec(forge-doctor-api obsidian sync-plan)",
+      "Exec(forge-doctor-api obsidian history)"
+    ]
+  }
+}

@@ -18,20 +18,18 @@ from forge_doctor_api.analyzers.routes.textscan import (
 )
 from forge_doctor_api.core.models import SourceLocation, UnknownFact
 
-_BLOCK_HEAD = re.compile(
-    r'\bresource\s+"[^"\n]*"\s+"[^"\n]*"\s*\{')
+_BLOCK_HEAD = re.compile(r'\bresource\s+"[^"\n]*"\s+"[^"\n]*"\s*\{')
 _QUOTED = re.compile(r'"[^"\n]*"')
-_ATTR = re.compile(
-    r'^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(\S.*?)\s*$')
+_ATTR = re.compile(r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(\S.*?)\s*$")
 _HEREDOC = re.compile(r'<<-?\s*"?([A-Za-z_][A-Za-z0-9_]*)"?')
 _DYNAMIC_KEYS = ("count", "for_each")
-_SCALAR = re.compile(r'-?\d+(\.\d+)?|true|false|null')
+_SCALAR = re.compile(r"-?\d+(\.\d+)?|true|false|null")
 
 
 @dataclass(frozen=True, kw_only=True)
 class TfAttr:
     name: str
-    value: str | None          # resolved literal or None (dynamic)
+    value: str | None  # resolved literal or None (dynamic)
     location: SourceLocation
     dynamic: bool = False
 
@@ -42,7 +40,7 @@ class TfBlock:
     name: str
     attrs: tuple[TfAttr, ...]
     location: SourceLocation
-    existence_known: bool      # False when count/for_each unknown
+    existence_known: bool  # False when count/for_each unknown
 
 
 def _blank_heredocs(text: str) -> str:
@@ -80,8 +78,7 @@ def _blank_hash_comments(safe: str) -> str:
     return "".join(chars)
 
 
-def parse_hcl(path: str, text: str) -> tuple[tuple[TfBlock, ...],
-                                             tuple[UnknownFact, ...]]:
+def parse_hcl(path: str, text: str) -> tuple[tuple[TfBlock, ...], tuple[UnknownFact, ...]]:
     """Extract resource blocks + literal attrs; dynamics -> unknowns."""
     text = _blank_heredocs(text)
     stripped = strip_source(text)
@@ -106,7 +103,7 @@ def parse_hcl(path: str, text: str) -> tuple[tuple[TfBlock, ...],
             elif safe[i] == "}":
                 depth -= 1
             i += 1
-        body = safe[m.end():i - 1]
+        body = safe[m.end() : i - 1]
         base = m.end()
 
         attrs: list[TfAttr] = []
@@ -124,38 +121,51 @@ def parse_hcl(path: str, text: str) -> tuple[tuple[TfBlock, ...],
                 am = _ATTR.match(seg)
                 if am:
                     aname = am.group(1)
-                    aloc = SourceLocation(
-                        path=path,
-                        line=line_of(safe, base + seg_start))
+                    aloc = SourceLocation(path=path, line=line_of(safe, base + seg_start))
                     # re-read raw value from the ORIGINAL text (literals
                     # intact) so quoted values resolve directly
-                    raw = text[base + seg_start:base + j]
+                    raw = text[base + seg_start : base + j]
                     vm = _ATTR.match(raw)
                     rval = vm.group(2).strip() if vm else ""
                     if aname in _DYNAMIC_KEYS:
                         existence_known = False
-                        unknowns.append(UnknownFact(
-                            subject=f"{type_name}.{name}",
-                            missing=f"resource existence ({aname} "
-                                    "not literal)",
-                            resolution="only a literal count > 0 marks "
-                                       "existence; expressions never do"))
+                        unknowns.append(
+                            UnknownFact(
+                                subject=f"{type_name}.{name}",
+                                missing=f"resource existence ({aname} not literal)",
+                                resolution="only a literal count > 0 marks "
+                                "existence; expressions never do",
+                            )
+                        )
                     else:
                         value = _attr_literal(rval)
                         if value is None and rval:
-                            unknowns.append(UnknownFact(
-                                subject=f"{type_name}.{name}.{aname}",
-                                missing="literal attribute value",
-                                resolution="expressions/references are "
-                                           "not evaluated"))
-                        attrs.append(TfAttr(
-                            name=aname, value=value, location=aloc,
-                            dynamic=value is None and bool(rval)))
+                            unknowns.append(
+                                UnknownFact(
+                                    subject=f"{type_name}.{name}.{aname}",
+                                    missing="literal attribute value",
+                                    resolution="expressions/references are not evaluated",
+                                )
+                            )
+                        attrs.append(
+                            TfAttr(
+                                name=aname,
+                                value=value,
+                                location=aloc,
+                                dynamic=value is None and bool(rval),
+                            )
+                        )
                 seg_start = j + 1
             j += 1
-        blocks.append(TfBlock(
-            type_name=type_name, name=name, attrs=tuple(attrs),
-            location=loc, existence_known=existence_known))
+        blocks.append(
+            TfBlock(
+                type_name=type_name,
+                name=name,
+                attrs=tuple(attrs),
+                location=loc,
+                existence_known=existence_known,
+            )
+        )
     return tuple(blocks), tuple(unknowns)
 
 
@@ -166,7 +176,7 @@ def _attr_literal(raw: str) -> str | None:
     if raw.startswith('"') and raw.endswith('"') and len(raw) >= 2:
         inner = raw[1:-1]
         if '"' in inner:
-            return None                      # interpolation escaped edge
+            return None  # interpolation escaped edge
         return inner.replace('\\"', '"').replace("\\\\", "\\")
     if _SCALAR.fullmatch(raw):
         return raw

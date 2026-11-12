@@ -61,18 +61,12 @@ def _baseline(
 ) -> RequestBaseline:
     durations = [e.duration_ms for e in exs if e.duration_ms is not None]
     statuses = [e.status for e in exs if e.status is not None]
-    errors = sum(
-        1
-        for s in statuses
-        if s == "error" or (s.isdigit() and int(s) >= 500)
-    )
+    errors = sum(1 for s in statuses if s == "error" or (s.isdigit() and int(s) >= 500))
     retries = [e.retries for e in exs if e.retries is not None]
     timed = [e.timed_out for e in exs if e.timed_out is not None]
     payloads = [e.response_bytes for e in exs if e.response_bytes is not None]
     fanouts = [float(len(e.downstream_calls)) for e in exs]
-    caches = [
-        e.cache_status.lower() for e in exs if e.cache_status is not None
-    ]
+    caches = [e.cache_status.lower() for e in exs if e.cache_status is not None]
     hits = sum(1 for c in caches if "hit" in c)
     pstats = robust_stats([float(p) for p in payloads])
     return RequestBaseline(
@@ -83,18 +77,12 @@ def _baseline(
         latency=robust_stats(durations),
         error_rate=errors / len(statuses) if statuses else None,
         throughput_per_hour=float(len(exs)),
-        retry_rate=(
-            sum(1 for r in retries if r > 0) / len(retries) if retries else None
-        ),
-        timeout_rate=(
-            sum(1 for t in timed if t) / len(timed) if timed else None
-        ),
+        retry_rate=(sum(1 for r in retries if r > 0) / len(retries) if retries else None),
+        timeout_rate=(sum(1 for t in timed if t) / len(timed) if timed else None),
         payload_p95_bytes=pstats.p95 if pstats else None,
         fanout_mean=sum(fanouts) / len(fanouts) if fanouts else None,
         cache_hit_rate=hits / len(caches) if caches else None,
-        confidence=(
-            Confidence.MEDIUM if len(exs) >= MIN_SAMPLES else Confidence.UNKNOWN
-        ),
+        confidence=(Confidence.MEDIUM if len(exs) >= MIN_SAMPLES else Confidence.UNKNOWN),
         evidence=(
             Evidence(
                 kind=EvidenceKind.DERIVED,
@@ -165,20 +153,13 @@ def _dependency_baselines(
                 window=win,
                 count=counts.get((key, win), len(durs)),
                 latency=robust_stats(durs),
-                retry_rate=(
-                    sum(1 for x in r if x > 0) / len(r) if r else None
-                ),
-                confidence=(
-                    Confidence.MEDIUM
-                    if len(durs) >= MIN_SAMPLES
-                    else Confidence.UNKNOWN
-                ),
+                retry_rate=(sum(1 for x in r if x > 0) / len(r) if r else None),
+                confidence=(Confidence.MEDIUM if len(durs) >= MIN_SAMPLES else Confidence.UNKNOWN),
                 evidence=(
                     Evidence(
                         kind=EvidenceKind.DERIVED,
                         source="(runtime-history)",
-                        summary=f"baseline dependency={key} window={win} "
-                        f"n={len(durs)}",
+                        summary=f"baseline dependency={key} window={win} n={len(durs)}",
                     ),
                 ),
             )

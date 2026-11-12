@@ -62,9 +62,7 @@ def test_media_type_version_param(tmp_path: Path) -> None:
 
 
 def test_server_url_version(tmp_path: Path) -> None:
-    spec = BASE.replace(
-        "paths:", "servers: [{url: 'https://api.example.com/v1'}]\npaths:"
-    )
+    spec = BASE.replace("paths:", "servers: [{url: 'https://api.example.com/v1'}]\npaths:")
     model = detect_version_model(_model(tmp_path, spec))
     assert (VersionMechanism.URI.value, "v1") in _versions(model)
 
@@ -104,9 +102,8 @@ def test_deprecated_flag(tmp_path: Path) -> None:
 
 def test_sunset_date(tmp_path: Path) -> None:
     spec = BASE.replace(
-        "info: {title: T, version: \"1.0\"}",
-        "info:\n  title: T\n  version: \"1.0\"\n"
-        "  x-sunset-date: \"2030-01-01\"\n  deprecated: true",
+        'info: {title: T, version: "1.0"}',
+        'info:\n  title: T\n  version: "1.0"\n  x-sunset-date: "2030-01-01"\n  deprecated: true',
     )
     model = detect_version_model(_model(tmp_path, spec))
     assert model.deprecation.sunset_date == "2030-01-01"
@@ -115,8 +112,8 @@ def test_sunset_date(tmp_path: Path) -> None:
 
 def test_explicit_lifecycle_overrides(tmp_path: Path) -> None:
     spec = BASE.replace(
-        "info: {title: T, version: \"1.0\"}",
-        "info:\n  title: T\n  version: \"1.0\"\n  x-lifecycle: retired",
+        'info: {title: T, version: "1.0"}',
+        'info:\n  title: T\n  version: "1.0"\n  x-lifecycle: retired',
     )
     model = detect_version_model(_model(tmp_path, spec))
     assert model.lifecycle is LifecycleState.RETIRED
@@ -125,8 +122,8 @@ def test_explicit_lifecycle_overrides(tmp_path: Path) -> None:
 
 def test_replacement_recorded(tmp_path: Path) -> None:
     spec = BASE.replace(
-        "info: {title: T, version: \"1.0\"}",
-        "info:\n  title: T\n  version: \"1.0\"\n  x-replaced-by: \"/v3/users\"",
+        'info: {title: T, version: "1.0"}',
+        'info:\n  title: T\n  version: "1.0"\n  x-replaced-by: "/v3/users"',
     )
     model = detect_version_model(_model(tmp_path, spec))
     assert model.deprecation.replacement == "/v3/users"

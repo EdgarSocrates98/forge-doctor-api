@@ -18,8 +18,7 @@ from forge_doctor_api.core.models import (
 )
 
 CORRELATION_CAVEAT = (
-    "correlation observed in the same scope; causality is not "
-    "established by this engine"
+    "correlation observed in the same scope; causality is not established by this engine"
 )
 
 

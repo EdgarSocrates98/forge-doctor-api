@@ -19,10 +19,10 @@ from forge_doctor_api.core.models import Model, ModelError, UnknownFact
 class TrustClass(StrEnum):
     """§132 plugin trust classes, strictest boundary last."""
 
-    BUILTIN = "BUILTIN"             # shipped inside forge_doctor_api
-    SIGNED = "SIGNED"               # verified signature evidence
+    BUILTIN = "BUILTIN"  # shipped inside forge_doctor_api
+    SIGNED = "SIGNED"  # verified signature evidence
     APPROVED_LOCAL = "APPROVED_LOCAL"  # operator-approved local path
-    UNTRUSTED = "UNTRUSTED"         # listed, never loaded
+    UNTRUSTED = "UNTRUSTED"  # listed, never loaded
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -60,9 +60,7 @@ def load_plugin(descriptor: PluginDescriptor) -> ModuleType:
     cannot be used as a loader for arbitrary code.
     """
     if descriptor.trust is TrustClass.UNTRUSTED:
-        raise ModelError(
-            f"plugin {descriptor.name!r} is UNTRUSTED: listed but never loaded"
-        )
+        raise ModelError(f"plugin {descriptor.name!r} is UNTRUSTED: listed but never loaded")
     module = descriptor.module
     if descriptor.trust is TrustClass.BUILTIN and not (
         module == "forge_doctor_api" or module.startswith("forge_doctor_api.")
@@ -74,9 +72,7 @@ def load_plugin(descriptor: PluginDescriptor) -> ModuleType:
     try:
         return importlib.import_module(module)
     except ImportError as exc:
-        raise ModelError(
-            f"plugin {descriptor.name!r} failed to import: {exc}"
-        ) from exc
+        raise ModelError(f"plugin {descriptor.name!r} failed to import: {exc}") from exc
 
 
 def describe_untrusted(registry: PluginRegistry) -> tuple[UnknownFact, ...]:

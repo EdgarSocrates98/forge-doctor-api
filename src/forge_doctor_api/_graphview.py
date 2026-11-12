@@ -153,23 +153,24 @@ class ForgeGraphView:
             **{k: tuple(v) if isinstance(v, list) else v for k, v in d.items()}
         )
         nodes = tuple(
-            GraphNodeView(
-                **{k: tuple(v) if isinstance(v, list) else v for k, v in n.items()}
-            )
+            GraphNodeView(**{k: tuple(v) if isinstance(v, list) else v for k, v in n.items()})
             for n in doc.get("nodes", [])
         )
         edges = tuple(
-            GraphEdgeView(
-                **{k: tuple(v) if isinstance(v, list) else v for k, v in e.items()}
-            )
+            GraphEdgeView(**{k: tuple(v) if isinstance(v, list) else v for k, v in e.items()})
             for e in doc.get("edges", [])
         )
         return ForgeGraphView(descriptor=descriptor, nodes=nodes, edges=edges)
 
 
-def new_descriptor(*, provider_id: str, domain: str, graph_id: str | None = None,
-                   capabilities: tuple[str, ...] = (),
-                   limitations: tuple[str, ...] = ()) -> GraphDescriptor:
+def new_descriptor(
+    *,
+    provider_id: str,
+    domain: str,
+    graph_id: str | None = None,
+    capabilities: tuple[str, ...] = (),
+    limitations: tuple[str, ...] = (),
+) -> GraphDescriptor:
     """A descriptor with real provenance stamps."""
     return GraphDescriptor(
         graph_id=graph_id or f"graph-{uuid.uuid4().hex[:8]}",

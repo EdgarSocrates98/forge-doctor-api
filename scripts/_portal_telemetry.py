@@ -39,17 +39,13 @@ DEFAULT_CAPACITY = 500
 
 # Closed vocabulary of statuses the portal itself emits; adapters may
 # use their own values — consumers render them verbatim.
-KNOWN_STATUSES = frozenset(
-    {"started", "ok", "refused", "failed", "timeout", "skipped"}
-)
+KNOWN_STATUSES = frozenset({"started", "ok", "refused", "failed", "timeout", "skipped"})
 
 # Event types the vendored server emits. Adapter-emitted types are
 # free-form (`task.planned`, `mcp.verification`, `tool.invocation`,
 # `receipt`, `state.change`, …) — consumers must not assume a closed
 # enum, only the field contract.
-CORE_EVENT_TYPES = frozenset(
-    {"operation.start", "operation.end", "request.rejected"}
-)
+CORE_EVENT_TYPES = frozenset({"operation.start", "operation.end", "request.rejected"})
 
 
 def _scalarish(value: Any, depth: int = 0) -> Any:
@@ -63,10 +59,7 @@ def _scalarish(value: Any, depth: int = 0) -> Any:
     if isinstance(value, list):
         return [_scalarish(v, depth + 1) for v in value[:200]]
     if isinstance(value, dict):
-        return {
-            str(k): _scalarish(v, depth + 1)
-            for k, v in list(value.items())[:50]
-        }
+        return {str(k): _scalarish(v, depth + 1) for k, v in list(value.items())[:50]}
     return str(value)
 
 

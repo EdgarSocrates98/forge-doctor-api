@@ -48,7 +48,9 @@ def _scenario(**expected: object) -> LabScenario:
     from forge_doctor_api.lab.model import LabExpectation
 
     return LabScenario(
-        domain="t", name="s", path="t/s",
+        domain="t",
+        name="s",
+        path="t/s",
         expected=LabExpectation(**expected),
     )
 
@@ -65,12 +67,15 @@ def _write(root: Path, files: dict[str, str]) -> Path:
 
 
 def test_discovery_finds_scenarios_sorted(tmp_path: Path) -> None:
-    root = _write(tmp_path / "labs", {
-        "b/second/expected.yaml": "expected_findings: []",
-        "a/first/expected.yaml": "expected_findings: [OAS001]",
-        "a/first/api.yaml": "x: 1",
-        "notascenario/readme.txt": "no expected.yaml",
-    })
+    root = _write(
+        tmp_path / "labs",
+        {
+            "b/second/expected.yaml": "expected_findings: []",
+            "a/first/expected.yaml": "expected_findings: [OAS001]",
+            "a/first/api.yaml": "x: 1",
+            "notascenario/readme.txt": "no expected.yaml",
+        },
+    )
     scenarios = discover_scenarios(ProjectContext.from_root(root))
     assert [s.path for s in scenarios] == ["a/first", "b/second"]
     assert scenarios[0].expected.findings == ("OAS001",)
@@ -78,24 +83,27 @@ def test_discovery_finds_scenarios_sorted(tmp_path: Path) -> None:
 
 
 def test_ground_truth_parses_all_fields(tmp_path: Path) -> None:
-    root = _write(tmp_path / "labs", {
-        "d/s/expected.yaml": (
-            "run: [openapi]\n"
-            "diff: {old: before, new: after}\n"
-            "hops: [gw, svc]\n"
-            "today: '2030-01-01'\n"
-            "expected_findings: [OAS001, 'APISEC*']\n"
-            "forbidden_findings: ['GQL*']\n"
-            "expected_entities: [endpoint:x]\n"
-            "forbidden_entities: [endpoint:y]\n"
-            "expected_clients: [web]\n"
-            "expected_breaking: [getUser]\n"
-            "expected_runtime_signals: [tracing]\n"
-            "expected_issues: [MALFORMED]\n"
-            "expected_description_contains: [BOLA]\n"
-            "forbidden_description_contains: [confirmed]\n"
-        ),
-    })
+    root = _write(
+        tmp_path / "labs",
+        {
+            "d/s/expected.yaml": (
+                "run: [openapi]\n"
+                "diff: {old: before, new: after}\n"
+                "hops: [gw, svc]\n"
+                "today: '2030-01-01'\n"
+                "expected_findings: [OAS001, 'APISEC*']\n"
+                "forbidden_findings: ['GQL*']\n"
+                "expected_entities: [endpoint:x]\n"
+                "forbidden_entities: [endpoint:y]\n"
+                "expected_clients: [web]\n"
+                "expected_breaking: [getUser]\n"
+                "expected_runtime_signals: [tracing]\n"
+                "expected_issues: [MALFORMED]\n"
+                "expected_description_contains: [BOLA]\n"
+                "forbidden_description_contains: [confirmed]\n"
+            ),
+        },
+    )
     (s,) = discover_scenarios(ProjectContext.from_root(root))
     assert s.run == ("openapi",)
     assert (s.diff_old, s.diff_new) == ("before", "after")
@@ -109,20 +117,26 @@ def test_ground_truth_parses_all_fields(tmp_path: Path) -> None:
 
 
 def test_discovery_skips_dot_directories(tmp_path: Path) -> None:
-    root = _write(tmp_path, {
-        "labs/a/first/expected.yaml": "expected_findings: []",
-        ".pytest-tmp/run0/labs/b/second/expected.yaml": "expected_findings: []",
-        ".hidden/expected.yaml": "expected_findings: []",
-    })
+    root = _write(
+        tmp_path,
+        {
+            "labs/a/first/expected.yaml": "expected_findings: []",
+            ".pytest-tmp/run0/labs/b/second/expected.yaml": "expected_findings: []",
+            ".hidden/expected.yaml": "expected_findings: []",
+        },
+    )
     scenarios = discover_scenarios(ProjectContext.from_root(root))
     assert [s.path for s in scenarios] == ["labs/a/first"]
 
 
 def test_unparseable_expected_yields_empty_scenario(tmp_path: Path) -> None:
-    root = _write(tmp_path / "labs", {
-        "d/s/expected.yaml": "{unclosed",
-        "d/s/api.yaml": "x: 1",
-    })
+    root = _write(
+        tmp_path / "labs",
+        {
+            "d/s/expected.yaml": "{unclosed",
+            "d/s/api.yaml": "x: 1",
+        },
+    )
     (s,) = discover_scenarios(ProjectContext.from_root(root))
     assert s.name == "s"
     assert s.expected.findings == ()
@@ -174,9 +188,7 @@ def test_compare_content_drift_fails() -> None:
         description_contains=("BOLA risk candidate",),
         forbidden_description_contains=("confirmed",),
     )
-    obs = LabObservations(
-        findings=[_finding("APISEC001", "BOLA confirmed - vulnerability")]
-    )
+    obs = LabObservations(findings=[_finding("APISEC001", "BOLA confirmed - vulnerability")])
     r = compare(s, obs)
     assert not r.passed
     assert len(r.wording_violations) == 2
@@ -227,9 +239,15 @@ def test_family_scores_track_hits_misses_fps() -> None:
     pairs = [
         (hit, compare(hit, LabObservations(findings=[_finding("OAS001")]))),
         (miss, compare(miss, LabObservations(findings=[]))),
-        (fp, compare(fp, LabObservations(
-            findings=[_finding("OAS001"), _finding("APISEC009")],
-        ))),
+        (
+            fp,
+            compare(
+                fp,
+                LabObservations(
+                    findings=[_finding("OAS001"), _finding("APISEC009")],
+                ),
+            ),
+        ),
     ]
     scores = {f.family: f for f in aggregate_scores(pairs)}
     assert scores["OAS"].expected == 3
@@ -241,9 +259,16 @@ def test_family_scores_track_hits_misses_fps() -> None:
 
 
 def test_run_record_written_under_factory_runs(tmp_path: Path) -> None:
-    report = run_labs(ProjectContext.from_root(_write(tmp_path / "labs", {
-        "t/s/expected.yaml": "expected_findings: []",
-    })))
+    report = run_labs(
+        ProjectContext.from_root(
+            _write(
+                tmp_path / "labs",
+                {
+                    "t/s/expected.yaml": "expected_findings: []",
+                },
+            )
+        )
+    )
     record = write_run_record(report, tmp_path / "factory" / "runs", "20300101T000000Z")
     data = json.loads(record.read_text())
     assert record.parent.name == "runs"
@@ -254,10 +279,13 @@ def test_run_record_written_under_factory_runs(tmp_path: Path) -> None:
 
 
 def test_runner_excludes_expected_yaml_and_respects_markers(tmp_path: Path) -> None:
-    root = _write(tmp_path / "labs", {
-        "d/s/expected.yaml": "expected_findings: []\nforbidden_findings: ['OAS*']",
-        "d/s/openapi.yaml": "# just config\nhost: localhost\n",
-    })
+    root = _write(
+        tmp_path / "labs",
+        {
+            "d/s/expected.yaml": "expected_findings: []\nforbidden_findings: ['OAS*']",
+            "d/s/openapi.yaml": "# just config\nhost: localhost\n",
+        },
+    )
     (s,) = discover_scenarios(ProjectContext.from_root(root))
     from forge_doctor_api.lab.runner import run_scenario
 
@@ -275,11 +303,7 @@ def test_full_corpus_is_green() -> None:
     from forge_doctor_api.lab.capabilities import extras_present
 
     report = run_labs(ProjectContext.from_root(REPO_LABS))
-    failures = [
-        f"{r.domain}/{r.name}"
-        for r in report.results
-        if not r.passed and not r.skipped
-    ]
+    failures = [f"{r.domain}/{r.name}" for r in report.results if not r.passed and not r.skipped]
     assert failures == []
     assert len(report.results) >= 20
     assert all(r.skip_reason for r in report.results if r.skipped)
@@ -290,13 +314,19 @@ def test_full_corpus_is_green() -> None:
 
 
 def test_corpus_covers_required_domains() -> None:
-    domains = {
-        s.domain for s in discover_scenarios(ProjectContext.from_root(REPO_LABS))
-    }
+    domains = {s.domain for s in discover_scenarios(ProjectContext.from_root(REPO_LABS))}
     required = {
-        "openapi", "rest", "graphql", "grpc", "asyncapi",
-        "security", "reliability", "performance", "contracts",
-        "adversarial", "golden",
+        "openapi",
+        "rest",
+        "graphql",
+        "grpc",
+        "asyncapi",
+        "security",
+        "reliability",
+        "performance",
+        "contracts",
+        "adversarial",
+        "golden",
     }
     assert required <= domains
 
@@ -320,8 +350,7 @@ def _without_measurements(data: dict) -> dict:
 def test_demo_scenarios_present() -> None:
     """§226-§229 demo targets exist and pass as lab scenarios."""
     names = {
-        f"{s.domain}/{s.name}"
-        for s in discover_scenarios(ProjectContext.from_root(REPO_LABS))
+        f"{s.domain}/{s.name}" for s in discover_scenarios(ProjectContext.from_root(REPO_LABS))
     }
     assert "contracts/breaking-change-client-impact" in names
     assert "performance/downstream-p95" in names
@@ -338,23 +367,21 @@ def test_negative_space_scenarios_exist() -> None:
 
 # -- spec 058: real-world corpus + metrics -----------------------------------
 
+
 def test_realworld_corpus_present_and_required() -> None:
     """spec 058: >=15 realworld cases covering the required matrix."""
     scenarios = discover_scenarios(ProjectContext.from_root(REPO_LABS))
     real = [s for s in scenarios if s.domain == "realworld"]
     assert len(real) >= 15
-    assert all(s.provenance for s in real), (
-        "every realworld scenario needs a provenance block")
-    assert all(not s.problems for s in real), (
-        [f"{s.name}: {s.problems}" for s in real])
+    assert all(s.provenance for s in real), "every realworld scenario needs a provenance block"
+    assert all(not s.problems for s in real), [f"{s.name}: {s.problems}" for s in real]
 
 
 def test_realworld_missing_provenance_fails() -> None:
     labs_root = Path(__file__).parent / ".pytest-tmp" / "rwtree"
     case = labs_root / "realworld" / "noprov"
     case.mkdir(parents=True, exist_ok=True)
-    (case / "expected.yaml").write_text(
-        "expected_findings: []\n", encoding="utf-8")
+    (case / "expected.yaml").write_text("expected_findings: []\n", encoding="utf-8")
     ctx = ProjectContext.from_root(labs_root)
     scenarios = discover_scenarios(ctx)
     assert scenarios[0].problems
@@ -366,9 +393,18 @@ def test_realworld_missing_provenance_fails() -> None:
 
 def test_family_score_metrics() -> None:
     score = FamilyScore(
-        family="OAS", expected=4, hits=3, misses=1, false_positives=2,
-        sample_size=10, unknowns=2, unsupported=1, parse_failures=0,
-        elapsed_ms=50, peak_bytes=1024)
+        family="OAS",
+        expected=4,
+        hits=3,
+        misses=1,
+        false_positives=2,
+        sample_size=10,
+        unknowns=2,
+        unsupported=1,
+        parse_failures=0,
+        elapsed_ms=50,
+        peak_bytes=1024,
+    )
     assert score.tp == 3 and score.fp == 2 and score.fn == 1
     assert score.precision == 0.6
     assert score.recall == 0.75
@@ -384,20 +420,24 @@ def test_run_records_metrics() -> None:
     report = run_labs(ProjectContext.from_root(REPO_LABS))
     assert any(r.sample_size > 0 for r in report.results)
     assert any(r.elapsed_ms >= 0 for r in report.results)
-    assert any(f.coverage_confidence in ("low", "medium")
-               for f in report.families)
+    assert any(f.coverage_confidence in ("low", "medium") for f in report.families)
 
 
 # -- spec 071/073: capability matrix (minimal vs full install) --------------
 
+
 def test_requires_extras_and_domains_parsed(tmp_path: Path) -> None:
-    _write(tmp_path / "graphql" / "case", {
-        "expected.yaml": (
-            "run: [graphql]\n"
-            "requires_extras: [graphql]\n"
-            "requires_domains: [graphql]\n"
-            "expected_findings: []\n"),
-    })
+    _write(
+        tmp_path / "graphql" / "case",
+        {
+            "expected.yaml": (
+                "run: [graphql]\n"
+                "requires_extras: [graphql]\n"
+                "requires_domains: [graphql]\n"
+                "expected_findings: []\n"
+            ),
+        },
+    )
     (scenario,) = discover_scenarios(ProjectContext.from_root(tmp_path))
     assert scenario.requires_extras == ("graphql",)
     assert scenario.requires_domains == ("graphql",)
@@ -407,37 +447,35 @@ def test_scenario_requirements_inferred(tmp_path: Path) -> None:
     """Domain and explicit `run:` imply the graphql extra; defaults don't."""
     from forge_doctor_api.lab import scenario_requirements
 
-    _write(tmp_path / "graphql" / "by-domain", {
-        "expected.yaml": "expected_findings: []\n"})
-    _write(tmp_path / "golden" / "by-run", {
-        "expected.yaml":
-            "run: [graphql]\nexpected_findings: []\n"})
-    _write(tmp_path / "golden" / "by-default", {
-        "expected.yaml": "expected_findings: []\n"})
+    _write(tmp_path / "graphql" / "by-domain", {"expected.yaml": "expected_findings: []\n"})
+    _write(
+        tmp_path / "golden" / "by-run", {"expected.yaml": "run: [graphql]\nexpected_findings: []\n"}
+    )
+    _write(tmp_path / "golden" / "by-default", {"expected.yaml": "expected_findings: []\n"})
     scenarios = {
-        f"{s.domain}/{s.name}": s
-        for s in discover_scenarios(ProjectContext.from_root(tmp_path))
+        f"{s.domain}/{s.name}": s for s in discover_scenarios(ProjectContext.from_root(tmp_path))
     }
-    assert scenario_requirements(
-        scenarios["graphql/by-domain"]) == ("graphql",)
-    assert scenario_requirements(
-        scenarios["golden/by-run"]) == ("graphql",)
+    assert scenario_requirements(scenarios["graphql/by-domain"]) == ("graphql",)
+    assert scenario_requirements(scenarios["golden/by-run"]) == ("graphql",)
     assert scenario_requirements(scenarios["golden/by-default"]) == ()
 
 
-def test_missing_extra_skips_with_reason(
-        tmp_path: Path, monkeypatch) -> None:
+def test_missing_extra_skips_with_reason(tmp_path: Path, monkeypatch) -> None:
     """Absent extras produce a recorded skip — not a failure, not a pass."""
     from forge_doctor_api.lab import capabilities
 
     monkeypatch.setattr(capabilities, "_find_spec", lambda name: None)
-    _write(tmp_path / "graphql" / "needs-gql", {
-        "expected.yaml":
-            "run: [graphql]\nrequires_extras: [graphql]\n"
-            "expected_findings: [GQL007]\n"})
-    _write(tmp_path / "openapi" / "plain", {
-        "readme.md": "# no API markers here\n",
-        "expected.yaml": "expected_findings: []\n"})
+    _write(
+        tmp_path / "graphql" / "needs-gql",
+        {
+            "expected.yaml": "run: [graphql]\nrequires_extras: [graphql]\n"
+            "expected_findings: [GQL007]\n"
+        },
+    )
+    _write(
+        tmp_path / "openapi" / "plain",
+        {"readme.md": "# no API markers here\n", "expected.yaml": "expected_findings: []\n"},
+    )
     report = run_labs(ProjectContext.from_root(tmp_path))
     skipped = {f"{r.domain}/{r.name}": r for r in report.results if r.skipped}
     assert set(skipped) == {"graphql/needs-gql"}
@@ -446,26 +484,23 @@ def test_missing_extra_skips_with_reason(
     assert report.failed == 0
     assert report.passed == 1  # the openapi scenario still ran
     # skipped scenarios contribute no family evidence either way
-    assert all(f.expected == 0 for f in report.families
-               if f.family == "GQL")
+    assert all(f.expected == 0 for f in report.families if f.family == "GQL")
 
 
-def test_run_record_records_install_profile(
-        tmp_path: Path, monkeypatch) -> None:
+def test_run_record_records_install_profile(tmp_path: Path, monkeypatch) -> None:
     """Spec 073: run records persist which extras were present."""
     from forge_doctor_api.lab import capabilities
 
     monkeypatch.setattr(
-        capabilities, "_find_spec",
-        lambda name: object() if name == "mcp" else None)
+        capabilities, "_find_spec", lambda name: object() if name == "mcp" else None
+    )
     report = run_labs(ProjectContext.from_root(tmp_path))
     data = report.to_dict()
     assert data["extras_present"] == ["mcp"]
     assert data["extras_absent"] == ["graphql"]
 
 
-def test_minimal_profile_still_counts_scenarios(
-        tmp_path: Path, monkeypatch) -> None:
+def test_minimal_profile_still_counts_scenarios(tmp_path: Path, monkeypatch) -> None:
     """A minimal install reports full coverage intent: every scenario
     is accounted for as passed, failed, or skipped-with-reason."""
     from forge_doctor_api.lab import capabilities
@@ -474,8 +509,7 @@ def test_minimal_profile_still_counts_scenarios(
     report = run_labs(ProjectContext.from_root(REPO_LABS))
     assert report.failed == 0
     assert report.skipped >= 1
-    assert report.passed + report.failed + report.skipped == len(
-        report.results)
+    assert report.passed + report.failed + report.skipped == len(report.results)
 
 
 def test_oss_scenarios_require_strong_provenance(tmp_path: Path) -> None:
@@ -485,8 +519,8 @@ def test_oss_scenarios_require_strong_provenance(tmp_path: Path) -> None:
     case.mkdir(parents=True)
     (case / "readme.md").write_text("# no API markers\n")
     (case / "expected.yaml").write_text(
-        "provenance: {source: somewhere, retrieved: today}\n"
-        "expected_findings: []\n")
+        "provenance: {source: somewhere, retrieved: today}\nexpected_findings: []\n"
+    )
     report = run_labs(ProjectContext.from_root(tmp_path))
     result = next(r for r in report.results if r.domain == "oss")
     assert not result.passed
@@ -503,9 +537,11 @@ def test_oss_result_carries_corpus_origin_into_run_record() -> None:
         prov = dict(r.provenance)
         assert {"source", "upstream_ref", "license", "sha256"} <= set(prov)
     record = report.to_dict()
-    origin = dict(record["results"][
-        [r["name"] for r in record["results"]].index("oai-petstore")][
-        "provenance"])
+    origin = dict(
+        record["results"][[r["name"] for r in record["results"]].index("oai-petstore")][
+            "provenance"
+        ]
+    )
     assert origin["sha256"].startswith("cefa")
 
 

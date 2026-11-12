@@ -103,15 +103,20 @@ def load_workspace(context: ProjectContext) -> Workspace | None:
             continue
         if not resolved.is_dir():
             member = WorkspaceMember(
-                name=member.name, path=member.path, role=member.role,
-                provides=member.provides, present=False,
+                name=member.name,
+                path=member.path,
+                role=member.role,
+                provides=member.provides,
+                present=False,
             )
             issues.append(f"member {member.name!r} path {member.path!r} not found")
-            unknowns.append(UnknownFact(
-                subject=member.name,
-                missing="declared member checkout",
-                resolution="clone the member repo at the declared path",
-            ))
+            unknowns.append(
+                UnknownFact(
+                    subject=member.name,
+                    missing="declared member checkout",
+                    resolution="clone the member repo at the declared path",
+                )
+            )
         seen[member.name] = member
         members.append(member)
 

@@ -21,10 +21,7 @@ def _families(*entry_ids: str) -> tuple[str, ...]:
     for entry_id in entry_ids:
         entry = _PACK.entry(entry_id)
         if entry is not None:
-            out.extend(
-                f for f in entry.fields.get("families", ())
-                if isinstance(f, str)
-            )
+            out.extend(f for f in entry.fields.get("families", ()) if isinstance(f, str))
     return tuple(out)
 
 

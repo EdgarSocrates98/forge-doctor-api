@@ -47,7 +47,7 @@ class Readiness(StrEnum):
 
 @dataclass(frozen=True, kw_only=True)
 class MigrationNode(Model):
-    unit_id: str               # "METHOD /path" or "client:{name}"
+    unit_id: str  # "METHOD /path" or "client:{name}"
     readiness: Readiness
     blockers: tuple[str, ...] = ()
 
@@ -104,19 +104,17 @@ def _op_schemas(model: OpenApiProjectModel) -> dict[str, set[str]]:
     for ref in model.references:
         if not ref.ref.startswith(_SCHEMA_REF):
             continue
-        name = ref.ref[len(_SCHEMA_REF):]
+        name = ref.ref[len(_SCHEMA_REF) :]
         if name not in known:
             continue
         for op_ptr, unit in ops.items():
-            if ref.pointer == op_ptr or ref.pointer.startswith(
-                    op_ptr + "/"):
+            if ref.pointer == op_ptr or ref.pointer.startswith(op_ptr + "/"):
                 out.setdefault(unit, set()).add(name)
     return out
 
 
 def _ev(source: str, summary: str) -> Evidence:
-    return Evidence(kind=EvidenceKind.STATIC, source=source,
-                    summary=summary)
+    return Evidence(kind=EvidenceKind.STATIC, source=source, summary=summary)
 
 
 def build_migration_graph(
@@ -135,9 +133,9 @@ def build_migration_graph(
             blockers.append("deprecated")
         nodes[unit] = MigrationNode(
             unit_id=unit,
-            readiness=(Readiness.BLOCKED if blockers
-                       else Readiness.READY),
-            blockers=tuple(sorted(blockers)))
+            readiness=(Readiness.BLOCKED if blockers else Readiness.READY),
+            blockers=tuple(sorted(blockers)),
+        )
 
     # schema-dep: shared declared component between operations
     op_schemas = _op_schemas(model)
@@ -145,15 +143,17 @@ def build_migration_graph(
         op_schemas.setdefault(_unit(op), set())
     units = sorted(op_schemas)
     for i, a in enumerate(units):
-        for b in units[i + 1:]:
+        for b in units[i + 1 :]:
             shared = sorted(op_schemas[a] & op_schemas[b])
             if shared:
-                edges.append(MigrationEdge(
-                    from_id=a, to_id=b,
-                    kind=MigrationEdgeKind.SCHEMA_DEP,
-                    evidence=(
-                        _ev(known_schemas[shared[0]],
-                            f"shared schema {shared[0]}"),)))
+                edges.append(
+                    MigrationEdge(
+                        from_id=a,
+                        to_id=b,
+                        kind=MigrationEdgeKind.SCHEMA_DEP,
+                        evidence=(_ev(known_schemas[shared[0]], f"shared schema {shared[0]}"),),
+                    )
+                )
 
     # version-dep: same tail under adjacent /vN/ prefixes
     by_tail: dict[str, list[tuple[str, int]]] = {}
@@ -164,8 +164,7 @@ def build_migration_graph(
         vm = _VERSION_SEG.match(segs[0])
         if vm:
             tail = "/" + "/".join(segs[1:])
-            by_tail.setdefault(tail, []).append(
-                (_unit(op), int(vm.group(1))))
+            by_tail.setdefault(tail, []).append((_unit(op), int(vm.group(1))))
     for tail, entries in sorted(by_tail.items()):
         by_ver: dict[int, list[str]] = {}
         for unit, ver in entries:
@@ -174,12 +173,14 @@ def build_migration_graph(
         for va, vb in itertools.pairwise(vers):
             for ua in by_ver[va]:
                 for ub in by_ver[vb]:
-                    edges.append(MigrationEdge(
-                        from_id=ua, to_id=ub,
-                        kind=MigrationEdgeKind.VERSION_DEP,
-                        evidence=(
-                            _ev("paths",
-                                f"v{va} -> v{vb} on {tail}"),)))
+                    edges.append(
+                        MigrationEdge(
+                            from_id=ua,
+                            to_id=ub,
+                            kind=MigrationEdgeKind.VERSION_DEP,
+                            evidence=(_ev("paths", f"v{va} -> v{vb} on {tail}"),),
+                        )
+                    )
 
     # client-impact: literal call-site hits on operations
     if clients is not None:
@@ -193,20 +194,22 @@ def build_migration_graph(
                 if site.method and unit.split(" ", 1)[0] != site.method.upper():
                     continue
                 cnode = f"client:{site.client}"
-                nodes.setdefault(cnode, MigrationNode(
-                    unit_id=cnode, readiness=Readiness.READY))
-                edges.append(MigrationEdge(
-                    from_id=cnode, to_id=unit,
-                    kind=MigrationEdgeKind.CLIENT_IMPACT,
-                    evidence=(
-                        _ev(site.location.path,
-                            f"call site {site.method or '?'} "
-                            f"{site.path}"),)))
+                nodes.setdefault(cnode, MigrationNode(unit_id=cnode, readiness=Readiness.READY))
+                edges.append(
+                    MigrationEdge(
+                        from_id=cnode,
+                        to_id=unit,
+                        kind=MigrationEdgeKind.CLIENT_IMPACT,
+                        evidence=(
+                            _ev(site.location.path, f"call site {site.method or '?'} {site.path}"),
+                        ),
+                    )
+                )
 
     return MigrationGraph(
         nodes=tuple(nodes[u] for u in sorted(nodes)),
-        edges=tuple(sorted(
-            edges, key=lambda e: (e.from_id, e.kind.value, e.to_id))))
+        edges=tuple(sorted(edges, key=lambda e: (e.from_id, e.kind.value, e.to_id))),
+    )
 
 
 def migration_paths(graph: MigrationGraph) -> tuple[MigrationPath, ...]:
@@ -215,16 +218,14 @@ def migration_paths(graph: MigrationGraph) -> tuple[MigrationPath, ...]:
     Cycles break the ordering claim: the remaining units are emitted
     as one path with `ordering_known=False`, never silently dropped.
     """
-    dep_kinds = {MigrationEdgeKind.SCHEMA_DEP,
-                 MigrationEdgeKind.VERSION_DEP}
+    dep_kinds = {MigrationEdgeKind.SCHEMA_DEP, MigrationEdgeKind.VERSION_DEP}
     out: dict[str, set[str]] = {}
     ev: list[Evidence] = []
     for e in graph.edges:
         if e.kind in dep_kinds:
             out.setdefault(e.from_id, set()).add(e.to_id)
             ev.extend(e.evidence)
-    units = {n.unit_id for n in graph.nodes
-             if not n.unit_id.startswith("client:")}
+    units = {n.unit_id for n in graph.nodes if not n.unit_id.startswith("client:")}
     # Kahn on the dep subgraph (a depends on b? order b first? — we
     # order shared-schema dependents AFTER their linked units by
     # treating edges as 'migrate from -> migrate to')
@@ -248,16 +249,24 @@ def migration_paths(graph: MigrationGraph) -> tuple[MigrationPath, ...]:
     cyclic = sorted(u for u in units if u not in set(order))
     paths: list[MigrationPath] = []
     if order:
-        paths.append(MigrationPath(
-            units=tuple(order), edge_evidence=tuple(ev),
-            remaining_blockers=tuple(sorted(
-                b for n in graph.nodes for b in n.blockers
-                if n.unit_id in set(order)))))
+        paths.append(
+            MigrationPath(
+                units=tuple(order),
+                edge_evidence=tuple(ev),
+                remaining_blockers=tuple(
+                    sorted(b for n in graph.nodes for b in n.blockers if n.unit_id in set(order))
+                ),
+            )
+        )
     if cyclic:
-        paths.append(MigrationPath(
-            units=tuple(cyclic), edge_evidence=tuple(ev),
-            ordering_known=False,
-            remaining_blockers=tuple(sorted(
-                b for n in graph.nodes for b in n.blockers
-                if n.unit_id in set(cyclic)))))
+        paths.append(
+            MigrationPath(
+                units=tuple(cyclic),
+                edge_evidence=tuple(ev),
+                ordering_known=False,
+                remaining_blockers=tuple(
+                    sorted(b for n in graph.nodes for b in n.blockers if n.unit_id in set(cyclic))
+                ),
+            )
+        )
     return tuple(paths)

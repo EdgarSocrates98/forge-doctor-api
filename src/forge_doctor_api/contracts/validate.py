@@ -24,8 +24,7 @@ _VERSION_RE = re.compile(r"^forge-contracts/\d+$")
 _TYPE_CHECKS = {
     "string": lambda v: isinstance(v, str),
     "integer": lambda v: isinstance(v, int) and not isinstance(v, bool),
-    "number": lambda v: (
-        isinstance(v, (int, float)) and not isinstance(v, bool)),
+    "number": lambda v: isinstance(v, (int, float)) and not isinstance(v, bool),
     "boolean": lambda v: isinstance(v, bool),
     "array": lambda v: isinstance(v, list),
     "object": lambda v: isinstance(v, dict),
@@ -42,29 +41,29 @@ def _check_type(value: Any, spec: dict[str, Any], path: str) -> None:
     if declared is None:
         return
     types = declared if isinstance(declared, list) else [declared]
-    if not any(_TYPE_CHECKS.get(t, lambda v: False)(value)
-               for t in types):
+    if not any(_TYPE_CHECKS.get(t, lambda v: False)(value) for t in types):
         raise ContractError(
-            f"{path}: expected {'|'.join(map(str, types))}, "
-            f"got {type(value).__name__}")
+            f"{path}: expected {'|'.join(map(str, types))}, got {type(value).__name__}"
+        )
 
 
-def _walk(value: Any, spec: dict[str, Any], path: str,
-          errors: list[str]) -> None:
+def _walk(value: Any, spec: dict[str, Any], path: str, errors: list[str]) -> None:
     try:
         _check_type(value, spec, path)
     except ContractError as exc:
         errors.append(str(exc))
         return
     if "enum" in spec and value not in spec["enum"]:
-        errors.append(
-            f"{path}: {value!r} not in enum {spec['enum']}")
+        errors.append(f"{path}: {value!r} not in enum {spec['enum']}")
         return
     if value is None:
         return
-    if (spec.get("type") == "string" and spec.get("pattern")
-            and path.endswith("contract_version")
-            and not _VERSION_RE.match(str(value))):
+    if (
+        spec.get("type") == "string"
+        and spec.get("pattern")
+        and path.endswith("contract_version")
+        and not _VERSION_RE.match(str(value))
+    ):
         errors.append(f"{path}: {value!r} is not forge-contracts/<major>")
     if isinstance(value, dict):
         required = spec.get("required", ())
@@ -72,8 +71,7 @@ def _walk(value: Any, spec: dict[str, Any], path: str,
             if key not in value:
                 errors.append(f"{path}.{key}: missing required field")
             elif value[key] is None:
-                errors.append(
-                    f"{path}.{key}: required field is explicitly null")
+                errors.append(f"{path}.{key}: required field is explicitly null")
         props = spec.get("properties", {})
         for key, sub in value.items():
             if key.startswith("x-"):
@@ -110,5 +108,5 @@ def assert_valid(payload: dict[str, Any], kind: str) -> None:
     errors = validate_named(payload, kind)
     if errors:
         raise ContractError(
-            f"{kind} payload violates forge-contracts/1:\n"
-            + "\n".join(f"  {e}" for e in errors))
+            f"{kind} payload violates forge-contracts/1:\n" + "\n".join(f"  {e}" for e in errors)
+        )

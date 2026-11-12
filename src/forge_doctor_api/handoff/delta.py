@@ -30,9 +30,22 @@ from forge_doctor_api.core.models import Finding, Model
 from forge_doctor_api.report import DoctorReport
 
 _DELTA_DOMAIN_FIELDS = (
-    "contracts", "routes", "clients", "graph", "gateway", "mesh",
-    "infrastructure", "cache", "runtime", "security", "reliability",
-    "policies", "twin", "fanout", "migration", "impact",
+    "contracts",
+    "routes",
+    "clients",
+    "graph",
+    "gateway",
+    "mesh",
+    "infrastructure",
+    "cache",
+    "runtime",
+    "security",
+    "reliability",
+    "policies",
+    "twin",
+    "fanout",
+    "migration",
+    "impact",
 )
 
 
@@ -67,15 +80,23 @@ class DeltaContext(Model):
     @property
     def empty(self) -> bool:
         return not (
-            self.findings_added or self.findings_removed
-            or self.findings_changed or self.operations_added
-            or self.operations_removed or self.operations_changed
+            self.findings_added
+            or self.findings_removed
+            or self.findings_changed
+            or self.operations_added
+            or self.operations_removed
+            or self.operations_changed
             or self.graph_entities_added
-            or self.graph_entities_removed or self.unknowns_added
-            or self.unknowns_removed or self.domains_added
-            or self.domains_removed or self.capabilities_added
+            or self.graph_entities_removed
+            or self.unknowns_added
+            or self.unknowns_removed
+            or self.domains_added
+            or self.domains_removed
+            or self.capabilities_added
             or self.capabilities_removed
-            or self.evidence_added or self.evidence_removed)
+            or self.evidence_added
+            or self.evidence_removed
+        )
 
 
 def _finding_key(f: Finding) -> str:
@@ -84,8 +105,7 @@ def _finding_key(f: Finding) -> str:
 
 
 def _finding_digest(f: Finding) -> str:
-    return hashlib.sha256(
-        f.to_json().encode("utf-8")).hexdigest()[:16]
+    return hashlib.sha256(f.to_json().encode("utf-8")).hexdigest()[:16]
 
 
 def _unknown_key(u: object) -> str:
@@ -111,25 +131,22 @@ def compute_delta(
     files = tuple(sorted(str(f) for f in changed_files))
     if prev is None:
         caps = {c.capability.value for c in cur.capabilities}
-        domains = {n for n in _DELTA_DOMAIN_FIELDS
-                   if getattr(cur, n, None) is not None}
+        domains = {n for n in _DELTA_DOMAIN_FIELDS if getattr(cur, n, None) is not None}
         return DeltaContext(
             initial=True,
             analysis_rev_cur=cur.analysis_rev,
             findings_added=tuple(_finding_key(f) for f in cur.findings),
             evidence_added=sum(len(f.evidence) for f in cur.findings),
-            operations_added=tuple(
-                k for k, _ in (cur.contracts.digests if cur.contracts
-                               else ())),
+            operations_added=tuple(k for k, _ in (cur.contracts.digests if cur.contracts else ())),
             graph_entities_added=cur.graph.ids if cur.graph else (),
             unknowns_added=tuple(_unknown_key(u) for u in cur.unknowns),
             domains_added=tuple(sorted(domains)),
             capabilities_added=tuple(sorted(caps)),
             baseline_ref=baseline_ref,
             changed_files=files,
-            protocol_diff=tuple(sorted(
-                [f"+capability:{n}" for n in caps]
-                + [f"+domain:{n}" for n in domains])),
+            protocol_diff=tuple(
+                sorted([f"+capability:{n}" for n in caps] + [f"+domain:{n}" for n in domains])
+            ),
         )
 
     prev_f = {_finding_key(f): f for f in prev.findings}
@@ -137,15 +154,17 @@ def compute_delta(
     added = sorted(set(cur_f) - set(prev_f))
     removed = sorted(set(prev_f) - set(cur_f))
     changed = sorted(
-        k for k in set(prev_f) & set(cur_f)
-        if _finding_digest(prev_f[k]) != _finding_digest(cur_f[k]))
+        k
+        for k in set(prev_f) & set(cur_f)
+        if _finding_digest(prev_f[k]) != _finding_digest(cur_f[k])
+    )
 
     ev_added = sum(len(cur_f[k].evidence) for k in added) + sum(
-        max(0, len(cur_f[k].evidence) - len(prev_f[k].evidence))
-        for k in changed)
+        max(0, len(cur_f[k].evidence) - len(prev_f[k].evidence)) for k in changed
+    )
     ev_removed = sum(len(prev_f[k].evidence) for k in removed) + sum(
-        max(0, len(prev_f[k].evidence) - len(cur_f[k].evidence))
-        for k in changed)
+        max(0, len(prev_f[k].evidence) - len(cur_f[k].evidence)) for k in changed
+    )
 
     prev_ops = dict(prev.contracts.digests) if prev.contracts else {}
     cur_ops = dict(cur.contracts.digests) if cur.contracts else {}
@@ -156,10 +175,8 @@ def compute_delta(
     prev_u = {_unknown_key(u) for u in prev.unknowns}
     cur_u = {_unknown_key(u) for u in cur.unknowns}
 
-    prev_domains = {n for n in _DELTA_DOMAIN_FIELDS
-                    if getattr(prev, n, None) is not None}
-    cur_domains = {n for n in _DELTA_DOMAIN_FIELDS
-                   if getattr(cur, n, None) is not None}
+    prev_domains = {n for n in _DELTA_DOMAIN_FIELDS if getattr(prev, n, None) is not None}
+    cur_domains = {n for n in _DELTA_DOMAIN_FIELDS if getattr(cur, n, None) is not None}
 
     prev_caps = {c.capability.value for c in prev.capabilities}
     cur_caps = {c.capability.value for c in cur.capabilities}
@@ -168,7 +185,8 @@ def compute_delta(
         [f"+capability:{n}" for n in sorted(cur_caps - prev_caps)]
         + [f"-capability:{n}" for n in sorted(prev_caps - cur_caps)]
         + [f"+domain:{n}" for n in sorted(cur_domains - prev_domains)]
-        + [f"-domain:{n}" for n in sorted(prev_domains - cur_domains)])
+        + [f"-domain:{n}" for n in sorted(prev_domains - cur_domains)]
+    )
 
     return DeltaContext(
         analysis_rev_prev=prev.analysis_rev,
@@ -180,9 +198,9 @@ def compute_delta(
         evidence_removed=ev_removed,
         operations_added=tuple(sorted(set(cur_ops) - set(prev_ops))),
         operations_removed=tuple(sorted(set(prev_ops) - set(cur_ops))),
-        operations_changed=tuple(sorted(
-            k for k in set(prev_ops) & set(cur_ops)
-            if prev_ops[k] != cur_ops[k])),
+        operations_changed=tuple(
+            sorted(k for k in set(prev_ops) & set(cur_ops) if prev_ops[k] != cur_ops[k])
+        ),
         graph_entities_added=tuple(sorted(cur_g - prev_g)),
         graph_entities_removed=tuple(sorted(prev_g - cur_g)),
         unknowns_added=tuple(sorted(cur_u - prev_u)),

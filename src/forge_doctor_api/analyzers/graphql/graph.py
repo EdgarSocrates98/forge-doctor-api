@@ -24,9 +24,7 @@ def graphql_graph(model: GraphQLProjectModel, service: str = "service") -> Servi
 
     seen_edges: set[tuple[str, str, str]] = set()
 
-    def link(
-        kind: RelationshipKind, source: str, target: str, loc: SourceLocation
-    ) -> None:
+    def link(kind: RelationshipKind, source: str, target: str, loc: SourceLocation) -> None:
         key = (source, kind.value, target)
         if key in seen_edges:
             return
@@ -76,7 +74,9 @@ def graphql_graph(model: GraphQLProjectModel, service: str = "service") -> Servi
         for member in t.union_members:
             if member in type_ids:
                 link(
-                    RelationshipKind.EXPOSES, type_ids[t.name], type_ids[member],
+                    RelationshipKind.EXPOSES,
+                    type_ids[t.name],
+                    type_ids[member],
                     t.location,
                 )
         for iface in t.interfaces:
@@ -99,7 +99,5 @@ def graphql_graph(model: GraphQLProjectModel, service: str = "service") -> Servi
             )
         )
         if r.type_name in type_ids:
-            link(
-                RelationshipKind.IMPLEMENTS, rid, type_ids[r.type_name], r.location
-            )
+            link(RelationshipKind.IMPLEMENTS, rid, type_ids[r.type_name], r.location)
     return graph

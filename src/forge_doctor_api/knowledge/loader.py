@@ -42,27 +42,19 @@ def _read(domain: str, filename: str) -> dict[str, Any]:
             .read_text(encoding="utf-8")
         )
     except (FileNotFoundError, NotADirectoryError, ModuleNotFoundError) as exc:
-        raise ModelError(
-            f"knowledge pack not found: {domain}/{filename}"
-        ) from exc
+        raise ModelError(f"knowledge pack not found: {domain}/{filename}") from exc
     try:
         doc = yaml.safe_load(text)
     except yaml.YAMLError as exc:
-        raise ModelError(
-            f"malformed knowledge pack {domain}/{filename}: {exc}"
-        ) from exc
+        raise ModelError(f"malformed knowledge pack {domain}/{filename}: {exc}") from exc
     if not isinstance(doc, dict):
-        raise ModelError(
-            f"knowledge pack {domain}/{filename} is not a mapping"
-        )
+        raise ModelError(f"knowledge pack {domain}/{filename} is not a mapping")
     return doc
 
 
 def parse_pack(doc: dict[str, Any], where: str) -> KnowledgePack:
     """Validate one pack document (§126 header + §127 per-entry provenance)."""
-    name, domain, edition = (
-        doc.get("pack"), doc.get("domain"), doc.get("edition")
-    )
+    name, domain, edition = (doc.get("pack"), doc.get("domain"), doc.get("edition"))
     for key, value in (("pack", name), ("domain", domain), ("edition", edition)):
         if value in (None, ""):
             raise ModelError(f"knowledge pack {where} missing `{key}`")
@@ -73,14 +65,10 @@ def parse_pack(doc: dict[str, Any], where: str) -> KnowledgePack:
     for entry_id in sorted(raw_entries):
         raw = raw_entries[entry_id]
         if not isinstance(raw, dict):
-            raise ModelError(
-                f"pack entry {entry_id!r} in {where} is not a mapping"
-            )
+            raise ModelError(f"pack entry {entry_id!r} in {where} is not a mapping")
         raw_fields = raw.get("fields")
         if not isinstance(raw_fields, dict):
-            raise ModelError(
-                f"pack entry {entry_id!r} in {where} missing `fields` mapping"
-            )
+            raise ModelError(f"pack entry {entry_id!r} in {where} missing `fields` mapping")
         entries.append(
             PackEntry(
                 id=str(entry_id),
@@ -111,11 +99,7 @@ def domain_packs(domain: str) -> tuple[KnowledgePack, ...]:
         )
     except (FileNotFoundError, ModuleNotFoundError):
         return ()
-    return tuple(
-        load_pack(domain, f.name)
-        for f in files
-        if f.name.endswith((".yaml", ".yml"))
-    )
+    return tuple(load_pack(domain, f.name) for f in files if f.name.endswith((".yaml", ".yml")))
 
 
 def all_packs() -> tuple[KnowledgePack, ...]:

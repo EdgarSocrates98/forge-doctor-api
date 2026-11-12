@@ -326,27 +326,31 @@ class _SchemaDiff:
         if self.side is ChangeSide.REQUEST:
             if o and not n:
                 self.emit(
-                    "type_changed_request", CompatibilityClass.BREAKING,
+                    "type_changed_request",
+                    CompatibilityClass.BREAKING,
                     path,
-                    f"{path}: nullable removed on a request field; "
-                    "clients sending null now fail",
-                    "nullable", "non-null",
+                    f"{path}: nullable removed on a request field; clients sending null now fail",
+                    "nullable",
+                    "non-null",
                 )
             return
         if o and not n:
             self.emit(
-                "type_changed_response", CompatibilityClass.BREAKING,
+                "type_changed_response",
+                CompatibilityClass.BREAKING,
                 path,
                 f"{path}: response field can no longer be null",
-                "nullable", "non-null",
+                "nullable",
+                "non-null",
             )
         else:
             self.emit(
-                "response_type_widened", CompatibilityClass.POTENTIALLY_BREAKING,
+                "response_type_widened",
+                CompatibilityClass.POTENTIALLY_BREAKING,
                 path,
-                f"{path}: response field may now be null; strictly-typed "
-                "clients may not handle it",
-                "non-null", "nullable",
+                f"{path}: response field may now be null; strictly-typed clients may not handle it",
+                "non-null",
+                "nullable",
             )
 
     def _discriminator(self, old: dict[str, Any], new: dict[str, Any], path: str) -> None:
@@ -374,7 +378,8 @@ class _SchemaDiff:
                 CompatibilityClass.BREAKING,
                 f"{path}.discriminator",
                 f"{path}: discriminator propertyName {o_name!r} -> {n_name!r}",
-                str(o_name), str(n_name),
+                str(o_name),
+                str(n_name),
             )
         elif o_map != n_map:
             self.emit(
@@ -382,12 +387,11 @@ class _SchemaDiff:
                 CompatibilityClass.POTENTIALLY_BREAKING,
                 f"{path}.discriminator",
                 f"{path}: discriminator mapping changed {o_map!r} -> {n_map!r}",
-                str(o_map)[:60], str(n_map)[:60],
+                str(o_map)[:60],
+                str(n_map)[:60],
             )
 
-    def _properties(
-        self, old: dict[str, Any], new: dict[str, Any], path: str, depth: int
-    ) -> None:
+    def _properties(self, old: dict[str, Any], new: dict[str, Any], path: str, depth: int) -> None:
         o_raw, n_raw = old.get("properties"), new.get("properties")
         o: dict[str, Any] = o_raw if isinstance(o_raw, dict) else {}
         n: dict[str, Any] = n_raw if isinstance(n_raw, dict) else {}
@@ -427,9 +431,7 @@ class _SchemaDiff:
         for name in sorted(set(o) & set(n)):
             self.diff(o[name], n[name], f"{path}.{name}", depth + 1)
 
-    def _items(
-        self, old: dict[str, Any], new: dict[str, Any], path: str, depth: int
-    ) -> None:
+    def _items(self, old: dict[str, Any], new: dict[str, Any], path: str, depth: int) -> None:
         o, n = old.get("items"), new.get("items")
         if o is None and n is None:
             return
@@ -438,9 +440,7 @@ class _SchemaDiff:
             return
         self.diff(o, n, f"{path}[]", depth + 1)
 
-    def _additional(
-        self, old: dict[str, Any], new: dict[str, Any], path: str, depth: int
-    ) -> None:
+    def _additional(self, old: dict[str, Any], new: dict[str, Any], path: str, depth: int) -> None:
         o, n = old.get("additionalProperties"), new.get("additionalProperties")
         if o == n or (o is None and n is None):
             return
@@ -474,9 +474,7 @@ class _SchemaDiff:
         elif isinstance(o, dict) and isinstance(n, dict):
             self.diff(o, n, f"{path}.*", depth + 1)
         else:
-            self.unknown(
-                path, f"additionalProperties changed {o!r} -> {n!r}; direction unclear"
-            )
+            self.unknown(path, f"additionalProperties changed {o!r} -> {n!r}; direction unclear")
 
 
 def diff_schema_content(
@@ -729,11 +727,7 @@ def diff_models(old: OpenApiProjectModel, new: OpenApiProjectModel) -> ContractD
 
     ordered = tuple(sorted(changes, key=lambda c: (c.kind, c.subject, c.path, c.detail)))
     findings = sorted(
-        (
-            _finding(CHANGE_TO_SPEC[c.kind], c)
-            for c in ordered
-            if c.kind in CHANGE_TO_SPEC
-        ),
+        (_finding(CHANGE_TO_SPEC[c.kind], c) for c in ordered if c.kind in CHANGE_TO_SPEC),
         key=lambda f: (
             f.id,
             f.source_location.path if f.source_location else "",
@@ -941,14 +935,10 @@ def _diff_operation(
     o_auth = _effective_security(old_reqs, old_op)
     n_auth = _effective_security(new_reqs, new_op)
     if o_auth != n_auth:
-        still_allowed = all(
-            any(new_alt <= old_alt for new_alt in n_auth) for old_alt in o_auth
-        )
+        still_allowed = all(any(new_alt <= old_alt for new_alt in n_auth) for old_alt in o_auth)
         expanded = any(
             not any(new_alt <= old_alt for new_alt in n_auth) for old_alt in o_auth
-        ) or any(
-            not any(old_alt <= new_alt for old_alt in o_auth) for new_alt in n_auth
-        )
+        ) or any(not any(old_alt <= new_alt for old_alt in o_auth) for new_alt in n_auth)
         if not still_allowed:
             out.append(
                 ContractChange(

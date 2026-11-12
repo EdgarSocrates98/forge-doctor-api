@@ -19,9 +19,16 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 EXEMPT_PREFIXES = (
-    "docs/sdd/archive/", "docs/superpowers/", "docs/historico/",
-    ".claude/sdd/", ".agents/sdd/", ".devin/sdd/", "vendor/",
-    "docs/reports/", "docs/knowledge-program/", "knowledge/devin/",
+    "docs/sdd/archive/",
+    "docs/superpowers/",
+    "docs/historico/",
+    ".claude/sdd/",
+    ".agents/sdd/",
+    ".devin/sdd/",
+    "vendor/",
+    "docs/reports/",
+    "docs/knowledge-program/",
+    "knowledge/devin/",
 )
 
 
@@ -36,10 +43,13 @@ def _load_manifest():
     return mod
 
 
-@pytest.mark.parametrize("cli,forge", [
-    # overridden per repo by edit below — single binding keeps vendoring simple
-    ("forge-doctor-api", "forge-doctor-api"),
-])
+@pytest.mark.parametrize(
+    "cli,forge",
+    [
+        # overridden per repo by edit below — single binding keeps vendoring simple
+        ("forge-doctor-api", "forge-doctor-api"),
+    ],
+)
 def test_no_broken_links_in_active_docs(cli: str, forge: str):
     mod = _load_manifest()
     inv = ROOT / "docs" / "knowledge-program" / "inventory.jsonl"

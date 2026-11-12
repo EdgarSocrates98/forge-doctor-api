@@ -42,8 +42,8 @@ class CacheEdgeKind(StrEnum):
 class CacheEdge(Model):
     """mutation -> cached-read link via declared schema evidence."""
 
-    from_id: str               # mutating operation id
-    to_id: str                 # cached operation/policy subject
+    from_id: str  # mutating operation id
+    to_id: str  # cached operation/policy subject
     kind: CacheEdgeKind
     via_schema: str | None = None
     evidence: tuple[Evidence, ...] = ()
@@ -63,27 +63,26 @@ _SCHEMA_REF = "#/components/schemas/"
 
 
 def _schemas_of(
-    op: OpenApiOperation, known: set[str],
+    op: OpenApiOperation,
+    known: set[str],
     refs: tuple[Any, ...],
 ) -> set[str]:
     """Declared schema components referenced under the op's pointer —
     resolved `$ref` records only, never name similarity."""
     out: set[str] = set()
     for r in refs:
-        if not (r.pointer == op.pointer
-                or r.pointer.startswith(op.pointer + "/")):
+        if not (r.pointer == op.pointer or r.pointer.startswith(op.pointer + "/")):
             continue
         if not r.ref.startswith(_SCHEMA_REF):
             continue
-        name = r.ref[len(_SCHEMA_REF):]
+        name = r.ref[len(_SCHEMA_REF) :]
         if name in known:
             out.add(name)
     return out
 
 
 def _ev(source: str, summary: str) -> Evidence:
-    return Evidence(kind=EvidenceKind.STATIC, source=source,
-                    summary=summary)
+    return Evidence(kind=EvidenceKind.STATIC, source=source, summary=summary)
 
 
 def build_cache_graph(
@@ -106,29 +105,31 @@ def build_cache_graph(
     findings: list[Finding] = []
     writer_subjects: dict[str, list[str]] = {}
     reads = {
-        op.identity: op for op in openapi.operations
-        if op.method.lower() not in _WRITE_METHODS}
+        op.identity: op for op in openapi.operations if op.method.lower() not in _WRITE_METHODS
+    }
     # policy subject -> covered read operations (declared subject only:
     # identity, or the policy's literal path)
     for subject in cached:
-        covered = [
-            r for r in reads.values()
-            if r.identity == subject or r.path == subject]
+        covered = [r for r in reads.values() if r.identity == subject or r.path == subject]
         for wid, wop in writers.items():
             for r in covered:
-                shared = sorted(
-                    op_schema.get(wid, set())
-                    & op_schema.get(r.identity, set()))
+                shared = sorted(op_schema.get(wid, set()) & op_schema.get(r.identity, set()))
                 if not shared:
                     continue
-                edges.append(CacheEdge(
-                    from_id=wid, to_id=r.identity,
-                    kind=CacheEdgeKind.INVALIDATES,
-                    via_schema=shared[0],
-                    evidence=(
-                        _ev(wop.location.path,
-                            f"{wid} mutates schema {shared[0]} served "
-                            f"by cached {r.identity}"),)))
+                edges.append(
+                    CacheEdge(
+                        from_id=wid,
+                        to_id=r.identity,
+                        kind=CacheEdgeKind.INVALIDATES,
+                        via_schema=shared[0],
+                        evidence=(
+                            _ev(
+                                wop.location.path,
+                                f"{wid} mutates schema {shared[0]} served by cached {r.identity}",
+                            ),
+                        ),
+                    )
+                )
                 writer_subjects.setdefault(subject, []).append(wid)
 
     # stale-window candidates: declared ttl + evidenced writer
@@ -137,22 +138,24 @@ def build_cache_graph(
             continue
         for wid in sorted(set(writer_subjects[subject])):
             wop = writers[wid]
-            findings.append(Finding(
-                id="APICACHE001",
-                title="Stale-window candidate on cached operation",
-                description=(
-                    f"{subject}: declared ttl={pol.ttl} with evidenced "
-                    f"writer {wid} - responses may serve stale data for "
-                    f"up to {pol.ttl} after a write"),
-                severity=Severity.LOW, confidence=Confidence.LOW,
-                evidence_kind=EvidenceKind.CONFIG,
-                evidence=(
-                    _ev(pol.location.path,
-                        f"ttl={pol.ttl} on {subject}"),
-                    _ev(wop.location.path,
-                        f"writer edge {wid} via schema"),
-                ),
-            ))
+            findings.append(
+                Finding(
+                    id="APICACHE001",
+                    title="Stale-window candidate on cached operation",
+                    description=(
+                        f"{subject}: declared ttl={pol.ttl} with evidenced "
+                        f"writer {wid} - responses may serve stale data for "
+                        f"up to {pol.ttl} after a write"
+                    ),
+                    severity=Severity.LOW,
+                    confidence=Confidence.LOW,
+                    evidence_kind=EvidenceKind.CONFIG,
+                    evidence=(
+                        _ev(pol.location.path, f"ttl={pol.ttl} on {subject}"),
+                        _ev(wop.location.path, f"writer edge {wid} via schema"),
+                    ),
+                )
+            )
 
     # APICACHE003 - writer-reader conflict on a shared declared key:
     # two policies bind the same `key` while their subjects split
@@ -164,8 +167,12 @@ def build_cache_graph(
             by_key.setdefault(pol.key, []).append(pol)
 
     def _op_names(op: OpenApiOperation) -> set[str]:
-        return {op.identity, op.path, f"{op.method.upper()} {op.path}",
-                *({op.operation_id} if op.operation_id else ())}
+        return {
+            op.identity,
+            op.path,
+            f"{op.method.upper()} {op.path}",
+            *({op.operation_id} if op.operation_id else ()),
+        }
 
     write_names = {n for wop in writers.values() for n in _op_names(wop)}
     read_names = {n for rop in reads.values() for n in _op_names(rop)}
@@ -177,52 +184,61 @@ def build_cache_graph(
     for key, pols in sorted(by_key.items()):
         if len(pols) < 2:
             continue
-        hits_w = sorted({p.subject for p in pols
-                         if p.subject in write_names})
-        hits_r = sorted({p.subject for p in pols
-                         if p.subject in read_names})
+        hits_w = sorted({p.subject for p in pols if p.subject in write_names})
+        hits_r = sorted({p.subject for p in pols if p.subject in read_names})
         if not hits_w or not hits_r:
             continue
-        vary_sets = {tuple(sorted(v.lower() for v in p.vary))
-                     for p in pols if p.vary}
+        vary_sets = {tuple(sorted(v.lower() for v in p.vary)) for p in pols if p.vary}
         union_vary = {v.lower() for p in pols for v in p.vary}
         scopes = {p.scope.lower() for p in pols if p.scope}
         if len(vary_sets) > 1:
-            partitioned.append(UnknownFact(
-                subject=f"cache key '{key}'",
-                missing="shared variant space across writer/reader "
-                "policies",
-                resolution="declared Vary sets differ — entries are "
-                "variant-partitioned, not shared"))
+            partitioned.append(
+                UnknownFact(
+                    subject=f"cache key '{key}'",
+                    missing="shared variant space across writer/reader policies",
+                    resolution="declared Vary sets differ — entries are "
+                    "variant-partitioned, not shared",
+                )
+            )
             continue
         if union_vary & _AUTHZ_VARY:
-            partitioned.append(UnknownFact(
-                subject=f"cache key '{key}'",
-                missing="cross-principal sharing evidence",
-                resolution="an authz-bearing Vary axis partitions "
-                "entries per principal — sharing is per-principal"))
+            partitioned.append(
+                UnknownFact(
+                    subject=f"cache key '{key}'",
+                    missing="cross-principal sharing evidence",
+                    resolution="an authz-bearing Vary axis partitions "
+                    "entries per principal — sharing is per-principal",
+                )
+            )
             continue
         if len(scopes) > 1:
-            partitioned.append(UnknownFact(
-                subject=f"cache key '{key}'",
-                missing="shared visibility scope across policies",
-                resolution="private/public scope divergence means the "
-                "declared key cannot name a shared entry"))
+            partitioned.append(
+                UnknownFact(
+                    subject=f"cache key '{key}'",
+                    missing="shared visibility scope across policies",
+                    resolution="private/public scope divergence means the "
+                    "declared key cannot name a shared entry",
+                )
+            )
             continue
-        findings.append(Finding(
-            id="APICACHE003",
-            title="Shared cache key across writer/reader subjects",
-            description=(
-                f"declared key '{key}' spans writer {hits_w} and "
-                f"reader {hits_r} - writer-reader invalidation "
-                "conflict candidate"),
-            severity=Severity.MEDIUM, confidence=Confidence.LOW,
-            evidence_kind=EvidenceKind.CONFIG,
-            evidence=tuple(
-                _ev(p.location.path,
-                    f"key='{key}' on {p.subject} ({p.layer.value})")
-                for p in pols),
-        ))
+        findings.append(
+            Finding(
+                id="APICACHE003",
+                title="Shared cache key across writer/reader subjects",
+                description=(
+                    f"declared key '{key}' spans writer {hits_w} and "
+                    f"reader {hits_r} - writer-reader invalidation "
+                    "conflict candidate"
+                ),
+                severity=Severity.MEDIUM,
+                confidence=Confidence.LOW,
+                evidence_kind=EvidenceKind.CONFIG,
+                evidence=tuple(
+                    _ev(p.location.path, f"key='{key}' on {p.subject} ({p.layer.value})")
+                    for p in pols
+                ),
+            )
+        )
 
     # cross-layer conflict candidates
     by_subject: dict[str, list[CachePolicy]] = {}
@@ -232,25 +248,28 @@ def build_cache_graph(
         stale = {p.stale_policy for p in pols if p.stale_policy}
         layers = {p.layer for p in pols}
         if len(stale) > 1 and len(layers) > 1:
-            findings.append(Finding(
-                id="APICACHE002",
-                title="Conflicting stale policies across cache layers",
-                description=(
-                    f"{subject}: layers declare conflicting "
-                    f"stale_policy values {sorted(stale)}"),
-                severity=Severity.MEDIUM, confidence=Confidence.LOW,
-                evidence_kind=EvidenceKind.CONFIG,
-                evidence=tuple(
-                    _ev(p.location.path,
-                        f"{p.layer} stale_policy={p.stale_policy}")
-                    for p in pols if p.stale_policy),
-            ))
+            findings.append(
+                Finding(
+                    id="APICACHE002",
+                    title="Conflicting stale policies across cache layers",
+                    description=(
+                        f"{subject}: layers declare conflicting stale_policy values {sorted(stale)}"
+                    ),
+                    severity=Severity.MEDIUM,
+                    confidence=Confidence.LOW,
+                    evidence_kind=EvidenceKind.CONFIG,
+                    evidence=tuple(
+                        _ev(p.location.path, f"{p.layer} stale_policy={p.stale_policy}")
+                        for p in pols
+                        if p.stale_policy
+                    ),
+                )
+            )
 
     graph = CacheGraph(
         cached_operations=tuple(sorted(cached)),
         mutating_operations=tuple(sorted(writers)),
-        edges=tuple(sorted(
-            edges, key=lambda e: (e.from_id, e.to_id, e.kind.value))),
-        unknowns=tuple(sorted(
-            partitioned, key=lambda u: (u.subject, u.missing))))
+        edges=tuple(sorted(edges, key=lambda e: (e.from_id, e.to_id, e.kind.value))),
+        unknowns=tuple(sorted(partitioned, key=lambda u: (u.subject, u.missing))),
+    )
     return graph, tuple(findings)

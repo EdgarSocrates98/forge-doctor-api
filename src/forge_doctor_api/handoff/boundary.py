@@ -82,20 +82,29 @@ class DoctorBoundary:
         )
         if request.delta is not None:
             if baseline is not None:
-                bundle = replace(bundle, delta=compute_delta(
-                    baseline, report,
-                    baseline_ref=request.delta.baseline_ref,
-                    changed_files=request.delta.changed_files))
+                bundle = replace(
+                    bundle,
+                    delta=compute_delta(
+                        baseline,
+                        report,
+                        baseline_ref=request.delta.baseline_ref,
+                        changed_files=request.delta.changed_files,
+                    ),
+                )
             else:
-                bundle = replace(bundle, unknowns=(
-                    *bundle.unknowns,
-                    UnknownFact(
-                        subject="delta",
-                        missing="baseline unresolved: "
-                                f"{request.delta.baseline_ref!r}",
-                        resolution="resolve the baseline_ref via the "
-                                   "snapshot store and pass the report "
-                                   "as handle(baseline=...)")))
+                bundle = replace(
+                    bundle,
+                    unknowns=(
+                        *bundle.unknowns,
+                        UnknownFact(
+                            subject="delta",
+                            missing=f"baseline unresolved: {request.delta.baseline_ref!r}",
+                            resolution="resolve the baseline_ref via the "
+                            "snapshot store and pass the report "
+                            "as handle(baseline=...)",
+                        ),
+                    ),
+                )
         return report, bundle.bounded()
 
     def handle(
@@ -144,8 +153,7 @@ class DoctorBoundary:
         return {
             "request": request.to_dict(),
             "handoff": build_handoff(report, bundle).to_dict(),
-            "capabilities": [
-                c.to_dict() for c in bundle.capabilities],
+            "capabilities": [c.to_dict() for c in bundle.capabilities],
             "manifest": report_manifest(report).to_dict(),
         }
 
@@ -159,13 +167,16 @@ class DoctorBoundary:
         return build_result(
             status,
             summary=f"handoff {handoff.handoff_id}: "
-                    f"{len(handoff.refs)} refs, "
-                    f"{len(handoff.capabilities)} capabilities, "
-                    f"{len(handoff.unknowns)} unknowns",
-            refs=(ForgeRef(
-                ref_id=mint("handoff", id=handoff.handoff_id),
-                kind="handoff",
-                sha256=handoff.handoff_id),),
+            f"{len(handoff.refs)} refs, "
+            f"{len(handoff.capabilities)} capabilities, "
+            f"{len(handoff.unknowns)} unknowns",
+            refs=(
+                ForgeRef(
+                    ref_id=mint("handoff", id=handoff.handoff_id),
+                    kind="handoff",
+                    sha256=handoff.handoff_id,
+                ),
+            ),
         )
 
     def capabilities(self, request: ForgeRequest) -> ForgeResult:
@@ -177,15 +188,22 @@ class DoctorBoundary:
         requested = set(request.capabilities)
         missing = sorted(requested - detected)
         status = "ok" if not missing else "partial"
-        summary = (
-            f"{len(detected)} capabilities detected"
-            + (f"; not evidenced: {', '.join(missing)}" if missing else ""))
-        refs = tuple(
-            ForgeRef(
-                ref_id=mint("capability", id=c),
-                kind="capability", entity=c,
-                summary="not evidenced" if c in missing else "detected")
-            for c in sorted(requested)) if requested else ()
+        summary = f"{len(detected)} capabilities detected" + (
+            f"; not evidenced: {', '.join(missing)}" if missing else ""
+        )
+        refs = (
+            tuple(
+                ForgeRef(
+                    ref_id=mint("capability", id=c),
+                    kind="capability",
+                    entity=c,
+                    summary="not evidenced" if c in missing else "detected",
+                )
+                for c in sorted(requested)
+            )
+            if requested
+            else ()
+        )
         return build_result(status, summary=summary, refs=refs)
 
 
@@ -203,13 +221,16 @@ def handoff_to_member_fields(handoff: ForgeHandoff) -> dict[str, Any]:
         "GRPC_STREAMING": "grpc",
         "GRPC_CLIENT": "grpc",
     }
-    styles = sorted({
-        _CAP_STYLE[c.name] for c in handoff.capabilities
-        if c.status == "detected" and c.name in _CAP_STYLE})
+    styles = sorted(
+        {
+            _CAP_STYLE[c.name]
+            for c in handoff.capabilities
+            if c.status == "detected" and c.name in _CAP_STYLE
+        }
+    )
     return {
         "styles": tuple(styles),
-        "unknown_subjects": tuple(
-            u.entity or u.summary for u in handoff.unknowns),
+        "unknown_subjects": tuple(u.entity or u.summary for u in handoff.unknowns),
         "analysis_rev": handoff.analysis_rev,
         "handoff_id": handoff.handoff_id,
     }

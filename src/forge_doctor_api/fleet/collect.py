@@ -90,9 +90,7 @@ def member_context(context: ProjectContext, member: WorkspaceMember) -> ProjectC
     return ProjectContext.from_root(context.resolve(member.path), clock=context.clock)
 
 
-def collect_member(
-    context: ProjectContext, member: WorkspaceMember
-) -> MemberData:
+def collect_member(context: ProjectContext, member: WorkspaceMember) -> MemberData:
     """Load the analyzable surface of one member repo."""
     ctx = member_context(context, member)
     files = tuple(ctx.iter_files())
@@ -106,21 +104,21 @@ def collect_member(
         styles = tuple(sorted(set(styles) | {"gateway"}))
     routes = gateway_routes(ctx, list(files)) if member.role is MemberRole.GATEWAY else {}
     return MemberData(
-        member=member, files=files, openapi=openapi, security=security,
-        reliability=reliability, version=version, ownership=ownership,
-        styles=styles, gateway_routes=routes,
+        member=member,
+        files=files,
+        openapi=openapi,
+        security=security,
+        reliability=reliability,
+        version=version,
+        ownership=ownership,
+        styles=styles,
+        gateway_routes=routes,
     )
 
 
-def collect_all(
-    context: ProjectContext, workspace: Workspace
-) -> dict[str, MemberData]:
+def collect_all(context: ProjectContext, workspace: Workspace) -> dict[str, MemberData]:
     """Per-member data for every present member, in manifest order."""
-    return {
-        m.name: collect_member(context, m)
-        for m in workspace.members
-        if m.present
-    }
+    return {m.name: collect_member(context, m) for m in workspace.members if m.present}
 
 
 def collect_handoff(member: WorkspaceMember, handoff: Any) -> MemberData:
@@ -134,6 +132,7 @@ def collect_handoff(member: WorkspaceMember, handoff: Any) -> MemberData:
     from forge_doctor_api.handoff.boundary import (
         handoff_to_member_fields,
     )
+
     fields = handoff_to_member_fields(handoff)
     styles: tuple[str, ...] = fields["styles"]
     if member.role is MemberRole.GATEWAY:

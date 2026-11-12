@@ -47,9 +47,7 @@ class ApiPerformanceSignal(Model):
 
 
 def _ev(summary: str) -> tuple[Evidence, ...]:
-    return (
-        Evidence(kind=EvidenceKind.RUNTIME, source="(runtime)", summary=summary),
-    )
+    return (Evidence(kind=EvidenceKind.RUNTIME, source="(runtime)", summary=summary),)
 
 
 def performance_signals(
@@ -60,25 +58,20 @@ def performance_signals(
 
     # RETRY_AMPLIFICATION - observed resends
     retried = [e for e in executions if (e.retries or 0) > 0]
-    nested = sum(
-        c.retries or 0 for e in executions for c in e.downstream_calls
-    )
+    nested = sum(c.retries or 0 for e in executions for c in e.downstream_calls)
     if retried or nested:
         out.append(
             ApiPerformanceSignal(
                 family=PerformanceFamily.RETRY_AMPLIFICATION,
                 subject="(observed)",
                 magnitude=float(len(retried) + nested),
-                detail=f"{len(retried)} request(s) retried; "
-                f"{nested} observed downstream resend(s)",
+                detail=f"{len(retried)} request(s) retried; {nested} observed downstream resend(s)",
                 evidence=_ev("observed retry counters on executions"),
             )
         )
 
     # PAYLOAD_AMPLIFICATION - large observed responses
-    payloads = sorted(
-        e.response_bytes for e in executions if e.response_bytes is not None
-    )
+    payloads = sorted(e.response_bytes for e in executions if e.response_bytes is not None)
     if payloads and payloads[-1] >= 256 * 1024:
         out.append(
             ApiPerformanceSignal(

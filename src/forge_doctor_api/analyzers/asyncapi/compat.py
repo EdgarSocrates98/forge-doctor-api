@@ -26,9 +26,7 @@ def _subject(kind: str, name: str) -> str:
     return f"{kind}:{name}"
 
 
-def _payload_content(
-    message: AsyncApiMessage, schemas: dict[str, Any]
-) -> Any:
+def _payload_content(message: AsyncApiMessage, schemas: dict[str, Any]) -> Any:
     """Resolve a message payload to its schema content, following one
     local `$ref`/`payload_ref` hop — same rule as the check engine."""
     content: Any = message.payload_content
@@ -88,7 +86,8 @@ def diff_asyncapi_models(
                     path=f"channel:{name}.bindings",
                     detail=(
                         f"channel {name} bindings changed "
-                        f"{sorted(oc.bindings)} -> {sorted(nc.bindings)}"),
+                        f"{sorted(oc.bindings)} -> {sorted(nc.bindings)}"
+                    ),
                     before=",".join(sorted(oc.bindings)),
                     after=",".join(sorted(nc.bindings)),
                     location=nc.location,
@@ -122,8 +121,8 @@ def diff_asyncapi_models(
                     subject=_subject("async_operation", name),
                     path=f"operation:{name}.action",
                     detail=(
-                        f"operation {name} action flipped "
-                        f"{oo.action.value} -> {no.action.value}"),
+                        f"operation {name} action flipped {oo.action.value} -> {no.action.value}"
+                    ),
                     before=oo.action.value,
                     after=no.action.value,
                     location=no.location,
@@ -139,7 +138,8 @@ def diff_asyncapi_models(
                     path=f"operation:{name}.bindings",
                     detail=(
                         f"operation {name} bindings changed "
-                        f"{sorted(oo.bindings)} -> {sorted(no.bindings)}"),
+                        f"{sorted(oo.bindings)} -> {sorted(no.bindings)}"
+                    ),
                     before=",".join(sorted(oo.bindings)),
                     after=",".join(sorted(no.bindings)),
                     location=no.location,
@@ -178,7 +178,8 @@ def diff_asyncapi_models(
                     detail=(
                         f"correlation-id location changed: {name} "
                         f"{om.correlation_id_location!r} -> "
-                        f"{nm.correlation_id_location!r}"),
+                        f"{nm.correlation_id_location!r}"
+                    ),
                     before=om.correlation_id_location,
                     after=nm.correlation_id_location,
                     location=nm.location,
@@ -188,12 +189,12 @@ def diff_asyncapi_models(
         # unified schema diff — property-level drift inside a stable ref
         # must surface, not just ref-pointer moves (spec 087).
         schemas = {s.name: s.content for s in new.schemas}
-        o_content = _payload_content(
-            om, {s.name: s.content for s in old.schemas})
+        o_content = _payload_content(om, {s.name: s.content for s in old.schemas})
         n_content = _payload_content(nm, schemas)
         if o_content is not None and n_content is not None:
             drift = diff_schema_content(
-                o_content, n_content,
+                o_content,
+                n_content,
                 side=ChangeSide.RESPONSE,
                 subject=_subject("message", name),
                 path=f"message:{name}.payload",
@@ -202,22 +203,21 @@ def diff_asyncapi_models(
             )
             if drift:
                 detail = "; ".join(sorted({d.detail for d in drift}))[:300]
-                unknown = any(
-                    d.classification is CompatibilityClass.UNKNOWN
-                    for d in drift)
+                unknown = any(d.classification is CompatibilityClass.UNKNOWN for d in drift)
                 changes.append(
                     ContractChange(
                         kind="ASYNC015",
                         classification=(
                             CompatibilityClass.POTENTIALLY_BREAKING
                             if unknown
-                            else CompatibilityClass.BREAKING),
+                            else CompatibilityClass.BREAKING
+                        ),
                         side=ChangeSide.RESPONSE,
                         subject=_subject("message", name),
                         path=f"message:{name}.payload",
-                        detail=f"message payload schema changed: {name} — "
-                        f"{detail}",
-                        before=None, after=None,
+                        detail=f"message payload schema changed: {name} — {detail}",
+                        before=None,
+                        after=None,
                         location=nm.location,
                     )
                 )
@@ -232,7 +232,8 @@ def diff_asyncapi_models(
                     path=f"message:{name}.payload",
                     detail=(
                         f"message payload shape changed: {name} "
-                        f"{om.payload_shape!r} -> {nm.payload_shape!r}"),
+                        f"{om.payload_shape!r} -> {nm.payload_shape!r}"
+                    ),
                     before=om.payload_shape,
                     after=nm.payload_shape,
                     location=nm.location,
@@ -248,7 +249,8 @@ def diff_asyncapi_models(
                     path=f"message:{name}.contentType",
                     detail=(
                         f"message content-type changed: {name} "
-                        f"{om.content_type!r} -> {nm.content_type!r}"),
+                        f"{om.content_type!r} -> {nm.content_type!r}"
+                    ),
                     before=om.content_type,
                     after=nm.content_type,
                     location=nm.location,
@@ -264,11 +266,11 @@ def diff_asyncapi_models(
                     path=f"message:{name}.bindings",
                     detail=(
                         f"message {name} bindings changed "
-                        f"{sorted(om.bindings)} -> {sorted(nm.bindings)}"),
+                        f"{sorted(om.bindings)} -> {sorted(nm.bindings)}"
+                    ),
                     before=",".join(sorted(om.bindings)),
                     after=",".join(sorted(nm.bindings)),
                     location=nm.location,
                 )
             )
-    return tuple(sorted(
-        changes, key=lambda c: (c.kind, c.subject, c.path, c.detail)))
+    return tuple(sorted(changes, key=lambda c: (c.kind, c.subject, c.path, c.detail)))

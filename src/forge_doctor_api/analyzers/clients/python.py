@@ -20,9 +20,7 @@ from forge_doctor_api.analyzers.clients.model import (
 )
 from forge_doctor_api.core.models import SourceLocation, UnknownFact
 
-_HTTP_METHODS = frozenset(
-    {"get", "post", "put", "delete", "patch", "head", "options", "request"}
-)
+_HTTP_METHODS = frozenset({"get", "post", "put", "delete", "patch", "head", "options", "request"})
 _CLIENT_CTOR = frozenset({"Client", "AsyncClient", "Session"})
 
 
@@ -82,18 +80,17 @@ def scan_python_source(path: str, source: str) -> tuple[list[ClientCallSite], li
     # `*_grpc` imports + `Stub(channel)` bindings + `stub.Rpc(...)`) and
     # generated OpenAPI clients (`openapi_client`/`*_api` imports +
     # `*Api(...)` bindings + `api.operation(...)`).
-    stub_classes: dict[str, str] = {}   # bound name -> module
-    api_classes: dict[str, str] = {}    # bound name -> module
-    grpc_modules: dict[str, str] = {}   # alias -> *_pb2_grpc module
-    gen_modules: dict[str, str] = {}    # alias -> generated client module
+    stub_classes: dict[str, str] = {}  # bound name -> module
+    api_classes: dict[str, str] = {}  # bound name -> module
+    grpc_modules: dict[str, str] = {}  # alias -> *_pb2_grpc module
+    gen_modules: dict[str, str] = {}  # alias -> generated client module
 
     def _is_grpc_mod(mod: str) -> bool:
         return mod.endswith(("_pb2_grpc", "_grpc")) or "_pb2_grpc" in mod
 
     def _is_gen_mod(mod: str) -> bool:
         parts = mod.split(".")
-        return "openapi_client" in parts or any(
-            p.endswith("_api") for p in parts)
+        return "openapi_client" in parts or any(p.endswith("_api") for p in parts)
 
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
@@ -128,8 +125,8 @@ def scan_python_source(path: str, source: str) -> tuple[list[ClientCallSite], li
 
     # session/client variable bindings: `c = httpx.Client(...)`, `c = Client()`
     client_vars: dict[str, str] = {}
-    stub_vars: dict[str, str] = {}   # var -> stub module (gRPC)
-    api_vars: dict[str, str] = {}    # var -> client module (generated OpenAPI)
+    stub_vars: dict[str, str] = {}  # var -> stub module (gRPC)
+    api_vars: dict[str, str] = {}  # var -> client module (generated OpenAPI)
     response_vars: dict[str, ast.expr] = {}
     data_vars: set[str] = set()
     for node in ast.walk(tree):
@@ -195,24 +192,32 @@ def scan_python_source(path: str, source: str) -> tuple[list[ClientCallSite], li
         if isinstance(func, ast.Attribute) and isinstance(func.value, ast.Name):
             receiver = func.value.id
             if receiver in stub_vars:
-                sites.append(ClientCallSite(
-                    client=client_name_for(path),
-                    language=ClientLanguage.PYTHON,
-                    library="grpc-stub",
-                    method=None, url=None, path=None,
-                    operation=func.attr,
-                    location=_loc(path, node),
-                ))
+                sites.append(
+                    ClientCallSite(
+                        client=client_name_for(path),
+                        language=ClientLanguage.PYTHON,
+                        library="grpc-stub",
+                        method=None,
+                        url=None,
+                        path=None,
+                        operation=func.attr,
+                        location=_loc(path, node),
+                    )
+                )
                 continue
             if receiver in api_vars:
-                sites.append(ClientCallSite(
-                    client=client_name_for(path),
-                    language=ClientLanguage.PYTHON,
-                    library="openapi-generated",
-                    method=None, url=None, path=None,
-                    operation=func.attr,
-                    location=_loc(path, node),
-                ))
+                sites.append(
+                    ClientCallSite(
+                        client=client_name_for(path),
+                        language=ClientLanguage.PYTHON,
+                        library="openapi-generated",
+                        method=None,
+                        url=None,
+                        path=None,
+                        operation=func.attr,
+                        location=_loc(path, node),
+                    )
+                )
                 continue
         library: str | None = None
         method: str | None = None
@@ -281,9 +286,7 @@ def _response_fields(
 ) -> set[str]:
     """Field names read off this call's response via `.json()` (§183 evidence)."""
     fields: set[str] = set()
-    call_funcs = {
-        node.func for node in ast.walk(tree) if isinstance(node, ast.Call)
-    }
+    call_funcs = {node.func for node in ast.walk(tree) if isinstance(node, ast.Call)}
     resp_names = {name for name, expr in response_vars.items() if expr is call}
     for node in ast.walk(tree):
         # resp.json()["field"] / data["field"] / data.get("field") / data.field

@@ -14,9 +14,7 @@ _PACK = load_pack("security", "owasp_api_top10.yaml")
 def owasp_categories() -> dict[str, str]:
     """`API1` .. `API10` -> category name."""
     return {
-        entry.id: str(entry.fields["name"])
-        for entry in _PACK.entries
-        if "name" in entry.fields
+        entry.id: str(entry.fields["name"]) for entry in _PACK.entries if "name" in entry.fields
     }
 
 

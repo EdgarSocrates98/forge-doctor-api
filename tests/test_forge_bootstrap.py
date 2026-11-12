@@ -105,9 +105,7 @@ def _stdout_json(capsys: pytest.CaptureFixture) -> dict:
     return json.loads(out[out.find("{\n") :])
 
 
-def _cp(
-    cmd: list[str], rc: int = 0, out: str = "", err: str = ""
-) -> subprocess.CompletedProcess:
+def _cp(cmd: list[str], rc: int = 0, out: str = "", err: str = "") -> subprocess.CompletedProcess:
     return subprocess.CompletedProcess(cmd, rc, out, err)
 
 
@@ -358,16 +356,16 @@ def test_install_package_dist_sends_verbatim_spec_to_pip(
     """pip needs the real userinfo to fetch the wheel — only the persisted
     spec is redacted. Assert the in-memory requirement reaches pip intact."""
     calls: list[list[str]] = []
-    monkeypatch.setattr(
-        fb, "_run", lambda cmd, timeout=300, **kw: calls.append(cmd) or _cp(cmd)
-    )
+    monkeypatch.setattr(fb, "_run", lambda cmd, timeout=300, **kw: calls.append(cmd) or _cp(cmd))
     venv = tmp_path / "v"
     spec = "forge-doctor-api @ https://u:p@wheelhouse/fda-1.0-py3-none-any.whl"
     fb.install_package(tmp_path, venv, ["mcp"], False, False, lambda m: None, dist=spec)
     assert len(calls) == 1
     cmd = calls[0]
-    python = venv / ("Scripts" if os.name == "nt" else "bin") / (
-        "python.exe" if os.name == "nt" else "python"
+    python = (
+        venv
+        / ("Scripts" if os.name == "nt" else "bin")
+        / ("python.exe" if os.name == "nt" else "python")
     )
     assert cmd[:3] == [str(python), "-m", "pip"]
     assert cmd[3:] == [
@@ -408,9 +406,7 @@ def test_install_package_editable_uses_e_flag(
     fb: Any, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     calls: list[list[str]] = []
-    monkeypatch.setattr(
-        fb, "_run", lambda cmd, timeout=300, **kw: calls.append(cmd) or _cp(cmd)
-    )
+    monkeypatch.setattr(fb, "_run", lambda cmd, timeout=300, **kw: calls.append(cmd) or _cp(cmd))
     repo, venv = tmp_path / "repo", tmp_path / "v"
     fb.install_package(repo, venv, ["mcp"], True, False, lambda m: None)
     assert len(calls) == 1
@@ -490,18 +486,14 @@ def test_checksum_integrity_verified_sha256sums(fb: Any, repo: Path) -> None:
 def test_checksum_integrity_binary_marker_and_uppercase_digest(fb: Any, repo: Path) -> None:
     target = repo / "a.bin"
     target.write_bytes(b"aaa")
-    (repo / "SHA256SUMS").write_text(
-        f"{_sha256(target).upper()} *a.bin\n", encoding="utf-8"
-    )
+    (repo / "SHA256SUMS").write_text(f"{_sha256(target).upper()} *a.bin\n", encoding="utf-8")
     assert fb._checksum_integrity(repo) == "verified"
 
 
 def test_checksum_integrity_alternate_filename(fb: Any, repo: Path) -> None:
     target = repo / "a.bin"
     target.write_bytes(b"aaa")
-    (repo / "checksums.sha256").write_text(
-        f"{_sha256(target)}  a.bin\n", encoding="utf-8"
-    )
+    (repo / "checksums.sha256").write_text(f"{_sha256(target)}  a.bin\n", encoding="utf-8")
     assert fb._checksum_integrity(repo) == "verified"
 
 
@@ -553,9 +545,7 @@ def test_checksum_integrity_json_flat_map(fb: Any, repo: Path) -> None:
 
 
 def test_checksum_integrity_json_files_not_list_is_partial(fb: Any, repo: Path) -> None:
-    (repo / ".forge-checksums.json").write_text(
-        json.dumps({"files": "a.bin"}), encoding="utf-8"
-    )
+    (repo / ".forge-checksums.json").write_text(json.dumps({"files": "a.bin"}), encoding="utf-8")
     assert fb._checksum_integrity(repo) == "partial"
 
 
@@ -598,9 +588,7 @@ def _mk_forge_repo(path: Path, *, git: str | None = None, checksums: bool = Fals
         (path / ".git").write_text("gitdir: /elsewhere\n", encoding="utf-8")
     if checksums:
         payload = path / "pyproject.toml"
-        (path / "SHA256SUMS").write_text(
-            f"{_sha256(payload)}  pyproject.toml\n", encoding="utf-8"
-        )
+        (path / "SHA256SUMS").write_text(f"{_sha256(payload)}  pyproject.toml\n", encoding="utf-8")
     return path
 
 
@@ -678,11 +666,7 @@ def test_managed_files_exact_owned_set(fb: Any, forge_home: Path) -> None:
             str(forge_home / ".forge" / "installations" / "forge-doctor-api.json"),
             str(forge_home / ".forge" / "installations" / ".forge-doctor-api-bootstrap.json"),
             str(launcher),
-            *(
-                [str(launcher.with_suffix(".cmd"))]
-                if os.name == "nt"
-                else []
-            ),
+            *([str(launcher.with_suffix(".cmd"))] if os.name == "nt" else []),
         }
     )
     assert files == expected
@@ -713,9 +697,7 @@ def test_managed_files_never_lists_shell_rc(fb: Any, forge_home: Path) -> None:
     assert not any(f.endswith((".bashrc", ".zshrc", ".profile")) for f in files)
 
 
-def test_managed_files_covers_register_and_receipt_paths(
-    fb: Any, forge_home: Path
-) -> None:
+def test_managed_files_covers_register_and_receipt_paths(fb: Any, forge_home: Path) -> None:
     """The paths register()/write_receipt() actually write must be inside
     the managed set — otherwise uninstall cannot see them."""
     cfg = {"forge_id": "forge-doctor-api", "cli": "forge-doctor-api"}
@@ -741,9 +723,7 @@ def test_explicit_python_argv_splits_invocation(fb: Any) -> None:
     assert fb._explicit_python_argv("  py  -3.11  ") == ["py", "-3.11"]
 
 
-def test_explicit_python_argv_existing_path_with_spaces_not_split(
-    fb: Any, tmp_path: Path
-) -> None:
+def test_explicit_python_argv_existing_path_with_spaces_not_split(fb: Any, tmp_path: Path) -> None:
     exe = tmp_path / "my python3"
     exe.write_text("x", encoding="utf-8")
     assert fb._explicit_python_argv(str(exe)) == [str(exe)]
@@ -793,9 +773,7 @@ def test_resolve_executable(fb: Any, monkeypatch: pytest.MonkeyPatch) -> None:
     assert fb._resolve_executable(["py"]) is None
 
 
-def _version_ok_run(
-    version: str = "3.12.4", resolved: str = "/usr/bin/python3.12"
-) -> Any:
+def _version_ok_run(version: str = "3.12.4", resolved: str = "/usr/bin/python3.12") -> Any:
     """A ``_run`` fake that answers the version + sys.executable probes."""
 
     def fake_run(cmd: list[str], timeout: int = 300, **kw: Any) -> subprocess.CompletedProcess:
@@ -832,9 +810,7 @@ def test_find_python_explicit_incompatible_refused(
     assert "3.9.9" in exc.value.detail
 
 
-def test_find_python_explicit_unusable_refused(
-    fb: Any, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_find_python_explicit_unusable_refused(fb: Any, monkeypatch: pytest.MonkeyPatch) -> None:
     def _boom(cmd: list[str], timeout: int = 300, **kw: Any) -> subprocess.CompletedProcess:
         raise OSError("missing")
 
@@ -870,9 +846,7 @@ def test_find_python_no_candidate_requires_allow_download(
 
 
 def test_find_python_uv_fetch_when_allowed(fb: Any, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(
-        fb.shutil, "which", lambda exe: "/uv" if exe == "uv" else None
-    )
+    monkeypatch.setattr(fb.shutil, "which", lambda exe: "/uv" if exe == "uv" else None)
 
     def fake_run(cmd: list[str], timeout: int = 300, **kw: Any) -> subprocess.CompletedProcess:
         if cmd[:3] == ["uv", "python", "install"]:
@@ -888,9 +862,7 @@ def test_find_python_uv_fetch_when_allowed(fb: Any, monkeypatch: pytest.MonkeyPa
     assert prov["source"] == "uv"
 
 
-def test_find_python_uv_install_failure_refused(
-    fb: Any, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_find_python_uv_install_failure_refused(fb: Any, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(fb.shutil, "which", lambda exe: "/uv" if exe == "uv" else None)
     monkeypatch.setattr(
         fb,
@@ -975,9 +947,7 @@ def pipeline(
     def fake_create_venv(root: Path, python: str, log: Any) -> Path:
         bindir = venv / ("Scripts" if os.name == "nt" else "bin")
         bindir.mkdir(parents=True, exist_ok=True)
-        (bindir / ("python.exe" if os.name == "nt" else "python")).write_text(
-            "x", encoding="utf-8"
-        )
+        (bindir / ("python.exe" if os.name == "nt" else "python")).write_text("x", encoding="utf-8")
         (bindir / ("forge-doctor-api.exe" if os.name == "nt" else "forge-doctor-api")).write_text(
             "x", encoding="utf-8"
         )
@@ -1074,9 +1044,10 @@ def test_pipeline_checkout_install_writes_manifest_and_receipt(
     assert receipt["status"] == "completed"
     assert receipt["install_method"] == "wheel"
     assert str(shim) in receipt["managed_files"]
-    assert str(forge_home / ".forge" / "installations" / "forge-doctor-api.json") in receipt[
-        "managed_files"
-    ]
+    assert (
+        str(forge_home / ".forge" / "installations" / "forge-doctor-api.json")
+        in receipt["managed_files"]
+    )
 
 
 def test_pipeline_dist_install_redacts_credentials_in_manifest(
@@ -1235,9 +1206,7 @@ def test_create_venv_reuses_existing(fb: Any, tmp_path: Path, monkeypatch) -> No
         cand = root / name
         bindir = _test_venv_bin(cand)
         bindir.mkdir(parents=True)
-        (bindir / ("python.exe" if os.name == "nt" else "python")).write_text(
-            "x", encoding="utf-8"
-        )
+        (bindir / ("python.exe" if os.name == "nt" else "python")).write_text("x", encoding="utf-8")
         monkeypatch.setattr(
             fb, "_run", lambda cmd, timeout=300, **kw: pytest.fail("must not spawn")
         )
@@ -1254,9 +1223,7 @@ def test_create_venv_delegates_explicit_python(
         calls.append(cmd)
         bindir = _test_venv_bin(venv_dir)
         bindir.mkdir(parents=True, exist_ok=True)
-        (bindir / ("python.exe" if os.name == "nt" else "python")).write_text(
-            "x", encoding="utf-8"
-        )
+        (bindir / ("python.exe" if os.name == "nt" else "python")).write_text("x", encoding="utf-8")
         return _cp(cmd)
 
     monkeypatch.setattr(fb, "_run", fake_run)
@@ -1287,16 +1254,17 @@ def test_write_launcher_missing_cli_refused(fb: Any, tmp_path: Path, forge_home:
     assert exc.value.kind == "FORGE-INSTALL-CLI-MISSING"
 
 
-def test_write_launcher_writes_executable_shim(
-    fb: Any, tmp_path: Path, forge_home: Path
-) -> None:
+def test_write_launcher_writes_executable_shim(fb: Any, tmp_path: Path, forge_home: Path) -> None:
     venv = tmp_path / "v"
     real = _test_venv_bin(venv) / _test_cli_name("forge-doctor-api")
     real.parent.mkdir(parents=True)
     real.write_text("#!/bin/sh\n", encoding="utf-8")
     out = fb.write_launcher("forge-doctor-api", venv, False, lambda m: None)
-    expected = forge_home / ".local" / "bin" / (
-        "forge-doctor-api.cmd" if os.name == "nt" else "forge-doctor-api"
+    expected = (
+        forge_home
+        / ".local"
+        / "bin"
+        / ("forge-doctor-api.cmd" if os.name == "nt" else "forge-doctor-api")
     )
     assert out == expected
     text = expected.read_text(encoding="utf-8")
@@ -1329,9 +1297,13 @@ def _register_kwargs(cfg: dict, tmp: Path) -> dict:
 
 
 def test_register_writes_sorted_manifest(fb: Any, forge_home: Path, tmp_path: Path) -> None:
-    cfg = {"forge_id": "forge-doctor-api", "package": "forge_doctor_api",
-           "distribution": "forge-doctor-api", "cli": "forge-doctor-api",
-           "python": ">=3.11"}
+    cfg = {
+        "forge_id": "forge-doctor-api",
+        "package": "forge_doctor_api",
+        "distribution": "forge-doctor-api",
+        "cli": "forge-doctor-api",
+        "python": ">=3.11",
+    }
     path = fb.register(**_register_kwargs(cfg, tmp_path))
     assert path == forge_home / ".forge" / "installations" / "forge-doctor-api.json"
     doc = json.loads(path.read_text(encoding="utf-8"))

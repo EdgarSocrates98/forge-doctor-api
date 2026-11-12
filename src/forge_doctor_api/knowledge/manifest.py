@@ -42,7 +42,7 @@ class PackManifest(Model):
 
     id: str
     version: str
-    doctor_compat: str = ""          # e.g. ">=0.1,<0.3"
+    doctor_compat: str = ""  # e.g. ">=0.1,<0.3"
     provides: tuple[str, ...] = ()
     requires: tuple[str, ...] = ()
 
@@ -82,16 +82,14 @@ def load_manifest(path: Path) -> tuple[PackManifest | None, tuple[str, ...]]:
     if not isinstance(raw, dict):
         return None, ("manifest root must be a table",)
     pid = raw.get("id")
-    if not isinstance(pid, str) or not re.fullmatch(
-            r"[a-z0-9][a-z0-9\-_.]*", pid or ""):
+    if not isinstance(pid, str) or not re.fullmatch(r"[a-z0-9][a-z0-9\-_.]*", pid or ""):
         errors.append(f"id must be a slug string, got {pid!r}")
     version = raw.get("version")
     if not isinstance(version, str) or _semver(version) is None:
         errors.append(f"version must be semver, got {version!r}")
     compat = raw.get("doctor_compat", "")
     if not isinstance(compat, str) or (compat and _parse_range(compat) is None):
-        errors.append(f"doctor_compat must be a semver range, "
-                      f"got {compat!r}")
+        errors.append(f"doctor_compat must be a semver range, got {compat!r}")
     provides = _strs(raw.get("provides"))
     if provides is None:
         errors.append("provides must be a list of strings")
@@ -100,9 +98,14 @@ def load_manifest(path: Path) -> tuple[PackManifest | None, tuple[str, ...]]:
         errors.append("requires must be a list of strings")
     if errors:
         return None, tuple(errors)
+    assert isinstance(pid, str) and isinstance(version, str) and isinstance(compat, str)
     return PackManifest(
-        id=pid, version=version, doctor_compat=compat,  # type: ignore[arg-type]
-        provides=provides or (), requires=requires or ()), ()
+        id=pid,
+        version=version,
+        doctor_compat=compat,
+        provides=provides or (),
+        requires=requires or (),
+    ), ()
 
 
 # -- semver range (stdlib) ----------------------------------------------------
@@ -129,8 +132,7 @@ def _parse_range(spec: str) -> tuple[tuple[str, tuple[int, int, int]], ...] | No
     return tuple(out)
 
 
-def compatible(manifest: PackManifest,
-               engine: str = __version__) -> tuple[bool, str]:
+def compatible(manifest: PackManifest, engine: str = __version__) -> tuple[bool, str]:
     """engine version vs manifest.doctor_compat. Empty range = any."""
     if not manifest.doctor_compat:
         return True, ""
@@ -140,8 +142,12 @@ def compatible(manifest: PackManifest,
         return False, f"unparseable range {manifest.doctor_compat!r}"
     for op, bound in rng:
         ok = {
-            ">=": ev >= bound, "<=": ev <= bound, ">": ev > bound,
-            "<": ev < bound, "==": ev == bound, "!=": ev != bound,
+            ">=": ev >= bound,
+            "<=": ev <= bound,
+            ">": ev > bound,
+            "<": ev < bound,
+            "==": ev == bound,
+            "!=": ev != bound,
         }[op]
         if not ok:
             return False, f"engine {engine} fails {op}{'.'.join(map(str, bound))}"
@@ -159,14 +165,25 @@ def _builtin_listing(engine: str) -> PackListing:
     """Builtin packs are pinned to the engine version (spec 064)."""
     return PackListing(
         manifest=PackManifest(
-            id=BUILTIN_ID, version=engine,
+            id=BUILTIN_ID,
+            version=engine,
             doctor_compat=f"=={engine}",
-            provides=("openapi", "asyncapi", "graphql", "grpc",
-                      "http", "jsonschema", "security", "frameworks",
-                      "gateways")),
+            provides=(
+                "openapi",
+                "asyncapi",
+                "graphql",
+                "grpc",
+                "http",
+                "jsonschema",
+                "security",
+                "frameworks",
+                "gateways",
+            ),
+        ),
         source=str(BUILTIN_PACK_DIR),
         status=PackStatus.ACTIVE,
-        details="pinned to engine version")
+        details="pinned to engine version",
+    )
 
 
 def list_packs(
@@ -189,41 +206,45 @@ def list_packs(
         manifest, errors = load_manifest(d)
         if manifest is None:
             for e in errors:
-                listings.append(PackListing(
-                    manifest=None, source=str(d),
-                    status=PackStatus.REJECTED, details=e))
-                unknowns.append(UnknownFact(
-                    subject=str(d), missing="valid knowledge manifest",
-                    resolution=e))
+                listings.append(
+                    PackListing(manifest=None, source=str(d), status=PackStatus.REJECTED, details=e)
+                )
+                unknowns.append(
+                    UnknownFact(subject=str(d), missing="valid knowledge manifest", resolution=e)
+                )
             continue
         if manifest.id in seen:
             winner = seen[manifest.id]
-            listings.append(PackListing(
-                manifest=manifest, source=str(d),
-                status=PackStatus.CONFLICT,
-                details=f"shadowed by {winner.source} "
-                        "(first in precedence wins)"))
+            listings.append(
+                PackListing(
+                    manifest=manifest,
+                    source=str(d),
+                    status=PackStatus.CONFLICT,
+                    details=f"shadowed by {winner.source} (first in precedence wins)",
+                )
+            )
             continue
         ok, reason = compatible(manifest, engine)
         status = PackStatus.ACTIVE if ok else PackStatus.INCOMPATIBLE
         if not ok:
-            unknowns.append(UnknownFact(
-                subject=manifest.id,
-                missing="compatible doctor engine",
-                resolution=reason))
-        entry = PackListing(
-            manifest=manifest, source=str(d), status=status,
-            details=reason)
+            unknowns.append(
+                UnknownFact(
+                    subject=manifest.id, missing="compatible doctor engine", resolution=reason
+                )
+            )
+        entry = PackListing(manifest=manifest, source=str(d), status=status, details=reason)
         listings.append(entry)
         seen[manifest.id] = entry
     if include_builtin:
         if BUILTIN_ID in seen:
-            listings.append(PackListing(
-                manifest=_builtin_listing(engine).manifest,
-                source=str(BUILTIN_PACK_DIR),
-                status=PackStatus.CONFLICT,
-                details=f"shadowed by {seen[BUILTIN_ID].source} "
-                        "(first in precedence wins)"))
+            listings.append(
+                PackListing(
+                    manifest=_builtin_listing(engine).manifest,
+                    source=str(BUILTIN_PACK_DIR),
+                    status=PackStatus.CONFLICT,
+                    details=f"shadowed by {seen[BUILTIN_ID].source} (first in precedence wins)",
+                )
+            )
         else:
             listings.append(_builtin_listing(engine))
     return tuple(listings), tuple(unknowns)

@@ -26,16 +26,29 @@ from forge_doctor_api.security.knowledge import check_to_owasp
 from forge_doctor_api.security.model import ApiSecurityModel
 from forge_doctor_api.security.scan import normalize_route_path, op_requires_auth
 
-_OBJECT_ID_RE = re.compile(
-    r"^(id|uuid|guid|pk|[a-z0-9_]*_id|[a-z0-9]*Id|[a-z0-9]*Uuid)$"
-)
+_OBJECT_ID_RE = re.compile(r"^(id|uuid|guid|pk|[a-z0-9_]*_id|[a-z0-9]*Id|[a-z0-9]*Uuid)$")
 _ADMIN_RE = re.compile(r"(^|[/_.-])admin([/_.-]|$)", re.IGNORECASE)
-_SENSITIVE_FIELD_NAMES = frozenset({
-    "password", "passwd", "secret", "token", "access_token",
-    "refresh_token", "api_key", "apikey", "private_key", "ssn",
-    "social_security_number", "credit_card", "card_number", "cvv",
-    "iban", "account_number", "pin",
-})
+_SENSITIVE_FIELD_NAMES = frozenset(
+    {
+        "password",
+        "passwd",
+        "secret",
+        "token",
+        "access_token",
+        "refresh_token",
+        "api_key",
+        "apikey",
+        "private_key",
+        "ssn",
+        "social_security_number",
+        "credit_card",
+        "card_number",
+        "cvv",
+        "iban",
+        "account_number",
+        "pin",
+    }
+)
 
 _URL_PARAM_RE = re.compile(
     r"^(url|uri|endpoint|target|callback|webhook|redirect(_uri|_url)?|"
@@ -65,7 +78,9 @@ def _finding(
         evidence_kind=spec.evidence_kind,
         evidence=(
             Evidence(
-                kind=spec.evidence_kind, source=path, summary=description,
+                kind=spec.evidence_kind,
+                source=path,
+                summary=description,
                 line=line,
             ),
         ),
@@ -75,15 +90,12 @@ def _finding(
     )
 
 
-def _op_params(
-    model: OpenApiProjectModel, op: OpenApiOperation
-) -> list[Any]:
+def _op_params(model: OpenApiProjectModel, op: OpenApiOperation) -> list[Any]:
     by_ptr = {p.pointer: p for p in model.parameters}
     return [by_ptr[p] for p in op.parameter_pointers if p in by_ptr]
 
 
-def _path_id_params(model: OpenApiProjectModel,
-                    op: OpenApiOperation) -> list[str]:
+def _path_id_params(model: OpenApiProjectModel, op: OpenApiOperation) -> list[str]:
     return [
         p.name
         for p in _op_params(model, op)
@@ -96,9 +108,7 @@ def _anonymous_ok(model: OpenApiProjectModel, op: OpenApiOperation) -> bool:
     return req is False
 
 
-def _returns_collection(
-    model: OpenApiProjectModel, op: OpenApiOperation
-) -> bool:
+def _returns_collection(model: OpenApiProjectModel, op: OpenApiOperation) -> bool:
     """True when a 2xx response schema resolves to a JSON array.
 
     Requires schema evidence - a bare GET path is not enough (avoids
@@ -129,8 +139,11 @@ def _sensitive_ops(model: OpenApiProjectModel) -> set[str]:
     out: set[str] = set()
     for ext in model.extensions:
         if ext.name.lower() in {
-            "x-sensitive", "x-pii", "x-classification",
-            "x-data-classification", "x-sensitivity",
+            "x-sensitive",
+            "x-pii",
+            "x-classification",
+            "x-data-classification",
+            "x-sensitivity",
         } and ext.value not in (None, False, ""):
             out.add(ext.owner_pointer)
     return out
@@ -145,25 +158,19 @@ def run_security_checks(
 
     if openapi is not None:
         sensitive_ptrs = _sensitive_ops(openapi)
-        ownership_ops = {
-            a.operation for a in model.authorization if a.ownership_check
-        }
-        authz_ops = {
-            a.operation for a in model.authorization
-            if a.roles or a.scopes or a.claims
-        }
+        ownership_ops = {a.operation for a in model.authorization if a.ownership_check}
+        authz_ops = {a.operation for a in model.authorization if a.roles or a.scopes or a.claims}
         # impl-plane policies recorded through an applied mechanism
         # (authz middleware/dependency) bind by `METHOD path` names.
         impl_via_ops = {
-            a.operation for a in model.authorization
-            if a.plane == "implementation" and a.via
+            a.operation for a in model.authorization if a.plane == "implementation" and a.via
         }
         # gateway policies scope by declared path/prefix — the same
         # join `_op_planes` uses: `*`, exact, or prefix containment.
         gw_authz = [
-            a for a in model.authorization
-            if a.plane == "gateway"
-            and (a.roles or a.scopes or a.claims or a.via)
+            a
+            for a in model.authorization
+            if a.plane == "gateway" and (a.roles or a.scopes or a.claims or a.via)
         ]
 
         def _authz_covered(op: OpenApiOperation) -> bool:
@@ -183,6 +190,7 @@ def run_security_checks(
                 or normalize_route_path(a.operation) in norm
                 for a in gw_authz
             )
+
         pag_by_op = {p.operation: p for p in model.pagination}
         resp_components: set[str] = set()
         for r in openapi.responses:
@@ -190,15 +198,12 @@ def run_security_checks(
                 resp_components.add(r.component_name)
             for shape in r.schema_shapes:
                 if shape.startswith("ref:#/components/schemas/"):
-                    resp_components.add(
-                        shape.rsplit("/", 1)[-1]
-                    )
+                    resp_components.add(shape.rsplit("/", 1)[-1])
 
         for op in openapi.operations:
             # APISEC001 - object-id path param + no object-level authz
             id_params = _path_id_params(openapi, op)
-            if id_params and op.identity not in ownership_ops \
-                    and not _authz_covered(op):
+            if id_params and op.identity not in ownership_ops and not _authz_covered(op):
                 findings.append(
                     _finding(
                         BY_ID["APISEC001"],
@@ -206,7 +211,8 @@ def run_security_checks(
                         f"parameter(s) {', '.join(id_params)} with no "
                         "authorization evidence - BOLA risk candidate, "
                         "manual review required",
-                        op.location.path, op.location.line,
+                        op.location.path,
+                        op.location.line,
                         unknowns=(
                             UnknownFact(
                                 subject=op.identity,
@@ -218,33 +224,32 @@ def run_security_checks(
                                 "impl authz evidence",
                             ),
                         ),
-                        remediation="verify caller owns the referenced "
-                        "object before returning it",
+                        remediation="verify caller owns the referenced object before returning it",
                     )
                 )
 
             # APISEC002 - admin-marked op without explicit authz
-            if (_ADMIN_RE.search(op.path) or (
-                op.operation_id and _ADMIN_RE.search(op.operation_id)
-            )) and not _authz_covered(op):
-                    findings.append(
-                        _finding(
-                            BY_ID["APISEC002"],
-                            f"{op.method.upper()} {op.path}: admin-marked "
-                            "operation without explicit roles/scopes - "
-                            "function-level authz candidate",
-                            op.location.path, op.location.line,
-                            unknowns=(
-                                UnknownFact(
-                                    subject=op.identity,
-                                    missing="explicit authorization "
-                                    "metadata for the admin surface",
-                                    resolution="declare x-roles/x-scopes "
-                                    "or gateway policy covering this op",
-                                ),
+            if (
+                _ADMIN_RE.search(op.path) or (op.operation_id and _ADMIN_RE.search(op.operation_id))
+            ) and not _authz_covered(op):
+                findings.append(
+                    _finding(
+                        BY_ID["APISEC002"],
+                        f"{op.method.upper()} {op.path}: admin-marked "
+                        "operation without explicit roles/scopes - "
+                        "function-level authz candidate",
+                        op.location.path,
+                        op.location.line,
+                        unknowns=(
+                            UnknownFact(
+                                subject=op.identity,
+                                missing="explicit authorization metadata for the admin surface",
+                                resolution="declare x-roles/x-scopes "
+                                "or gateway policy covering this op",
                             ),
-                        )
+                        ),
                     )
+                )
 
             # APISEC003 - anonymous + explicitly sensitive
             if _anonymous_ok(openapi, op) and op.pointer in sensitive_ptrs:
@@ -254,16 +259,17 @@ def run_security_checks(
                         f"{op.method.upper()} {op.path}: anonymous access "
                         "allowed on an explicitly sensitive-marked "
                         "operation - authentication candidate",
-                        op.location.path, op.location.line,
-                        remediation="require authentication for the "
-                        "classified operation",
+                        op.location.path,
+                        op.location.line,
+                        remediation="require authentication for the classified operation",
                     )
                 )
 
             # APISEC005 - public op without rate-limit coverage
             if _anonymous_ok(openapi, op):
                 covered = any(
-                    r.scope == "*" or r.scope in op.path
+                    r.scope == "*"
+                    or r.scope in op.path
                     or normalize_route_path(r.scope) == normalize_route_path(op.path)
                     or op.path.startswith(r.scope.rstrip("/"))
                     for r in model.rate_limits
@@ -275,7 +281,8 @@ def run_security_checks(
                             f"{op.method.upper()} {op.path}: public "
                             "operation with no rate-limit evidence - "
                             "candidate",
-                            op.location.path, op.location.line,
+                            op.location.path,
+                            op.location.line,
                             unknowns=(
                                 UnknownFact(
                                     subject=op.identity,
@@ -300,9 +307,9 @@ def run_security_checks(
                         f"GET {op.path}: list-returning endpoint without "
                         "a bounded pagination/limit parameter - "
                         "unrestricted resource candidate",
-                        op.location.path, op.location.line,
-                        remediation="declare a limit/pagination parameter "
-                        "or a rate-limit policy",
+                        op.location.path,
+                        op.location.line,
+                        remediation="declare a limit/pagination parameter or a rate-limit policy",
                     )
                 )
 
@@ -310,8 +317,7 @@ def run_security_checks(
             url_params = [
                 p.name
                 for p in _op_params(openapi, op)
-                if p.name and _URL_PARAM_RE.match(p.name)
-                and p.location_in in {"query", "header"}
+                if p.name and _URL_PARAM_RE.match(p.name) and p.location_in in {"query", "header"}
             ]
             if url_params:
                 findings.append(
@@ -320,7 +326,8 @@ def run_security_checks(
                         f"{op.method.upper()} {op.path}: URL-shaped "
                         f"parameter(s) {', '.join(url_params)} - unsafe "
                         "outbound consumption candidate",
-                        op.location.path, op.location.line,
+                        op.location.path,
+                        op.location.line,
                         unknowns=(
                             UnknownFact(
                                 subject=op.identity,
@@ -340,7 +347,8 @@ def run_security_checks(
                         BY_ID["APISEC009"],
                         f"{op.method.upper()} {op.path}: deprecated "
                         "operation still documented as reachable",
-                        op.location.path, op.location.line,
+                        op.location.path,
+                        op.location.line,
                     )
                 )
 
@@ -362,62 +370,64 @@ def run_security_checks(
         # an op declaring `security:` whose requirements cannot be
         # resolved, or an op with no security evidence anywhere, is
         # UNKNOWN - never PASS, never FAIL.
-        global_reqs = tuple(
-            r for r in openapi.security_requirements
-            if r.owner_pointer == "")
+        global_reqs = tuple(r for r in openapi.security_requirements if r.owner_pointer == "")
         declared_schemes = {s.name for s in openapi.security_schemes}
         for op in openapi.operations:
             op_reqs = tuple(
-                r for r in openapi.security_requirements
-                if r.owner_pointer == op.pointer)
+                r for r in openapi.security_requirements if r.owner_pointer == op.pointer
+            )
             requires, scopes = op_requires_auth(openapi, op)
-            global_schemes = sorted(
-                {s.name for r in global_reqs for s in r.schemes})
+            global_schemes = sorted({s.name for r in global_reqs for s in r.schemes})
             unresolvable = [
-                s.name for r in op_reqs for s in r.schemes
-                if s.name not in declared_schemes]
+                s.name for r in op_reqs for s in r.schemes if s.name not in declared_schemes
+            ]
             chain = (
                 f"global_schemes={global_schemes} "
                 f"op_security={op.has_security} "
                 f"op_reqs={len(op_reqs)} scopes={list(scopes)} "
                 f"unresolvable={unresolvable}"
             )
-            if op.has_security and global_reqs and (
-                    not op_reqs or unresolvable):
+            if op.has_security and global_reqs and (not op_reqs or unresolvable):
                 # declared op-level security that does not resolve to
                 # any requirement - ambiguous override
-                findings.append(_finding(
-                    BY_ID["APISEC011"],
-                    f"{op.method.upper()} {op.path}: declares "
-                    "operation-level security but no requirement "
-                    f"resolves through the chain ({chain})",
-                    op.location.path, op.location.line,
-                    unknowns=(
-                        UnknownFact(
-                            subject=op.identity,
-                            missing="resolvable operation security "
-                            "requirement",
-                            resolution="the op-level security list must "
-                            "name declared schemes, or be [] for "
-                            "anonymous"),
-                    ),
-                ))
+                findings.append(
+                    _finding(
+                        BY_ID["APISEC011"],
+                        f"{op.method.upper()} {op.path}: declares "
+                        "operation-level security but no requirement "
+                        f"resolves through the chain ({chain})",
+                        op.location.path,
+                        op.location.line,
+                        unknowns=(
+                            UnknownFact(
+                                subject=op.identity,
+                                missing="resolvable operation security requirement",
+                                resolution="the op-level security list must "
+                                "name declared schemes, or be [] for "
+                                "anonymous",
+                            ),
+                        ),
+                    )
+                )
             elif requires is None and not global_reqs:
-                findings.append(_finding(
-                    BY_ID["APISEC011"],
-                    f"{op.method.upper()} {op.path}: no security "
-                    "evidence at any level - effective authentication "
-                    f"is unknown ({chain})",
-                    op.location.path, op.location.line,
-                    unknowns=(
-                        UnknownFact(
-                            subject=op.identity,
-                            missing="global or operation security "
-                            "requirement",
-                            resolution="declare security schemes and "
-                            "requirements, or gateway auth evidence"),
-                    ),
-                ))
+                findings.append(
+                    _finding(
+                        BY_ID["APISEC011"],
+                        f"{op.method.upper()} {op.path}: no security "
+                        "evidence at any level - effective authentication "
+                        f"is unknown ({chain})",
+                        op.location.path,
+                        op.location.line,
+                        unknowns=(
+                            UnknownFact(
+                                subject=op.identity,
+                                missing="global or operation security requirement",
+                                resolution="declare security schemes and "
+                                "requirements, or gateway auth evidence",
+                            ),
+                        ),
+                    )
+                )
 
         # APISEC012 - sensitive-named schema field, no protection
         # evidence (spec 061). Name-only + LOW confidence; declared
@@ -438,28 +448,32 @@ def run_security_checks(
                 protected = (
                     fbody.get("writeOnly") is True
                     or fbody.get("format") == "password"
-                    or any(str(k).lower().startswith("x-") and
-                           "redact" in str(k).lower()
-                           for k in fbody)
+                    or any(
+                        str(k).lower().startswith("x-") and "redact" in str(k).lower()
+                        for k in fbody
+                    )
                     or f"{schema.name}.{fname}" in classified
                 )
                 if protected:
                     continue
-                findings.append(_finding(
-                    BY_ID["APISEC012"],
-                    f"{schema.name}.{fname}: field name matches the "
-                    "sensitive-name list with no declared protection "
-                    "evidence - candidate",
-                    schema.location.path, schema.location.line,
-                    unknowns=(
-                        UnknownFact(
-                            subject=f"{schema.name}.{fname}",
-                            missing="protection evidence (writeOnly, "
-                            "x-redact, classification)",
-                            resolution="mark the field writeOnly/"
-                            "x-redact/classified, or accept exposure"),
-                    ),
-                ))
+                findings.append(
+                    _finding(
+                        BY_ID["APISEC012"],
+                        f"{schema.name}.{fname}: field name matches the "
+                        "sensitive-name list with no declared protection "
+                        "evidence - candidate",
+                        schema.location.path,
+                        schema.location.line,
+                        unknowns=(
+                            UnknownFact(
+                                subject=f"{schema.name}.{fname}",
+                                missing="protection evidence (writeOnly, x-redact, classification)",
+                                resolution="mark the field writeOnly/"
+                                "x-redact/classified, or accept exposure",
+                            ),
+                        ),
+                    )
+                )
 
     # APISEC013 - auth chain break (spec 079): a chain record is
     # complete when declared contract security lands on an enforcement
@@ -474,8 +488,7 @@ def run_security_checks(
                 f"({link.scheme_declared}) but the enforcement planes "
                 "show none - declared-but-unenforced auth chain break"
             )
-            missing = "implementation/gateway enforcement evidence for " \
-                "the declared scheme"
+            missing = "implementation/gateway enforcement evidence for the declared scheme"
         else:
             desc = (
                 f"{link.operation}: "
@@ -483,22 +496,24 @@ def run_security_checks(
                 "contract security declaration - enforced-but-undeclared "
                 "auth chain break"
             )
-            missing = "contract security requirement matching the " \
-                "observed enforcement"
-        findings.append(_finding(
-            BY_ID["APISEC013"], desc,
-            src.source if src else "(contract)",
-            src.line if src else None,
-            unknowns=(
-                UnknownFact(
-                    subject=link.operation,
-                    missing=missing,
-                    resolution="join contract scheme, applied scope, and "
-                    "enforcement point by declared identifiers, or "
-                    "declare the operation anonymous",
+            missing = "contract security requirement matching the observed enforcement"
+        findings.append(
+            _finding(
+                BY_ID["APISEC013"],
+                desc,
+                src.source if src else "(contract)",
+                src.line if src else None,
+                unknowns=(
+                    UnknownFact(
+                        subject=link.operation,
+                        missing=missing,
+                        resolution="join contract scheme, applied scope, and "
+                        "enforcement point by declared identifiers, or "
+                        "declare the operation anonymous",
+                    ),
                 ),
-            ),
-        ))
+            )
+        )
 
     # APISEC004 - wildcard CORS
     for cors in model.cors:
@@ -535,8 +550,7 @@ def run_security_checks(
                         UnknownFact(
                             subject=ext.host,
                             missing=f"declared {'/'.join(gaps)} config",
-                            resolution="record timeout/auth on the "
-                            "external dependency",
+                            resolution="record timeout/auth on the external dependency",
                         ),
                     ),
                 )

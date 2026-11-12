@@ -24,7 +24,7 @@ class FixType(StrEnum):
     """Fix-type vocabulary keyed in the §104 rule table."""
 
     # SAFE members (§104)
-    METADATA_MISSING = "metadata_missing"          # explicit OpenAPI metadata
+    METADATA_MISSING = "metadata_missing"  # explicit OpenAPI metadata
     DEPRECATED_CONFIG_RENAME = "deprecated_config_rename"
     DOC_FIELD = "doc_field"
     SPEC_NORMALIZATION = "spec_normalization"

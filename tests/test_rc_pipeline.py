@@ -40,10 +40,8 @@ def test_manifest_required_fields() -> None:
 
 
 def test_manifest_deterministic_render() -> None:
-    a = release_manifest._render(
-        release_manifest.build_manifest(dist_dir=ROOT / "nope"))
-    b = release_manifest._render(
-        release_manifest.build_manifest(dist_dir=ROOT / "nope"))
+    a = release_manifest._render(release_manifest.build_manifest(dist_dir=ROOT / "nope"))
+    b = release_manifest._render(release_manifest.build_manifest(dist_dir=ROOT / "nope"))
     assert a == b
 
 
@@ -80,22 +78,23 @@ def test_manifest_check_volatile_fields_excluded(tmp_path: Path) -> None:
     changed["dirty_tree"] = True
     changed["rc"] = True
     changed["artifacts"] = [{"filename": "a.whl", "sha256": "f" * 64}]
-    baseline = dict(m, artifacts=[{"filename": "a.whl",
-                                   "sha256": "0" * 64}])
-    assert release_manifest._diff(
-        release_manifest._normalize(baseline),
-        release_manifest._normalize(changed)) == []
+    baseline = dict(m, artifacts=[{"filename": "a.whl", "sha256": "0" * 64}])
+    assert (
+        release_manifest._diff(
+            release_manifest._normalize(baseline), release_manifest._normalize(changed)
+        )
+        == []
+    )
     # artifact filename drift IS identity drift — must fail
-    renamed = dict(changed, artifacts=[{"filename": "b.whl",
-                                        "sha256": "f" * 64}])
+    renamed = dict(changed, artifacts=[{"filename": "b.whl", "sha256": "f" * 64}])
     assert release_manifest._diff(
-        release_manifest._normalize(baseline),
-        release_manifest._normalize(renamed))
+        release_manifest._normalize(baseline), release_manifest._normalize(renamed)
+    )
     # non-volatile drift must fail
     drifted = dict(changed, version="9.9.9")
     assert release_manifest._diff(
-        release_manifest._normalize(baseline),
-        release_manifest._normalize(drifted))
+        release_manifest._normalize(baseline), release_manifest._normalize(drifted)
+    )
 
 
 def test_manifest_artifact_digests(tmp_path: Path) -> None:
@@ -129,8 +128,7 @@ def test_provenance_builder_ids(monkeypatch) -> None:
     monkeypatch.setenv("GITHUB_ACTIONS", "true")
     monkeypatch.setenv("GITHUB_REPOSITORY", "o/r")
     monkeypatch.setenv("GITHUB_RUN_ID", "42")
-    assert provenance._builder_id() == (
-        "https://github.com/o/r/actions/runs/42")
+    assert provenance._builder_id() == ("https://github.com/o/r/actions/runs/42")
 
 
 def test_provenance_subjects_from_dist(tmp_path: Path) -> None:
@@ -159,8 +157,7 @@ def test_version_gate_detects_dist_divergence(tmp_path: Path) -> None:
     dist.mkdir()
     (dist / "forge_doctor_api-9.9.9-py3-none-any.whl").write_bytes(b"x")
     sources = version_gate.gather(dist)
-    divergent = {k: v for k, v in sources.items()
-                 if v != sources["pyproject"]}
+    divergent = {k: v for k, v in sources.items() if v != sources["pyproject"]}
     assert "dist:forge_doctor_api-9.9.9-py3-none-any.whl" in divergent
 
 
@@ -169,8 +166,10 @@ def test_version_gate_detects_dist_divergence(tmp_path: Path) -> None:
 
 def _report(findings, unknowns=()) -> dict:
     return {
-        "schema_version": "1.0", "tool_version": "0.1.0",
-        "knowledge_versions": {"k": "v"}, "gate_passed": True,
+        "schema_version": "1.0",
+        "tool_version": "0.1.0",
+        "knowledge_versions": {"k": "v"},
+        "gate_passed": True,
         "gate_failures": [],
         "findings": findings,
         "unknowns": list(unknowns),
@@ -178,10 +177,15 @@ def _report(findings, unknowns=()) -> dict:
 
 
 def _finding(i: str, **kw) -> dict:
-    return {"id": i, "severity": "HIGH", "confidence": "MEDIUM",
-            "entity_ids": ["op:a"], "description": kw.get("d", "x"),
-            "evidence": [{"line": kw.get("line", 1)}],
-            "source_location": {"path": "f", "line": kw.get("line", 1)}}
+    return {
+        "id": i,
+        "severity": "HIGH",
+        "confidence": "MEDIUM",
+        "entity_ids": ["op:a"],
+        "description": kw.get("d", "x"),
+        "evidence": [{"line": kw.get("line", 1)}],
+        "source_location": {"path": "f", "line": kw.get("line", 1)},
+    }
 
 
 def test_self_scan_shape_ignores_volatile_fields() -> None:
@@ -193,20 +197,17 @@ def test_self_scan_shape_ignores_volatile_fields() -> None:
 def test_self_scan_shape_detects_identity_drift() -> None:
     a = _report([_finding("APISEC001")])
     b = _report([_finding("APISEC001"), _finding("APISEC004")])
-    diffs = self_scan._diff_shape(
-        self_scan._shape(a), self_scan._shape(b))
+    diffs = self_scan._diff_shape(self_scan._shape(a), self_scan._shape(b))
     assert any("APISEC004" in d for d in diffs)
     c = _report([dict(_finding("APISEC001"), entity_ids=["op:other"])])
-    assert self_scan._diff_shape(
-        self_scan._shape(a), self_scan._shape(c))
+    assert self_scan._diff_shape(self_scan._shape(a), self_scan._shape(c))
 
 
 def test_self_scan_shape_detects_gate_drift() -> None:
     a = _report([])
     b = _report([], unknowns=())
     b["gate_passed"] = False
-    assert self_scan._diff_shape(
-        self_scan._shape(a), self_scan._shape(b))
+    assert self_scan._diff_shape(self_scan._shape(a), self_scan._shape(b))
 
 
 # ---------- release smoke ----------
@@ -214,12 +215,13 @@ def test_self_scan_shape_detects_gate_drift() -> None:
 
 def test_release_smoke_requires_a_wheel(tmp_path: Path) -> None:
     import release_smoke
+
     with pytest.raises(SystemExit):
         release_smoke._wheel(tmp_path)
 
 
 def test_release_smoke_picks_the_wheel(tmp_path: Path) -> None:
     import release_smoke
-    (tmp_path / "forge_doctor_api-0.1.0-py3-none-any.whl").write_bytes(
-        b"x")
+
+    (tmp_path / "forge_doctor_api-0.1.0-py3-none-any.whl").write_bytes(b"x")
     assert release_smoke._wheel(tmp_path).name.endswith(".whl")

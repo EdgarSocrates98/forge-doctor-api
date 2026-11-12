@@ -154,9 +154,7 @@ def test_async001_clean_when_schema_present(tmp_path: Path) -> None:
 
 
 def test_async002_missing_correlation_id(tmp_path: Path) -> None:
-    spec = ASYNC2.replace(
-        "      correlationId: {location: \"$message.header#/correlation\"}\n", ""
-    )
+    spec = ASYNC2.replace('      correlationId: {location: "$message.header#/correlation"}\n', "")
     model = _model(tmp_path, {"a.yaml": spec})
     assert "ASYNC002" in _ids(run_async_checks(model))
 
@@ -206,9 +204,7 @@ def test_async004_clean_with_dlq(tmp_path: Path) -> None:
 
 
 def test_async005_unordered_kafka(tmp_path: Path) -> None:
-    spec = ASYNC2.replace(
-        "    bindings: {kafka: {partitions: 3}}", "    bindings: {kafka: {}}"
-    )
+    spec = ASYNC2.replace("    bindings: {kafka: {partitions: 3}}", "    bindings: {kafka: {}}")
     model = _model(tmp_path, {"a.yaml": spec})
     findings = run_async_checks(model)
     assert "ASYNC005" in _ids(findings)

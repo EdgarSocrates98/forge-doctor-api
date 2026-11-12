@@ -57,14 +57,14 @@ def _strip_comments(source: str) -> str:
                 quote = None
         elif ch in "\"'`":
             quote = ch
-        elif ch == "/" and source[i:i + 2] == "//":
+        elif ch == "/" and source[i : i + 2] == "//":
             j = source.find("\n", i)
             end = len(source) if j < 0 else j
             for k in range(i, end):
                 out[k] = " "
             i = end
             continue
-        elif ch == "/" and source[i:i + 2] == "/*":
+        elif ch == "/" and source[i : i + 2] == "/*":
             j = source.find("*/", i + 2)
             end = len(source) if j < 0 else j + 2
             for k in range(i, end):
@@ -186,7 +186,7 @@ def scan_javascript_source(
         else:  # axios(...) or axios.request(...)
             library = "axios"
             url = _url_in_object(args)
-            method = (_method_in_args(args) or "GET")
+            method = _method_in_args(args) or "GET"
             if url is None:
                 url = _literal_arg(args)
 

@@ -42,10 +42,8 @@ def test_v1_unchanged_shape(tmp_path: Path) -> None:
 def test_v2_deterministic_id(tmp_path: Path) -> None:
     r1 = _report(tmp_path)
     r2 = _report(tmp_path)
-    b1 = assemble_bundle_v2(r1, findings=r1.findings,
-                            unknowns=r1.unknowns)
-    b2 = assemble_bundle_v2(r2, findings=r2.findings,
-                            unknowns=r2.unknowns)
+    b1 = assemble_bundle_v2(r1, findings=r1.findings, unknowns=r1.unknowns)
+    b2 = assemble_bundle_v2(r2, findings=r2.findings, unknowns=r2.unknowns)
     assert b1.handoff_version == 2
     assert b1.handoff_id == b2.handoff_id  # content-addressed
     assert len(b1.handoff_id) == 64
@@ -82,10 +80,8 @@ def test_build_handoff_and_receipt(tmp_path: Path) -> None:
 
 def test_v1_v2_shared_fields(tmp_path: Path) -> None:
     report = _report(tmp_path)
-    v1 = assemble_bundle(findings=report.findings,
-                         unknowns=report.unknowns)
-    v2 = assemble_bundle_v2(report, findings=report.findings,
-                            unknowns=report.unknowns)
+    v1 = assemble_bundle(findings=report.findings, unknowns=report.unknowns)
+    v2 = assemble_bundle_v2(report, findings=report.findings, unknowns=report.unknowns)
     assert v1.findings == v2.findings
     assert v1.unknowns == v2.unknowns
     assert v1.operations == v2.operations

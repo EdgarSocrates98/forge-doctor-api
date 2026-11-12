@@ -43,9 +43,7 @@ def _json(output: str) -> dict:
 
 def _invoke(*args: str) -> tuple[int, dict]:
     result = runner.invoke(app, ["install", *args])
-    assert not result.exception or isinstance(result.exception, SystemExit), (
-        result.exception
-    )
+    assert not result.exception or isinstance(result.exception, SystemExit), result.exception
     return result.exit_code, _json(result.stdout)
 
 
@@ -73,9 +71,9 @@ def test_apply_writes_managed_regions(target: Path) -> None:
     entry = mcp["mcpServers"]["forge-doctor-api"]
     assert entry["command"] == "forge-doctor-api"
     assert entry["args"] == ["mcp"]
-    assert "forge-doctor-api:managed:begin" in (target / "AGENTS.md").read_text(
-        encoding="utf-8"
-    )
+    agents = (target / "AGENTS.md").read_text(encoding="utf-8")
+    assert "forge:forge-doctor-api:begin" in agents
+    assert "forge:ecosystem:begin" in agents
 
 
 def test_status_doctor_round_trip(target: Path) -> None:
@@ -148,8 +146,13 @@ def test_module_invocation_is_the_catalog_argv(tmp_path: Path) -> None:
     env["FORGE_HOME_OVERRIDE"] = str(tmp_path / "home")
     proc = subprocess.run(
         [
-            sys.executable, "-m", "forge_doctor_api",
-            "install", "--root", str(root), "--dry-run",
+            sys.executable,
+            "-m",
+            "forge_doctor_api",
+            "install",
+            "--root",
+            str(root),
+            "--dry-run",
         ],
         capture_output=True,
         text=True,

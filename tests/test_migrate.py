@@ -127,13 +127,19 @@ def test_rest_to_grpc_full_dimension_coverage(tmp_path: Path) -> None:
     m = assess_rest_to_grpc(api)
     assert m.kind is MigrationKind.REST_TO_GRPC
     assert {a.subject for a in m.assessments} == {
-        "operation_id:getItem", "operation_id:createItem",
+        "operation_id:getItem",
+        "operation_id:createItem",
     }
     for a in m.assessments:
         dims = {d.dimension for d in a.dimensions}
         assert dims == {
-            "request/response", "status semantics", "streaming",
-            "metadata/headers", "error model", "timeouts", "idempotency",
+            "request/response",
+            "status semantics",
+            "streaming",
+            "metadata/headers",
+            "error model",
+            "timeouts",
+            "idempotency",
         }
 
 
@@ -191,8 +197,7 @@ def test_rest_to_graphql_always_redesign(tmp_path: Path) -> None:
     m = assess_rest_to_graphql(api)
     for a in m.assessments:
         assert a.classification is MigrationClass.REDESIGN_REQUIRED
-        assert all(d.classification is MigrationClass.REDESIGN_REQUIRED
-                   for d in a.dimensions)
+        assert all(d.classification is MigrationClass.REDESIGN_REQUIRED for d in a.dimensions)
         assert all(d.detail for d in a.dimensions)
 
 
@@ -204,8 +209,13 @@ def test_sync_to_async_full_coverage(tmp_path: Path) -> None:
     m = assess_sync_to_async(api)
     for a in m.assessments:
         assert {d.dimension for d in a.dimensions} == {
-            "request-response", "delivery semantics", "correlation",
-            "retry", "dlq", "ordering", "event schema",
+            "request-response",
+            "delivery semantics",
+            "correlation",
+            "retry",
+            "dlq",
+            "ordering",
+            "event schema",
         }
 
 
@@ -235,12 +245,15 @@ def test_sync_to_async_with_evidence(tmp_path: Path) -> None:
 
 
 def test_gateway_to_gateway_known_target(tmp_path: Path) -> None:
-    root = _write(tmp_path / "gw", {
-        "gw.yaml": (
-            "rate_limit: {scope: edge, limit: 100}\n"
-            "cors: {scope: edge, allow_origins: [https://a.com]}\n"
-        ),
-    })
+    root = _write(
+        tmp_path / "gw",
+        {
+            "gw.yaml": (
+                "rate_limit: {scope: edge, limit: 100}\n"
+                "cors: {scope: edge, allow_origins: [https://a.com]}\n"
+            ),
+        },
+    )
     ctx = ProjectContext.from_root(root)
     sec = load_security_model(ctx, ["gw.yaml"])
     m = assess_gateway_to_gateway("aws-api-gateway", "kong", sec)
@@ -253,9 +266,12 @@ def test_gateway_to_gateway_known_target(tmp_path: Path) -> None:
 
 def test_gateway_to_gateway_missing_capability(tmp_path: Path) -> None:
     """Capability observed but absent from the target pack -> NO_EQUIVALENT."""
-    root = _write(tmp_path / "gw2", {
-        "gw.yaml": "rate_limit: {scope: edge, limit: 10}\n",
-    })
+    root = _write(
+        tmp_path / "gw2",
+        {
+            "gw.yaml": "rate_limit: {scope: edge, limit: 10}\n",
+        },
+    )
     ctx = ProjectContext.from_root(root)
     sec = load_security_model(ctx, ["gw.yaml"])
     m = assess_gateway_to_gateway("kong", "nginx", sec)
@@ -263,8 +279,7 @@ def test_gateway_to_gateway_missing_capability(tmp_path: Path) -> None:
     rl = next(d for d in a.dimensions if d.dimension == "rate-limiting")
     assert rl.classification is MigrationClass.DIRECT  # nginx has rate-limiting
     m2 = assess_gateway_to_gateway("kong", "aws-api-gateway", sec)
-    rl2 = next(d for d in m2.assessments[0].dimensions
-               if d.dimension == "rate-limiting")
+    rl2 = next(d for d in m2.assessments[0].dimensions if d.dimension == "rate-limiting")
     assert rl2.classification is MigrationClass.DIRECT  # throttling alias
 
 
@@ -290,7 +305,8 @@ def test_contract_version_nullable_approximate(tmp_path: Path) -> None:
     doc = OPENAPI + (
         "components:\n  schemas:\n"
         "    X: {type: object, nullable: true, "
-        "properties: {a: {type: string}}}\n")
+        "properties: {a: {type: string}}}\n"
+    )
     _, api = _api(tmp_path, doc, "n")
     m = assess_contract_version(api, "3.1")
     a = m.assessments[0]
@@ -312,7 +328,8 @@ def test_client_generation_impact_flags_structural(tmp_path: Path) -> None:
     after = OPENAPI.replace(
         "      parameters:\n"
         "        - {name: id, in: path, required: true, schema: {type: string}}\n",
-        "")
+        "",
+    )
     after_root = _write(tmp_path / "a", {"api.yaml": after})
     b = load_openapi_project(ProjectContext.from_root(before_root))
     a = load_openapi_project(ProjectContext.from_root(after_root))
@@ -329,13 +346,18 @@ def test_version_upgrade_removed_endpoint_no_equivalent(tmp_path: Path) -> None:
     b = load_openapi_project(ProjectContext.from_root(before_root))
     a = load_openapi_project(ProjectContext.from_root(after_root))
     m = assess_version_upgrade(b, a)
-    removed = [x for a_ in m.assessments for d in a_.dimensions
-               for x in [d] if d.dimension == "method_removed"
-               or d.dimension == "endpoint_removed"]
+    removed = [
+        x
+        for a_ in m.assessments
+        for d in a_.dimensions
+        for x in [d]
+        if d.dimension == "method_removed" or d.dimension == "endpoint_removed"
+    ]
     assert removed
-    assert any(d.classification in {
-        MigrationClass.NO_EQUIVALENT, MigrationClass.REDESIGN_REQUIRED}
-        for d in removed)
+    assert any(
+        d.classification in {MigrationClass.NO_EQUIVALENT, MigrationClass.REDESIGN_REQUIRED}
+        for d in removed
+    )
 
 
 # --- §167 decision briefs --------------------------------------------------------
@@ -344,8 +366,7 @@ def test_version_upgrade_removed_endpoint_no_equivalent(tmp_path: Path) -> None:
 def test_decide_move_to_grpc_brief(tmp_path: Path) -> None:
     _, api = _api(tmp_path)
     m = assess_rest_to_grpc(api)
-    brief = decide(DecisionQuestion.CAN_MOVE_TO_GRPC, "createItem",
-                   migration=m)
+    brief = decide(DecisionQuestion.CAN_MOVE_TO_GRPC, "createItem", migration=m)
     assert brief.constraints == ()
     assert brief.tradeoffs  # APPROXIMATE dims
     assert brief.unknowns  # idempotency unknown on POST
@@ -353,11 +374,9 @@ def test_decide_move_to_grpc_brief(tmp_path: Path) -> None:
 
 
 def test_decide_retire_version(tmp_path: Path) -> None:
-    brief = decide(DecisionQuestion.CAN_RETIRE_VERSION, "v1",
-                   remaining_clients=0)
+    brief = decide(DecisionQuestion.CAN_RETIRE_VERSION, "v1", remaining_clients=0)
     assert any("no client call sites" in f for f in brief.facts)
-    brief2 = decide(DecisionQuestion.CAN_RETIRE_VERSION, "v1",
-                    remaining_clients=3)
+    brief2 = decide(DecisionQuestion.CAN_RETIRE_VERSION, "v1", remaining_clients=3)
     assert brief2.constraints
     brief3 = decide(DecisionQuestion.CAN_RETIRE_VERSION, "v1")
     assert brief3.unknowns

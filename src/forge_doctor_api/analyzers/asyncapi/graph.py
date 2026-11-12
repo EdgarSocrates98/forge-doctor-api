@@ -37,9 +37,7 @@ def async_graph(model: AsyncApiProjectModel, service: str) -> ServiceGraph:
 
     channels = {c.pointer: c for c in model.channels}
     channel_entity = {
-        c.pointer: entity_id(
-            EntityKind.ASYNC_CHANNEL, "asyncapi",
-            f"{c.location.path}#{c.name}")
+        c.pointer: entity_id(EntityKind.ASYNC_CHANNEL, "asyncapi", f"{c.location.path}#{c.name}")
         for c in model.channels
     }
     for channel in model.channels:
@@ -52,8 +50,8 @@ def async_graph(model: AsyncApiProjectModel, service: str) -> ServiceGraph:
         )
     message_entity = {
         m.pointer: entity_id(
-            EntityKind.MESSAGE, "asyncapi",
-            f"{m.location.path}#{m.name or m.pointer}")
+            EntityKind.MESSAGE, "asyncapi", f"{m.location.path}#{m.name or m.pointer}"
+        )
         for m in model.messages
     }
     for message in model.messages:
@@ -65,9 +63,7 @@ def async_graph(model: AsyncApiProjectModel, service: str) -> ServiceGraph:
             )
         )
 
-    def link(
-        kind: RelationshipKind, source: str, target: str, loc: SourceLocation
-    ) -> None:
+    def link(kind: RelationshipKind, source: str, target: str, loc: SourceLocation) -> None:
         graph.add_relationship(
             Relationship(
                 kind=kind,
@@ -87,9 +83,7 @@ def async_graph(model: AsyncApiProjectModel, service: str) -> ServiceGraph:
 
     for op in model.operations:
         op_id = entity_id("operation", "asyncapi", f"{op.action}:{op.name}")
-        graph.add_entity(
-            Entity(id=op_id, kind=EntityKind.OPERATION, name=op.name)
-        )
+        graph.add_entity(Entity(id=op_id, kind=EntityKind.OPERATION, name=op.name))
         if op.channel_pointer and op.channel_pointer in channel_entity:
             link(
                 RelationshipKind.PUBLISHES
@@ -100,9 +94,7 @@ def async_graph(model: AsyncApiProjectModel, service: str) -> ServiceGraph:
                 op.location,
             )
         bound_channel = channels.get(op.channel_pointer or "")
-        msg_ptrs = op.message_pointers or (
-            bound_channel.message_pointers if bound_channel else ()
-        )
+        msg_ptrs = op.message_pointers or (bound_channel.message_pointers if bound_channel else ())
         for ptr in msg_ptrs:
             if ptr in message_entity:
                 link(

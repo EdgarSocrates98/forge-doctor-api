@@ -78,10 +78,7 @@ from forge_doctor_api.knowledge.capability import (
 from forge_doctor_api.report import DoctorReport
 
 ROOT = Path(__file__).resolve().parents[1]
-FIXTURE = (
-    ROOT / "tests" / "fixtures" / "contracts"
-    / "forge-contracts-1-handoff.json"
-)
+FIXTURE = ROOT / "tests" / "fixtures" / "contracts" / "forge-contracts-1-handoff.json"
 
 
 def _core_finding(**kw: object) -> CoreFinding:
@@ -109,6 +106,7 @@ def _core_finding(**kw: object) -> CoreFinding:
 
 
 # -- canonical fixture round-trip ---------------------------------------------
+
 
 def test_canonical_fixture_decodes() -> None:
     """A real forge-contracts/1 payload from the sibling doctor parses."""
@@ -147,18 +145,17 @@ def test_every_schema_entry_validates_minimal_payload() -> None:
         "relationship": {"src": "a:b:c", "dst": "a:b:d", "kind": "CALLS"},
         "evidence": {"ref": "f:1", "kind": "static", "source": "t"},
         "finding": {
-            "check_id": "X001", "title": "t", "severity": "info",
-            "category": "c", "message": "m"},
+            "check_id": "X001",
+            "title": "t",
+            "severity": "info",
+            "category": "c",
+            "message": "m",
+        },
         "capability": {"id": "C", "domain": "api", "status": "supported"},
-        "unknown-fact": {
-            "subject": "s", "kind": "evidence", "reason": "missing"},
-        "migration-plan": {
-            "id": "m1", "source": "a", "target": "b", "kind": "k"},
-        "remediation-plan": {
-            "id": "r1", "check_id": "X001", "problem": "p"},
-        "handoff": {
-            "tool": {"name": "t", "version": "0"},
-            "project": {}, "summary": {}},
+        "unknown-fact": {"subject": "s", "kind": "evidence", "reason": "missing"},
+        "migration-plan": {"id": "m1", "source": "a", "target": "b", "kind": "k"},
+        "remediation-plan": {"id": "r1", "check_id": "X001", "problem": "p"},
+        "handoff": {"tool": {"name": "t", "version": "0"}, "project": {}, "summary": {}},
         "diagnostic-manifest": {"tool": {"name": "t", "version": "0"}},
     }
     for kind, payload in minimal.items():
@@ -168,36 +165,35 @@ def test_every_schema_entry_validates_minimal_payload() -> None:
 
 # -- validators ----------------------------------------------------------------
 
+
 def test_validator_rejects_missing_required() -> None:
     errors = validate_named({"kind": "a", "domain": "b"}, "entity")
     assert any("id" in e for e in errors)
 
 
 def test_validator_rejects_null_required() -> None:
-    errors = validate_named(
-        {"id": None, "kind": "a", "domain": "b"}, "entity")
+    errors = validate_named({"id": None, "kind": "a", "domain": "b"}, "entity")
     assert any("id" in e and "null" in e for e in errors)
 
 
 def test_validator_rejects_bad_enum() -> None:
     errors = validate_named(
-        {"check_id": "X", "title": "t", "severity": "severe",
-         "category": "c", "message": "m"},
-        "finding")
+        {"check_id": "X", "title": "t", "severity": "severe", "category": "c", "message": "m"},
+        "finding",
+    )
     assert any("enum" in e for e in errors)
 
 
 def test_validator_rejects_wrong_type() -> None:
-    errors = validate_named(
-        {"id": "a:b:c", "kind": "a", "domain": "b", "line": "twelve"},
-        "entity")
+    errors = validate_named({"id": "a:b:c", "kind": "a", "domain": "b", "line": "twelve"}, "entity")
     assert any("line" in e for e in errors)
 
 
 def test_validator_nested_items() -> None:
     payload = {
         "tool": {"name": "t", "version": "0"},
-        "project": {}, "summary": {},
+        "project": {},
+        "summary": {},
         "findings": [{"check_id": "X001"}],  # missing required fields
     }
     errors = validate_named(payload, "handoff")
@@ -212,18 +208,20 @@ def test_assert_valid_raises_with_all_errors() -> None:
 
 def test_contract_version_pattern_enforced() -> None:
     errors = validate_named(
-        {"contract_version": "bogus/7",
-         "id": "a:b:c", "kind": "a", "domain": "b"},
-        "entity")
+        {"contract_version": "bogus/7", "id": "a:b:c", "kind": "a", "domain": "b"}, "entity"
+    )
     assert any("contract_version" in e for e in errors)
 
 
 # -- x-* extension round trip ---------------------------------------------------
 
+
 def test_x_extension_round_trips() -> None:
     payload = {
         "contract_version": "forge-contracts/1",
-        "id": "a:b:c", "kind": "a", "domain": "b",
+        "id": "a:b:c",
+        "kind": "a",
+        "domain": "b",
         "x-future-field": {"nested": [1, 2]},
     }
     entity = Entity.from_dict(payload)
@@ -238,11 +236,11 @@ def test_forge_api_extension_round_trips() -> None:
     out = f.to_dict()
     assert out[API_EXTENSION]["entity_ids"] == ["operation:openapi:get /pets"]
     decoded = WireFinding.from_dict(out)
-    assert decoded.extensions[API_EXTENSION]["entity_ids"] == [
-        "operation:openapi:get /pets"]
+    assert decoded.extensions[API_EXTENSION]["entity_ids"] == ["operation:openapi:get /pets"]
 
 
 # -- adapters -------------------------------------------------------------------
+
 
 def test_wire_finding_maps_severity_and_fields() -> None:
     f = wire_finding(_core_finding(severity=Severity.CRITICAL))
@@ -258,20 +256,29 @@ def test_wire_finding_maps_severity_and_fields() -> None:
     assert validate_named(d, "finding") == []
 
 
-@pytest.mark.parametrize("sev,expected", [
-    (Severity.CRITICAL, "error"), (Severity.HIGH, "error"),
-    (Severity.MEDIUM, "warning"), (Severity.LOW, "info"),
-    (Severity.INFO, "info"),
-])
+@pytest.mark.parametrize(
+    "sev,expected",
+    [
+        (Severity.CRITICAL, "error"),
+        (Severity.HIGH, "error"),
+        (Severity.MEDIUM, "warning"),
+        (Severity.LOW, "info"),
+        (Severity.INFO, "info"),
+    ],
+)
 def test_severity_map(sev: Severity, expected: str) -> None:
     assert wire_finding(_core_finding(severity=sev)).severity == expected
 
 
 def test_wire_entity_decomposes_canonical_id() -> None:
-    e = wire_entity(CoreEntity(
-        id="operation:openapi:get /pets", kind="operation",
-        name="get /pets",
-        attributes={"file": "api.yaml", "line": "7"}))
+    e = wire_entity(
+        CoreEntity(
+            id="operation:openapi:get /pets",
+            kind="operation",
+            name="get /pets",
+            attributes={"file": "api.yaml", "line": "7"},
+        )
+    )
     d = e.to_dict()
     assert d["id"] == "operation:openapi:get /pets"
     assert d["kind"] == "operation"
@@ -290,15 +297,17 @@ def test_entity_from_id_unknown_on_noncanonical() -> None:
 
 
 def test_wire_relationship_maps_and_carries_confidence() -> None:
-    rel = wire_relationship(CoreRelationship(
-        kind="CALLS",
-        source_id="client:ext:sdk",
-        target_id="operation:openapi:get /pets",
-        confidence=Confidence.HIGH,
-        evidence=(CoreEvidence(
-            kind=EvidenceKind.STATIC, source="sdk.py",
-            summary="client call"),),
-    ))
+    rel = wire_relationship(
+        CoreRelationship(
+            kind="CALLS",
+            source_id="client:ext:sdk",
+            target_id="operation:openapi:get /pets",
+            confidence=Confidence.HIGH,
+            evidence=(
+                CoreEvidence(kind=EvidenceKind.STATIC, source="sdk.py", summary="client call"),
+            ),
+        )
+    )
     d = rel.to_dict()
     assert d["src"] == "client:ext:sdk"
     assert d["dst"] == "operation:openapi:get /pets"
@@ -309,10 +318,13 @@ def test_wire_relationship_maps_and_carries_confidence() -> None:
 
 
 def test_wire_unknown_maps_reason_and_detail() -> None:
-    u = wire_unknown(CoreUnknown(
-        subject="cap:IDEMPOTENT_OPERATION",
-        missing="idempotency evidence",
-        resolution="declare an Idempotency-Key header"))
+    u = wire_unknown(
+        CoreUnknown(
+            subject="cap:IDEMPOTENT_OPERATION",
+            missing="idempotency evidence",
+            resolution="declare an Idempotency-Key header",
+        )
+    )
     d = u.to_dict()
     assert d["subject"] == "cap:IDEMPOTENT_OPERATION"
     assert d["reason"] == "idempotency evidence"
@@ -322,19 +334,23 @@ def test_wire_unknown_maps_reason_and_detail() -> None:
 
 
 def test_wire_capability_supported_with_refs() -> None:
-    cap = wire_capability_gap(CapabilityGap(
-        rule=DependencyRule.SAFE_RETRY,
-        capability=CapabilityKind.RETRY,
-        missing=CapabilityKind.IDEMPOTENT_OPERATION,
-        detail="retry without idempotent evidence"))
+    cap = wire_capability_gap(
+        CapabilityGap(
+            rule=DependencyRule.SAFE_RETRY,
+            capability=CapabilityKind.RETRY,
+            missing=CapabilityKind.IDEMPOTENT_OPERATION,
+            detail="retry without idempotent evidence",
+        )
+    )
     assert cap.status == "partial"
     assert validate_named(cap.to_dict(), "capability") == []
 
     detected = DetectedCapability(
         capability=CapabilityKind.MTLS,
-        evidence=(CoreEvidence(
-            kind=EvidenceKind.CONFIG, source="deploy.yaml",
-            summary="mtls: true"),))
+        evidence=(
+            CoreEvidence(kind=EvidenceKind.CONFIG, source="deploy.yaml", summary="mtls: true"),
+        ),
+    )
     wc = wire_capability(detected)
     assert wc.id == "MTLS"
     assert wc.domain == "api"
@@ -344,15 +360,22 @@ def test_wire_capability_supported_with_refs() -> None:
 
 
 def test_wire_edge_export_carries_evidence_ids() -> None:
-    rel = wire_edge_export(EdgeExport(
-        from_id="a:b:c", to_id="a:b:d", kind="CALLS",
-        evidence_ids=("ev:1",), confidence=Confidence.MEDIUM))
+    rel = wire_edge_export(
+        EdgeExport(
+            from_id="a:b:c",
+            to_id="a:b:d",
+            kind="CALLS",
+            evidence_ids=("ev:1",),
+            confidence=Confidence.MEDIUM,
+        )
+    )
     d = rel.to_dict()
     assert d[API_EXTENSION]["evidence_ids"] == ["ev:1"]
     assert validate_named(d, "relationship") == []
 
 
 # -- report-level adapters -------------------------------------------------------
+
 
 def _report() -> DoctorReport:
     return DoctorReport(
@@ -363,13 +386,22 @@ def _report() -> DoctorReport:
             _core_finding(),
             _core_finding(id="APISEC001", severity=Severity.CRITICAL),
         ),
-        unknowns=(CoreUnknown(
-            subject="cap:GRPC_CLIENT", missing="health evidence",
-            resolution="enable grpc health service"),),
-        graph_edges=(EdgeExport(
-            from_id="client:ext:sdk", to_id="operation:openapi:get /pets",
-            kind="CALLS", evidence_ids=("ev:9",),
-            confidence=Confidence.HIGH),),
+        unknowns=(
+            CoreUnknown(
+                subject="cap:GRPC_CLIENT",
+                missing="health evidence",
+                resolution="enable grpc health service",
+            ),
+        ),
+        graph_edges=(
+            EdgeExport(
+                from_id="client:ext:sdk",
+                to_id="operation:openapi:get /pets",
+                kind="CALLS",
+                evidence_ids=("ev:9",),
+                confidence=Confidence.HIGH,
+            ),
+        ),
     )
 
 
@@ -403,11 +435,14 @@ def test_report_handoff_round_trips_through_wire() -> None:
 def test_bounded_bundle_records_truncation() -> None:
     bundle = HandoffBundle(
         tool="forge-doctor-api",
-        findings=tuple(WireFinding(
-            check_id=f"OAS{i:03}", title="t", severity="info",
-            category="oas", message="m") for i in range(5)),
-        unknowns=(UnknownFact(
-            subject="s", kind="k", reason="r"),))
+        findings=tuple(
+            WireFinding(
+                check_id=f"OAS{i:03}", title="t", severity="info", category="oas", message="m"
+            )
+            for i in range(5)
+        ),
+        unknowns=(UnknownFact(subject="s", kind="k", reason="r"),),
+    )
     bounded = bundle.bounded(findings=2)
     assert len(bounded.findings) == 2
     trunc = [u for u in bounded.unknowns if u.kind == "truncated"]
@@ -418,9 +453,9 @@ def test_bounded_bundle_records_truncation() -> None:
 
 # -- version negotiation ----------------------------------------------------------
 
+
 def test_version_negotiation() -> None:
-    assert negotiate("forge-contracts/1") == ContractVersion(
-        "forge-contracts", 1)
+    assert negotiate("forge-contracts/1") == ContractVersion("forge-contracts", 1)
     assert negotiate("forge-contracts/2") is None
     assert negotiate("other/1") is None
     assert within_range("forge-contracts/1")
@@ -430,6 +465,7 @@ def test_version_negotiation() -> None:
 
 
 # -- no cross-package import --------------------------------------------------------
+
 
 def test_no_forge_doctor_data_import() -> None:
     """Spec 074 hard rule: the wire contract is shared, internals are not."""
@@ -446,13 +482,19 @@ def test_no_forge_doctor_data_import() -> None:
                 for n in names:
                     if n.split(".")[0] == "forge_doctor_data":
                         offenders.append(f"{path}: {n}")
-    assert offenders == [], "forge_doctor_data imports: " + "; ".join(
-        offenders)
+    assert offenders == [], "forge_doctor_data imports: " + "; ".join(offenders)
 
 
 def test_schemas_pinned_set() -> None:
     assert sorted(FORGE_CONTRACT_SCHEMAS) == [
-        "capability", "diagnostic-manifest", "entity", "evidence",
-        "finding", "handoff", "migration-plan", "relationship",
-        "remediation-plan", "unknown-fact",
+        "capability",
+        "diagnostic-manifest",
+        "entity",
+        "evidence",
+        "finding",
+        "handoff",
+        "migration-plan",
+        "relationship",
+        "remediation-plan",
+        "unknown-fact",
     ]

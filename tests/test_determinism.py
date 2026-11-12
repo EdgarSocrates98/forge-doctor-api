@@ -55,7 +55,7 @@ paths:
         "201": {description: ok}
 """
 
-_APP = '''\
+_APP = """\
 from fastapi import FastAPI
 app = FastAPI()
 
@@ -66,7 +66,7 @@ def list_orders():
 @app.post("/orders")
 def create_order():
     return {}
-'''
+"""
 
 
 def _span(i: int, dur_ms: float = 100.0) -> dict[str, object]:
@@ -86,13 +86,18 @@ def _span(i: int, dur_ms: float = 100.0) -> dict[str, object]:
     }
 
 
-_OTLP = json.dumps({
-    "resourceSpans": [{
-        "resource": {"attributes": [
-            {"key": "service.name", "value": {"stringValue": "orders-api"}}]},
-        "scopeSpans": [{"scope": {}, "spans": [_span(i) for i in range(8)]}],
-    }],
-})
+_OTLP = json.dumps(
+    {
+        "resourceSpans": [
+            {
+                "resource": {
+                    "attributes": [{"key": "service.name", "value": {"stringValue": "orders-api"}}]
+                },
+                "scopeSpans": [{"scope": {}, "spans": [_span(i) for i in range(8)]}],
+            }
+        ],
+    }
+)
 
 _K8S = """\
 apiVersion: apps/v1
@@ -123,11 +128,11 @@ policies:
     applies_to: "/**"
 """
 
-_CLIENT = '''\
+_CLIENT = """\
 import httpx
 def fetch_orders():
     return httpx.get("https://api.example.com/orders")
-'''
+"""
 
 _CACHE_CFG = """\
 service:
@@ -253,8 +258,7 @@ def test_duplicate_operationid_across_documents(tmp_path: Path) -> None:
     ctx = ProjectContext.from_root(tmp_path)
     model = load_openapi_project(ctx)
     graph = contract_graph(model)
-    op_ids = sorted(
-        e.id for e in graph.entities() if e.kind == "operation")
+    op_ids = sorted(e.id for e in graph.entities() if e.kind == "operation")
     assert op_ids == [
         "operation:openapi:operation_id:addPet@a/openapi.yaml",
         "operation:openapi:operation_id:addPet@b/openapi.yaml",
@@ -267,7 +271,6 @@ def test_unique_operationid_keeps_bare_identity(tmp_path: Path) -> None:
     (tmp_path / "openapi.yaml").write_text(_API)
     ctx = ProjectContext.from_root(tmp_path)
     graph = contract_graph(load_openapi_project(ctx))
-    op_ids = sorted(
-        e.id for e in graph.entities() if e.kind == "operation")
+    op_ids = sorted(e.id for e in graph.entities() if e.kind == "operation")
     assert "operation:openapi:operation_id:listOrders" in op_ids
     assert all("@" not in i for i in op_ids)

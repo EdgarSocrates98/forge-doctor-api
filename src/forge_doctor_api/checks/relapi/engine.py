@@ -41,11 +41,7 @@ def _finding(
         severity=spec.severity,
         confidence=spec.confidence,
         evidence_kind=spec.evidence_kind,
-        evidence=(
-            Evidence(
-                kind=spec.evidence_kind, source=path, summary=description
-            ),
-        ),
+        evidence=(Evidence(kind=spec.evidence_kind, source=path, summary=description),),
         source_location=SourceLocation(path=path),
         remediation=remediation,
         unknowns=unknowns,
@@ -86,8 +82,7 @@ def run_reliability_checks(
     findings: list[Finding] = []
 
     scopes = [p.scope for p in model.retry_policies]
-    amp = amplification(hops or tuple(sorted(set(scopes))),
-                        model.retry_policies)
+    amp = amplification(hops or tuple(sorted(set(scopes))), model.retry_policies)
     if amp.potential_attempts is not None and amp.potential_attempts > 1:
         findings.append(
             _finding(
@@ -104,8 +99,7 @@ def run_reliability_checks(
         findings.append(
             _finding(
                 BY_ID["RELAPI001"],
-                "amplification unknown - hops without declared policies: "
-                + ", ".join(amp.missing),
+                "amplification unknown - hops without declared policies: " + ", ".join(amp.missing),
                 "(config)",
                 unknowns=amp.unknowns,
             )
@@ -119,12 +113,10 @@ def run_reliability_checks(
             if op.method.lower() not in _WRITE_METHODS:
                 continue
             bound = next(
-                (i for i in model.idempotency
-                 if _idem_binds(i.subject, op)),
+                (i for i in model.idempotency if _idem_binds(i.subject, op)),
                 None,
             )
-            if bound is not None and \
-                    bound.verdict is IdempotencyVerdict.IDEMPOTENT:
+            if bound is not None and bound.verdict is IdempotencyVerdict.IDEMPOTENT:
                 continue
             if bound is not None:
                 desc = (
@@ -159,7 +151,9 @@ def run_reliability_checks(
                 )
             findings.append(
                 _finding(
-                    BY_ID["RELAPI008"], desc, op.location.path,
+                    BY_ID["RELAPI008"],
+                    desc,
+                    op.location.path,
                     unknowns=unknowns,
                     remediation="declare an Idempotency-Key header or "
                     "contract idempotency metadata for the mutating "
@@ -188,7 +182,9 @@ def run_reliability_checks(
                 f"retries declared at '{policy.scope}' with idempotency "
                 f"{verdict.value.lower()} - manual review required",
                 (policy.location.path if policy.location else "(config)"),
-                unknowns=idem.unknowns if idem else (
+                unknowns=idem.unknowns
+                if idem
+                else (
                     UnknownFact(
                         subject=policy.scope,
                         missing="idempotency evidence (§42 sources)",
@@ -197,8 +193,7 @@ def run_reliability_checks(
                         "is safe",
                     ),
                 ),
-                remediation="prove idempotency or bound retries before "
-                "enabling amplification",
+                remediation="prove idempotency or bound retries before enabling amplification",
             )
         )
 
@@ -233,8 +228,11 @@ def run_reliability_checks(
 
     # RELAPI004: scopes with timeouts but no deadline-propagation evidence
     if model.timeouts:
-        propagated = {t.scope for t in model.timeouts
-                      if "stub call" in " ".join(e.summary for e in t.evidence)}
+        propagated = {
+            t.scope
+            for t in model.timeouts
+            if "stub call" in " ".join(e.summary for e in t.evidence)
+        }
         gap_scopes = sorted({t.scope for t in model.timeouts} - propagated)
         if gap_scopes:
             findings.append(
@@ -246,10 +244,8 @@ def run_reliability_checks(
                     unknowns=(
                         UnknownFact(
                             subject="deadline propagation",
-                            missing="call-site deadline evidence on the "
-                            "s2s/grpc path",
-                            resolution="verify callers pass deadlines "
-                            "downstream",
+                            missing="call-site deadline evidence on the s2s/grpc path",
+                            resolution="verify callers pass deadlines downstream",
                         ),
                     ),
                 )
@@ -267,8 +263,7 @@ def run_reliability_checks(
                     UnknownFact(
                         subject="circuit breakers",
                         missing="declared circuit-breaker config",
-                        resolution="CBs may live in mesh/app config not "
-                        "provided",
+                        resolution="CBs may live in mesh/app config not provided",
                     ),
                 ),
             )
@@ -280,15 +275,13 @@ def run_reliability_checks(
             findings.append(
                 _finding(
                     BY_ID["RELAPI006"],
-                    "reliability config exists but no health-check "
-                    "evidence - candidate",
+                    "reliability config exists but no health-check evidence - candidate",
                     "(config)",
                     unknowns=(
                         UnknownFact(
                             subject="health checks",
                             missing="declared health-check config",
-                            resolution="health checks may live in "
-                            "orchestrator config not provided",
+                            resolution="health checks may live in orchestrator config not provided",
                         ),
                     ),
                 )
@@ -297,15 +290,13 @@ def run_reliability_checks(
             findings.append(
                 _finding(
                     BY_ID["RELAPI007"],
-                    "no graceful-shutdown/drain configuration evidence - "
-                    "candidate",
+                    "no graceful-shutdown/drain configuration evidence - candidate",
                     "(config)",
                     unknowns=(
                         UnknownFact(
                             subject="graceful shutdown",
                             missing="drain/shutdown configuration",
-                            resolution="shutdown handling may live in "
-                            "platform config not provided",
+                            resolution="shutdown handling may live in platform config not provided",
                         ),
                     ),
                 )
@@ -315,8 +306,9 @@ def run_reliability_checks(
     return tuple(findings)
 
 
-def _retry_for(model: ApiReliabilityModel, caller: str,
-               callee: str | None = None) -> RetryPolicy | None:
+def _retry_for(
+    model: ApiReliabilityModel, caller: str, callee: str | None = None
+) -> RetryPolicy | None:
     """Declared retry binding for `caller` (exact or edge scope)."""
     for p in model.retry_policies:
         if p.scope == caller:
@@ -339,8 +331,7 @@ class _Missing:
 _MISSING = _Missing()
 
 
-def _timeout_for(model: ApiReliabilityModel,
-                 scope: str) -> float | _Missing | None:
+def _timeout_for(model: ApiReliabilityModel, scope: str) -> float | _Missing | None:
     for t in model.timeouts:
         if t.scope == scope:
             return t.timeout_ms
@@ -368,18 +359,17 @@ def run_depth_checks(
             ca = caller_retry.max_attempts or 0
             cb = callee_retry.max_attempts or 0
             if ca > 1 and cb > 1:
-                ca_loc = (caller_retry.location.path
-                          if caller_retry.location else "(config)")
-                cb_loc = (callee_retry.location.path
-                          if callee_retry.location else "(config)")
-                findings.append(_finding(
-                    BY_ID["APIREL001"],
-                    f"{edge}: caller retries {ca}x ({ca_loc}) x "
-                    f"callee retries {cb}x ({cb_loc}) - amplification "
-                    f"bound {ca * cb} attempts on this edge",
-                    (caller_retry.location.path if caller_retry.location
-                     else "(config)"),
-                ))
+                ca_loc = caller_retry.location.path if caller_retry.location else "(config)"
+                cb_loc = callee_retry.location.path if callee_retry.location else "(config)"
+                findings.append(
+                    _finding(
+                        BY_ID["APIREL001"],
+                        f"{edge}: caller retries {ca}x ({ca_loc}) x "
+                        f"callee retries {cb}x ({cb_loc}) - amplification "
+                        f"bound {ca * cb} attempts on this edge",
+                        (caller_retry.location.path if caller_retry.location else "(config)"),
+                    )
+                )
 
         # APIREL002 - timeout cascade on the evidenced edge. An
         # edge-scoped timeout (`caller->callee`) is caller-budget
@@ -391,28 +381,31 @@ def run_depth_checks(
         if isinstance(caller_ms, _Missing):
             continue
         if isinstance(callee_ms, _Missing):
-            findings.append(_finding(
-                BY_ID["APIREL002"],
-                f"{edge}: caller timeout {caller_ms}ms declared but "
-                "the callee has no declared timeout - cascade bound "
-                "is unknown",
-                "(config)",
-                unknowns=(
-                    UnknownFact(
-                        subject=edge,
-                        missing="callee timeout declaration",
-                        resolution="declare a timeout at the callee "
-                        "scope to bound the cascade"),
-                ),
-            ))
-        elif caller_ms is not None and callee_ms is not None \
-                and caller_ms < callee_ms:
-            findings.append(_finding(
-                BY_ID["APIREL002"],
-                f"{edge}: caller timeout {caller_ms}ms < callee "
-                f"timeout {callee_ms}ms - requests cannot complete "
-                "within the caller budget",
-                "(config)",
-            ))
+            findings.append(
+                _finding(
+                    BY_ID["APIREL002"],
+                    f"{edge}: caller timeout {caller_ms}ms declared but "
+                    "the callee has no declared timeout - cascade bound "
+                    "is unknown",
+                    "(config)",
+                    unknowns=(
+                        UnknownFact(
+                            subject=edge,
+                            missing="callee timeout declaration",
+                            resolution="declare a timeout at the callee scope to bound the cascade",
+                        ),
+                    ),
+                )
+            )
+        elif caller_ms is not None and callee_ms is not None and caller_ms < callee_ms:
+            findings.append(
+                _finding(
+                    BY_ID["APIREL002"],
+                    f"{edge}: caller timeout {caller_ms}ms < callee "
+                    f"timeout {callee_ms}ms - requests cannot complete "
+                    "within the caller budget",
+                    "(config)",
+                )
+            )
     findings.sort(key=lambda f: (f.id, f.description))
     return tuple(findings)

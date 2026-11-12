@@ -1,0 +1,12 @@
+{
+    "schema_version": 2,
+    "commit": "5c04fe78dc11274542993f5e5f2285854b7fd2a0",
+    "indexed_at": "2026-11-07T11:30:49Z",
+    "project": "E-projetos-FORJAS-forge-doctor-api",
+    "nodes": 9867,
+    "edges": 35471,
+    "original_size": 42991616,
+    "compressed_size": 5014546,
+    "compression_level": 9,
+    "reconcile_basis": "git-clean-head"
+}

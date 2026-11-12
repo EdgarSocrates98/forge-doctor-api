@@ -42,8 +42,7 @@ def error_budget(
             unknowns=(
                 UnknownFact(
                     subject=objective.name,
-                    missing=f"computable signal for metric "
-                    f"'{objective.metric}'",
+                    missing=f"computable signal for metric '{objective.metric}'",
                     resolution="error budgets consume request status "
                     "only; latency-percentile or freshness objectives "
                     "need a declared threshold signal, never an "
@@ -54,8 +53,7 @@ def error_budget(
     scoped = [
         e
         for e in executions
-        if objective.window is None
-        or window_key(e.start_unix_nano) == objective.window
+        if objective.window is None or window_key(e.start_unix_nano) == objective.window
     ]
     window = objective.window or "(all)"
     total = len(scoped)
@@ -71,16 +69,14 @@ def error_budget(
                 UnknownFact(
                     subject=objective.name,
                     missing=f">= {MIN_SAMPLES} requests in window {window}",
-                    resolution="provide more runtime history for the "
-                    "objective window",
+                    resolution="provide more runtime history for the objective window",
                 ),
             ),
         )
     errors = sum(
         1
         for e in scoped
-        if e.status == "error"
-        or ((e.status or "").isdigit() and int(e.status or "0") >= 500)
+        if e.status == "error" or ((e.status or "").isdigit() and int(e.status or "0") >= 500)
     )
     allowed = 1.0 - objective.target  # e.g. 0.999 availability -> 0.1%
     budget = allowed * total

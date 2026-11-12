@@ -36,8 +36,7 @@ def help_text(*argv: str) -> str:
     previous = typer.rich_utils.MAX_WIDTH
     typer.rich_utils.MAX_WIDTH = _PINNED_WIDTH
     try:
-        result = CliRunner().invoke(
-            app, [*argv, "--help"], env=_HELP_ENV, color=False)
+        result = CliRunner().invoke(app, [*argv, "--help"], env=_HELP_ENV, color=False)
     finally:
         typer.rich_utils.MAX_WIDTH = previous
     assert result.exit_code == 0, result.output
@@ -51,11 +50,7 @@ def help_text(*argv: str) -> str:
 # width-invariant: strip every decoration glyph, collapse to a token
 # stream, re-wrap at a fixed 100 columns. Snapshots pin the contract
 # (content + order), never the renderer's layout.
-_BOX_GLYPHS = (
-    "─━═│┃║╌╍┄┅┈┉"
-    "┌┐└┘┏┓┗┛╔╗╚╝╭╮╰╯"
-    "├┤┬┴┼┣┫┳┻╋╠╣╦╩╬╞╡╤╧╪"
-)
+_BOX_GLYPHS = "─━═│┃║╌╍┄┅┈┉┌┐└┘┏┓┗┛╔╗╚╝╭╮╰╯├┤┬┴┼┣┫┳┻╋╠╣╦╩╬╞╡╤╧╪"
 
 
 def normalized_help(*argv: str) -> str:
@@ -79,6 +74,5 @@ def normalized_help(*argv: str) -> str:
 def assert_option(command: str, *argv: str, option: str) -> str:
     """Assert `option` is present in `command argv --help` output."""
     text = help_text(command, *argv)
-    assert option in text, (
-        f"{option!r} missing from `{command} --help` output")
+    assert option in text, f"{option!r} missing from `{command} --help` output"
     return text

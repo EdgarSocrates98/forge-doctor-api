@@ -66,17 +66,29 @@ def _exec(
 ) -> RequestExecution:
     calls = tuple(
         DownstreamCall(
-            caller=svc, callee=callee, operation="charge",
-            duration_ms=callee_dur, retries=0,
+            caller=svc,
+            callee=callee,
+            operation="charge",
+            duration_ms=callee_dur,
+            retries=0,
         )
         for _ in range(fanout)
     )
     return RequestExecution(
-        request_id=f"r{i}", trace_id=f"t{i}", service=svc, operation=op,
-        method="GET", route=op, start_unix_nano=BASE + w * HOUR + i,
-        duration_ms=dur, status=status, retries=retries,
-        timed_out=timed_out, response_bytes=payload,
-        downstream_calls=calls, cache_status=cache,
+        request_id=f"r{i}",
+        trace_id=f"t{i}",
+        service=svc,
+        operation=op,
+        method="GET",
+        route=op,
+        start_unix_nano=BASE + w * HOUR + i,
+        duration_ms=dur,
+        status=status,
+        retries=retries,
+        timed_out=timed_out,
+        response_bytes=payload,
+        downstream_calls=calls,
+        cache_status=cache,
     )
 
 
@@ -120,22 +132,13 @@ def test_baselines_dimensions_and_confidence() -> None:
 
 def test_baseline_enough_samples_confident() -> None:
     exs = tuple(_exec(i, 0, 300.0) for i in range(10))
-    svc = [
-        b
-        for b in build_baselines(exs)
-        if b.dimension is BaselineDimension.SERVICE
-    ]
+    svc = [b for b in build_baselines(exs) if b.dimension is BaselineDimension.SERVICE]
     assert svc[0].confidence is Confidence.MEDIUM
 
 
 def test_dependency_baseline() -> None:
-    exs = tuple(_exec(i, 0, 300.0, fanout=1, callee_dur=120.0)
-                for i in range(10))
-    deps = [
-        b
-        for b in build_baselines(exs)
-        if b.dimension is BaselineDimension.DEPENDENCY
-    ]
+    exs = tuple(_exec(i, 0, 300.0, fanout=1, callee_dur=120.0) for i in range(10))
+    deps = [b for b in build_baselines(exs) if b.dimension is BaselineDimension.DEPENDENCY]
     assert deps and deps[0].key == "payments" and deps[0].latency
 
 
@@ -143,9 +146,7 @@ def test_dependency_baseline() -> None:
 
 
 def _two_windows(base_n=12, cur_n=12, **kw) -> tuple:
-    return tuple(
-        _exec(i, 0, kw.pop("bdur", 300.0), **kw) for i in range(base_n)
-    ) + tuple(
+    return tuple(_exec(i, 0, kw.pop("bdur", 300.0), **kw) for i in range(base_n)) + tuple(
         _exec(100 + i, 1, kw.get("cdur", 300.0), **kw) for i in range(cur_n)
     )
 
@@ -181,8 +182,7 @@ def test_apiperf001_single_window_no_fire() -> None:
 
 def test_apiperf002_error_rate() -> None:
     exs = tuple(_exec(i, 0, 300.0) for i in range(12)) + tuple(
-        _exec(100 + i, 1, 300.0, status="500" if i < 8 else "200")
-        for i in range(12)
+        _exec(100 + i, 1, 300.0, status="500" if i < 8 else "200") for i in range(12)
     )
     assert "APIPERF002" in _ids(run_perf_checks(exs))
 
@@ -190,61 +190,46 @@ def test_apiperf002_error_rate() -> None:
 def test_apiperf003_downstream_parent_child() -> None:
     """Downstream attribution comes from recorded call links, not names."""
     exs = tuple(
-        _exec(i, 0, 400.0, fanout=1, callee="payments", callee_dur=120.0)
-        for i in range(12)
+        _exec(i, 0, 400.0, fanout=1, callee="payments", callee_dur=120.0) for i in range(12)
     ) + tuple(
-        _exec(100 + i, 1, 1400.0, fanout=1, callee="payments",
-              callee_dur=1100.0)
-        for i in range(12)
+        _exec(100 + i, 1, 1400.0, fanout=1, callee="payments", callee_dur=1100.0) for i in range(12)
     )
     f = [f for f in run_perf_checks(exs) if f.id == "APIPERF003"]
     assert f and "payments" in f[0].description
 
 
 def test_apiperf004_retry_amplification() -> None:
-    exs = tuple(
-        _exec(i, 0, 300.0, retries=0) for i in range(12)
-    ) + tuple(
-        _exec(100 + i, 1, 300.0, retries=2 if i < 9 else 0)
-        for i in range(12)
+    exs = tuple(_exec(i, 0, 300.0, retries=0) for i in range(12)) + tuple(
+        _exec(100 + i, 1, 300.0, retries=2 if i < 9 else 0) for i in range(12)
     )
     f = [f for f in run_perf_checks(exs) if f.id == "APIPERF004"]
     assert f and f[0].confidence is Confidence.LOW and f[0].unknowns
 
 
 def test_apiperf005_timeout_increase() -> None:
-    exs = tuple(
-        _exec(i, 0, 300.0, timed_out=False) for i in range(12)
-    ) + tuple(
+    exs = tuple(_exec(i, 0, 300.0, timed_out=False) for i in range(12)) + tuple(
         _exec(100 + i, 1, 300.0, timed_out=i < 8) for i in range(12)
     )
     assert "APIPERF005" in _ids(run_perf_checks(exs))
 
 
 def test_apiperf006_payload_growth() -> None:
-    exs = tuple(
-        _exec(i, 0, 300.0, payload=2_000) for i in range(12)
-    ) + tuple(
+    exs = tuple(_exec(i, 0, 300.0, payload=2_000) for i in range(12)) + tuple(
         _exec(100 + i, 1, 300.0, payload=500_000) for i in range(12)
     )
     assert "APIPERF006" in _ids(run_perf_checks(exs))
 
 
 def test_apiperf007_fanout_increase() -> None:
-    exs = tuple(
-        _exec(i, 0, 300.0, fanout=1) for i in range(12)
-    ) + tuple(
+    exs = tuple(_exec(i, 0, 300.0, fanout=1) for i in range(12)) + tuple(
         _exec(100 + i, 1, 300.0, fanout=6) for i in range(12)
     )
     assert "APIPERF007" in _ids(run_perf_checks(exs))
 
 
 def test_apiperf008_cache_regression() -> None:
-    exs = tuple(
-        _exec(i, 0, 300.0, cache="HIT") for i in range(12)
-    ) + tuple(
-        _exec(100 + i, 1, 300.0, cache="MISS" if i < 10 else "HIT")
-        for i in range(12)
+    exs = tuple(_exec(i, 0, 300.0, cache="HIT") for i in range(12)) + tuple(
+        _exec(100 + i, 1, 300.0, cache="MISS" if i < 10 else "HIT") for i in range(12)
     )
     assert "APIPERF008" in _ids(run_perf_checks(exs))
 
@@ -264,23 +249,49 @@ def test_perf_determinism() -> None:
 def test_critical_path_decomposition() -> None:
     ev = Evidence(kind=EvidenceKind.RUNTIME, source="t", summary="s")
     spans = (
-        Span(service="api", operation="GET /orders", span_id="r",
-             trace_id="t1", duration_ms=1800.0, kind=SpanKind.SERVER,
-             evidence=(ev,)),
-        Span(service="api", operation="authenticate", span_id="a",
-             trace_id="t1", parent_id="r", duration_ms=50.0,
-             kind=SpanKind.INTERNAL, evidence=(ev,)),
-        Span(service="api", operation="GET charge", span_id="p",
-             trace_id="t1", parent_id="r", duration_ms=900.0,
-             kind=SpanKind.CLIENT, attributes={"peer.service": "payments"},
-             evidence=(ev,)),
-        Span(service="api", operation="db query", span_id="d",
-             trace_id="t1", parent_id="r", duration_ms=400.0,
-             kind=SpanKind.CLIENT, attributes={"peer.service": "pg"},
-             evidence=(ev,)),
+        Span(
+            service="api",
+            operation="GET /orders",
+            span_id="r",
+            trace_id="t1",
+            duration_ms=1800.0,
+            kind=SpanKind.SERVER,
+            evidence=(ev,),
+        ),
+        Span(
+            service="api",
+            operation="authenticate",
+            span_id="a",
+            trace_id="t1",
+            parent_id="r",
+            duration_ms=50.0,
+            kind=SpanKind.INTERNAL,
+            evidence=(ev,),
+        ),
+        Span(
+            service="api",
+            operation="GET charge",
+            span_id="p",
+            trace_id="t1",
+            parent_id="r",
+            duration_ms=900.0,
+            kind=SpanKind.CLIENT,
+            attributes={"peer.service": "payments"},
+            evidence=(ev,),
+        ),
+        Span(
+            service="api",
+            operation="db query",
+            span_id="d",
+            trace_id="t1",
+            parent_id="r",
+            duration_ms=400.0,
+            kind=SpanKind.CLIENT,
+            attributes={"peer.service": "pg"},
+            evidence=(ev,),
+        ),
     )
-    cp = critical_path(TraceModel(trace_id="t1", spans=spans,
-                                  duration_ms=1800.0, span_count=4))
+    cp = critical_path(TraceModel(trace_id="t1", spans=spans, duration_ms=1800.0, span_count=4))
     labels = {s.label: s.duration_ms for s in cp.segments}
     assert labels["downstream:payments"] == 900.0
     assert labels["downstream:pg"] == 400.0
@@ -292,12 +303,17 @@ def test_critical_path_decomposition() -> None:
 def test_critical_path_incomplete_unknown() -> None:
     ev = Evidence(kind=EvidenceKind.RUNTIME, source="t", summary="s")
     spans = (
-        Span(service="api", operation="op", span_id="x", trace_id="t1",
-             parent_id="ghost", duration_ms=10.0, evidence=(ev,)),
+        Span(
+            service="api",
+            operation="op",
+            span_id="x",
+            trace_id="t1",
+            parent_id="ghost",
+            duration_ms=10.0,
+            evidence=(ev,),
+        ),
     )
-    cp = critical_path(
-        TraceModel(trace_id="t1", spans=spans, span_count=1, incomplete=True)
-    )
+    cp = critical_path(TraceModel(trace_id="t1", spans=spans, span_count=1, incomplete=True))
     assert not cp.complete and cp.unknowns
 
 
@@ -315,14 +331,10 @@ def test_capacity_unknown_dims_honest() -> None:
 
 def test_capacity_saturation_thresholds() -> None:
     exs = tuple(_exec(i, 0, 300.0) for i in range(3_700))
-    tp = ThresholdProvenance(
-        source="org policy p-1", elevated=1.0, saturated=2.0
-    )
+    tp = ThresholdProvenance(source="org policy p-1", elevated=1.0, saturated=2.0)
     from forge_doctor_api.perf.capacity import CapacityDimension
 
-    sigs = capacity_signals(
-        exs, thresholds={CapacityDimension.RPS: tp}
-    )
+    sigs = capacity_signals(exs, thresholds={CapacityDimension.RPS: tp})
     rps = next(s for s in sigs if s.dimension is CapacityDimension.RPS)
     # 3700 requests in one hour-window -> ~1.03 rps -> ELEVATED
     assert rps.saturation is Saturation.ELEVATED
@@ -360,20 +372,34 @@ def test_payload_shape_static_and_runtime() -> None:
 def test_budget_evaluation() -> None:
     ev = Evidence(kind=EvidenceKind.RUNTIME, source="t", summary="s")
     spans = (
-        Span(service="api", operation="op", span_id="r", trace_id="t1",
-             duration_ms=1_000.0, kind=SpanKind.SERVER, evidence=(ev,)),
-        Span(service="api", operation="pay", span_id="p", trace_id="t1",
-             parent_id="r", duration_ms=900.0, kind=SpanKind.CLIENT,
-             attributes={"peer.service": "payments"}, evidence=(ev,)),
+        Span(
+            service="api",
+            operation="op",
+            span_id="r",
+            trace_id="t1",
+            duration_ms=1_000.0,
+            kind=SpanKind.SERVER,
+            evidence=(ev,),
+        ),
+        Span(
+            service="api",
+            operation="pay",
+            span_id="p",
+            trace_id="t1",
+            parent_id="r",
+            duration_ms=900.0,
+            kind=SpanKind.CLIENT,
+            attributes={"peer.service": "payments"},
+            evidence=(ev,),
+        ),
     )
-    cp = critical_path(
-        TraceModel(trace_id="t1", spans=spans, duration_ms=1_000.0,
-                   span_count=2)
-    )
+    cp = critical_path(TraceModel(trace_id="t1", spans=spans, duration_ms=1_000.0, span_count=2))
     budget = ApiLatencyBudget(
         name="checkout",
-        hops=(BudgetHop(name="payments", budget_ms=500.0),
-              BudgetHop(name="api", budget_ms=2_000.0)),
+        hops=(
+            BudgetHop(name="payments", budget_ms=500.0),
+            BudgetHop(name="api", budget_ms=2_000.0),
+        ),
     )
     report = evaluate_budget(cp, budget)
     by_hop = {h.hop: h for h in report.hops}
@@ -388,16 +414,21 @@ def test_budget_missing_hop_unknown() -> None:
         TraceModel(
             trace_id="t1",
             spans=(
-                Span(service="api", operation="op", span_id="r",
-                     trace_id="t1", duration_ms=10.0,
-                     kind=SpanKind.SERVER, evidence=(ev,)),
+                Span(
+                    service="api",
+                    operation="op",
+                    span_id="r",
+                    trace_id="t1",
+                    duration_ms=10.0,
+                    kind=SpanKind.SERVER,
+                    evidence=(ev,),
+                ),
             ),
-            duration_ms=10.0, span_count=1,
+            duration_ms=10.0,
+            span_count=1,
         )
     )
-    budget = ApiLatencyBudget(
-        name="b", hops=(BudgetHop(name="payments", budget_ms=100.0),)
-    )
+    budget = ApiLatencyBudget(name="b", hops=(BudgetHop(name="payments", budget_ms=100.0),))
     report = evaluate_budget(cp, budget)
     assert report.hops[0].over_budget is None and report.unknowns
 
@@ -412,9 +443,7 @@ def _experiment(**kw) -> Experiment:
             route="/checkout",
             expected_constraints=kw.pop("constraints", ()),
         ),
-        baseline=kw.pop("baseline", None) or robust_stats(
-            [300.0] * 20
-        ),
+        baseline=kw.pop("baseline", None) or robust_stats([300.0] * 20),
         **kw,
     )
 
@@ -470,14 +499,18 @@ def test_correlation_requires_entity_overlap() -> None:
     )
     regs = run_perf_checks(exs)
     change = ChangeEvent(
-        change_id="c1", subject="api:/checkout", kind="schema grew",
+        change_id="c1",
+        subject="api:/checkout",
+        kind="schema grew",
         entities=("api:/checkout",),
     )
     corrs = correlate_changes((change,), regs)
     assert corrs and "correlat" in corrs[0].caveat
     assert corrs[0].confidence is Confidence.LOW
     unrelated = ChangeEvent(
-        change_id="c2", subject="other", kind="rename",
+        change_id="c2",
+        subject="other",
+        kind="rename",
         entities=("other:svc",),
     )
     assert correlate_changes((unrelated,), regs) == ()
@@ -487,9 +520,7 @@ def test_correlation_requires_entity_overlap() -> None:
 
 
 def test_observed_signals_only_with_evidence() -> None:
-    sigs = performance_signals(
-        (_exec(1, 0, 300.0, retries=3, fanout=5),)
-    )
+    sigs = performance_signals((_exec(1, 0, 300.0, retries=3, fanout=5),))
     fams = {s.family for s in sigs}
     assert PerformanceFamily.RETRY_AMPLIFICATION in fams
     assert PerformanceFamily.FANOUT_AMPLIFICATION in fams
@@ -504,8 +535,11 @@ def test_observed_signals_only_with_evidence() -> None:
 def _write_otlp(root: Path, n: int, w: int, dur: float) -> None:
     spans = [
         {
-            "traceId": f"t{i}", "spanId": f"s{i}", "name": "GET /c",
-            "kind": 2, "startTimeUnixNano": str(BASE + w * HOUR + i * 1_000),
+            "traceId": f"t{i}",
+            "spanId": f"s{i}",
+            "name": "GET /c",
+            "kind": 2,
+            "startTimeUnixNano": str(BASE + w * HOUR + i * 1_000),
             "endTimeUnixNano": str(BASE + w * HOUR + i * 1_000 + int(dur * 1e6)),
             "attributes": [
                 {"key": "http.route", "value": {"stringValue": "/c"}},

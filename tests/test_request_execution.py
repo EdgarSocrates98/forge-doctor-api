@@ -57,13 +57,18 @@ def _trace(spans: list[Span]) -> TraceModel:
 
 def test_server_span_to_execution() -> None:
     spans = [
-        _span("srv", "t1", SpanKind.SERVER, attrs={
-            "http.request.method": "GET",
-            "http.route": "/users",
-            "http.status_code": "200",
-            "x-request-id": "r-1",
-            "http.response.body.size": "1234",
-        }),
+        _span(
+            "srv",
+            "t1",
+            SpanKind.SERVER,
+            attrs={
+                "http.request.method": "GET",
+                "http.route": "/users",
+                "http.status_code": "200",
+                "x-request-id": "r-1",
+                "http.response.body.size": "1234",
+            },
+        ),
     ]
     ex, unk = executions_from_traces((_trace(spans),))
     assert len(ex) == 1
@@ -77,11 +82,18 @@ def test_server_span_to_execution() -> None:
 def test_client_span_becomes_downstream_call() -> None:
     spans = [
         _span("srv", "t1", SpanKind.SERVER),
-        _span("cli", "t1", SpanKind.CLIENT, parent="srv", dur=50, attrs={
-            "peer.service": "pg",
-            "http.resend_count": "2",
-            "rpc.system": "grpc",
-        }),
+        _span(
+            "cli",
+            "t1",
+            SpanKind.CLIENT,
+            parent="srv",
+            dur=50,
+            attrs={
+                "peer.service": "pg",
+                "http.resend_count": "2",
+                "rpc.system": "grpc",
+            },
+        ),
     ]
     ex, _ = executions_from_traces((_trace(spans),))
     (call,) = ex[0].downstream_calls
@@ -94,8 +106,7 @@ def test_observed_retries_distinct_from_policy() -> None:
     """Review note: retries field is observed resends, never configured policy."""
     spans = [
         _span("srv", "t1", SpanKind.SERVER),
-        _span("cli", "t1", SpanKind.CLIENT, parent="srv",
-              attrs={"x-envoy-attempt-count": "3"}),
+        _span("cli", "t1", SpanKind.CLIENT, parent="srv", attrs={"x-envoy-attempt-count": "3"}),
     ]
     ex, _ = executions_from_traces((_trace(spans),))
     assert ex[0].downstream_calls[0].retries == 2  # attempts - 1
@@ -120,8 +131,7 @@ def test_no_server_root_fallback() -> None:
 def test_broken_parent_attaches_to_root_with_unknown() -> None:
     spans = [
         _span("srv", "t1", SpanKind.SERVER),
-        _span("cli", "t1", SpanKind.CLIENT, parent="ghost",
-              attrs={"peer.service": "db"}),
+        _span("cli", "t1", SpanKind.CLIENT, parent="ghost", attrs={"peer.service": "db"}),
     ]
     ex, unk = executions_from_traces((_trace(spans),))
     assert len(ex[0].downstream_calls) == 1
@@ -131,10 +141,14 @@ def test_broken_parent_attaches_to_root_with_unknown() -> None:
 def test_access_log_summary_to_execution() -> None:
     summaries = (
         RequestSummary(
-            method="GET", path="/users", status=200, request_id="r-9",
+            method="GET",
+            path="/users",
+            status=200,
+            request_id="r-9",
             bytes_sent=512,
-            evidence=(Evidence(kind=EvidenceKind.RUNTIME, source="a.log",
-                               summary="line 1", line=1),),
+            evidence=(
+                Evidence(kind=EvidenceKind.RUNTIME, source="a.log", summary="line 1", line=1),
+            ),
         ),
     )
     ex, _ = executions_from_summaries(summaries)
@@ -148,13 +162,19 @@ def test_access_log_summary_to_execution() -> None:
 def test_history_keyed_windows_deterministic() -> None:
     base = 1_700_000_000_000_000_000
     exs = (
-        RequestExecution(request_id="b", trace_id="t2", service="api",
-                         operation="op", start_unix_nano=base + 60),
-        RequestExecution(request_id="a", trace_id="t1", service="api",
-                         operation="op", start_unix_nano=base),
-        RequestExecution(request_id="c", trace_id="t3", service="api",
-                         operation="op",
-                         start_unix_nano=base + 3_700_000_000_000),
+        RequestExecution(
+            request_id="b", trace_id="t2", service="api", operation="op", start_unix_nano=base + 60
+        ),
+        RequestExecution(
+            request_id="a", trace_id="t1", service="api", operation="op", start_unix_nano=base
+        ),
+        RequestExecution(
+            request_id="c",
+            trace_id="t3",
+            service="api",
+            operation="op",
+            start_unix_nano=base + 3_700_000_000_000,
+        ),
     )
     h = RequestHistory()
     h.add_all(tuple(reversed(exs)))
@@ -169,8 +189,7 @@ def test_history_keyed_windows_deterministic() -> None:
 
 def test_history_unwindowed_and_iteration() -> None:
     h = RequestHistory()
-    h.add(RequestExecution(request_id=None, trace_id=None, service=None,
-                           operation="op"))
+    h.add(RequestExecution(request_id=None, trace_id=None, service=None, operation="op"))
     assert h.windows() == ("(unwindowed)",)
     assert h.keys() == (("(unknown)", "op", "(unwindowed)"),)
 
@@ -178,10 +197,14 @@ def test_history_unwindowed_and_iteration() -> None:
 def test_runtime_graph_calls_and_retries() -> None:
     spans = [
         _span("srv", "t1", SpanKind.SERVER),
-        _span("cli", "t1", SpanKind.CLIENT, parent="srv",
-              attrs={"peer.service": "pg", "http.resend_count": "1"}),
-        _span("cli2", "t1", SpanKind.CLIENT, parent="srv",
-              attrs={"peer.service": "cache"}),
+        _span(
+            "cli",
+            "t1",
+            SpanKind.CLIENT,
+            parent="srv",
+            attrs={"peer.service": "pg", "http.resend_count": "1"},
+        ),
+        _span("cli2", "t1", SpanKind.CLIENT, parent="srv", attrs={"peer.service": "cache"}),
     ]
     ex, _ = executions_from_traces((_trace(spans),))
     g = runtime_graph(ex)
@@ -190,10 +213,7 @@ def test_runtime_graph_calls_and_retries() -> None:
     assert (RelationshipKind.CALLS, f"{svc}api", f"{svc}pg") in kinds
     assert (RelationshipKind.CALLS, f"{svc}api", f"{svc}cache") in kinds
     assert (RelationshipKind.RETRIES, f"{svc}api", f"{svc}pg") in kinds
-    assert not any(
-        k == RelationshipKind.RETRIES and t == f"{svc}cache"
-        for k, _, t in kinds
-    )
+    assert not any(k == RelationshipKind.RETRIES and t == f"{svc}cache" for k, _, t in kinds)
     for r in g.relationships():
         assert r.evidence[0].kind is EvidenceKind.RUNTIME
 
@@ -201,8 +221,7 @@ def test_runtime_graph_calls_and_retries() -> None:
 def test_determinism_repeat_runs() -> None:
     spans = [
         _span("srv", "t1", SpanKind.SERVER, attrs={"x-request-id": "r1"}),
-        _span("cli", "t1", SpanKind.CLIENT, parent="srv",
-              attrs={"peer.service": "pg"}),
+        _span("cli", "t1", SpanKind.CLIENT, parent="srv", attrs={"peer.service": "pg"}),
     ]
     a = executions_from_traces((_trace(spans),))[0]
     b = executions_from_traces((_trace(spans),))[0]

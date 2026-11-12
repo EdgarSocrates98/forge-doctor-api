@@ -28,9 +28,7 @@ class RetryAmplification(Model):
     unknowns: tuple[UnknownFact, ...] = ()
 
 
-def amplification(
-    hops: tuple[str, ...], policies: tuple[RetryPolicy, ...]
-) -> RetryAmplification:
+def amplification(hops: tuple[str, ...], policies: tuple[RetryPolicy, ...]) -> RetryAmplification:
     """§41 multiply declared attempts across a client->dep hop chain.
 
     `policies` bind to hops by `scope`: an exact hop name, or an
@@ -58,9 +56,7 @@ def amplification(
         else:
             bound.append(p)
     overlap: set[str] = set()
-    declared_sets = [
-        set(p.retryable_statuses) for p in bound if p.retryable_statuses
-    ]
+    declared_sets = [set(p.retryable_statuses) for p in bound if p.retryable_statuses]
     if declared_sets and len(declared_sets) == len(bound):
         overlap = set.intersection(*declared_sets) if declared_sets else set()
     complete = not missing and bool(bound)
@@ -84,8 +80,7 @@ def amplification(
                 UnknownFact(
                     subject=f"hop {hop}",
                     missing="declared retry policy with max_attempts",
-                    resolution="amplification is not computed without "
-                    "explicit per-hop configs",
+                    resolution="amplification is not computed without explicit per-hop configs",
                 )
                 for hop in missing
             )

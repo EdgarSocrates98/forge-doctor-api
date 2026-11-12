@@ -92,6 +92,7 @@ def test_no_error_surface_is_unknown(tmp_path: Path) -> None:
 
 def test_custom_contract(tmp_path: Path) -> None:
     from forge_doctor_api.checks.drift.error_contract import ErrorContract
+
     contract = ErrorContract(
         name="org-json-error",
         required_content_types=("application/json",),

@@ -317,6 +317,32 @@ This is the path the `forge-cli` native/registry method delegates to
 (`{python} -m forge_doctor_api install ...`) — see
 [docs/installation/portable-installation.md](installation/portable-installation.md).
 
+## obsidian
+
+**Stability:** experimental
+
+
+```text
+forge-doctor-api obsidian status
+forge-doctor-api obsidian scan [--prefix P] [--limit N]
+forge-doctor-api obsidian preview PATH
+forge-doctor-api obsidian sync-plan PATH FILE [--baseline-hash H] [--classification C]
+forge-doctor-api obsidian export PATH FILE [--baseline-hash H] [--classification C]
+                            [--yes] [--no-moc]
+forge-doctor-api obsidian export-note NAME FILE [--baseline-hash H] [--classification C]
+                            [--yes] [--no-moc]
+forge-doctor-api obsidian history [--limit N]
+```
+
+Obsidian vault integration through the vendored `forge-obsidian` engine
+(byte-parity with the canonical the-forge copy). `status` reports the
+configured/detected vault, `scan` lists Markdown paths without reading
+bodies, `preview` shows metadata plus the projection — never the body.
+`sync-plan` dry-runs a sync of FILE into a vault path, `export` applies a
+reviewed plan, `export-note` exports one file under
+`forges/<forge-id>/<name>.md`, and `history` lists prior sync receipts
+(body-free). Writes stay scoped to the configured vault.
+
 ## mcp
 
 **Stability:** experimental

@@ -124,14 +124,8 @@ def _ev(
     )
 
 
-def _cap(
-    cap: Capability, *evidence: Evidence
-) -> DetectedCapability | None:
-    return (
-        DetectedCapability(capability=cap, evidence=tuple(evidence))
-        if evidence
-        else None
-    )
+def _cap(cap: Capability, *evidence: Evidence) -> DetectedCapability | None:
+    return DetectedCapability(capability=cap, evidence=tuple(evidence)) if evidence else None
 
 
 def detect_capabilities(
@@ -207,19 +201,17 @@ def detect_capabilities(
             found.append(c)
         if c := _cap(
             Capability.GRPC_CLIENT,
-            *(
-                _ev(c2.location, f"grpc stub call {c2.stub}")
-                for c2 in grpc.client_calls
-            ),
+            *(_ev(c2.location, f"grpc stub call {c2.stub}") for c2 in grpc.client_calls),
         ):
             found.append(c)
-    if asyncapi is not None and asyncapi.documents and (
-        c := _cap(
-            Capability.ASYNCAPI,
-            *(
-                _ev(doc.location, "AsyncAPI document")
-                for doc in asyncapi.documents
-            ),
+    if (
+        asyncapi is not None
+        and asyncapi.documents
+        and (
+            c := _cap(
+                Capability.ASYNCAPI,
+                *(_ev(doc.location, "AsyncAPI document") for doc in asyncapi.documents),
+            )
         )
     ):
         found.append(c)
@@ -234,34 +226,39 @@ def detect_capabilities(
             *(ev for h in reliability.health_checks for ev in h.evidence),
         ):
             found.append(c)
-        idem_ev = tuple(
-            ev for i in reliability.idempotency for s in i.sources for ev in s.evidence
-        )
+        idem_ev = tuple(ev for i in reliability.idempotency for s in i.sources for ev in s.evidence)
         idem_ok = tuple(
-            i for i in reliability.idempotency
-            if i.verdict is IdempotencyVerdict.IDEMPOTENT
+            i for i in reliability.idempotency if i.verdict is IdempotencyVerdict.IDEMPOTENT
         )
         if idem_ok and idem_ev:
-            found.append(DetectedCapability(
-                capability=Capability.IDEMPOTENT_OPERATION,
-                evidence=idem_ev,
-            ))
+            found.append(
+                DetectedCapability(
+                    capability=Capability.IDEMPOTENT_OPERATION,
+                    evidence=idem_ev,
+                )
+            )
         key_ev = tuple(
-            ev for i in reliability.idempotency
+            ev
+            for i in reliability.idempotency
             if any(s.kind == "idempotency_key" for s in i.sources)
-            for s in i.sources for ev in s.evidence
+            for s in i.sources
+            for ev in s.evidence
         )
         if key_ev:
-            found.append(DetectedCapability(
-                capability=Capability.IDEMPOTENCY_KEYS,
-                evidence=key_ev,
-            ))
+            found.append(
+                DetectedCapability(
+                    capability=Capability.IDEMPOTENCY_KEYS,
+                    evidence=key_ev,
+                )
+            )
     if security is not None:
         if c := _cap(
             Capability.MTLS,
             *(
-                ev for s in security.auth_schemes
-                if s.type is AuthSchemeType.MTLS for ev in s.evidence
+                ev
+                for s in security.auth_schemes
+                if s.type is AuthSchemeType.MTLS
+                for ev in s.evidence
             ),
         ):
             found.append(c)
@@ -288,8 +285,7 @@ def detect_capabilities(
                 UnknownFact(
                     subject=dep.trigger.value,
                     missing=f"{dep.requires.value} evidence",
-                    resolution="the dependency may be satisfied by "
-                    "evidence this scan did not see",
+                    resolution="the dependency may be satisfied by evidence this scan did not see",
                 ),
             ),
         )
@@ -308,7 +304,5 @@ def pack_capabilities(platform: str) -> tuple[str, ...]:
         for entry in pack.entries:
             pid = str(entry.fields.get("platform", "")).lower()
             if pid == needle:
-                return tuple(
-                    str(c) for c in entry.fields.get("capabilities", ())
-                )
+                return tuple(str(c) for c in entry.fields.get("capabilities", ()))
     return ()

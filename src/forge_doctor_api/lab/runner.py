@@ -64,14 +64,26 @@ from forge_doctor_api.reliability.config import gateway_edge_policies
 from forge_doctor_api.security import load_security_model
 
 _DEFAULT_RUN = (
-    "openapi", "security", "reliability", "clients", "runtime",
-    "graphql", "grpc", "asyncapi", "policy",
+    "openapi",
+    "security",
+    "reliability",
+    "clients",
+    "runtime",
+    "graphql",
+    "grpc",
+    "asyncapi",
+    "policy",
 )
 
-_PARSE_FAILURE_CODES = frozenset({
-    IssueCode.MALFORMED, IssueCode.UNREADABLE, IssueCode.DUPLICATE_KEY,
-    IssueCode.INVALID_REF, IssueCode.MISSING_REF_TARGET,
-})
+_PARSE_FAILURE_CODES = frozenset(
+    {
+        IssueCode.MALFORMED,
+        IssueCode.UNREADABLE,
+        IssueCode.DUPLICATE_KEY,
+        IssueCode.INVALID_REF,
+        IssueCode.MISSING_REF_TARGET,
+    }
+)
 
 
 @dataclass(kw_only=True)
@@ -110,8 +122,7 @@ def _route_scans(ctx: ProjectContext) -> tuple[ServiceGraph, ...]:
         return ()
     for adapter in adapters:
         try:
-            scan = adapter.discover_routes(
-                ctx, service=ctx.root.name, files=files)
+            scan = adapter.discover_routes(ctx, service=ctx.root.name, files=files)
         except (ContextError, OSError, ValueError):
             continue
         if scan.routes:
@@ -122,10 +133,7 @@ def _route_scans(ctx: ProjectContext) -> tuple[ServiceGraph, ...]:
 def run_scenario(context: ProjectContext, scenario: LabScenario) -> LabObservations:
     """Run the scenario's pipelines and collect observations."""
     ctx = _sub_ctx(context, scenario.path)
-    files = [
-        f for f in ctx.iter_files()
-        if Path(f).name not in ("expected.yaml", "expected.yml")
-    ]
+    files = [f for f in ctx.iter_files() if Path(f).name not in ("expected.yaml", "expected.yml")]
     run = set(scenario.run) if scenario.run else set(_DEFAULT_RUN)
     obs = LabObservations(sample_size=len(files))
 
@@ -133,28 +141,22 @@ def run_scenario(context: ProjectContext, scenario: LabScenario) -> LabObservati
     if run & {"openapi", "security", "diff", "policy", "cache"}:
         openapi = load_openapi_project(ctx)
         obs.issues.extend(f"{i.code}:{i.message}" for i in openapi.issues)
-        obs.parse_failures += sum(
-            1 for i in openapi.issues
-            if i.code in _PARSE_FAILURE_CODES)
-        obs.unsupported += sum(
-            1 for i in openapi.issues
-            if i.code is IssueCode.UNSUPPORTED_VERSION)
+        obs.parse_failures += sum(1 for i in openapi.issues if i.code in _PARSE_FAILURE_CODES)
+        obs.unsupported += sum(1 for i in openapi.issues if i.code is IssueCode.UNSUPPORTED_VERSION)
         obs.unknowns += sum(
-            1 for i in openapi.issues
-            if i.code in (IssueCode.MISSING_REF_TARGET,
-                          IssueCode.INVALID_REF))
+            1
+            for i in openapi.issues
+            if i.code in (IssueCode.MISSING_REF_TARGET, IssueCode.INVALID_REF)
+        )
     if "openapi" in run and openapi is not None:
         obs.findings.extend(run_openapi_checks(openapi))
         graph = contract_graph(openapi)
         obs.entities.extend(f"{e.kind}:{e.name}" for e in graph.entities())
-        obs.edges.extend(
-            f"{r.kind}:{r.source_id}->{r.target_id}" for r in graph.relationships()
-        )
+        obs.edges.extend(f"{r.kind}:{r.source_id}->{r.target_id}" for r in graph.relationships())
         for route_graph in _route_scans(ctx):
             obs.entities.extend(f"{e.kind}:{e.name}" for e in route_graph.entities())
             obs.edges.extend(
-                f"{r.kind}:{r.source_id}->{r.target_id}"
-                for r in route_graph.relationships()
+                f"{r.kind}:{r.source_id}->{r.target_id}" for r in route_graph.relationships()
             )
 
     clients: ApiClientModel | None = None
@@ -174,12 +176,14 @@ def run_scenario(context: ProjectContext, scenario: LabScenario) -> LabObservati
         if any(s.routes for s in scans):
             lab_routes = RouteScan(
                 service=ctx.root.name,
-                routes=tuple(sorted(
-                    {r for s in scans for r in s.routes},
-                    key=lambda r: (r.method, r.path, r.handler))),
+                routes=tuple(
+                    sorted(
+                        {r for s in scans for r in s.routes},
+                        key=lambda r: (r.method, r.path, r.handler),
+                    )
+                ),
             )
-        security = load_security_model(
-            ctx, files, openapi=openapi, routes=lab_routes)
+        security = load_security_model(ctx, files, openapi=openapi, routes=lab_routes)
     if "security" in run and openapi is not None and security is not None:
         obs.findings.extend(run_security_checks(security, openapi))
 
@@ -188,12 +192,11 @@ def run_scenario(context: ProjectContext, scenario: LabScenario) -> LabObservati
     meshes: tuple[ServiceMeshModel, ...] = ()
     if "gateway" in run:
         gateways, meshes, gw_unknowns = load_gateway_models(ctx, files)
-        obs.issues.extend(
-            f"{u.subject}:{u.missing}" for u in gw_unknowns)
+        obs.issues.extend(f"{u.subject}:{u.missing}" for u in gw_unknowns)
         obs.unknowns += len(gw_unknowns)
         chain_edges.extend(
-            (gw.dialect.value, rt.service)
-            for gw in gateways for rt in gw.routes if rt.service)
+            (gw.dialect.value, rt.service) for gw in gateways for rt in gw.routes if rt.service
+        )
 
     reliability = None
     if "reliability" in run or "policy" in run:
@@ -203,31 +206,31 @@ def run_scenario(context: ProjectContext, scenario: LabScenario) -> LabObservati
             if extra_r or extra_t:
                 reliability = replace(
                     reliability,
-                    retry_policies=tuple(sorted(
-                        (*reliability.retry_policies, *extra_r),
-                        key=lambda r: r.scope)),
-                    timeouts=tuple(sorted(
-                        (*reliability.timeouts, *extra_t),
-                        key=lambda t: t.scope)))
+                    retry_policies=tuple(
+                        sorted((*reliability.retry_policies, *extra_r), key=lambda r: r.scope)
+                    ),
+                    timeouts=tuple(
+                        sorted((*reliability.timeouts, *extra_t), key=lambda t: t.scope)
+                    ),
+                )
     if "reliability" in run and reliability is not None:
         obs.findings.extend(
             run_reliability_checks(
-                reliability, tuple(scenario.hops) or None,
-                operations=(
-                    openapi.operations if openapi is not None else None))
+                reliability,
+                tuple(scenario.hops) or None,
+                operations=(openapi.operations if openapi is not None else None),
+            )
         )
         # Declared hop chains + resolved gateway route targets feed the
         # edge-level depth checks - evidenced edges only (spec 079).
-        edges = tuple(chain_edges) + tuple(
-            zip(scenario.hops, scenario.hops[1:], strict=False))
+        edges = tuple(chain_edges) + tuple(zip(scenario.hops, scenario.hops[1:], strict=False))
         if edges:
             obs.findings.extend(run_depth_checks(reliability, edges))
 
     if "cache" in run:
         cache = load_cache_model(ctx, files, openapi=openapi)
         obs.unknowns += len(cache.unknowns)
-        obs.issues.extend(
-            f"{u.subject}:{u.missing}" for u in cache.unknowns)
+        obs.issues.extend(f"{u.subject}:{u.missing}" for u in cache.unknowns)
         if openapi is not None:
             _cg, cache_findings = build_cache_graph(cache, openapi)
             obs.findings.extend(cache_findings)
@@ -253,25 +256,23 @@ def run_scenario(context: ProjectContext, scenario: LabScenario) -> LabObservati
     if "frameworks" in run:
         for adapter in available_adapters(ctx, files):
             surfaces = (
-                adapter.discover_auth, adapter.discover_dependencies,
-                adapter.discover_error_handlers, adapter.discover_schemas,
-                adapter.discover_validation)
+                adapter.discover_auth,
+                adapter.discover_dependencies,
+                adapter.discover_error_handlers,
+                adapter.discover_schemas,
+                adapter.discover_validation,
+            )
             for surface in surfaces:
                 res = surface(ctx, files)
                 obs.entities.extend(
-                    f"capability:{adapter.framework}:{i.kind}:{i.label}"
-                    for i in res.items)
-                obs.issues.extend(
-                    f"{u.subject}:{u.missing}" for u in res.unknowns)
+                    f"capability:{adapter.framework}:{i.kind}:{i.label}" for i in res.items
+                )
+                obs.issues.extend(f"{u.subject}:{u.missing}" for u in res.unknowns)
                 obs.unknowns += len(res.unknowns)
 
     if "policy" in run:
         policy_set = load_policies(ctx, files)
-        today = (
-            date.fromisoformat(scenario.today)
-            if scenario.today
-            else date.min
-        )
+        today = date.fromisoformat(scenario.today) if scenario.today else date.min
         rule_ctx = RuleContext(
             openapi=openapi,
             security=security,
@@ -286,7 +287,8 @@ def run_scenario(context: ProjectContext, scenario: LabScenario) -> LabObservati
         new_model = load_openapi_project(_sub_ctx(ctx, scenario.diff_new))
         diff = diff_models(old_model, new_model)
         obs.breaking.extend(
-            c.subject for c in diff.changes
+            c.subject
+            for c in diff.changes
             if c.classification is not CompatibilityClass.NON_BREAKING
         )
         if clients is not None:

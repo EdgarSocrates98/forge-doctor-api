@@ -34,9 +34,7 @@ def _date(value: object, field_name: str) -> date | None:
     try:
         return date.fromisoformat(str(value))
     except ValueError as exc:
-        raise ModelError(
-            f"provenance {field_name} must be an ISO date: {value!r}"
-        ) from exc
+        raise ModelError(f"provenance {field_name} must be an ISO date: {value!r}") from exc
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -58,18 +56,13 @@ class PackProvenance(Model):
         doc = raw if isinstance(raw, dict) else {}
         missing = [k for k in REQUIRED_PROVENANCE if doc.get(k) in (None, "")]
         if missing:
-            raise ModelError(
-                f"pack entry {entry_id!r} missing provenance: "
-                f"{', '.join(missing)}"
-            )
+            raise ModelError(f"pack entry {entry_id!r} missing provenance: {', '.join(missing)}")
         return cls(
             source=str(doc["source"]),
             source_version=str(doc["source_version"]),
             last_verified=_date(doc["last_verified"], "last_verified") or date.min,
             effective_since=_date(doc.get("effective_since"), "effective_since"),
-            deprecated_since=_date(
-                doc.get("deprecated_since"), "deprecated_since"
-            ),
+            deprecated_since=_date(doc.get("deprecated_since"), "deprecated_since"),
         )
 
     def age_days(self, today: date) -> int:
@@ -104,8 +97,7 @@ class KnowledgePack(Model):
         _require_text("KnowledgePack.edition", self.edition)
         if self.maturity not in MATURITY_STAGES:
             raise ModelError(
-                f"KnowledgePack.maturity must be one of "
-                f"{MATURITY_STAGES}: {self.maturity!r}"
+                f"KnowledgePack.maturity must be one of {MATURITY_STAGES}: {self.maturity!r}"
             )
 
     def entry(self, entry_id: str) -> PackEntry | None:
@@ -116,7 +108,4 @@ class KnowledgePack(Model):
 
     def stale_entries(self, today: date, max_age_days: int) -> tuple[PackEntry, ...]:
         """Entries whose `last_verified` is older than `max_age_days` (§127)."""
-        return tuple(
-            e for e in self.entries
-            if e.provenance.age_days(today) > max_age_days
-        )
+        return tuple(e for e in self.entries if e.provenance.age_days(today) > max_age_days)

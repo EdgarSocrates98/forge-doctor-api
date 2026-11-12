@@ -68,7 +68,7 @@ addopts = "-ra --basetemp=.pytest-tmp"
 line-length = 100
 target-version = "py311"
 src = ["src", "tests"]
-extend-exclude = ["factory", "docs", ".claude", "labs"]
+extend-exclude = ["factory", "docs", ".claude", "labs", "src/forge_doctor_api/_forge_obsidian"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF", "DTZ"]
@@ -82,9 +82,13 @@ select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF", "DTZ"]
 # Vendored shared sources — canonical copies in the-forge are the lint target.
 "scripts/forge_installkit.py" = ["ALL"]
 "scripts/forge_bootstrap.py" = ["ALL"]
+# Vendored forge-context engine (canonical: the-forge) — byte-parity, lint owned upstream.
+"scripts/forge_context.py" = ["ALL"]
+"src/forge_doctor_api/_forgecontext.py" = ["ALL"]
 # Wheel copy of the same vendored engine (byte-parity asserted by
 # tests/test_forge_install.py) — canonical copy is the lint target.
 "src/forge_doctor_api/_installkit.py" = ["ALL"]
+"src/forge_doctor_api/_forge_obsidian/*" = ["ALL"]
 # Vendored portal server — canonical copy in forge-portal/portal_core.
 "scripts/_forge_portal.py" = ["ALL"]
 "scripts/_portal_telemetry.py" = ["ALL"]
@@ -111,6 +115,12 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = ["forge_doctor_api.handoff.mcp_server"]
 disallow_untyped_decorators = false
+
+[[tool.mypy.overrides]]
+# Vendored Obsidian engine — byte-parity with the canonical copy in the-forge;
+# Windows-only `msvcrt` attrs are typed upstream.
+module = ["forge_doctor_api._forge_obsidian", "forge_doctor_api._forge_obsidian.*"]
+ignore_errors = true
 
 [[tool.mypy.overrides]]
 # Vendored upstream surfaces (byte-parity with the-forge, same convention

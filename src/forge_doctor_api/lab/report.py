@@ -51,21 +51,18 @@ def compare(scenario: LabScenario, obs: LabObservations) -> LabResult:
     descriptions = [f"{f.title} {f.description}" for f in obs.findings]
     corpus = "\n".join(descriptions)
 
-    missing_findings = tuple(
-        e for e in exp.findings if not any(_matches(e, a) for a in actual_ids)
-    )
+    missing_findings = tuple(e for e in exp.findings if not any(_matches(e, a) for a in actual_ids))
     forbidden_hits = tuple(
-        a for a in actual_ids
-        if any(_matches(e, a) for e in exp.forbidden_findings)
+        a for a in actual_ids if any(_matches(e, a) for e in exp.forbidden_findings)
     )
     unexpected = tuple(
-        a for a in actual_ids
+        a
+        for a in actual_ids
         if not any(_matches(e, a) for e in exp.findings)
         and not any(_matches(e, a) for e in exp.forbidden_findings)
     )
     wording = tuple(
-        e for e in exp.description_contains
-        if not any(e in d for d in descriptions)
+        e for e in exp.description_contains if not any(e in d for d in descriptions)
     ) + tuple(
         f"forbidden wording {w!r} present"
         for w in exp.forbidden_description_contains
@@ -77,27 +74,32 @@ def compare(scenario: LabScenario, obs: LabObservations) -> LabResult:
     forbidden_entity_hits = tuple(
         e for e in exp.forbidden_entities if any(e in x for x in obs.entities)
     )
-    forbidden_edge_hits = tuple(
-        e for e in exp.forbidden_edges if any(e in x for x in obs.edges)
-    )
+    forbidden_edge_hits = tuple(e for e in exp.forbidden_edges if any(e in x for x in obs.edges))
     missing_clients = _missing(exp.clients, obs.clients)
-    missing_breaking = tuple(
-        b for b in exp.breaking if not any(b in s for s in obs.breaking)
-    )
+    missing_breaking = tuple(b for b in exp.breaking if not any(b in s for s in obs.breaking))
     missing_runtime_signals = tuple(
-        s for s in exp.runtime_signals
-        if s not in obs.runtime_signals
-        and not any(_matches(s, a) for a in actual_ids)
+        s
+        for s in exp.runtime_signals
+        if s not in obs.runtime_signals and not any(_matches(s, a) for a in actual_ids)
     )
     missing_issues = tuple(i for i in exp.issues if i not in issues_text)
-    passed = not any((
-        missing_findings, unexpected, forbidden_hits,
-        missing_entities, missing_edges,
-        forbidden_entity_hits, forbidden_edge_hits,
-        missing_clients, missing_breaking,
-        missing_runtime_signals, missing_issues, wording,
-        scenario.problems,
-    ))
+    passed = not any(
+        (
+            missing_findings,
+            unexpected,
+            forbidden_hits,
+            missing_entities,
+            missing_edges,
+            forbidden_entity_hits,
+            forbidden_edge_hits,
+            missing_clients,
+            missing_breaking,
+            missing_runtime_signals,
+            missing_issues,
+            wording,
+            scenario.problems,
+        )
+    )
     return LabResult(
         domain=scenario.domain,
         name=scenario.name,
@@ -142,15 +144,20 @@ def run_labs(context: ProjectContext) -> LabReport:
     for scenario in scenarios:
         missing = missing_extras(scenario_requirements(scenario))
         if missing:
-            pairs.append((scenario, LabResult(
-                domain=scenario.domain,
-                name=scenario.name,
-                passed=False,
-                skipped=True,
-                skip_reason="missing extras: " + ", ".join(missing),
-                problems=scenario.problems,
-                provenance=scenario.provenance,
-            )))
+            pairs.append(
+                (
+                    scenario,
+                    LabResult(
+                        domain=scenario.domain,
+                        name=scenario.name,
+                        passed=False,
+                        skipped=True,
+                        skip_reason="missing extras: " + ", ".join(missing),
+                        problems=scenario.problems,
+                        provenance=scenario.provenance,
+                    ),
+                )
+            )
             continue
         tracemalloc.start()
         t0 = perf_counter()
@@ -176,11 +183,19 @@ def aggregate_scores(
 
     def stat(family: str) -> dict[str, int]:
         return stats.setdefault(
-            family, {"expected": 0, "hits": 0, "misses": 0,
-                     "false_positives": 0, "sample_size": 0,
-                     "unknowns": 0, "unsupported": 0,
-                     "parse_failures": 0, "elapsed_ms": 0,
-                     "peak_bytes": 0}
+            family,
+            {
+                "expected": 0,
+                "hits": 0,
+                "misses": 0,
+                "false_positives": 0,
+                "sample_size": 0,
+                "unknowns": 0,
+                "unsupported": 0,
+                "parse_failures": 0,
+                "elapsed_ms": 0,
+                "peak_bytes": 0,
+            },
         )
 
     for scenario, result in pairs:
@@ -231,11 +246,19 @@ def aggregate_domain_scores(
 
     def stat(domain: str) -> dict[str, int]:
         return stats.setdefault(
-            domain, {"scenarios": 0, "expected": 0, "hits": 0,
-                     "misses": 0, "false_positives": 0,
-                     "unknowns": 0, "unsupported": 0,
-                     "parse_failures": 0, "elapsed_ms": 0,
-                     "peak_bytes": 0}
+            domain,
+            {
+                "scenarios": 0,
+                "expected": 0,
+                "hits": 0,
+                "misses": 0,
+                "false_positives": 0,
+                "unknowns": 0,
+                "unsupported": 0,
+                "parse_failures": 0,
+                "elapsed_ms": 0,
+                "peak_bytes": 0,
+            },
         )
 
     for scenario, result in pairs:
@@ -252,8 +275,7 @@ def aggregate_domain_scores(
             s["expected"] += 1
             hit = any(_matches(entry, a) for a in result.observed_findings)
             s["hits" if hit else "misses"] += 1
-        s["false_positives"] += (
-            len(result.unexpected_findings) + len(result.forbidden_hits))
+        s["false_positives"] += len(result.unexpected_findings) + len(result.forbidden_hits)
     return tuple(
         DomainScore(
             domain=domain,

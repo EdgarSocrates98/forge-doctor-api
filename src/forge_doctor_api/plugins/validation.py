@@ -58,78 +58,100 @@ _ENUMS = {
 class OutputViolation(Model):
     """One typed rejection of plugin output."""
 
-    rule: str        # stable rule id, e.g. "severity", "entity-id"
-    detail: str      # what was wrong, no plugin-supplied formatting
-    path: str = ""   # where in the result, e.g. "findings[2]"
+    rule: str  # stable rule id, e.g. "severity", "entity-id"
+    detail: str  # what was wrong, no plugin-supplied formatting
+    path: str = ""  # where in the result, e.g. "findings[2]"
 
 
 def _as_data(result: Any) -> Any:
     if isinstance(result, Model):
         return result.to_dict()
     if isinstance(result, (list, tuple)):
-        return [x.to_dict() if isinstance(x, Model) else x
-                for x in result]
+        return [x.to_dict() if isinstance(x, Model) else x for x in result]
     return result
 
 
-def _finding_violations(f: Any, path: str,
-                        root: Path) -> list[OutputViolation]:
+def _finding_violations(f: Any, path: str, root: Path) -> list[OutputViolation]:
     out: list[OutputViolation] = []
     if not isinstance(f, dict):
-        return [OutputViolation(
-            rule="finding-type", path=path,
-            detail="finding must be a mapping")]
+        return [OutputViolation(rule="finding-type", path=path, detail="finding must be a mapping")]
     fid = f.get("id")
     if not isinstance(fid, str) or not CHECK_ID_PATTERN.match(fid):
-        out.append(OutputViolation(
-            rule="check-id", path=f"{path}.id",
-            detail="finding id must match the stable check-id shape"))
+        out.append(
+            OutputViolation(
+                rule="check-id",
+                path=f"{path}.id",
+                detail="finding id must match the stable check-id shape",
+            )
+        )
     for field, allowed in _ENUMS.items():
         val = f.get(field)
         if val not in allowed:
-            out.append(OutputViolation(
-                rule=field, path=f"{path}.{field}",
-                detail=f"{field} must be one of "
-                       f"{sorted(allowed)}"))
+            out.append(
+                OutputViolation(
+                    rule=field,
+                    path=f"{path}.{field}",
+                    detail=f"{field} must be one of {sorted(allowed)}",
+                )
+            )
     evidence = f.get("evidence")
     if not isinstance(evidence, list) or not evidence:
-        out.append(OutputViolation(
-            rule="evidence", path=f"{path}.evidence",
-            detail="finding must carry at least one evidence item"))
+        out.append(
+            OutputViolation(
+                rule="evidence",
+                path=f"{path}.evidence",
+                detail="finding must carry at least one evidence item",
+            )
+        )
     else:
         for i, ev in enumerate(evidence):
             ep = f"{path}.evidence[{i}]"
             if not isinstance(ev, dict):
-                out.append(OutputViolation(
-                    rule="evidence", path=ep,
-                    detail="evidence must be a mapping"))
+                out.append(
+                    OutputViolation(rule="evidence", path=ep, detail="evidence must be a mapping")
+                )
                 continue
             if ev.get("kind") not in _ENUMS["evidence_kind"]:
-                out.append(OutputViolation(
-                    rule="evidence-kind", path=f"{ep}.kind",
-                    detail="unknown evidence kind"))
+                out.append(
+                    OutputViolation(
+                        rule="evidence-kind", path=f"{ep}.kind", detail="unknown evidence kind"
+                    )
+                )
             if not ev.get("source") or not ev.get("summary"):
-                out.append(OutputViolation(
-                    rule="evidence", path=ep,
-                    detail="evidence needs source and summary"))
-    if f.get("confidence") == Confidence.UNKNOWN.value and not (
-            f.get("unknowns")):
-        out.append(OutputViolation(
-            rule="unknowns", path=f"{path}.unknowns",
-            detail="UNKNOWN confidence requires unknowns"))
+                out.append(
+                    OutputViolation(
+                        rule="evidence", path=ep, detail="evidence needs source and summary"
+                    )
+                )
+    if f.get("confidence") == Confidence.UNKNOWN.value and not (f.get("unknowns")):
+        out.append(
+            OutputViolation(
+                rule="unknowns",
+                path=f"{path}.unknowns",
+                detail="UNKNOWN confidence requires unknowns",
+            )
+        )
     for i, eid in enumerate(f.get("entity_ids") or []):
         try:
             parse_entity_id(str(eid))
         except Exception as exc:
-            out.append(OutputViolation(
-                rule="entity-id", path=f"{path}.entity_ids[{i}]",
-                detail=f"non-canonical entity id: {exc}"))
+            out.append(
+                OutputViolation(
+                    rule="entity-id",
+                    path=f"{path}.entity_ids[{i}]",
+                    detail=f"non-canonical entity id: {exc}",
+                )
+            )
     loc = f.get("source_location")
     if isinstance(loc, dict) and loc.get("path"):
         p = loc["path"]
-        bad = (not isinstance(p, str) or "\\" in p
-               or PurePosixPath(p).is_absolute() or ":" in p
-               or ".." in PurePosixPath(p).parts)
+        bad = (
+            not isinstance(p, str)
+            or "\\" in p
+            or PurePosixPath(p).is_absolute()
+            or ":" in p
+            or ".." in PurePosixPath(p).parts
+        )
         if not bad:
             resolved = (root / p).resolve()
             try:
@@ -137,21 +159,29 @@ def _finding_violations(f: Any, path: str,
             except ValueError:
                 bad = True
         if bad:
-            out.append(OutputViolation(
-                rule="path-scope", path=f"{path}.source_location.path",
-                detail="path must stay inside the analyzed root "
-                       "(relative POSIX, no '..')"))
+            out.append(
+                OutputViolation(
+                    rule="path-scope",
+                    path=f"{path}.source_location.path",
+                    detail="path must stay inside the analyzed root (relative POSIX, no '..')",
+                )
+            )
     version = f.get("schema_version")
     if version is not None and version not in KNOWN_SCHEMA_VERSIONS:
-        out.append(OutputViolation(
-            rule="schema-version", path=f"{path}.schema_version",
-            detail=f"unknown schema_version {version!r}"))
+        out.append(
+            OutputViolation(
+                rule="schema-version",
+                path=f"{path}.schema_version",
+                detail=f"unknown schema_version {version!r}",
+            )
+        )
     return out
 
 
-def validate_plugin_output(result: Any,
-                           project_root: Path | str,
-                           ) -> tuple[OutputViolation, ...]:
+def validate_plugin_output(
+    result: Any,
+    project_root: Path | str,
+) -> tuple[OutputViolation, ...]:
     """Validate the serialized form of a plugin result.
 
     Returns sorted ``OutputViolation`` records — empty means the
@@ -161,37 +191,40 @@ def validate_plugin_output(result: Any,
     out: list[OutputViolation] = []
     data = _as_data(result)
     if not isinstance(data, (dict, list)):
-        return (OutputViolation(
-            rule="result-type",
-            detail="plugin result must be a mapping or a list"),)
+        return (
+            OutputViolation(rule="result-type", detail="plugin result must be a mapping or a list"),
+        )
     try:
-        size = len(json.dumps(data, sort_keys=True,
-                              default=str).encode("utf-8"))
+        size = len(json.dumps(data, sort_keys=True, default=str).encode("utf-8"))
     except Exception:
-        return (OutputViolation(
-            rule="serializable",
-            detail="result is not JSON-serializable"),)
+        return (OutputViolation(rule="serializable", detail="result is not JSON-serializable"),)
     if size > PLUGIN_RESULT_BUDGET:
-        out.append(OutputViolation(
-            rule="oversized",
-            detail=f"result is {size}B over the "
-                   f"{PLUGIN_RESULT_BUDGET}B budget"))
-    version = (data.get("schema_version")
-               if isinstance(data, dict) else None)
+        out.append(
+            OutputViolation(
+                rule="oversized",
+                detail=f"result is {size}B over the {PLUGIN_RESULT_BUDGET}B budget",
+            )
+        )
+    version = data.get("schema_version") if isinstance(data, dict) else None
     if version is not None and version not in KNOWN_SCHEMA_VERSIONS:
-        out.append(OutputViolation(
-            rule="schema-version", path="schema_version",
-            detail=f"unknown schema_version {version!r}"))
+        out.append(
+            OutputViolation(
+                rule="schema-version",
+                path="schema_version",
+                detail=f"unknown schema_version {version!r}",
+            )
+        )
     findings = data.get("findings") if isinstance(data, dict) else None
     if findings is None and isinstance(data, list):
         findings = data
     if findings is not None:
         if not isinstance(findings, list):
-            out.append(OutputViolation(
-                rule="findings-type", path="findings",
-                detail="findings must be a list"))
+            out.append(
+                OutputViolation(
+                    rule="findings-type", path="findings", detail="findings must be a list"
+                )
+            )
         else:
             for i, f in enumerate(findings):
-                out.extend(_finding_violations(
-                    f, f"findings[{i}]", root))
+                out.extend(_finding_violations(f, f"findings[{i}]", root))
     return tuple(sorted(out, key=lambda v: (v.rule, v.path, v.detail)))

@@ -15,8 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def _pyproject() -> dict[str, object]:
-    return tomllib.loads(
-        (ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    return tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
 
 
 def test_python_support_declared() -> None:
@@ -31,16 +30,42 @@ def test_python_support_declared() -> None:
 def test_no_forbidden_runtime_imports() -> None:
     """Portability: no os-specific or network imports in the package."""
     import ast
-    forbidden = {"socket", "urllib", "requests", "httpx", "subprocess",
-                 "winreg", "msvcrt", "fcntl", "termios"}
-    vendored = {"_graphstudio.py",
-                "ui/i18n.py", "ui/kit.py", "ui/wizard.py", "ui/home.py",
-                "ui/app.py", "ui/screen.py", "ui/tui.py",
-                # cyc11.2 P2-002 install surface — the sanctioned
-                # host-mutation boundary (see tests/test_boundary.py and
-                # docs/adr/ADR-0006); subprocess confined to _spawn/update
-                "_installkit.py", "install/__init__.py",
-                "install/service.py", "cli/install_cmd.py"}
+
+    forbidden = {
+        "socket",
+        "urllib",
+        "requests",
+        "httpx",
+        "subprocess",
+        "winreg",
+        "msvcrt",
+        "fcntl",
+        "termios",
+    }
+    vendored = {
+        "_graphstudio.py",
+        "ui/i18n.py",
+        "ui/kit.py",
+        "ui/wizard.py",
+        "ui/home.py",
+        "ui/app.py",
+        "ui/screen.py",
+        "ui/tui.py",
+        # cyc11.2 P2-002 install surface — the sanctioned
+        # host-mutation boundary (see tests/test_boundary.py and
+        # docs/adr/ADR-0006); subprocess confined to _spawn/update
+        "_installkit.py",
+        "install/__init__.py",
+        "install/service.py",
+        "cli/install_cmd.py",
+        # vendored forge-obsidian engine — byte-parity with the canonical
+        # the-forge copy; msvcrt is its Windows file-locking path (guarded),
+        # os/fs is its vault surface.
+        "_forge_obsidian/__init__.py",
+        "_forge_obsidian/cli.py",
+        "_forge_obsidian/notes.py",
+        "_forge_obsidian/obsidian.py",
+    }
     pkg = ROOT / "src" / "forge_doctor_api"
     for path in sorted(pkg.rglob("*.py")):
         if path.relative_to(pkg).as_posix() in vendored:
@@ -62,20 +87,26 @@ def _build(tmp_path: Path) -> Path:
     cmd = [sys.executable, "-m", "build", "--outdir", str(dist)]
     try:
         subprocess.run(
-            [*cmd, "--wheel", "--sdist"], cwd=ROOT,
-            check=True, capture_output=True, text=True)
+            [*cmd, "--wheel", "--sdist"], cwd=ROOT, check=True, capture_output=True, text=True
+        )
     except (subprocess.CalledProcessError, FileNotFoundError):
         try:
             subprocess.run(
-                [sys.executable, "-m", "pip", "wheel", str(ROOT),
-                 "--no-deps", "-w", str(dist)],
-                check=True, capture_output=True, text=True)
+                [sys.executable, "-m", "pip", "wheel", str(ROOT), "--no-deps", "-w", str(dist)],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
         except (subprocess.CalledProcessError, FileNotFoundError):
             # pip-less environments (uv venvs): `uv build` emits both the
             # sdist and the wheel with no build module required.
             subprocess.run(
                 ["uv", "build", "--out-dir", str(dist)],
-                cwd=ROOT, check=True, capture_output=True, text=True)
+                cwd=ROOT,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
     return dist
 
 
@@ -86,8 +117,7 @@ def test_wheel_and_sdist_contents(tmp_path: Path) -> None:
     with zipfile.ZipFile(wheels[0]) as zf:
         names = zf.namelist()
     # knowledge packs ship inside the wheel
-    assert any(n.startswith("forge_doctor_api/knowledge/")
-               and n.endswith(".yaml") for n in names)
+    assert any(n.startswith("forge_doctor_api/knowledge/") and n.endswith(".yaml") for n in names)
     assert any(n.endswith("cli/__init__.py") for n in names)
     meta = next(n for n in names if n.endswith("METADATA"))
     with zipfile.ZipFile(wheels[0]) as zf:
@@ -100,5 +130,4 @@ def test_wheel_and_sdist_contents(tmp_path: Path) -> None:
         with tarfile.open(sdists[0]) as tf:
             sdist_names = tf.getnames()
         assert any("pyproject.toml" in n for n in sdist_names)
-        assert any("knowledge" in n and n.endswith(".yaml")
-                   for n in sdist_names)
+        assert any("knowledge" in n and n.endswith(".yaml") for n in sdist_names)

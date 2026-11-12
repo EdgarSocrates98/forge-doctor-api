@@ -224,21 +224,17 @@ def _wrap(kind: str, body: dict[str, Any], title: str) -> dict[str, Any]:
 
 FORGE_CONTRACT_SCHEMAS: dict[str, dict[str, Any]] = {
     "entity": _wrap("entity", _ENTITY, "forge-contracts/1 entity"),
-    "relationship": _wrap(
-        "relationship", _RELATIONSHIP, "forge-contracts/1 relationship"),
+    "relationship": _wrap("relationship", _RELATIONSHIP, "forge-contracts/1 relationship"),
     "evidence": _wrap("evidence", _EVIDENCE, "forge-contracts/1 evidence"),
     "finding": _wrap("finding", _FINDING, "forge-contracts/1 finding"),
-    "capability": _wrap(
-        "capability", _CAPABILITY, "forge-contracts/1 capability"),
+    "capability": _wrap("capability", _CAPABILITY, "forge-contracts/1 capability"),
     "unknown-fact": _wrap(
-        "unknown-fact", _UNKNOWN_FACT,
-        "forge-contracts/1 unknown fact (honest UNKNOWN)"),
-    "migration-plan": _wrap(
-        "migration-plan", _MIGRATION_PLAN,
-        "forge-contracts/1 migration plan"),
+        "unknown-fact", _UNKNOWN_FACT, "forge-contracts/1 unknown fact (honest UNKNOWN)"
+    ),
+    "migration-plan": _wrap("migration-plan", _MIGRATION_PLAN, "forge-contracts/1 migration plan"),
     "remediation-plan": _wrap(
-        "remediation-plan", _REMEDIATION_PLAN,
-        "forge-contracts/1 remediation plan"),
+        "remediation-plan", _REMEDIATION_PLAN, "forge-contracts/1 remediation plan"
+    ),
     "handoff": HANDOFF,
     "diagnostic-manifest": DIAGNOSTIC_MANIFEST,
 }

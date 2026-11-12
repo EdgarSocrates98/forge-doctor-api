@@ -59,8 +59,7 @@ def _props_tokens(shapes: tuple[str, ...]) -> frozenset[str]:
     for shape in shapes:
         m = _PROPS.search(shape)
         if m:
-            out.update(
-                p.strip() for p in m["props"].split(",") if p.strip())
+            out.update(p.strip() for p in m["props"].split(",") if p.strip())
     return frozenset(out)
 
 
@@ -69,29 +68,38 @@ def _eval_op(
     model: OpenApiProjectModel,
     contract: ErrorContract,
 ) -> ErrorVerdict:
-    responses = [r for r in model.responses
-                 if r.pointer in op.response_pointers]
-    errors = [r for r in responses
-              if r.status is not None and _ERROR_STATUS.match(r.status)]
+    responses = [r for r in model.responses if r.pointer in op.response_pointers]
+    errors = [r for r in responses if r.status is not None and _ERROR_STATUS.match(r.status)]
     loc = op.location
     ev = (
-        Evidence(kind=EvidenceKind.STATIC, source=loc.path,
-                 summary=f"error surface of {op.identity}", line=loc.line),
+        Evidence(
+            kind=EvidenceKind.STATIC,
+            source=loc.path,
+            summary=f"error surface of {op.identity}",
+            line=loc.line,
+        ),
     )
     if not errors:
-        status = (ErrorConformance.UNKNOWN
-                  if contract.require_error_responses
-                  else ErrorConformance.CONFORMS)
+        status = (
+            ErrorConformance.UNKNOWN
+            if contract.require_error_responses
+            else ErrorConformance.CONFORMS
+        )
         return ErrorVerdict(
-            subject=op.identity, status=status,
+            subject=op.identity,
+            status=status,
             detail="no declared error responses"
-            if contract.require_error_responses else "no error surface to check",
-            evidence=ev)
+            if contract.require_error_responses
+            else "no error surface to check",
+            evidence=ev,
+        )
 
-    missing_ct = sorted(set(contract.required_content_types) - {
-        ct for r in errors for ct in r.content_types})
-    missing_fields = sorted(set(contract.required_fields) - {
-        p for r in errors for p in _props_tokens(r.schema_shapes)})
+    missing_ct = sorted(
+        set(contract.required_content_types) - {ct for r in errors for ct in r.content_types}
+    )
+    missing_fields = sorted(
+        set(contract.required_fields) - {p for r in errors for p in _props_tokens(r.schema_shapes)}
+    )
     if missing_ct or missing_fields:
         bits = []
         if missing_ct:
@@ -99,11 +107,17 @@ def _eval_op(
         if missing_fields:
             bits.append(f"missing fields {missing_fields}")
         return ErrorVerdict(
-            subject=op.identity, status=ErrorConformance.VIOLATION,
-            detail="; ".join(bits), evidence=ev)
+            subject=op.identity,
+            status=ErrorConformance.VIOLATION,
+            detail="; ".join(bits),
+            evidence=ev,
+        )
     return ErrorVerdict(
-        subject=op.identity, status=ErrorConformance.CONFORMS,
-        detail="declared error surface conforms", evidence=ev)
+        subject=op.identity,
+        status=ErrorConformance.CONFORMS,
+        detail="declared error surface conforms",
+        evidence=ev,
+    )
 
 
 def evaluate_error_contract(
@@ -116,7 +130,8 @@ def evaluate_error_contract(
         verdicts=tuple(
             _eval_op(op, model, contract)
             for op in model.operations
-            if op.source is OperationSource.PATH),
+            if op.source is OperationSource.PATH
+        ),
     )
 
 

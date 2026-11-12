@@ -88,7 +88,9 @@ def test_malformed_pack_rejected() -> None:
 
 def test_missing_provenance_rejected() -> None:
     doc = {
-        "pack": "x", "domain": "d", "edition": "1",
+        "pack": "x",
+        "domain": "d",
+        "edition": "1",
         "entries": {"e": {"fields": {}, "provenance": {"source": "s"}}},
     }
     with pytest.raises(ModelError, match="provenance"):
@@ -153,9 +155,12 @@ def test_knowledge_versions_cover_all_domains() -> None:
 
 def test_capability_retry_gap_without_idempotency(tmp_path: Path) -> None:
     """§70: SAFE_RETRY REQUIRES IDEMPOTENT_OPERATION -> gap when absent."""
-    root = _write(tmp_path / "p", {
-        "cfg.yaml": "retries: [{scope: gw, max_attempts: 3}]\n",
-    })
+    root = _write(
+        tmp_path / "p",
+        {
+            "cfg.yaml": "retries: [{scope: gw, max_attempts: 3}]\n",
+        },
+    )
     ctx = ProjectContext.from_root(root)
     model = load_reliability_model(ctx, ["cfg.yaml"])
     report = detect_capabilities(reliability=model)
@@ -167,20 +172,19 @@ def test_capability_retry_gap_without_idempotency(tmp_path: Path) -> None:
 
 
 def test_capability_gap_closes_with_idempotency(tmp_path: Path) -> None:
-    root = _write(tmp_path / "p", {
-        "cfg.yaml": (
-            "retries: [{scope: gw, max_attempts: 2}]\n"
-            "idempotency:\n"
-            "  idempotent: true\n"
-        ),
-    })
+    root = _write(
+        tmp_path / "p",
+        {
+            "cfg.yaml": (
+                "retries: [{scope: gw, max_attempts: 2}]\nidempotency:\n  idempotent: true\n"
+            ),
+        },
+    )
     ctx = ProjectContext.from_root(root)
     model = load_reliability_model(ctx, ["cfg.yaml"])
     report = detect_capabilities(reliability=model)
     assert Capability.RETRY in {c.capability for c in report.capabilities}
-    assert all(
-        g.rule is not DependencyRule.SAFE_RETRY for g in report.gaps
-    )
+    assert all(g.rule is not DependencyRule.SAFE_RETRY for g in report.gaps)
 
 
 def test_no_models_no_capabilities() -> None:
@@ -189,15 +193,15 @@ def test_no_models_no_capabilities() -> None:
 
 
 def test_capabilities_carry_evidence(tmp_path: Path) -> None:
-    root = _write(tmp_path / "p", {
-        "cfg.yaml": "retries: [{scope: gw, max_attempts: 3}]\n",
-    })
-    model = load_reliability_model(
-        ProjectContext.from_root(root), ["cfg.yaml"]
+    root = _write(
+        tmp_path / "p",
+        {
+            "cfg.yaml": "retries: [{scope: gw, max_attempts: 3}]\n",
+        },
     )
+    model = load_reliability_model(ProjectContext.from_root(root), ["cfg.yaml"])
     report = detect_capabilities(reliability=model)
-    retry = next(c for c in report.capabilities
-                 if c.capability is Capability.RETRY)
+    retry = next(c for c in report.capabilities if c.capability is Capability.RETRY)
     assert retry.evidence and all(e.source for e in retry.evidence)
 
 

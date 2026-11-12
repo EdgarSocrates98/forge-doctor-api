@@ -45,8 +45,9 @@ _CONF_RANK = {
 }
 
 
-def _findings_of(namespace: str, findings: tuple[Finding, ...],
-                 min_confidence: Confidence) -> tuple[str, ...]:
+def _findings_of(
+    namespace: str, findings: tuple[Finding, ...], min_confidence: Confidence
+) -> tuple[str, ...]:
     return tuple(
         f"{f.id}: {f.description}"
         for f in findings
@@ -69,33 +70,38 @@ def evaluate_gate(
     failures: list[GateFailure] = []
     if GateCategory.BREAKING in fail_on:
         if diff is None:
-            raise GateConfigError(
-                "fail-on=breaking requires a --baseline contract context")
+            raise GateConfigError("fail-on=breaking requires a --baseline contract context")
         breaking = tuple(
             f"{c.kind}: {c.subject} {c.path}".strip()
             for c in diff.changes
             if c.classification is CompatibilityClass.BREAKING
         )
         if breaking:
-            failures.append(GateFailure(
-                category=GateCategory.BREAKING,
-                subjects=breaking,
-                detail=f"{len(breaking)} breaking change(s) detected",
-            ))
+            failures.append(
+                GateFailure(
+                    category=GateCategory.BREAKING,
+                    subjects=breaking,
+                    detail=f"{len(breaking)} breaking change(s) detected",
+                )
+            )
     if GateCategory.SECURITY in fail_on:
         hits = _findings_of("APISEC", findings, Confidence.HIGH)
         if hits:
-            failures.append(GateFailure(
-                category=GateCategory.SECURITY,
-                subjects=hits,
-                detail=f"{len(hits)} high-confidence security issue(s)",
-            ))
+            failures.append(
+                GateFailure(
+                    category=GateCategory.SECURITY,
+                    subjects=hits,
+                    detail=f"{len(hits)} high-confidence security issue(s)",
+                )
+            )
     if GateCategory.POLICY in fail_on:
         hits = _findings_of("POLICY", findings, Confidence.LOW)
         if hits:
-            failures.append(GateFailure(
-                category=GateCategory.POLICY,
-                subjects=hits,
-                detail=f"{len(hits)} policy violation(s)",
-            ))
+            failures.append(
+                GateFailure(
+                    category=GateCategory.POLICY,
+                    subjects=hits,
+                    detail=f"{len(hits)} policy violation(s)",
+                )
+            )
     return tuple(failures)

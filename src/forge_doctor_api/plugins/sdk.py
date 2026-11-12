@@ -44,9 +44,7 @@ class GatewayAdapter(Protocol):
 
     name: str
 
-    def routes(
-        self, context: ProjectContext, files: Sequence[str]
-    ) -> tuple[Model, ...]:
+    def routes(self, context: ProjectContext, files: Sequence[str]) -> tuple[Model, ...]:
         """Declarative gateway routes from config evidence."""
         ...
 
@@ -57,9 +55,7 @@ class ContractAdapter(Protocol):
 
     name: str
 
-    def load(
-        self, context: ProjectContext, paths: Sequence[str] | None = None
-    ) -> Model:
+    def load(self, context: ProjectContext, paths: Sequence[str] | None = None) -> Model:
         """Parse contract documents into the domain model."""
         ...
 
@@ -78,9 +74,7 @@ class RuntimeAdapter(Protocol):
         """Stream normalized spans without loading the artifact fully."""
         ...
 
-    def iter_summaries(
-        self, reader: BinaryIO, path: str
-    ) -> Iterator[RequestSummary]:
+    def iter_summaries(self, reader: BinaryIO, path: str) -> Iterator[RequestSummary]:
         """Request summaries, where the format has any."""
         ...
 

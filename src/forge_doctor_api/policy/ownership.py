@@ -102,26 +102,41 @@ def resolve_ownership(
             if ext.name in _DOMAIN_EXTS and isinstance(ext.value, str):
                 ext_domain = ext.value
         if ext_owner:
-            hits.append(OwnershipSource(
-                source="openapi_extension", owner=ext_owner,
-                evidence=_ev("openapi", "x-owner extension"),
-            ))
+            hits.append(
+                OwnershipSource(
+                    source="openapi_extension",
+                    owner=ext_owner,
+                    evidence=_ev("openapi", "x-owner extension"),
+                )
+            )
     cat = _catalog_owner(context)
     if cat:
-        hits.append(OwnershipSource(
-            source="catalog", owner=cat, evidence=_ev("catalog-info.yaml", "spec.owner"),
-        ))
+        hits.append(
+            OwnershipSource(
+                source="catalog",
+                owner=cat,
+                evidence=_ev("catalog-info.yaml", "spec.owner"),
+            )
+        )
     patterns = _codeowners_owners(context)
     co = next(iter(patterns.values()), None) if patterns else None
     if co:
-        hits.append(OwnershipSource(
-            source="codeowners", owner=co, evidence=_ev("CODEOWNERS", "first pattern owner"),
-        ))
+        hits.append(
+            OwnershipSource(
+                source="codeowners",
+                owner=co,
+                evidence=_ev("CODEOWNERS", "first pattern owner"),
+            )
+        )
     svc = _service_config_owner(context, files)
     if svc:
-        hits.append(OwnershipSource(
-            source="service_config", owner=svc, evidence=_ev("service.yaml", "owner"),
-        ))
+        hits.append(
+            OwnershipSource(
+                source="service_config",
+                owner=svc,
+                evidence=_ev("service.yaml", "owner"),
+            )
+        )
 
     chosen = next(
         (h.owner for h in sorted(hits, key=lambda h: _PRECEDENCE.index(h.source))),
@@ -130,11 +145,13 @@ def resolve_ownership(
     tags: tuple[str, ...] = ()
     if openapi is not None:
         tags = tuple(sorted({t for op in openapi.operations for t in op.tags}))
-    return (ApiOwnership(
-        subject="(project)",
-        owner=chosen,
-        domain=ext_domain,
-        tags=tags,
-        sources=tuple(sorted(hits, key=lambda h: _PRECEDENCE.index(h.source))),
-        precedence=_PRECEDENCE,
-    ),)
+    return (
+        ApiOwnership(
+            subject="(project)",
+            owner=chosen,
+            domain=ext_domain,
+            tags=tags,
+            sources=tuple(sorted(hits, key=lambda h: _PRECEDENCE.index(h.source))),
+            precedence=_PRECEDENCE,
+        ),
+    )

@@ -90,7 +90,8 @@ class ProjectContext:
         matches = (
             self.relative(path)
             for path in self.root.glob(pattern)
-            if path.is_file() and path.resolve().is_relative_to(self.root)
+            if path.is_file()
+            and path.resolve().is_relative_to(self.root)
             and not self.relative(path).startswith(".forge-doctor/")
         )
         yield from sorted(matches)

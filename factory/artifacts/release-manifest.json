@@ -10,15 +10,15 @@
     },
     {
       "filename": "SHA256SUMS",
-      "sha256": "2662e18a123b313b19f160a5b571894a98bc67499adc84b6af734c9713aeaff1"
+      "sha256": "69077e4b796a850aca4ff8b0a5378eb947f3f32fca38a7136ac109e87babf05a"
     }
   ],
-  "cli_command_count": 34,
+  "cli_command_count": 41,
   "contract_family": "forge-contracts",
   "contract_version": "1",
-  "dirty_tree": true,
+  "dirty_tree": false,
   "forge_protocol_version": 2,
-  "git_head": "320e4fc8b219b9ee3a9dd191579e5630bebf0bf4",
+  "git_head": "9ae9c6a3514f43db806e9850530f89d01ef972a0",
   "manifest_version": 1,
   "mcp_tool_count": 17,
   "package": "forge-doctor-api",

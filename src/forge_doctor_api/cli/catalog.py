@@ -68,6 +68,14 @@ STABILITY: dict[str, CommandStability] = {
     "install uninstall": CommandStability.EXPERIMENTAL,
     "install update": CommandStability.EXPERIMENTAL,
     "install mcp-verify": CommandStability.EXPERIMENTAL,
+    # vendored forge-obsidian vault surface — new in this cycle.
+    "obsidian export": CommandStability.EXPERIMENTAL,
+    "obsidian export-note": CommandStability.EXPERIMENTAL,
+    "obsidian history": CommandStability.EXPERIMENTAL,
+    "obsidian preview": CommandStability.EXPERIMENTAL,
+    "obsidian scan": CommandStability.EXPERIMENTAL,
+    "obsidian status": CommandStability.EXPERIMENTAL,
+    "obsidian sync-plan": CommandStability.EXPERIMENTAL,
 }
 
 
@@ -123,12 +131,14 @@ def command_inventory() -> tuple[CommandEntry, ...]:
             if hasattr(cmd, "commands"):
                 walk(cmd, f"{path} ")
             else:
-                entries.append(CommandEntry(
-                    path=path,
-                    options=_options(cmd),
-                    arguments=_arguments(cmd),
-                    stability=stability_of(path),
-                ))
+                entries.append(
+                    CommandEntry(
+                        path=path,
+                        options=_options(cmd),
+                        arguments=_arguments(cmd),
+                        stability=stability_of(path),
+                    )
+                )
 
     walk(root)
     return tuple(entries)
