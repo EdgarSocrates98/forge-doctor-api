@@ -1,0 +1,212 @@
+{
+  "schema": "forge/SpecialistAgenticManifest/v1",
+  "provider": "forge-doctor-api",
+  "version": "0.3.3",
+  "cli": "forge-doctor-api",
+  "cli_entry": "forge_doctor_api.cli:main",
+  "workflows": [
+    {
+      "id": "scan",
+      "mode": "DIAGNOSTIC_ONLY",
+      "command": [
+        "{cli}",
+        "scan",
+        "{target}"
+      ],
+      "description": "Independent API diagnostic",
+      "read_only": true
+    },
+    {
+      "id": "diagnose",
+      "mode": "DIAGNOSTIC_ONLY",
+      "command": [
+        "{cli}",
+        "diagnose",
+        "{target}"
+      ],
+      "description": "Contract/reliability diagnosis",
+      "read_only": true
+    }
+  ],
+  "skills": [],
+  "agents": [
+    "api-diagnostic-investigator",
+    "api-contract-reviewer",
+    "api-handoff-governor"
+  ],
+  "agent_roster_paths": [
+    "src/forge_doctor_api/installation/assets/agents"
+  ],
+  "coordinators": [],
+  "mcp_command": [
+    "{cli}",
+    "mcp"
+  ],
+  "host_adapters": [
+    "claude",
+    "devin",
+    "codex",
+    "copilot"
+  ],
+  "requires_network": false,
+  "requires_credentials": false,
+  "read_only_default": true,
+  "resources": [
+    {
+      "id": "README",
+      "kind": "agent",
+      "location": ".claude/agents/README.md",
+      "resource_class": "agentic"
+    },
+    {
+      "id": "src/forge_doctor_api/knowledge/asyncapi/versions.yaml",
+      "kind": "knowledge",
+      "location": "src/forge_doctor_api/knowledge/asyncapi/versions.yaml",
+      "format": "yaml",
+      "resource_class": "read-only",
+      "packaged_location": "knowledge/asyncapi/versions.yaml"
+    },
+    {
+      "id": "src/forge_doctor_api/knowledge/frameworks/express.yaml",
+      "kind": "knowledge",
+      "location": "src/forge_doctor_api/knowledge/frameworks/express.yaml",
+      "format": "yaml",
+      "resource_class": "read-only",
+      "packaged_location": "knowledge/frameworks/express.yaml"
+    },
+    {
+      "id": "src/forge_doctor_api/knowledge/frameworks/fastapi.yaml",
+      "kind": "knowledge",
+      "location": "src/forge_doctor_api/knowledge/frameworks/fastapi.yaml",
+      "format": "yaml",
+      "resource_class": "read-only",
+      "packaged_location": "knowledge/frameworks/fastapi.yaml"
+    },
+    {
+      "id": "src/forge_doctor_api/knowledge/frameworks/spring.yaml",
+      "kind": "knowledge",
+      "location": "src/forge_doctor_api/knowledge/frameworks/spring.yaml",
+      "format": "yaml",
+      "resource_class": "read-only",
+      "packaged_location": "knowledge/frameworks/spring.yaml"
+    },
+    {
+      "id": "src/forge_doctor_api/knowledge/gateways/aws-api-gateway.yaml",
+      "kind": "knowledge",
+      "location": "src/forge_doctor_api/knowledge/gateways/aws-api-gateway.yaml",
+      "format": "yaml",
+      "resource_class": "read-only",
+      "packaged_location": "knowledge/gateways/aws-api-gateway.yaml"
+    },
+    {
+      "id": "src/forge_doctor_api/knowledge/gateways/capability-map.yaml",
+      "kind": "knowledge",
+      "location": "src/forge_doctor_api/knowledge/gateways/capability-map.yaml",
+      "format": "yaml",
+      "resource_class": "read-only",
+      "packaged_location": "knowledge/gateways/capability-map.yaml"
+    },
+    {
+      "id": "src/forge_doctor_api/knowledge/gateways/envoy.yaml",
+      "kind": "knowledge",
+      "location": "src/forge_doctor_api/knowledge/gateways/envoy.yaml",
+      "format": "yaml",
+      "resource_class": "read-only",
+      "packaged_location": "knowledge/gateways/envoy.yaml"
+    },
+    {
+      "id": "src/forge_doctor_api/knowledge/gateways/kong.yaml",
+      "kind": "knowledge",
+      "location": "src/forge_doctor_api/knowledge/gateways/kong.yaml",
+      "format": "yaml",
+      "resource_class": "read-only",
+      "packaged_location": "knowledge/gateways/kong.yaml"
+    },
+    {
+      "id": "src/forge_doctor_api/knowledge/gateways/nginx.yaml",
+      "kind": "knowledge",
+      "location": "src/forge_doctor_api/knowledge/gateways/nginx.yaml",
+      "format": "yaml",
+      "resource_class": "read-only",
+      "packaged_location": "knowledge/gateways/nginx.yaml"
+    },
+    {
+      "id": "src/forge_doctor_api/knowledge/graphql/spec.yaml",
+      "kind": "knowledge",
+      "location": "src/forge_doctor_api/knowledge/graphql/spec.yaml",
+      "format": "yaml",
+      "resource_class": "read-only",
+      "packaged_location": "knowledge/graphql/spec.yaml"
+    },
+    {
+      "id": "src/forge_doctor_api/knowledge/grpc/behaviors.yaml",
+      "kind": "knowledge",
+      "location": "src/forge_doctor_api/knowledge/grpc/behaviors.yaml",
+      "format": "yaml",
+      "resource_class": "read-only",
+      "packaged_location": "knowledge/grpc/behaviors.yaml"
+    },
+    {
+      "id": "src/forge_doctor_api/knowledge/http/semantics.yaml",
+      "kind": "knowledge",
+      "location": "src/forge_doctor_api/knowledge/http/semantics.yaml",
+      "format": "yaml",
+      "resource_class": "read-only",
+      "packaged_location": "knowledge/http/semantics.yaml"
+    },
+    {
+      "id": "src/forge_doctor_api/knowledge/jsonschema/dialects.yaml",
+      "kind": "knowledge",
+      "location": "src/forge_doctor_api/knowledge/jsonschema/dialects.yaml",
+      "format": "yaml",
+      "resource_class": "read-only",
+      "packaged_location": "knowledge/jsonschema/dialects.yaml"
+    },
+    {
+      "id": "src/forge_doctor_api/knowledge/openapi/versions.yaml",
+      "kind": "knowledge",
+      "location": "src/forge_doctor_api/knowledge/openapi/versions.yaml",
+      "format": "yaml",
+      "resource_class": "read-only",
+      "packaged_location": "knowledge/openapi/versions.yaml"
+    },
+    {
+      "id": "src/forge_doctor_api/knowledge/security/owasp_api_top10.yaml",
+      "kind": "knowledge",
+      "location": "src/forge_doctor_api/knowledge/security/owasp_api_top10.yaml",
+      "format": "yaml",
+      "resource_class": "read-only",
+      "packaged_location": "knowledge/security/owasp_api_top10.yaml"
+    },
+    {
+      "id": "tests/fixtures/contracts",
+      "kind": "fixture",
+      "location": "tests/fixtures/contracts",
+      "resource_class": "test-only"
+    },
+    {
+      "id": "tests/fixtures/openapi",
+      "kind": "fixture",
+      "location": "tests/fixtures/openapi",
+      "resource_class": "test-only"
+    },
+    {
+      "id": "tests/fixtures/oss",
+      "kind": "fixture",
+      "location": "tests/fixtures/oss",
+      "resource_class": "test-only"
+    },
+    {
+      "id": "tests/fixtures/oss-negative",
+      "kind": "fixture",
+      "location": "tests/fixtures/oss-negative",
+      "resource_class": "test-only"
+    },
+    {
+      "id": "tests/fixtures/plugin_src",
+      "kind": "fixture",
+      "location": "tests/fixtures/plugin_src",
+      "resource_class": "test-only"
+    }
+  ]
+}
