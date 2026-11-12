@@ -157,7 +157,7 @@ def test_member_path_escape_rejected(tmp_path: Path) -> None:
     ws = _workspace(
         tmp_path,
         {
-            "forge-doctor-api.workspace.yaml": "members:\n  - {name: bad, path: ../outside, role: service}\n",
+            "forge-doctor-api.workspace.yaml": "members:\n  - {name: bad, path: ../outside, role: service}\n",  # noqa: E501
         },
     )[1]
     assert ws is not None and ws.members == ()
