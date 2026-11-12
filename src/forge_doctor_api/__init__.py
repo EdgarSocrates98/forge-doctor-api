@@ -37,7 +37,7 @@ from forge_doctor_api.sdk import (
     ProjectUnreadableError,
 )
 
-__version__ = "0.3.2"
+__version__ = "0.3.3"
 
 __all__ = [
     "SDK_VERSION",
