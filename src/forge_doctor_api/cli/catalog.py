@@ -68,6 +68,14 @@ STABILITY: dict[str, CommandStability] = {
     "install uninstall": CommandStability.EXPERIMENTAL,
     "install update": CommandStability.EXPERIMENTAL,
     "install mcp-verify": CommandStability.EXPERIMENTAL,
+    # vendored forge-obsidian vault surface — new in this cycle.
+    "obsidian export": CommandStability.EXPERIMENTAL,
+    "obsidian export-note": CommandStability.EXPERIMENTAL,
+    "obsidian history": CommandStability.EXPERIMENTAL,
+    "obsidian preview": CommandStability.EXPERIMENTAL,
+    "obsidian scan": CommandStability.EXPERIMENTAL,
+    "obsidian status": CommandStability.EXPERIMENTAL,
+    "obsidian sync-plan": CommandStability.EXPERIMENTAL,
 }
 
 

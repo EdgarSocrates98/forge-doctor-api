@@ -138,6 +138,12 @@ _INSTALL_SURFACE = frozenset(
     {
         "_installkit.py",
         "_forgecontext.py",
+        # vendored forge-obsidian engine — byte-parity with the canonical
+        # the-forge copy; os/fs access is its documented vault surface.
+        "_forge_obsidian/__init__.py",
+        "_forge_obsidian/cli.py",
+        "_forge_obsidian/notes.py",
+        "_forge_obsidian/obsidian.py",
         "install/__init__.py",
         "install/service.py",
         "cli/install_cmd.py",
