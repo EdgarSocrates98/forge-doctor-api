@@ -34,7 +34,9 @@
     "api-contract-reviewer",
     "api-handoff-governor"
   ],
-  "agent_roster_paths": ["src/forge_doctor_api/installation/assets/agents"],
+  "agent_roster_paths": [
+    "src/forge_doctor_api/installation/assets/agents"
+  ],
   "coordinators": [],
   "mcp_command": [
     "{cli}",
@@ -48,5 +50,43 @@
   ],
   "requires_network": false,
   "requires_credentials": false,
-  "read_only_default": true
+  "read_only_default": true,
+  "resources": [
+    {
+      "id": "README",
+      "kind": "agent",
+      "location": ".claude/agents/README.md",
+      "resource_class": "agentic"
+    },
+    {
+      "id": "tests/fixtures/contracts",
+      "kind": "fixture",
+      "location": "tests/fixtures/contracts",
+      "resource_class": "test-only"
+    },
+    {
+      "id": "tests/fixtures/openapi",
+      "kind": "fixture",
+      "location": "tests/fixtures/openapi",
+      "resource_class": "test-only"
+    },
+    {
+      "id": "tests/fixtures/oss",
+      "kind": "fixture",
+      "location": "tests/fixtures/oss",
+      "resource_class": "test-only"
+    },
+    {
+      "id": "tests/fixtures/oss-negative",
+      "kind": "fixture",
+      "location": "tests/fixtures/oss-negative",
+      "resource_class": "test-only"
+    },
+    {
+      "id": "tests/fixtures/plugin_src",
+      "kind": "fixture",
+      "location": "tests/fixtures/plugin_src",
+      "resource_class": "test-only"
+    }
+  ]
 }
