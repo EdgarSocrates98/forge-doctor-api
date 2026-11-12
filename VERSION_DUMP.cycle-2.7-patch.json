@@ -1,0 +1,9 @@
+{
+  "cycle": "2.7-patch",
+  "repository": "forge-doctor-api",
+  "version": "0.3.3",
+  "tag": "v0.3.3",
+  "source_commit": "502143be58be8d2f44a1765fe8dc5ba5a3fde642",
+  "version_source": "pyproject.toml",
+  "verified_at": "2026-11-12"
+}
