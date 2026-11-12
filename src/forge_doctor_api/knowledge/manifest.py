@@ -98,10 +98,11 @@ def load_manifest(path: Path) -> tuple[PackManifest | None, tuple[str, ...]]:
         errors.append("requires must be a list of strings")
     if errors:
         return None, tuple(errors)
+    assert isinstance(pid, str) and isinstance(version, str) and isinstance(compat, str)
     return PackManifest(
         id=pid,
         version=version,
-        doctor_compat=compat,  # type: ignore[arg-type]
+        doctor_compat=compat,
         provides=provides or (),
         requires=requires or (),
     ), ()
