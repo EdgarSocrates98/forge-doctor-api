@@ -20,6 +20,12 @@ _VENDORED = frozenset(
         "ui/app.py",
         "ui/screen.py",
         "ui/tui.py",
+        # forge-obsidian engine — byte-parity vendored copy; vault env
+        # discovery (os.environ) is its documented surface.
+        "_forge_obsidian/__init__.py",
+        "_forge_obsidian/cli.py",
+        "_forge_obsidian/notes.py",
+        "_forge_obsidian/obsidian.py",
     }
 )
 # Install surface (cyc11.2 P2-002, RC exception — see tests/test_boundary.py

@@ -58,6 +58,13 @@ def test_no_forbidden_runtime_imports() -> None:
         "install/__init__.py",
         "install/service.py",
         "cli/install_cmd.py",
+        # vendored forge-obsidian engine — byte-parity with the canonical
+        # the-forge copy; msvcrt is its Windows file-locking path (guarded),
+        # os/fs is its vault surface.
+        "_forge_obsidian/__init__.py",
+        "_forge_obsidian/cli.py",
+        "_forge_obsidian/notes.py",
+        "_forge_obsidian/obsidian.py",
     }
     pkg = ROOT / "src" / "forge_doctor_api"
     for path in sorted(pkg.rglob("*.py")):
