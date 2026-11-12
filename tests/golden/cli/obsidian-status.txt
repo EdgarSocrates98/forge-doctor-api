@@ -1,0 +1,2 @@
+Usage: forge-doctor-api obsidian status [OPTIONS] Report configured/detected vault state (never
+fabricates). Options --help Show this message and exit.

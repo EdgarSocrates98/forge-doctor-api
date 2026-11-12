@@ -1,0 +1,2 @@
+Usage: forge-doctor-api obsidian history [OPTIONS] List the vault's Forge sync receipts (body-free
+ledger). Options --limit <int range> [1<=x<=100] [default: 50] --help Show this message and exit.

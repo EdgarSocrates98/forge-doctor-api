@@ -174,6 +174,11 @@ class Operation:
     confirm: str | None = None  # literal required in body["confirm"]
     needs_plan_token: bool = False
     timeout: float = 30.0
+    # Opt-in response cache TTL in seconds. Honest by construction:
+    # only GET ops with mutating=False may be cached; a hit reports
+    # `cache: "hit"` in telemetry and Cache-Control/Age headers; any
+    # successful mutation invalidates the whole cache.
+    cache_ttl: float = 0.0
 
     def match(self, path: str) -> dict[str, str] | None:
         want = self.path.split("/")
@@ -486,22 +491,29 @@ class PortalHandler(BaseHTTPRequestHandler):
         self.server.log(fmt % args if args else fmt)
 
     # -- envelope ----------------------------------------------------------
-    def _send_json(self, status: int, payload: dict, *, extra_headers: dict | None = None) -> None:
+    def _send_json(
+        self,
+        status: int,
+        payload: dict,
+        *,
+        extra_headers: dict | None = None,
+        cache_control: str | None = None,
+    ) -> None:
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
         for k, v in (extra_headers or {}).items():
             self.send_header(k, v)
-        self._security_headers()
+        self._security_headers(cache_control)
         self.end_headers()
         self.wfile.write(body)
 
-    def _security_headers(self) -> None:
+    def _security_headers(self, cache_control: str | None = None) -> None:
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("Referrer-Policy", "no-referrer")
         self.send_header("Content-Security-Policy", CSP)
-        self.send_header("Cache-Control", "no-store")
+        self.send_header("Cache-Control", cache_control or "no-store")
         # XFO is the legacy fallback for CSP frame-ancestors (older
         # webviews/embedded contexts may not honour CSP); Permissions-
         # Policy disables browser features this app never calls.
@@ -766,12 +778,62 @@ class PortalHandler(BaseHTTPRequestHandler):
             span_id=span_id,
         )
 
+        # Response cache — opt-in GET ops only. Bypass on ?fresh=1 or a
+        # request `Cache-Control: no-cache`; a hit still emits real
+        # operation.start/end events with cache="hit".
+        t0 = time.perf_counter()
+        cacheable = method == "GET" and not operation.mutating and operation.cache_ttl > 0
+        cache_key: tuple | None = None
+        bypass = False
+        if cacheable:
+            query_items = tuple(
+                sorted((k, v) for k, vals in ctx.query.items() for v in vals if k != "fresh")
+            )
+            cache_key = (rel, query_items)
+            bypass = (
+                "no-cache" in (self.headers.get("Cache-Control") or "")
+                or ctx.query.get("fresh", [""])[0] == "1"
+            )
+            if not bypass:
+                hit = self.server.cache.get(cache_key)
+                if hit is not None:
+                    etag, data, remaining = hit
+                    max_age = max(1, int(remaining))
+                    self.server.emit_event(
+                        "operation.start",
+                        correlation_id=cid,
+                        span_id=span_id,
+                        source="portal_core",
+                        target=op_target,
+                        status="started",
+                        metadata={"mutating": False, "cache": "hit"},
+                    )
+                    self._end_op(cid, span_id, op_target, t0, "ok")
+                    headers = {
+                        "ETag": etag,
+                        "X-Portal-Cache": "hit",
+                        "Age": str(max(0, int(operation.cache_ttl - remaining))),
+                    }
+                    if self.headers.get("If-None-Match") == etag:
+                        self.send_response(304)
+                        for k, v in headers.items():
+                            self.send_header(k, v)
+                        self._security_headers(f"private, max-age={max_age}")
+                        self.end_headers()
+                        return
+                    self._send_json(
+                        200,
+                        self._envelope(cid, data=data),
+                        extra_headers=headers,
+                        cache_control=f"private, max-age={max_age}",
+                    )
+                    return
+
         # The operation boundary — start/end are emitted back-to-back with
         # the handler call so `duration_ms` is measured, never estimated.
         # A timed-out handler keeps running on its worker thread: the
         # 'timeout' end is real (the client's wait ended); the orphan
         # cannot emit a second end — documented in the contract.
-        t0 = time.perf_counter()
         self.server.emit_event(
             "operation.start",
             correlation_id=cid,
@@ -813,8 +875,30 @@ class PortalHandler(BaseHTTPRequestHandler):
             streamed = self._stream_sse(result, cid)
             self._end_op(cid, span_id, op_target, t0, "ok" if streamed else "failed")
             return
+        if operation.mutating and method == "POST":
+            # A successful mutation may affect any read — drop everything.
+            self.server.cache.clear()
         self._end_op(cid, span_id, op_target, t0, "ok")
-        self._send_json(200, self._envelope(cid, data=redact(result)))
+        data = redact(result)
+        if cacheable and cache_key is not None:
+            etag = self.server.cache.put(cache_key, operation.cache_ttl, data)
+            cache_meta = "bypass" if bypass else "miss"
+            self.server.emit_event(
+                "cache.store",
+                correlation_id=cid,
+                span_id=span_id,
+                source="portal_core",
+                target=op_target,
+                metadata={"cache": cache_meta},
+            )
+            self._send_json(
+                200,
+                self._envelope(cid, data=data),
+                extra_headers={"ETag": etag, "X-Portal-Cache": cache_meta},
+                cache_control=f"private, max-age={max(1, int(operation.cache_ttl))}",
+            )
+            return
+        self._send_json(200, self._envelope(cid, data=data))
 
     def _end_op(
         self, cid: str, span_id: str, op_target: str, t0: float, status: str, *, code: str | None = None
@@ -964,6 +1048,52 @@ class RateLimiter:
 
 
 # ---------------------------------------------------------------------------
+# response cache — opt-in per GET op (`Operation.cache_ttl`), honest headers
+#
+# Entries store the *redacted* payload so a hit can never leak what a fresh
+# call would have stripped. Any successful mutating op clears the whole map —
+# a mutation may affect any read. `?fresh=1` or a request `Cache-Control:
+# no-cache` bypasses without discarding the stored copy.
+
+
+class ResponseCache:
+    MAX_ENTRIES = 256
+
+    def __init__(self) -> None:
+        self._entries: dict[tuple, tuple[float, float, str, Any]] = {}
+        self._lock = threading.Lock()
+
+    def get(self, key: tuple) -> tuple[str, Any, float] | None:
+        """Return (etag, data, remaining_ttl_s) on a live hit."""
+        now = time.monotonic()
+        with self._lock:
+            entry = self._entries.get(key)
+            if entry is None:
+                return None
+            stored_at, ttl, etag, data = entry
+            remaining = ttl - (now - stored_at)
+            if remaining <= 0:
+                del self._entries[key]
+                return None
+            return etag, data, remaining
+
+    def put(self, key: tuple, ttl: float, data: Any) -> str:
+        etag = '"%s"' % hashlib.sha256(
+            json.dumps(data, sort_keys=True, ensure_ascii=False).encode("utf-8")
+        ).hexdigest()[:32]
+        with self._lock:
+            if len(self._entries) >= self.MAX_ENTRIES:
+                oldest = min(self._entries, key=lambda k: self._entries[k][0])
+                del self._entries[oldest]
+            self._entries[key] = (time.monotonic(), ttl, etag, data)
+        return etag
+
+    def clear(self) -> None:
+        with self._lock:
+            self._entries.clear()
+
+
+# ---------------------------------------------------------------------------
 # server
 
 
@@ -992,6 +1122,7 @@ class PortalServer(ThreadingHTTPServer):
         self._plan_secret = secrets.token_bytes(32)
         self._used_plans: set[str] = set()
         self.rate_limiter = RateLimiter()
+        self.cache = ResponseCache()
         self._quiet = quiet
         self._executor = __import__("concurrent.futures", fromlist=["ThreadPoolExecutor"]).ThreadPoolExecutor(
             max_workers=8, thread_name_prefix="forge-portal"
@@ -1134,17 +1265,39 @@ def default_operations(adapter: PortalAdapter) -> list[Operation]:
                 "health": _with_portal_presence(adapter.health()),
                 "account_environment": adapter.account_environment(),
             },
+            cache_ttl=5.0,
         ),
-        Operation("GET", "/health", _environment_presence_op(_presence_op(_get("health", None)), adapter)),
-        Operation("GET", "/environment", lambda ctx: adapter.account_environment()),
-        Operation("GET", "/capabilities", lambda ctx: adapter.capabilities()),
-        Operation("GET", "/registry/state", lambda ctx: read_registry_state()),
+        Operation(
+            "GET",
+            "/health",
+            _environment_presence_op(_presence_op(_get("health", None)), adapter),
+            cache_ttl=5.0,
+        ),
+        Operation(
+            "GET",
+            "/environment",
+            lambda ctx: adapter.account_environment(),
+            cache_ttl=30.0,
+        ),
+        Operation(
+            "GET",
+            "/capabilities",
+            lambda ctx: adapter.capabilities(),
+            cache_ttl=60.0,
+        ),
+        Operation(
+            "GET",
+            "/registry/state",
+            lambda ctx: read_registry_state(),
+            cache_ttl=10.0,
+        ),
         Operation(
             "GET",
             "/installation/status",
             _environment_presence_op(
                 _presence_op(_get("installation_status", adapter.health)), adapter
             ),
+            cache_ttl=10.0,
         ),
     ]
 

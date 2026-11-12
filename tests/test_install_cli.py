@@ -73,9 +73,9 @@ def test_apply_writes_managed_regions(target: Path) -> None:
     entry = mcp["mcpServers"]["forge-doctor-api"]
     assert entry["command"] == "forge-doctor-api"
     assert entry["args"] == ["mcp"]
-    assert "forge-doctor-api:managed:begin" in (target / "AGENTS.md").read_text(
-        encoding="utf-8"
-    )
+    agents = (target / "AGENTS.md").read_text(encoding="utf-8")
+    assert "forge:forge-doctor-api:begin" in agents
+    assert "forge:ecosystem:begin" in agents
 
 
 def test_status_doctor_round_trip(target: Path) -> None:

@@ -27,6 +27,7 @@ import re
 import stat
 import sys
 import tempfile
+import threading
 import time
 import uuid
 from importlib import metadata as importlib_metadata
@@ -38,7 +39,7 @@ from typing import Any
 _INSTALLKIT_VERSION = "1.0.4"
 # Filled by the vendor step (scripts/installkit/vendor.py) — the sha256 of
 # the canonical source body, so drift checks can compare vendored copies.
-_SOURCE_SHA256 = "7a51eb0c03d7a342"
+_SOURCE_SHA256 = "7510ca119c2fbb95"
 
 SCHEMA_MANIFEST = "forge/InstallationManifest/v1"
 SCHEMA_RECEIPT = "forge/InstallReceipt/v1"
@@ -638,17 +639,22 @@ def state_dir_for(spec: ForgeSpec, scope: str, root: Path) -> Path:
 
 
 def _host_dirs(host: str, scope: str) -> list[str]:
-    """Project/user roots a host reads its assets from."""
+    """Project/user roots a host reads its assets from.
+
+    `.agents/` is the shared surface: Devin, Codex and Copilot all read it
+    natively, so skills/agents are written there ONCE. Host dirs remain only
+    for host-specific config (`.devin` confs/payloads, `.codex` TOML agents,
+    `.github` copilot assets) — never a second copy of the same skill."""
     if scope == "user":
         return {
             "claude": ["~/.claude/skills", "~/.claude/agents"],
-            "devin": ["~/.devin/skills", "~/.agents/skills", "~/.agents/agents"],
+            "devin": ["~/.agents/skills", "~/.agents/agents", "~/.devin"],
             "codex": ["~/.codex", "~/.agents/skills", "~/.agents/agents"],
             "copilot": ["~/.agents/skills", "~/.agents/agents"],
         }.get(host, [])
     return {
         "claude": [".claude/skills", ".claude/agents"],
-        "devin": [".devin/skills", ".agents/skills", ".agents/agents"],
+        "devin": [".agents/skills", ".agents/agents", ".devin"],
         "codex": [".agents/skills", ".agents/agents", ".codex"],
         "copilot": [".agents/skills", ".agents/agents", ".github/skills"],
     }.get(host, [])
@@ -657,8 +663,14 @@ def _host_dirs(host: str, scope: str) -> list[str]:
 def profile_asset_kinds(profile: str) -> tuple[str, ...]:
     return {
         "minimal": ("config", "mcp", "marker", "state"),
-        "recommended": ("config", "mcp", "marker", "state", "skill", "agent"),
-        "full": ("config", "mcp", "marker", "state", "skill", "agent"),
+        "recommended": (
+            "config", "mcp", "marker", "state", "skill", "agent",
+            "knowledge", "rules", "evals",
+        ),
+        "full": (
+            "config", "mcp", "marker", "state", "skill", "agent",
+            "knowledge", "rules", "evals",
+        ),
     }[profile]
 
 
@@ -678,9 +690,25 @@ def components_path(state_dir: Path) -> Path:
 # Optional components selectable beyond the profile. Public names map to
 # asset kinds; "graph-studio"/"tui" are runtime flags persisted to
 # components.json. Core kinds are always installed.
-COMPONENT_KINDS = {"skills": "skill", "agents": "agent", "mcp": "mcp"}
+COMPONENT_KINDS = {
+    "skills": "skill",
+    "agents": "agent",
+    "mcp": "mcp",
+    "knowledge": "knowledge",
+    "rules": "rules",
+    "evals": "evals",
+}
 CORE_KINDS = ("config", "marker", "state")
-OPTIONAL_COMPONENTS = ("skills", "agents", "mcp", "tui", "graph-studio")
+OPTIONAL_COMPONENTS = (
+    "skills",
+    "agents",
+    "mcp",
+    "knowledge",
+    "rules",
+    "evals",
+    "tui",
+    "graph-studio",
+)
 
 
 def component_options(
@@ -765,6 +793,12 @@ def _asset_kind(rel: str) -> str:
         return "skill"
     if "/agents/" in f"/{rel}" or "agent" in Path(rel).name.lower():
         return "agent"
+    if "/knowledge/" in f"/{rel}":
+        return "knowledge"
+    if "/rules/" in f"/{rel}":
+        return "rules"
+    if "/evals/" in f"/{rel}":
+        return "evals"
     if Path(rel).name == ".mcp.json" or "mcp" in rel:
         return "mcp"
     if rel.startswith((".", "")) and Path(rel).suffix in (".json", ".yaml", ".yml", ".toml"):
@@ -830,7 +864,10 @@ def apply_install(ctx: InstallContext, *, approved: bool = False) -> dict[str, A
     try:
         assets = ctx.spec.render_assets(ctx) if ctx.spec.render_assets else {}
         kinds = set(asset_kinds_for(ctx))
-        ctx_bytes = {"skill": 0, "agent": 0, "managed": 0}
+        ctx_bytes = {
+            "skill": 0, "agent": 0, "knowledge": 0, "rules": 0, "evals": 0,
+            "managed": 0,
+        }
         for rel in sorted(assets):
             kind = _asset_kind(rel)
             if kind not in kinds:
@@ -841,7 +878,7 @@ def apply_install(ctx: InstallContext, *, approved: bool = False) -> dict[str, A
                     f"{rel!r}: escapes the install root — remove or fix the asset path",
                 )
             data = assets[rel]
-            if kind in ("skill", "agent"):
+            if kind in ctx_bytes:
                 ctx_bytes[kind] += len(data)
             ctx_bytes["managed"] += len(data)
             target = ctx.root / rel
@@ -1282,6 +1319,11 @@ def uninstall(ctx: InstallContext, *, purge_state: bool = False) -> dict[str, An
             # the install root — keep it (and the entry) for repair/triage.
             kept.append(rel)
             continue
+        # `.mcp.json` is a shared document. Its managed server key is removed
+        # below while sibling servers and user metadata are preserved; the
+        # generic whole-file deletion path must never win first.
+        if rel == ".mcp.json" and ctx.spec.mcp_server_name:
+            continue
         target = ctx.root / rel
         if rel in ctx.spec.marker_files and target.exists():
             # marker files: excise the block, keep the file
@@ -1605,20 +1647,34 @@ def mcp_verify(spec: ForgeSpec, *, timeout: int = 20) -> dict[str, Any]:
             "detail": "subprocess disabled by policy",
         }
     exe = spec.mcp_command[0]
+    resolved_exe = exe
     if not (os.sep in exe or (os.altsep and os.altsep in exe)):
         import shutil  # noqa: PLC0415
 
-        if shutil.which(exe) is None:
+        resolved_exe = shutil.which(exe)
+        if resolved_exe is None:
             return {
                 "id": "mcp-handshake",
                 "status": "BLOCKED",
                 "detail": f"{exe!r} not resolvable on PATH — install incomplete",
             }
+    spawn_command = list(spec.mcp_command)
+    # Windows PATH launchers are commonly `.cmd`/`.bat` shims. `Popen` with
+    # `shell=False` (the safe default) does not execute those shims when the
+    # command is passed as an argv list, even though the host can launch them
+    # interactively. Route only that wrapper through cmd.exe; real executables
+    # keep the original no-shell path and every declared argument is preserved.
+    if os.name == "nt" and resolved_exe:
+        suffix = Path(resolved_exe).suffix.lower()
+        if suffix in (".cmd", ".bat"):
+            spawn_command = ["cmd.exe", "/d", "/c", resolved_exe, *spec.mcp_command[1:]]
+        elif not (os.sep in exe or (os.altsep and os.altsep in exe)):
+            spawn_command[0] = resolved_exe
     try:
         import subprocess  # noqa: PLC0415
 
         proc = subprocess.Popen(  # noqa: S603 — command is the declared spec
-            list(spec.mcp_command),
+            spawn_command,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -1639,30 +1695,57 @@ def mcp_verify(spec: ForgeSpec, *, timeout: int = 20) -> dict[str, Any]:
     if proc.stdin is None or proc.stdout is None:
         proc.kill()
         return {"id": "mcp-handshake", "status": "FAIL", "detail": "stdio pipes unavailable"}
+
+    # A Windows ``.cmd`` launcher can leave the real provider holding the
+    # wrapper's stderr handle after the wrapper exits.  Reading
+    # ``proc.stderr`` only during cleanup would then block the Portal worker
+    # forever (the MCP handshake itself may already have completed).  Drain
+    # stderr in a daemon pump and keep only a bounded tail instead.
+    stderr_tail = bytearray()
+
+    def _drain_stderr() -> None:
+        if proc.stderr is None:
+            return
+        for chunk in iter(proc.stderr.readline, b""):
+            stderr_tail.extend(chunk)
+            del stderr_tail[:-400]
+
+    threading.Thread(target=_drain_stderr, daemon=True, name="mcp-stderr").start()
     try:
         out = _mcp_handshake(proc, spec, timeout)
     except Exception as exc:  # handshake failures are FAIL, not crashes
         out = {"id": "mcp-handshake", "status": "FAIL", "detail": str(exc)}
     killed = False
+    # Kill the exact process tree on Windows so a cmd.exe shim cannot leave
+    # a specialist MCP child alive.  On other platforms the existing
+    # terminate/kill path remains the portable fallback.
+    if os.name == "nt" and proc.poll() is None:
+        try:
+            subprocess.run(
+                ["taskkill", "/T", "/F", "/PID", str(proc.pid)],
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                timeout=5,
+                check=False,
+            )
+        except Exception:  # noqa: S110 — best-effort tree cleanup
+            pass
     try:
-        proc.terminate()
+        if proc.poll() is None:
+            proc.terminate()
         proc.wait(timeout=3)
     except Exception:
         try:
             proc.kill()
+            proc.wait(timeout=3)
             killed = True
         except Exception:  # noqa: S110 — best-effort kill after terminate
             pass
-    stderr_tail = b""
-    try:
-        if proc.stderr is not None:
-            stderr_tail = proc.stderr.read()[-400:]
-    except Exception:  # noqa: S110 — server stderr is best-effort evidence
-        pass
     out["process"] = {
         "exit": ("clean" if proc.returncode == 0 else "killed" if killed else "terminated"),
         "returncode": proc.returncode,
-        "stderr_tail": stderr_tail.decode(errors="replace").strip()[-200:] or None,
+        "stderr_tail": bytes(stderr_tail).decode(errors="replace").strip()[-200:] or None,
     }
     return out
 

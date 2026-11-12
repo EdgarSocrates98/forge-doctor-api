@@ -1,0 +1,3 @@
+Usage: forge-doctor-api obsidian preview [OPTIONS] {path} Preview one vault note: metadata +
+projection, never the body. Arguments * path <str> [required] Options --help Show this message and
+exit.

@@ -1,0 +1,4 @@
+Usage: forge-doctor-api obsidian export-note [OPTIONS] {name} {file} Export FILE as ``forges/<forge-
+id>/<name>.md`` — canonical layout. Arguments * name <str> [required] * file <path> [required]
+Options --baseline-hash <str> --classification <str> [default: internal] --yes Confirm the reviewed
+sync plan --no-moc --help Show this message and exit.

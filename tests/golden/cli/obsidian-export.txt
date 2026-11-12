@@ -1,0 +1,4 @@
+Usage: forge-doctor-api obsidian export [OPTIONS] {path} {file} Apply a reviewed sync plan and emit
+the real vault receipt. Arguments * path <str> [required] * file <path> [required] Options
+--baseline-hash <str> --classification <str> [default: internal] --yes Confirm the reviewed sync
+plan --no-moc Do not refresh forges/index.md --help Show this message and exit.

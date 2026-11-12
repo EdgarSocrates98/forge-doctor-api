@@ -92,6 +92,10 @@ from forge_doctor_api.cli.install_cmd import install_app  # noqa: E402
 
 app.add_typer(install_app, name="install")
 
+from forge_doctor_api._forge_obsidian.cli import obsidian_app as _obsidian_app  # noqa: E402
+
+app.add_typer(_obsidian_app("forge-doctor-api"), name="obsidian")
+
 
 def _version(value: bool) -> None:
     if value:

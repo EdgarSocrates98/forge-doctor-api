@@ -93,15 +93,23 @@ _VENDORED = frozenset({
 # ``os``/``subprocess`` surface in ``src/`` — subprocess is confined to
 # ``_installkit._spawn`` and ``install.service.update``; the scan/engine
 # path never imports them (``test_install_surface_isolation`` guards it).
+# ``_forgecontext.py`` is the vendored forge/context/v1 engine the
+# install surface uses for workspace registration — byte-parity with
+# the-forge, stdlib-only, vendored in e5dea6d.
 _INSTALL_SURFACE = frozenset({
     "_installkit.py",
+    "_forgecontext.py",
     "install/__init__.py",
     "install/service.py",
     "cli/install_cmd.py",
 })
 # Module paths only the install surface may import — any other src module
 # reaching them is a boundary violation.
-_INSTALL_MODULES = ("forge_doctor_api._installkit", "forge_doctor_api.install")
+_INSTALL_MODULES = (
+    "forge_doctor_api._installkit",
+    "forge_doctor_api._forgecontext",
+    "forge_doctor_api.install",
+)
 
 
 def _member(tmp_path: Path) -> WorkspaceMember:
