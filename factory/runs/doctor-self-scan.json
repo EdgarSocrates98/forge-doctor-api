@@ -1,5 +1,5 @@
 {
-  "analysis_rev": "230eec70e07b10c8b15b870d85926239f97074b8981df71de6144382c5b9e922",
+  "analysis_rev": "dbbe5b04164c5033a05cb91c4408291aee3ca494cec701a8048d9dda72c94ede",
   "analysis_stats": [],
   "cache": {
     "counts": [
@@ -12064,16 +12064,16 @@
       "evidence": [
         {
           "kind": "STATIC",
-          "line": 21,
+          "line": 19,
           "offset": null,
-          "source": "tests/fixtures/oss/nestjs/cats-controller/slice.ts",
+          "source": "labs/frameworks/nestjs-depth/cats.controller.ts",
           "summary": "implemented GET /cats is absent from the contract"
         },
         {
           "kind": "STATIC",
-          "line": 21,
+          "line": 19,
           "offset": null,
-          "source": "tests/fixtures/oss/nestjs/cats-controller/slice.ts",
+          "source": "labs/frameworks/nestjs-depth/cats.controller.ts",
           "summary": "implementation: GET /cats -> CatsController.findAll"
         }
       ],
@@ -12083,8 +12083,8 @@
       "severity": "MEDIUM",
       "source_location": {
         "column": null,
-        "line": 21,
-        "path": "tests/fixtures/oss/nestjs/cats-controller/slice.ts"
+        "line": 19,
+        "path": "labs/frameworks/nestjs-depth/cats.controller.ts"
       },
       "title": "Implemented route absent from contract",
       "unknowns": [
@@ -28900,7 +28900,25 @@
           "unknown"
         ],
         "markers": [],
-        "path": ".git/logs/refs/heads/feat/forge-unified-workspace-closure",
+        "path": ".git/logs/refs/heads/feat/mcp-verify-tool",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/logs/refs/heads/feat/portal-catalog-parity",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/logs/refs/heads/feat/resource-catalog",
         "unreadable": false,
         "vendored": true
       },
@@ -28928,6 +28946,15 @@
         ],
         "markers": [],
         "path": ".git/logs/refs/heads/release/cycle-2.7-patch-version",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/logs/refs/heads/release/v0.3.4",
         "unreadable": false,
         "vendored": true
       },
@@ -29017,6 +29044,33 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/logs/refs/remotes/origin/feat/mcp-verify-tool",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/logs/refs/remotes/origin/feat/portal-catalog-parity",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/logs/refs/remotes/origin/feat/resource-catalog",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/logs/refs/remotes/origin/main",
         "unreadable": false,
         "vendored": true
@@ -29045,6 +29099,15 @@
         ],
         "markers": [],
         "path": ".git/logs/refs/remotes/origin/release/cycle-2.7-version-dump",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/logs/refs/remotes/origin/release/v0.3.4",
         "unreadable": false,
         "vendored": true
       },
@@ -29170,6 +29233,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/03/765d8dcaf305f6b46de76d08848b75607d3ec1",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/03/bba745fe2079a2bf1670d8fa275f553c8c0121",
         "unreadable": false,
         "vendored": true
@@ -29189,6 +29261,15 @@
         ],
         "markers": [],
         "path": ".git/objects/04/63c7a52f007e7aa7a3b0d615667e4b2703a1f5",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/04/8f857dd75bfc26bae4390f3d14d480c5b6f1d3",
         "unreadable": false,
         "vendored": true
       },
@@ -29314,6 +29395,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/09/20e84bd4931322af82f4e20ee37e2313fa7729",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/09/2cd7b917258e9b466296078c7e3d38ceb8b702",
         "unreadable": false,
         "vendored": true
@@ -29404,6 +29494,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/0c/6084c92d15d2fddbc24b9f42f64b3f282ecb9b",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/0d/37715719dd17edf89a17e03b65009df078dea5",
         "unreadable": false,
         "vendored": true
@@ -29450,6 +29549,15 @@
         ],
         "markers": [],
         "path": ".git/objects/0d/d9e52d96ec377b200b731a75b81c82e147ee89",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/0d/e55ad583457bdc8480473134f37e44280b5091",
         "unreadable": false,
         "vendored": true
       },
@@ -29791,6 +29899,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/1a/ed5eb86e3f84354774a35261bb7458a25f3f94",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/1b/193a248b645bbee2fe72999347af21a278a9dc",
         "unreadable": false,
         "vendored": true
@@ -29890,6 +30007,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/1e/027814346ad8d7f757a7ff42eeeb24c151d67c",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/1e/09f652e56f1d15dddb1c6570c474a9525a6d44",
         "unreadable": false,
         "vendored": true
@@ -29972,6 +30098,15 @@
         ],
         "markers": [],
         "path": ".git/objects/20/8d165c53a61eb08953b41aba8945a10b8d0108",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/20/be60b6cecb5921d0ac4c76416e1d1a90786f3a",
         "unreadable": false,
         "vendored": true
       },
@@ -30133,6 +30268,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/24/c73cca5a3cb750a55d1d7f050acd19f7da6fd4",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/25/8ee49fb6f4325a8291112b5260edefa61347ed",
         "unreadable": false,
         "vendored": true
@@ -30152,6 +30296,15 @@
         ],
         "markers": [],
         "path": ".git/objects/26/8ba8329bc08d2107d3743dccf1fcc3a14da1cd",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/26/b911198cc8c21e4ee1b837c7fe470b1e2de280",
         "unreadable": false,
         "vendored": true
       },
@@ -30224,6 +30377,15 @@
         ],
         "markers": [],
         "path": ".git/objects/29/92f2e1df15d1c33ea964c28f24879817619f10",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/2a/083d29eb0af309e099a264a8678f7a37ac5245",
         "unreadable": false,
         "vendored": true
       },
@@ -30322,6 +30484,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/2e/c2c1f86e2f49595ccc36853d415fcbf3714bc7",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/2f/30ba1c9aff357883f43e4b4da765e8bdab11d4",
         "unreadable": false,
         "vendored": true
@@ -30350,6 +30521,15 @@
         ],
         "markers": [],
         "path": ".git/objects/2f/ed73072eb6c7ed9fc0ad82bd5f2349b4b09fe9",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/30/0a6bc411bd8d29770fc9934b300a5db8521a48",
         "unreadable": false,
         "vendored": true
       },
@@ -30395,6 +30575,15 @@
         ],
         "markers": [],
         "path": ".git/objects/31/439d647e962be9441720aa26540c503c3af1db",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/31/614f1ef0f3e2eadd90c92b8bf12084128732cd",
         "unreadable": false,
         "vendored": true
       },
@@ -30521,6 +30710,15 @@
         ],
         "markers": [],
         "path": ".git/objects/35/278c2b14ffd308bfa3b352972bed3a936c8ebb",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/35/6e4b6a15f80a5bd6492a103b4f259b09845a04",
         "unreadable": false,
         "vendored": true
       },
@@ -30898,6 +31096,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/3e/3ec3e7d54f3a28c55618cdf47f2b0dafec3e34",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/3e/5e0f2a8f0173d2588bbec10ef513046b051e7f",
         "unreadable": false,
         "vendored": true
@@ -30944,6 +31151,15 @@
         ],
         "markers": [],
         "path": ".git/objects/3f/e0065a450977c1f530612d45fc40a4b2b536b5",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/41/14ed3ab23b22e408f78b1cac963ab67e6146a5",
         "unreadable": false,
         "vendored": true
       },
@@ -31159,6 +31375,24 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/48/a65d39bf94067ab3dc71b515d467100dedba28",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/49/16ccdcf35932c449cfd41e0511c2eecc64d562",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/49/38dea7f40abf0201ea676840f86cfe411c720f",
         "unreadable": false,
         "vendored": true
@@ -31169,6 +31403,15 @@
         ],
         "markers": [],
         "path": ".git/objects/49/56229c6bf564066f22d00f38fdb0b30043bb91",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/4a/89e1d967e5e849429d2da021733447ca4bcf77",
         "unreadable": false,
         "vendored": true
       },
@@ -31196,6 +31439,15 @@
         ],
         "markers": [],
         "path": ".git/objects/4c/05bca7fc7b8d5b2533708a017f3f71871e4452",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/4c/300f422f104cb69dcd047c88183403bd3df8f0",
         "unreadable": false,
         "vendored": true
       },
@@ -31249,6 +31501,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/4e/bb4f699562d8b99b80bd1fa2a9932fe8f3c1ab",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/4f/8abc36d5e5b5e19a3dee987726bb5ffe1c269b",
         "unreadable": false,
         "vendored": true
@@ -31286,6 +31547,15 @@
         ],
         "markers": [],
         "path": ".git/objects/50/84550d762fee5ce7c84469e5565b8be88ceb00",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/50/96d063995062b47c7073c2f6351fd16f39ed03",
         "unreadable": false,
         "vendored": true
       },
@@ -31349,6 +31619,15 @@
         ],
         "markers": [],
         "path": ".git/objects/53/d49a125817be8e182e87e0c20a58cad7149e0b",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/53/fcfee269a17f062033aa42c98d0cd7e7226e03",
         "unreadable": false,
         "vendored": true
       },
@@ -31447,7 +31726,25 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/57/60e256a2f8a7517fd1feb3cbd15ace61a03366",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/57/6e4e6262e9ea6edfec1789f6eb81ba4bac5990",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/57/7e8637ab4ef56f5286a86b952c346a05d8ecbd",
         "unreadable": false,
         "vendored": true
       },
@@ -31520,6 +31817,15 @@
         ],
         "markers": [],
         "path": ".git/objects/59/969b208f58d6d181a3b02dfda6b79792a67d2c",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/59/a6fd014efbaf25a1a17736ce819b8d6aa91321",
         "unreadable": false,
         "vendored": true
       },
@@ -31663,6 +31969,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/5d/cebee94c5ecbde5b76078d7439044c87df7f10",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/5d/f52eb2856d8da8ca6926e35de61fdcec8aa625",
         "unreadable": false,
         "vendored": true
@@ -31754,6 +32069,15 @@
         ],
         "markers": [],
         "path": ".git/objects/61/11eccffbd46c3d755c10cb72655a251f3b000e",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/61/19fd18008cff2cd2a6716cd39bbc6a102d1370",
         "unreadable": false,
         "vendored": true
       },
@@ -31861,7 +32185,25 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/64/8ee2ed04144579d8427a4815536da021d11524",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/65/7090c017b9fe0fd2bac5c026d7a11a3dd5ca22",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/65/73758e497bbc8a399ec2804f83375082aa6bfb",
         "unreadable": false,
         "vendored": true
       },
@@ -32230,6 +32572,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/72/cbb8574e03bfa0a1275de612498095da999370",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/72/e2b7e7a1ae604dca7403f3848bc2ad84c16e32",
         "unreadable": false,
         "vendored": true
@@ -32240,6 +32591,15 @@
         ],
         "markers": [],
         "path": ".git/objects/72/e3acb47b9782721c053f0f5525f3aeb4544758",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/72/ef724caa1acd080a170373b7edb8bb76ec59c2",
         "unreadable": false,
         "vendored": true
       },
@@ -32365,6 +32725,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/76/4e38b8933f57a279910102c95a8e58d68024fd",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/76/6f50f7a8cca23b30b520f9eb42eaa35bfd7490",
         "unreadable": false,
         "vendored": true
@@ -32465,6 +32834,15 @@
         ],
         "markers": [],
         "path": ".git/objects/7a/48e0d49be7e5fe184e8ff43ace63e2f8eb5703",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/7a/69a54eed711a7cd44cb8028e0bbe35d563d24a",
         "unreadable": false,
         "vendored": true
       },
@@ -32582,6 +32960,15 @@
         ],
         "markers": [],
         "path": ".git/objects/7d/dcd4f598e7e30e8927f14fadec3aede04571a9",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/7e/17d2243250798398a2e93ed38acda1e8943c1b",
         "unreadable": false,
         "vendored": true
       },
@@ -32761,6 +33148,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/82/ab90b145e1a21173422c9e74ee4bfb30a2a5bf",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/83/3c9f94661f41a86760dee7fea35e5db4d79fb0",
         "unreadable": false,
         "vendored": true
@@ -32824,7 +33220,34 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/84/d73f9f515331d3644b1fb5ccfc6e0f21a23931",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/84/fb24b0e3744a97301ba97c23e8e1d55207a14c",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/85/c0a2a6d2035a399066e19aa650fc8f418e9978",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/86/1f41bf51a834ffce6e77f8949f83123e12ae7c",
         "unreadable": false,
         "vendored": true
       },
@@ -32851,7 +33274,25 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/86/5078316ff8b4786d5a29ddd40eb220d4d2e1f5",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/86/8d8d8376912c9fcf1a6b5d81d0608caf86d4f9",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/86/d8d1083781066386f8337d37451c0236c93c4e",
         "unreadable": false,
         "vendored": true
       },
@@ -32897,6 +33338,15 @@
         ],
         "markers": [],
         "path": ".git/objects/87/abb43a260c9bbd22108830ba8f6606232a3b17",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/87/cd4e9f1c2ee85c72402cebfc7e45efd4f6894e",
         "unreadable": false,
         "vendored": true
       },
@@ -32960,6 +33410,15 @@
         ],
         "markers": [],
         "path": ".git/objects/89/74f0ff8dd9faa49b4e657e41523d1a0b8bbb12",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/89/7d97e3198ec8bbe9dd11a97077e5b355ae0acc",
         "unreadable": false,
         "vendored": true
       },
@@ -33040,6 +33499,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/8a/69c4521aa9194546bc99410a9a29533fe7014a",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/8a/ece7a3f76ab7373a34330f1cb544b0001a18ef",
         "unreadable": false,
         "vendored": true
@@ -33077,6 +33545,15 @@
         ],
         "markers": [],
         "path": ".git/objects/8b/c28952b3266aa6befbd70128ac8a7197bf8a04",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/8b/c5f143aa3197b7c87ff288b9e6909cd7727c86",
         "unreadable": false,
         "vendored": true
       },
@@ -33256,7 +33733,25 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/91/4220cfcdd8ac0777c50aef15dbc24cca02dab3",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/91/4f14c262dbe0721e0de5f4a6c585dc786b9dcf",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/91/6e36ee422787762df80a7ced94128680860aa8",
         "unreadable": false,
         "vendored": true
       },
@@ -33311,6 +33806,15 @@
         ],
         "markers": [],
         "path": ".git/objects/92/d7ada22125b51a9186333db5a733e2e7f7e56c",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/93/2b31b485c5742431f06d0c6fcaab30fa596d8f",
         "unreadable": false,
         "vendored": true
       },
@@ -33410,6 +33914,15 @@
         ],
         "markers": [],
         "path": ".git/objects/97/9fd64c40483ce5f27020e6cdb0aeeaceb2fe09",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/97/d5f93ce2d48d587ccf6035972c8da02517b911",
         "unreadable": false,
         "vendored": true
       },
@@ -33571,6 +34084,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/9d/bd40f07282b3e96c9db12f87959c5a73ac37b3",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/9d/cb676371623a97c2fa78add8fa2b64e44e4a13",
         "unreadable": false,
         "vendored": true
@@ -33670,6 +34192,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/a0/3c0ea2d70c59f7f7230be6d9c0063bed35d7de",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/a0/ba04b906b40bf6607856dcc2428cc8a069d424",
         "unreadable": false,
         "vendored": true
@@ -33680,6 +34211,15 @@
         ],
         "markers": [],
         "path": ".git/objects/a0/dc3ad119341c7e098ae9e9ef9457e958b01486",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/a0/f61675ac9c44043d8c6f962e75ee80190ff1ee",
         "unreadable": false,
         "vendored": true
       },
@@ -33725,6 +34265,15 @@
         ],
         "markers": [],
         "path": ".git/objects/a3/ae637c5665521a62ae82375d05ad4c40414c4a",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/a3/bfdea253daadedad06cc287354f00d3ebf3f40",
         "unreadable": false,
         "vendored": true
       },
@@ -33922,6 +34471,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/aa/f7dbb9e71074caeaa95c3a5ed6bf21004c2672",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/ab/68f7c9460666920621e5e57d2fa79fbfe2e448",
         "unreadable": false,
         "vendored": true
@@ -33959,6 +34517,15 @@
         ],
         "markers": [],
         "path": ".git/objects/ac/70bf7078ddd2bcbec1eb3850010390f56c6e0a",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/ac/834ecc05d91f32adc1c9098b1abb29bb030222",
         "unreadable": false,
         "vendored": true
       },
@@ -34102,6 +34669,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/b2/4b6535dcc3e59135e52d753fc19632e8faebf8",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/b2/5231b42f8d83904551fa2154c0eb64bd6f54f5",
         "unreadable": false,
         "vendored": true
@@ -34157,6 +34733,15 @@
         ],
         "markers": [],
         "path": ".git/objects/b3/c7e7e3ea01413dd022238ec6c1b4118a4993e6",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/b4/04a939203544099b8ffa045ce06069cb73b228",
         "unreadable": false,
         "vendored": true
       },
@@ -34246,6 +34831,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/b7/b1e73a017178f5e85686cdcb946e03f883af4a",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/b7/d2fd24ef90e6433fbd75663b87e255874720fb",
         "unreadable": false,
         "vendored": true
@@ -34327,6 +34921,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/b9/e0a702473c137bb3c166be76ef88759f5e8ba3",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/b9/ffed3f938e14e40c4b9ba2904c1362edcca108",
         "unreadable": false,
         "vendored": true
@@ -34346,6 +34949,15 @@
         ],
         "markers": [],
         "path": ".git/objects/ba/4fbc50eeea174ab59613b612a6af104208937b",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/ba/b7e81e9b4421d4ceea4d3a206bf076c0d859da",
         "unreadable": false,
         "vendored": true
       },
@@ -34426,6 +35038,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/bb/f62616fa82ee3617c8a9cec6c21d43ae702a8f",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/bc/4e0e06728a4297f93180600af1b64e5a0aad32",
         "unreadable": false,
         "vendored": true
@@ -34472,6 +35093,15 @@
         ],
         "markers": [],
         "path": ".git/objects/bd/ae3c0fec818fee8e4d33d2454986a772b280b7",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/be/aee822cbbf2d498dd6757df688f662b04cee62",
         "unreadable": false,
         "vendored": true
       },
@@ -34705,6 +35335,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/c5/126e01b51a94b738e91bcaed9a71bde3635ade",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/c5/4e2233f32ae45221b5857cf8aff2e9dc9eef22",
         "unreadable": false,
         "vendored": true
@@ -34733,6 +35372,15 @@
         ],
         "markers": [],
         "path": ".git/objects/c7/463bf53ef87ee574f5b8795e342825a806e5a6",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/c7/954e69eb84ef866c5e8f97da26df6ccc3487b6",
         "unreadable": false,
         "vendored": true
       },
@@ -34831,6 +35479,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/cb/34db598f2c5047558faabab4c3bb7990cb8f11",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/cb/437bbf4cb380a521d7840ac9eefa65f09fb27b",
         "unreadable": false,
         "vendored": true
@@ -34849,6 +35506,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/cb/f3942a850a6d79dc4591350a86d93a19192b47",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/cc/37411c536166d4830d3c7770952120ae8fa036",
         "unreadable": false,
         "vendored": true
@@ -34859,6 +35525,15 @@
         ],
         "markers": [],
         "path": ".git/objects/cc/6a07479dbb4a7ce47d30cfe9ac91b0a07275b3",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/cc/7b1a881b12bbc727ac8729e5ddea1001d0e6ea",
         "unreadable": false,
         "vendored": true
       },
@@ -34903,7 +35578,25 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/cd/81d724e16627d77acaaf8c0337f9fc0639f45b",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/cd/b67881b8d3f0ddd1322728d29e253d71b6c14f",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/cd/e48f4f9ec77edf97efc8d49b9b542e0f386065",
         "unreadable": false,
         "vendored": true
       },
@@ -35191,6 +35884,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/d7/434bddf3eb8b94c8e5334024247646932d2224",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/d9/6adaaf2a4f4b1405e31a32846bc663cce2eb66",
         "unreadable": false,
         "vendored": true
@@ -35263,6 +35965,24 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/da/a7f4f5e65a3fb2720e03be3e0d16ffb0dbda00",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/db/056f8277aab0c7901351f1070771cb02cda024",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/db/458a2c388aead3fff21f9a35f5bf70ed236c0c",
         "unreadable": false,
         "vendored": true
@@ -35326,6 +36046,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/dc/74e7da0261f7065cd72cab2761997e8b7fd225",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/dc/7c6b05bafb76807b2b8eac315771ed523243d8",
         "unreadable": false,
         "vendored": true
@@ -35363,6 +36092,15 @@
         ],
         "markers": [],
         "path": ".git/objects/dd/6021d8226388b08ebdf1adace695133e9b34fb",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/dd/9473a2cc77a454c379c20a14b16dae2fd14292",
         "unreadable": false,
         "vendored": true
       },
@@ -35578,6 +36316,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/e5/c8f697adbea82d91006a5168f240184a3229d0",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/e5/dea6d7824dc02d05119306d83f449c934389de",
         "unreadable": false,
         "vendored": true
@@ -35668,6 +36415,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/e7/c6fad3f4b3f4568e4d181bc3f0f95b5c10221e",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/e7/cab08c1f5b167d706d0720cd141de8e93c7ca8",
         "unreadable": false,
         "vendored": true
@@ -35678,6 +36434,15 @@
         ],
         "markers": [],
         "path": ".git/objects/e7/faf592635541c61df737a48aec2f269f582ff1",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/e8/158c49692d2fbc364066cd7db5e0451292da42",
         "unreadable": false,
         "vendored": true
       },
@@ -35776,6 +36541,24 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/ea/f9c316d6b2f69642da040eab7c5823daf93146",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/eb/4275bb5656c60dc69f9e8a19f9cf88d11b6aaf",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/eb/99a32664f937e61ec0aaf88285f5a8cd49d736",
         "unreadable": false,
         "vendored": true
@@ -35795,6 +36578,15 @@
         ],
         "markers": [],
         "path": ".git/objects/ec/bc3300f8a5a541055a5b3e7634ae3cb2b47fad",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/ed/3915a84c4e6ec398a63440024c4d643f998d62",
         "unreadable": false,
         "vendored": true
       },
@@ -35885,6 +36677,15 @@
         ],
         "markers": [],
         "path": ".git/objects/f0/37d2d3f2c003d3b50a01530fc6c0e11ba71b38",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/f1/18b0b92cf256a372eab61caa0139b8ed044a24",
         "unreadable": false,
         "vendored": true
       },
@@ -36091,6 +36892,15 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/f5/c898357dfb79a78c3c5f07e91e1bbdd4385223",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/f6/0528416760b0fb5393b8bec1ee86689e2663da",
         "unreadable": false,
         "vendored": true
@@ -36109,7 +36919,25 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/f7/ee62ee3ccc838317bd8d9eb124481914babc7f",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/f8/214563c052b89fb54ad01109caef9ea4b59cf1",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/f8/2411e25b81180b4eb57b4f8187f274c5c55104",
         "unreadable": false,
         "vendored": true
       },
@@ -36217,7 +37045,25 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/fa/64af0da1ca293cc9a24541867d0ca73aff107a",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/fa/93438202da491f3380749995c3b3811e9efa73",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/fa/b74985d9476e8625c900c66c49554ed608a375",
         "unreadable": false,
         "vendored": true
       },
@@ -36254,6 +37100,15 @@
         ],
         "markers": [],
         "path": ".git/objects/fa/e96fc63b69a5203ad1094b568a4a189ee24f23",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/fb/4a9cda912009c5a661f640aa93b540d94b665c",
         "unreadable": false,
         "vendored": true
       },
@@ -36316,7 +37171,25 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".git/objects/fd/478e5bb49ed4c08a7883efad7953ea687ec433",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".git/objects/fd/4a7766240c8ea90cc471c69810d6a22427f7bd",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/objects/fd/8b13aa2054b2e1cb0f880bed74b1a7b8d646c5",
         "unreadable": false,
         "vendored": true
       },
@@ -36415,7 +37288,25 @@
           "unknown"
         ],
         "markers": [],
-        "path": ".git/refs/heads/feat/forge-unified-workspace-closure",
+        "path": ".git/refs/heads/feat/mcp-verify-tool",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/refs/heads/feat/portal-catalog-parity",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".git/refs/heads/feat/resource-catalog",
         "unreadable": false,
         "vendored": true
       },
@@ -36433,16 +37324,7 @@
           "unknown"
         ],
         "markers": [],
-        "path": ".git/refs/heads/phase1/agent-roster-doctor-api-20261108",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "unknown"
-        ],
-        "markers": [],
-        "path": ".git/refs/heads/release/cycle-2.7-patch-version",
+        "path": ".git/refs/heads/release/v0.3.4",
         "unreadable": false,
         "vendored": true
       },
@@ -36460,7 +37342,7 @@
           "unknown"
         ],
         "markers": [],
-        "path": ".git/refs/remotes/origin/codex/agentic-ecosystem-2026-11-06",
+        "path": ".git/refs/remotes/origin/feat/mcp-verify-tool",
         "unreadable": false,
         "vendored": true
       },
@@ -36469,7 +37351,7 @@
           "unknown"
         ],
         "markers": [],
-        "path": ".git/refs/remotes/origin/dependabot/github_actions/softprops/action-gh-release-3.0.4",
+        "path": ".git/refs/remotes/origin/feat/portal-catalog-parity",
         "unreadable": false,
         "vendored": true
       },
@@ -36478,52 +37360,7 @@
           "unknown"
         ],
         "markers": [],
-        "path": ".git/refs/remotes/origin/dependabot/pip/build-gte-1.6.1",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "unknown"
-        ],
-        "markers": [],
-        "path": ".git/refs/remotes/origin/dependabot/pip/graphql-core-gte-3.3.1-and-lt-4",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "unknown"
-        ],
-        "markers": [],
-        "path": ".git/refs/remotes/origin/dependabot/pip/mypy-gte-2.4.1",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "unknown"
-        ],
-        "markers": [],
-        "path": ".git/refs/remotes/origin/dependabot/pip/pytest-gte-9.2.0",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "unknown"
-        ],
-        "markers": [],
-        "path": ".git/refs/remotes/origin/dependabot/pip/ruff-gte-0.17.3",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "unknown"
-        ],
-        "markers": [],
-        "path": ".git/refs/remotes/origin/feat/forge-unified-workspace-closure",
+        "path": ".git/refs/remotes/origin/feat/resource-catalog",
         "unreadable": false,
         "vendored": true
       },
@@ -36541,52 +37378,7 @@
           "unknown"
         ],
         "markers": [],
-        "path": ".git/refs/remotes/origin/phase1/agent-roster-doctor-api-20261108",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "unknown"
-        ],
-        "markers": [],
-        "path": ".git/refs/remotes/origin/release/cycle-2.7-patch-version",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "unknown"
-        ],
-        "markers": [],
-        "path": ".git/refs/remotes/origin/release/cycle-2.7-version-dump",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "unknown"
-        ],
-        "markers": [],
-        "path": ".git/refs/tags/v0.3.1",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "unknown"
-        ],
-        "markers": [],
-        "path": ".git/refs/tags/v0.3.2",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "unknown"
-        ],
-        "markers": [],
-        "path": ".git/refs/tags/v0.3.3",
+        "path": ".git/refs/remotes/origin/release/v0.3.4",
         "unreadable": false,
         "vendored": true
       },
@@ -36720,63 +37512,6 @@
       },
       {
         "classes": [
-          "config",
-          "contract"
-        ],
-        "markers": [
-          "openapi"
-        ],
-        "path": ".pytest-tmp/test_determinism0/api.yaml",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "config",
-          "contract"
-        ],
-        "markers": [
-          "openapi"
-        ],
-        "path": ".pytest-tmp/test_explain_found_and_missing0/api.yaml",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "unknown"
-        ],
-        "markers": [],
-        "path": ".pytest-tmp/test_from_path_errors_are_type0/file.txt",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "config",
-          "contract"
-        ],
-        "markers": [
-          "openapi"
-        ],
-        "path": ".pytest-tmp/test_handoff_v20/api.yaml",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "config",
-          "contract"
-        ],
-        "markers": [
-          "openapi"
-        ],
-        "path": ".pytest-tmp/test_inventory_and_capabilitie0/api.yaml",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
           "unknown"
         ],
         "markers": [],
@@ -36817,36 +37552,6 @@
         ],
         "markers": [],
         "path": ".pytest-tmp/test_release_smoke_picks_the_w0/forge_doctor_api-0.1.0-py3-none-any.whl",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "config",
-          "contract"
-        ],
-        "markers": [
-          "openapi"
-        ],
-        "path": ".pytest-tmp/test_scan_round_trip0/api.yaml",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "unknown"
-        ],
-        "markers": [],
-        "path": ".pytest-tmp/test_sha256sums_round_trip0/dist/pkg-0.1.0-py3-none-any.whl",
-        "unreadable": false,
-        "vendored": true
-      },
-      {
-        "classes": [
-          "unknown"
-        ],
-        "markers": [],
-        "path": ".pytest-tmp/test_sha256sums_round_trip0/dist/pkg-0.1.0.tar.gz",
         "unreadable": false,
         "vendored": true
       },
@@ -37315,6 +38020,15 @@
         ],
         "markers": [],
         "path": ".venv/Lib/site-packages/_cffi_backend.cp312-win_amd64.pyd",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".venv/Lib/site-packages/_editable_impl_theforge_doctorapi_adapter.pth",
         "unreadable": false,
         "vendored": true
       },
@@ -44133,6 +44847,1905 @@
         ],
         "markers": [],
         "path": ".venv/Lib/site-packages/forge_doctor_api.pth",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/__init__.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/error/__init__.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/error/graphql_error.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/error/located_error.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/error/syntax_error.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/execution/__init__.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/execution/aborted_graphql_execution_error.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/execution/async_iterables.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/execution/collect_fields.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/execution/execute.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/execution/executor.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/execution/executor_throwing_on_incremental.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/execution/get_variable_signature.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/execution/incremental/__init__.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/execution/incremental/build_execution_plan.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/execution/incremental/computation.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/execution/incremental/incremental_executor.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/execution/incremental/incremental_publisher.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/execution/incremental/stream_item_queue.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/execution/incremental/work_queue.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/execution/middleware.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/execution/types.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/execution/values.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/graphql.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/harness.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/language/__init__.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/language/ast.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/language/block_string.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/language/character_classes.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/language/directive_locations.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/language/lexer.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/language/location.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/language/parser.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/language/predicates.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/language/print_location.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/language/print_string.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/language/printer.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/language/reducer.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/language/schema_coordinate_lexer.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/language/source.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/language/token_kind.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/language/visitor.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".venv/Lib/site-packages/graphql/py.typed",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/pyutils/__init__.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/pyutils/abort_signal.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/pyutils/async_reduce.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/pyutils/awaitable_or_value.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/pyutils/cached_property.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/pyutils/convert_case.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/pyutils/description.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/pyutils/did_you_mean.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/pyutils/format_list.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/pyutils/frozen_error.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/pyutils/gather_with_cancel.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/pyutils/group_by.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/pyutils/identity_func.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/pyutils/inspect.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/pyutils/is_awaitable.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/pyutils/is_iterable.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/pyutils/merge_kwargs.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/pyutils/natural_compare.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/pyutils/path.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/pyutils/print_path_list.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/pyutils/ref_map.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/pyutils/ref_set.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/pyutils/set_map.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/pyutils/simple_pub_sub.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/pyutils/suggestion_list.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/pyutils/undefined.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/type/__init__.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/type/assert_name.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/type/definition.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/type/directives.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/type/introspection.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/type/scalars.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/type/schema.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/type/validate.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/utilities/__init__.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/utilities/ast_from_value.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/utilities/ast_to_dict.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/utilities/build_ast_schema.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/utilities/build_client_schema.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/utilities/coerce_input_value.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/utilities/concat_ast.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/utilities/extend_schema.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/utilities/find_schema_changes.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/utilities/get_default_value_ast.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/utilities/get_introspection_query.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/utilities/get_operation_ast.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/utilities/introspection_from_schema.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/utilities/lexicographic_sort_schema.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/utilities/map_schema_config.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/utilities/print_schema.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/utilities/replace_variables.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/utilities/resolve_schema_coordinate.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/utilities/separate_operations.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/utilities/sort_value_node.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/utilities/strip_ignored_characters.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/utilities/type_comparators.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/utilities/type_from_ast.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/utilities/type_info.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/utilities/validate_input_value.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/utilities/value_from_ast.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/utilities/value_from_ast_untyped.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/utilities/value_to_literal.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/__init__.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/__init__.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/custom/__init__.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/custom/no_deprecated.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/custom/no_schema_introspection.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/defer_stream_directive_label.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/defer_stream_directive_on_root_field.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/defer_stream_directive_on_valid_operations_rule.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/executable_definitions.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/fields_on_correct_type.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/fragments_on_composite_types.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/known_argument_names.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/known_directives.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/known_fragment_names.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/known_operation_types.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/known_type_names.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/lone_anonymous_operation.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/lone_schema_definition.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/max_introspection_depth_rule.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/no_fragment_cycles.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/no_undefined_variables.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/no_unused_fragments.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/no_unused_variables.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/overlapping_fields_can_be_merged.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/possible_fragment_spreads.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/possible_type_extensions.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/provided_required_arguments.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/scalar_leafs.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/single_field_subscriptions.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/stream_directive_on_list_field.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/unique_argument_definition_names.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/unique_argument_names.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/unique_directive_names.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/unique_directives_per_location.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/unique_enum_value_names.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/unique_field_definition_names.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/unique_fragment_names.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/unique_input_field_names.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/unique_operation_names.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/unique_operation_types.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/unique_type_names.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/unique_variable_names.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/values_of_correct_type.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/variables_are_input_types.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/rules/variables_in_allowed_position.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/specified_rules.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/validate.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/validation/validation_context.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "client",
+          "source"
+        ],
+        "markers": [
+          "python"
+        ],
+        "path": ".venv/Lib/site-packages/graphql/version.py",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".venv/Lib/site-packages/graphql_core-3.3.2.dist-info/INSTALLER",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".venv/Lib/site-packages/graphql_core-3.3.2.dist-info/METADATA",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".venv/Lib/site-packages/graphql_core-3.3.2.dist-info/RECORD",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".venv/Lib/site-packages/graphql_core-3.3.2.dist-info/REQUESTED",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".venv/Lib/site-packages/graphql_core-3.3.2.dist-info/WHEEL",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".venv/Lib/site-packages/graphql_core-3.3.2.dist-info/licenses/LICENSE",
         "unreadable": false,
         "vendored": true
       },
@@ -64770,6 +67383,78 @@
           "unknown"
         ],
         "markers": [],
+        "path": ".venv/Lib/site-packages/theforge_doctorapi_adapter-0.3.0.dist-info/INSTALLER",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".venv/Lib/site-packages/theforge_doctorapi_adapter-0.3.0.dist-info/METADATA",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".venv/Lib/site-packages/theforge_doctorapi_adapter-0.3.0.dist-info/RECORD",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".venv/Lib/site-packages/theforge_doctorapi_adapter-0.3.0.dist-info/REQUESTED",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
+        "path": ".venv/Lib/site-packages/theforge_doctorapi_adapter-0.3.0.dist-info/WHEEL",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "config"
+        ],
+        "markers": [],
+        "path": ".venv/Lib/site-packages/theforge_doctorapi_adapter-0.3.0.dist-info/direct_url.json",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "config"
+        ],
+        "markers": [],
+        "path": ".venv/Lib/site-packages/theforge_doctorapi_adapter-0.3.0.dist-info/uv_build.json",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "config"
+        ],
+        "markers": [],
+        "path": ".venv/Lib/site-packages/theforge_doctorapi_adapter-0.3.0.dist-info/uv_cache.json",
+        "unreadable": false,
+        "vendored": true
+      },
+      {
+        "classes": [
+          "unknown"
+        ],
+        "markers": [],
         "path": ".venv/Lib/site-packages/truststore-0.10.5.dist-info/INSTALLER",
         "unreadable": false,
         "vendored": true
@@ -72308,6 +74993,15 @@
       },
       {
         "classes": [
+          "config"
+        ],
+        "markers": [],
+        "path": "VERSION_DUMP.unified-release.json",
+        "unreadable": false,
+        "vendored": false
+      },
+      {
+        "classes": [
           "unknown"
         ],
         "markers": [],
@@ -72329,7 +75023,7 @@
           "unknown"
         ],
         "markers": [],
-        "path": "dist/forge_doctor_api-0.3.3-py3-none-any.whl",
+        "path": "dist/forge_doctor_api-0.3.4-py3-none-any.whl",
         "unreadable": false,
         "vendored": true
       },
@@ -72338,7 +75032,7 @@
           "unknown"
         ],
         "markers": [],
-        "path": "dist/forge_doctor_api-0.3.3.tar.gz",
+        "path": "dist/forge_doctor_api-0.3.4.tar.gz",
         "unreadable": false,
         "vendored": true
       },
@@ -76919,9 +79613,13 @@
       },
       {
         "classes": [
-          "config"
+          "config",
+          "gateway"
         ],
-        "markers": [],
+        "markers": [
+          "envoy",
+          "kong"
+        ],
         "path": "forge.agentic.json",
         "unreadable": false,
         "vendored": false
@@ -84304,6 +87002,19 @@
           "python"
         ],
         "path": "src/forge_doctor_api/fleet/report.py",
+        "unreadable": false,
+        "vendored": false
+      },
+      {
+        "classes": [
+          "config",
+          "gateway"
+        ],
+        "markers": [
+          "envoy",
+          "kong"
+        ],
+        "path": "src/forge_doctor_api/forge.agentic.json",
         "unreadable": false,
         "vendored": false
       },
@@ -93257,7 +95968,7 @@
       {
         "allocated_bytes": null,
         "analyzer": "security",
-        "artifacts": 875,
+        "artifacts": 877,
         "duration_ms": null,
         "findings": 111,
         "ran": true,
@@ -93266,7 +95977,7 @@
       {
         "allocated_bytes": null,
         "analyzer": "reliability",
-        "artifacts": 390,
+        "artifacts": 392,
         "duration_ms": null,
         "findings": 32,
         "ran": true,
@@ -93275,7 +95986,7 @@
       {
         "allocated_bytes": null,
         "analyzer": "cache",
-        "artifacts": 390,
+        "artifacts": 392,
         "duration_ms": null,
         "findings": 1,
         "ran": true,
@@ -93284,7 +95995,7 @@
       {
         "allocated_bytes": null,
         "analyzer": "gateway",
-        "artifacts": 27,
+        "artifacts": 29,
         "duration_ms": null,
         "findings": 0,
         "ran": true,
@@ -93348,7 +96059,7 @@
     "total_findings": 826,
     "total_unknowns": 35
   },
-  "tool_version": "0.3.3",
+  "tool_version": "0.3.4",
   "twin": {
     "counts": [
       [
