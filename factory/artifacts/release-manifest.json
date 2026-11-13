@@ -7,6 +7,10 @@
     {
       "filename": "forge_doctor_api-0.3.4.tar.gz",
       "sha256": "2eceba0114485341a289b5ce6e9c15099f781f9c91b338fec1433f3e87a8904d"
+    },
+    {
+      "filename": "SHA256SUMS",
+      "sha256": "a4cd379a38413edd1df12f946569840981215215bd93ff3dc3b63ebd9a0aee26"
     }
   ],
   "cli_command_count": 41,
@@ -14,7 +18,7 @@
   "contract_version": "1",
   "dirty_tree": false,
   "forge_protocol_version": 2,
-  "git_head": "bbf62616fa82ee3617c8a9cec6c21d43ae702a8f",
+  "git_head": "577e8637ab4ef56f5286a86b952c346a05d8ecbd",
   "manifest_version": 1,
   "mcp_tool_count": 17,
   "package": "forge-doctor-api",
