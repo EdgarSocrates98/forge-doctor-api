@@ -12,6 +12,12 @@ record, [docs/release.md](docs/release.md) for release mechanics,
 and [docs/release-evidence.md](docs/release-evidence.md) for the
 verification matrix.
 
+## [0.3.4] — 2026-11-13
+
+### Changed
+
+- Unified platform release: version bump + VERSION_DUMP.unified-release.json.
+
 ## [0.3.3] - 2026-11-12
 
 Cycle 2.7 patch release: federated SDD contracts, forge-context kind taxonomy, Obsidian export verbs, self-scan baseline refresh, CI hardening and generated-artifact refresh.
