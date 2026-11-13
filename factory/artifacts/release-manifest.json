@@ -18,7 +18,7 @@
   "contract_version": "1",
   "dirty_tree": false,
   "forge_protocol_version": 2,
-  "git_head": "26489c4247548da4d404dd4ac1027b99cd1448b2",
+  "git_head": "fd8b13aa2054b2e1cb0f880bed74b1a7b8d646c5",
   "manifest_version": 1,
   "mcp_tool_count": 17,
   "package": "forge-doctor-api",
