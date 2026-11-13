@@ -248,7 +248,7 @@ class PortalAdapter:
         return detect_account_environment(self)
 
 
-PORTAL_VERSION = "1.1.2"
+PORTAL_VERSION = "1.1.3"
 
 
 def portal_version() -> str:
