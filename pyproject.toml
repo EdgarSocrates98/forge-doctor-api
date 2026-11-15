@@ -48,7 +48,7 @@ include = [
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=8.0"
-ruff = ">=0.6"
+ruff = ">=0.17.4"
 mypy = ">=2.3.1"
 types-PyYAML = ">=6.0"
 # Sem isto o teste de conteudo de artefato pula as assercoes de
