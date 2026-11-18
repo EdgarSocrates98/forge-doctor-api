@@ -1431,6 +1431,33 @@ def test_environment_contract_variables(fb: Any, tmp_path: Path) -> None:
     assert doc["execution_environment"] == expected
 
 
+def test_environment_contract_python_is_venv_launcher_not_base(
+    fb: Any, tmp_path: Path
+) -> None:
+    """``<PREFIX>_PYTHON`` must be the venv's own ``bin/python`` launcher.
+    A POSIX venv python is a symlink to the base interpreter — resolving it
+    persisted the base python (no venv site-packages) into the manifest, so
+    ``{python} -m forge_doctor_api`` delegation failed with
+    ``No module named forge_doctor_api`` on real workspace installs."""
+    cfg = {"forge_id": "forge-doctor-api", "cli": "forge-doctor-api"}
+    venv = tmp_path / "v"
+    bin_dir = venv / ("Scripts" if os.name == "nt" else "bin")
+    bin_dir.mkdir(parents=True)
+    real_base = tmp_path / "base" / "python3.12"
+    real_base.parent.mkdir(parents=True)
+    real_base.write_text("#!/bin/sh\n", encoding="utf-8")
+    venv_python = bin_dir / ("python.exe" if os.name == "nt" else "python")
+    if os.name == "nt":
+        venv_python.write_text("x", encoding="utf-8")
+    else:
+        venv_python.symlink_to(real_base)
+    doc = fb.environment_contract(
+        cfg, tmp_path / "repo", tmp_path / "root", venv, None, has_checkout=False
+    )
+    assert doc["variables"]["FORGE_DOCTOR_API_PYTHON"] == str(venv_python)
+    assert doc["variables"]["FORGE_DOCTOR_API_PYTHON"] != str(real_base)
+
+
 def test_environment_contract_dist_drops_home(fb: Any, tmp_path: Path) -> None:
     cfg = {"forge_id": "forge-doctor-api", "cli": "forge-doctor-api"}
     doc = fb.environment_contract(
