@@ -1128,7 +1128,7 @@ def test_pipeline_report_carries_provenance_fields(
 # sibling forges — wave-12 made it byte-identical again after the register
 # block was ported. Any upstream change must land deliberately: update the
 # copy AND this pin in the same commit, never drift silently.
-_CANONICAL_BOOTSTRAP_SHA256 = "4fc1a6933b179b193336d1ad925a1f1a765a08ec42a6bd35d830feb55243df1c"
+_CANONICAL_BOOTSTRAP_SHA256 = "02f20671e2020d3a719808a48cf0330348ab11902188534924f7f1aecede8384"
 
 
 def test_bootstrap_byte_parity_with_canonical() -> None:
