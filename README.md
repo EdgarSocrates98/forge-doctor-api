@@ -1,8 +1,8 @@
 
-> Instalação portátil: [`docs/installation/quickstart.md`](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.2.5/docs/installation/quickstart.md) — clone → setup → install. Delegação agêntica: [forge.agentic.json](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.2.5/forge.agentic.json) (SpecialistAgenticManifest/v1).
-> Docs: [commands](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.2.5/docs/reference/commands.md) · [skills](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.2.5/docs/reference/skills.md) · [agents](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.2.5/docs/reference/agents.md) · [tutorial](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.2.5/docs/tutorials/first-run.md) · [economy](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.2.5/docs/economy.md) · [troubleshooting](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.2.5/docs/installation/troubleshooting.md)
+> Instalação portátil: [`docs/installation/quickstart.md`](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.3.4/docs/installation/quickstart.md) — clone → setup → install. Delegação agêntica: [forge.agentic.json](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.3.4/forge.agentic.json) (SpecialistAgenticManifest/v1).
+> Docs: [commands](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.3.4/docs/reference/commands.md) · [skills](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.3.4/docs/reference/skills.md) · [agents](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.3.4/docs/reference/agents.md) · [tutorial](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.3.4/docs/tutorials/first-run.md) · [economy](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.3.4/docs/economy.md) · [troubleshooting](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.3.4/docs/installation/troubleshooting.md)
 <p align="center">
-  <img src="https://raw.githubusercontent.com/EdgarSocrates98/forge-doctor-api/v0.2.5/docs/assets/logo.png" alt="Forge Doctor API" width="440">
+  <img src="https://raw.githubusercontent.com/EdgarSocrates98/forge-doctor-api/v0.3.4/docs/assets/logo.png" alt="Forge Doctor API" width="440">
 </p>
 
 # Forge Doctor API
@@ -128,7 +128,7 @@ forge-doctor-api reliability path     hop-by-hop effective policy
 ```
 
 `--help` on any command lists its options. See
-[docs/cli.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.2.5/docs/cli.md) for the full reference.
+[docs/cli.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.3.4/docs/cli.md) for the full reference.
 
 ## What it understands
 
@@ -153,28 +153,28 @@ assessments, and compact handoff bundles for agentic tools.
 
 ## Documentation
 
-- [docs/architecture.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.2.5/docs/architecture.md) — pipeline layout, models, determinism contract
-- [docs/cli.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.2.5/docs/cli.md) — every command, option, and exit code
-- [docs/output-formats.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.2.5/docs/output-formats.md) — console/JSON/JSONL/SARIF/agent + CI gate
-- [docs/checks.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.2.5/docs/checks.md) — finding model, namespaces, confidence semantics
-- [docs/compatibility.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.2.5/docs/compatibility.md) — cross-protocol diff taxonomy, decision tables, client-impact coverage
-- [docs/runtime-evidence.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.2.5/docs/runtime-evidence.md) — trace/log ingestion, history, perf & SLOs
-- [docs/runtime-scale.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.2.5/docs/runtime-scale.md) — streaming bounds, memory curve, perf budget gate, snapshot formats
-- [docs/policies.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.2.5/docs/policies.md) — policy files, inheritance, exceptions, ownership
-- [docs/workspace-fleet.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.2.5/docs/workspace-fleet.md) — multi-repo manifests + inventory
-- [docs/knowledge-packs.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.2.5/docs/knowledge-packs.md) — versioned knowledge data + plugin SDK
-- [docs/migration.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.2.5/docs/migration.md) — portability assessments + decision briefs
-- [docs/handoff.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.2.5/docs/handoff.md) — `ApiHandoffBundle`, `DoctorApi`, Forger routing
-- [docs/infrastructure.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.2.5/docs/infrastructure.md) — gateway/mesh declared config + Kubernetes/IaC evidence
-- [docs/cache.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.2.5/docs/cache.md) — declared cache policies, layers, invalidation risk
-- [docs/lab.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.2.5/docs/lab.md) — Forge Lab corpus, ground truth, precision/recall
-- [docs/output-contract.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.2.5/docs/output-contract.md) — v1 export schemas (json/jsonl/sarif/agent/report) + evolution rules
-- [docs/forger-boundary.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.2.5/docs/forger-boundary.md) — Doctor ↔ API Forge ↔ The Forger typed boundary
-- [docs/release-policy.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.2.5/docs/release-policy.md) — versioning, public surfaces, release checklist, SBOM
-- [docs/release-v0.1.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.2.5/docs/release-v0.1.md) — quality gate, packaging, hermetic proofs
-- [docs/roadmap.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.2.5/docs/roadmap.md) — shipped coverage vs planned waves
+- [docs/architecture.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.3.4/docs/architecture.md) — pipeline layout, models, determinism contract
+- [docs/cli.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.3.4/docs/cli.md) — every command, option, and exit code
+- [docs/output-formats.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.3.4/docs/output-formats.md) — console/JSON/JSONL/SARIF/agent + CI gate
+- [docs/checks.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.3.4/docs/checks.md) — finding model, namespaces, confidence semantics
+- [docs/compatibility.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.3.4/docs/compatibility.md) — cross-protocol diff taxonomy, decision tables, client-impact coverage
+- [docs/runtime-evidence.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.3.4/docs/runtime-evidence.md) — trace/log ingestion, history, perf & SLOs
+- [docs/runtime-scale.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.3.4/docs/runtime-scale.md) — streaming bounds, memory curve, perf budget gate, snapshot formats
+- [docs/policies.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.3.4/docs/policies.md) — policy files, inheritance, exceptions, ownership
+- [docs/workspace-fleet.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.3.4/docs/workspace-fleet.md) — multi-repo manifests + inventory
+- [docs/knowledge-packs.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.3.4/docs/knowledge-packs.md) — versioned knowledge data + plugin SDK
+- [docs/migration.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.3.4/docs/migration.md) — portability assessments + decision briefs
+- [docs/handoff.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.3.4/docs/handoff.md) — `ApiHandoffBundle`, `DoctorApi`, Forger routing
+- [docs/infrastructure.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.3.4/docs/infrastructure.md) — gateway/mesh declared config + Kubernetes/IaC evidence
+- [docs/cache.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.3.4/docs/cache.md) — declared cache policies, layers, invalidation risk
+- [docs/lab.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.3.4/docs/lab.md) — Forge Lab corpus, ground truth, precision/recall
+- [docs/output-contract.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.3.4/docs/output-contract.md) — v1 export schemas (json/jsonl/sarif/agent/report) + evolution rules
+- [docs/forger-boundary.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.3.4/docs/forger-boundary.md) — Doctor ↔ API Forge ↔ The Forger typed boundary
+- [docs/release-policy.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.3.4/docs/release-policy.md) — versioning, public surfaces, release checklist, SBOM
+- [docs/release-v0.1.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.3.4/docs/release-v0.1.md) — quality gate, packaging, hermetic proofs
+- [docs/roadmap.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.3.4/docs/roadmap.md) — shipped coverage vs planned waves
 - [docs/adr/](https://github.com/EdgarSocrates98/forge-doctor-api/tree/v0.2.5/docs/adr/) — architecture decision records
-- [docs/development.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.2.5/docs/development.md) — repo layout, test/lint/typecheck, adding a check
+- [docs/development.md](https://github.com/EdgarSocrates98/forge-doctor-api/blob/v0.3.4/docs/development.md) — repo layout, test/lint/typecheck, adding a check
 
 ## Repository layout
 
