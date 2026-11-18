@@ -255,23 +255,120 @@ def portal_version() -> str:
     return PORTAL_VERSION
 
 
+# Mirrors the installkit MEMBER_MARKERS vocabulary: a directory counts
+# as a workspace member when it carries ``.git`` or a project manifest —
+# gitless members are first-class citizens, not just manifest-holders.
+MEMBER_MARKERS = frozenset(
+    {".git", "forge.json", "forge.agentic.json", "pyproject.toml", "package.json"}
+)
+
+_MEMBER_SKIP_DIRS = frozenset(
+    {
+        ".forge",
+        "node_modules",
+        ".venv",
+        "venv",
+        "__pycache__",
+        "dist",
+        "build",
+        ".mypy_cache",
+        ".pytest_cache",
+        ".ruff_cache",
+        ".hypothesis",
+    }
+)
+
+_MEMBER_MAX_DEPTH = 2
+
+
+def _plain_dir(entry: os.DirEntry[str]) -> bool:
+    """A real directory: symlinks and junctions are never followed."""
+    try:
+        if entry.is_symlink() or not entry.is_dir(follow_symlinks=False):
+            return False
+    except OSError:
+        return False
+    isjunction = getattr(os.path, "isjunction", None)
+    return not (isjunction is not None and isjunction(entry.path))
+
+
+def _member_entry(d: Path, base: Path, markers: set[str]) -> dict[str, Any]:
+    rel = "." if d == base else d.relative_to(base).as_posix()
+    return {
+        "name": d.name or rel,
+        "path": rel,
+        "markers": sorted(markers),
+        "git": ".git" in markers,
+        "manifest": "forge.agentic.json" in markers,
+    }
+
+
+def workspace_members(base: Path) -> list[dict[str, Any]]:
+    """Member repositories under ``base`` — directories carrying a
+    ``MEMBER_MARKERS`` entry (``.git`` or a project manifest), so
+    gitless members surface, not only ``forge.agentic.json`` holders.
+    Bounded to ``_MEMBER_MAX_DEPTH`` levels, never follows symlinks or
+    junctions, skips hidden and tool-cache directories, and never
+    descends into a member already found (its inner modules stay
+    isolated)."""
+    found: list[dict[str, Any]] = []
+    root_markers = {m for m in MEMBER_MARKERS if os.path.lexists(base / m)}
+    if root_markers:
+        found.append(_member_entry(base, base, root_markers))
+
+    def _walk(d: Path, depth: int) -> None:
+        if depth > _MEMBER_MAX_DEPTH:
+            return
+        try:
+            with os.scandir(d) as it:
+                children = sorted(it, key=lambda e: e.name)
+        except OSError:
+            return
+        for entry in children:
+            if entry.name.startswith(".") or entry.name in _MEMBER_SKIP_DIRS:
+                continue
+            if not _plain_dir(entry):
+                continue
+            child = Path(entry.path)
+            markers = {m for m in MEMBER_MARKERS if os.path.lexists(child / m)}
+            if markers:
+                found.append(_member_entry(child, base, markers))
+                continue  # a member's inner modules stay isolated
+            _walk(child, depth + 1)
+
+    _walk(base, 1)
+    return sorted(found, key=lambda m: m["path"])
+
+
 def workspace_resources(root: str | None) -> dict[str, Any]:
-    """Resource Catalog surface for the Portal (Onda 10/§17.3).
+    """Resource Catalog surface for the Portal (Onda 10/§17.3, §20.1).
 
     Scans ``<root>/*/forge.agentic.json`` and returns *metadata only* —
-    id, kind, class, availability, declared location. Resource bodies are
+    id, kind, class, availability, declared location, plus the manifest's
+    declared version/hosts and any declared domain/hash/integrity
+    (absent data stays ``None`` — never invented). Resource bodies are
     never read here (access policy: list + locate, not stream contents).
     Unavailable/conditional entries keep their explicit reasons.
+
+    ``members`` lists detected workspace member repositories via
+    :func:`workspace_members` — marker-based, symlink-safe, depth-bounded.
     """
     import json
 
-    out: dict[str, Any] = {"workspace": root, "forges": [], "resources": [], "errors": []}
+    out: dict[str, Any] = {
+        "workspace": root,
+        "forges": [],
+        "members": [],
+        "resources": [],
+        "errors": [],
+    }
     if not root:
         return out
     base = Path(root)
     if not base.is_dir():
         out["errors"].append(f"workspace root not found: {root}")
         return out
+    out["members"] = workspace_members(base)
     for repo in sorted(base.iterdir()):
         mp = repo / "forge.agentic.json"
         if not repo.is_dir() or not mp.is_file():
@@ -283,6 +380,12 @@ def workspace_resources(root: str | None) -> dict[str, Any]:
             continue
         fid = doc.get("forge_id") or doc.get("id") or repo.name
         out["forges"].append(fid)
+        # Manifest-level provenance the catalog can honestly report per
+        # resource: the declaring forge's version and its host_adapters.
+        manifest_version = doc.get("version")
+        manifest_hosts = doc.get("host_adapters")
+        if not isinstance(manifest_hosts, list):
+            manifest_hosts = []
         declared = doc.get("resources") or []
         declared_ids = {e.get("id") for e in declared if isinstance(e, dict)}
         # Legacy skills[]/agents[] names promote to typed placeholders —
@@ -308,11 +411,17 @@ def workspace_resources(root: str | None) -> dict[str, Any]:
                         "tags": [],
                         "description": None,
                         "format": None,
+                        "version": manifest_version,
+                        "domain": None,
+                        "hosts": list(manifest_hosts),
+                        "hash": None,
+                        "integrity": None,
                     }
                 )
         for e in declared:
             if not isinstance(e, dict) or not e.get("id"):
                 continue
+            entry_hosts = e.get("hosts")
             out["resources"].append(
                 {
                     "forge_id": fid,
@@ -326,6 +435,14 @@ def workspace_resources(root: str | None) -> dict[str, Any]:
                     "tags": e.get("tags") or [],
                     "description": e.get("description"),
                     "format": e.get("format"),
+                    # Per-entry overrides when declared; manifest-level
+                    # version/hosts otherwise; undeclared stays None —
+                    # an unknown is never promoted to a value.
+                    "version": e.get("version") or manifest_version,
+                    "domain": e.get("domain"),
+                    "hosts": list(entry_hosts) if isinstance(entry_hosts, list) else list(manifest_hosts),
+                    "hash": e.get("hash"),
+                    "integrity": e.get("integrity"),
                 }
             )
     return out
@@ -767,7 +884,10 @@ class PortalHandler(BaseHTTPRequestHandler):
         op = self._find_op(method, rel)
         if op is None:
             self._refused(cid, "PORTAL-NOT-FOUND", rel)
-            self._send_json(404, self._envelope(cid, error=_err("PORTAL-NOT-FOUND", f"no such operation: {rel}")))
+            # _reject (not _send_json): an unknown POST op carries a body the
+            # next keep-alive request would otherwise inherit — the socket
+            # must be drained before responding.
+            self._reject(404, self._envelope(cid, error=_err("PORTAL-NOT-FOUND", f"no such operation: {rel}")))
             return
         params = op[1]
         operation = op[0]
