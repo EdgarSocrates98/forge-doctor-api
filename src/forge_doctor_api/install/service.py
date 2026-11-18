@@ -394,6 +394,14 @@ def _register(ctx: kit.InstallContext) -> None:
             "verified": False,
         },
     )
+    mcp_doc = doc.get("mcp")
+    if isinstance(mcp_doc, dict):
+        # The orchestrator discovers the verify tool here — setdefault
+        # preserves a verify_tool already registered by the bootstrap.
+        verify_tool = _spec().mcp_verify_tool
+        if verify_tool:
+            mcp_doc.setdefault("verify_tool", verify_tool)
+    doc.update(_declared_install_fields())
     kit.register_installation(doc)
 
 
@@ -445,18 +453,55 @@ def _drop_stale_doc_entries(ctx: kit.InstallContext) -> None:
         ledger.save()
 
 
+def _bundled_json(name: str) -> dict[str, Any] | None:
+    """Declarative JSON packaged with this forge: first the copy bundled
+    inside the package (``src/forge_doctor_api/<name>`` — shipped in the
+    wheel), then the checkout root (editable/source installs)."""
+    for cand in (_PKG_DIR / name, _REPO_DIR / name):
+        data = kit._load_json(cand, None)
+        if isinstance(data, dict):
+            return data
+    return None
+
+
+def _declared_install_fields() -> dict[str, Any]:
+    """The install-2.1 declarations of this forge's ``forge.json`` —
+    copied verbatim into the manifest registered under
+    ``~/.forge/installations/``, never fabricated (mirrors the
+    ``register`` step of ``forge_bootstrap`` and the sibling helpers):
+
+    - ``installation_kind``: ``content``|``service``|``control-tool`` —
+      the class the consolidated plan orders on.
+    - ``install``: the declared surface (operations/flags/hosts/scopes/
+      profiles/approval) — the orchestrator's argv builder only sends
+      what is declared; absent, the manifest stays on the v1 default.
+    - ``depends_on``: forge_ids that must install first — declared even
+      when empty (``[]``): the key's presence is an explicit statement,
+      not missing data.
+    """
+    cfg = _bundled_json("forge.json")
+    if not cfg:
+        return {}
+    doc: dict[str, Any] = {}
+    if cfg.get("installation_kind"):
+        kind = str(cfg["installation_kind"])
+        if kind not in kit.INSTALLATION_KINDS:
+            raise kit.InstallError(
+                kit.E_UNSUPPORTED,
+                f"forge.json installation_kind {kind!r} — expected {kit.INSTALLATION_KINDS}",
+            )
+        doc["installation_kind"] = kind
+    if cfg.get("install"):
+        doc["install"] = dict(cfg["install"])
+    if "depends_on" in cfg:
+        doc["depends_on"] = [str(d) for d in cfg["depends_on"]]
+    return doc
+
+
 def _context_manifest(ctx: kit.InstallContext) -> dict[str, Any]:
     """The ``forge/context/v1`` manifest built from real sources:
     ``forge.json`` / ``forge.agentic.json`` (repo root) and the bundled
     agent specs under ``installation/assets/agents``."""
-
-    def _bundled_json(name: str) -> dict[str, Any] | None:
-        for cand in (_PKG_DIR / name, _REPO_DIR / name):
-            data = kit._load_json(cand, None)
-            if isinstance(data, dict):
-                return data
-        return None
-
     forge_json = _bundled_json("forge.json")
     agentic = _bundled_json("forge.agentic.json")
     agents = _mds(_AGENTS_DIR)

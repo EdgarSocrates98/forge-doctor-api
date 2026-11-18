@@ -182,7 +182,47 @@ def _register(ctx: kit.InstallContext) -> None:
     doc.setdefault(
         "mcp", {"server_name": FORGE_ID, "command": ["forge-doctor-api", "mcp"], "verified": False}
     )
+    mcp_doc = doc.get("mcp")
+    if isinstance(mcp_doc, dict):
+        # O orquestrador descobre a tool de verificacao aqui — setdefault
+        # preserva um `verify_tool` ja registrado pelo bootstrap.
+        verify_tool = _spec().mcp_verify_tool
+        if verify_tool:
+            mcp_doc.setdefault("verify_tool", verify_tool)
+    doc.update(_declared_install_fields())
     kit.register_installation(doc)
+
+
+def _declared_install_fields() -> dict[str, Any]:
+    """As declaracoes install-2.1 do `forge.json` deste forge — copiadas
+    verbatim para o manifesto registrado em `~/.forge/installations/`,
+    nunca fabricadas (espelha o passo `register` do `forge_bootstrap` e
+    o helper da wheel `install/service.py`):
+
+    - `installation_kind`: `content`|`service`|`control-tool`.
+    - `install`: a superficie declarada (operations/flags/hosts/scopes/
+      profiles/approval) — o argv builder do orquestrador so envia o que
+      esta declarado.
+    - `depends_on`: forge_ids que devem instalar antes — declarado mesmo
+      quando vazio (`[]`): a presenca da chave e declaracao explicita.
+    """
+    cfg = kit._load_json(REPO / "forge.json", None)
+    if not isinstance(cfg, dict) or not cfg:
+        return {}
+    doc: dict[str, Any] = {}
+    if cfg.get("installation_kind"):
+        kind = str(cfg["installation_kind"])
+        if kind not in kit.INSTALLATION_KINDS:
+            raise kit.InstallError(
+                kit.E_UNSUPPORTED,
+                f"forge.json installation_kind {kind!r} — expected {kit.INSTALLATION_KINDS}",
+            )
+        doc["installation_kind"] = kind
+    if cfg.get("install"):
+        doc["install"] = dict(cfg["install"])
+    if "depends_on" in cfg:
+        doc["depends_on"] = [str(d) for d in cfg["depends_on"]]
+    return doc
 
 
 def _installation_manifest() -> dict[str, Any]:
