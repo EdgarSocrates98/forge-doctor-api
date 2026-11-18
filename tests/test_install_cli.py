@@ -163,3 +163,74 @@ def test_module_invocation_is_the_catalog_argv(tmp_path: Path) -> None:
     doc = json.loads(proc.stdout)
     assert doc["status"] == "planned"
     assert doc["schema"] == "forge/InstallReceipt/v1"
+
+
+# --------------------------------------------------------------------------
+# install-2.1 — declared-surface propagation + --json/--no-input parity
+# --------------------------------------------------------------------------
+
+
+def _installation_manifest(target: Path) -> dict:
+    path = (
+        Path(os.environ["FORGE_HOME_OVERRIDE"])
+        / ".forge"
+        / "installations"
+        / "forge-doctor-api.json"
+    )
+    assert path.exists(), "install manifest was not registered"
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def test_register_writes_declared_install21_fields(target: Path) -> None:
+    """The wheel `_register` merges the forge.json declarations into
+    ``~/.forge/installations/forge-doctor-api.json`` — the doc the
+    orchestrator's typed delegation reads."""
+    code, _ = _invoke("--root", str(target), "--yes")
+    assert code == 0
+    manifest = _installation_manifest(target)
+    assert manifest["installation_kind"] == "content"
+    install = manifest["install"]
+    assert "apply" in install["operations"]
+    assert install["approval"] == "--yes"
+    for flag in ("--scope", "--root", "--host", "--profile", "--yes", "--dry-run"):
+        assert flag in install["flags"], flag
+    assert manifest["depends_on"] == []
+    assert manifest["mcp"]["verify_tool"] == "doctor.get_reliability"
+
+
+def test_json_flag_still_emits_contract_doc(target: Path) -> None:
+    """``--json`` is the parity flag: on a pipe it is a no-op (JSON is the
+    default); on a TTY it forces the contract document."""
+    code, doc = _invoke("--root", str(target), "--dry-run", "--json")
+    assert code == 0
+    assert doc["status"] == "planned"
+    assert doc["schema"] == "forge/InstallReceipt/v1"
+
+
+def test_no_input_still_requires_approval(target: Path) -> None:
+    """``--no-input`` suppresses the interactive prompt; it can never
+    approve a mutation on its own — the fail-closed gate stands."""
+    result = runner.invoke(app, ["install", "--root", str(target), "--no-input"])
+    assert result.exit_code == 1
+    doc = _json(result.stdout)
+    assert doc["error"]["kind"] == "FORGE-INSTALL-PLAN-NOT-APPROVED"
+    assert not (target / ".mcp.json").exists()
+
+
+def test_no_input_with_yes_applies(target: Path) -> None:
+    code, doc = _invoke("--root", str(target), "--no-input", "--yes")
+    assert code == 0
+    assert doc["status"] == "completed"
+    assert (target / ".mcp.json").exists()
+
+
+def test_subcommand_json_flag_parity(target: Path) -> None:
+    """Lifecycle subcommands accept ``--json`` too — same flag name as the
+    checkout adapter (``scripts/forge_install.py``)."""
+    _invoke("--root", str(target), "--yes")
+    code, doc = _invoke("status", "--root", str(target), "--json")
+    assert code == 0
+    assert doc["status"] == "healthy"
+    code, doc = _invoke("uninstall", "--root", str(target), "--dry-run", "--json")
+    assert code == 0
+    assert doc["status"] == "planned"

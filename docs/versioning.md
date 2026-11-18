@@ -205,3 +205,66 @@ public-surface, contract or dependency change:
 - Release hygiene: the `v0.2.8` tag pointed at a commit before the
   `0.2.8` changelog entry, and no GitHub Release was created. `0.2.9`
   re-cuts the chain correctly (version + changelog + tag + release).
+
+## The recorded decision — `0.3.0`
+
+**Decision (owner-authorized, 2026-10-23): bump `0.2.9` → `0.3.0`.**
+
+MINOR bump closing the `0.2.x` RC band and opening the `0.3.x` line:
+the shipped surface had grown past what `0.2.x` honestly described —
+install/registration lifecycle, forge-context workspace registry,
+agentic manifests, portal bundle and the release machinery were all
+first-class surfaces by then. The release itself carried a bounded
+fix (`ui._has_vcs_root`/`_cli_argv`: a stray `forge.json` ancestor no
+longer binds the CLI's VCS-root detection — regression tests added)
+plus changelog date/order corrections and the rc-baseline, SBOM and
+release-manifest regen for the new line. `v0.3.0` tag under the same
+owner directive.
+
+## The recorded decision — `0.3.1`
+
+**Decision (owner-authorized, 2026-11-04): bump `0.3.0` → `0.3.1`.**
+
+Patch bump under RC discipline (`0.3.x` band): no public-surface,
+contract, or dependency changes. Ships the synced hardened Forge
+Portal runtime with refreshed bundled portal assets, plus accumulated
+fixes riding the same release: malformed MCP frames kept isolated
+(one bad stdio frame can no longer poison the session), a single
+Windows Python executable choice in the bootstrap path, the typer
+pin for CLI contract stability, and the specialist roster /
+agentic-ecosystem sync. `v0.3.1` tag under the same owner directive.
+
+## The recorded decision — `0.3.2`
+
+**Decision (owner-authorized, 2026-11-10): bump `0.3.1` → `0.3.2`.**
+
+Patch bump under RC discipline (`0.3.x` band): publishes the Cycle 2.7
+release-certification baseline — the recorded release manifest, version
+dump and artifact sets were refreshed so the published wheel's evidence
+chain matches the shipped bits. No code-surface change beyond the
+release artifacts themselves. `v0.3.2` tag under the same owner
+directive.
+
+## The recorded decision — `0.3.3`
+
+**Decision (owner-authorized, 2026-11-12): bump `0.3.2` → `0.3.3`.**
+
+Patch bump under RC discipline (`0.3.x` band): Cycle 2.7 patch release —
+federated SDD contracts, the forge-context kind taxonomy landed by
+re-vendoring `_forgecontext` 1.3.4 plus forge-context registration and
+consolidation of in-flight work (#103), Obsidian export verbs, self-scan
+baseline refresh, CI hardening and generated-artifact refresh. The
+agentic manifest rode along at 0.3.3. `v0.3.3` tag under the same
+owner directive.
+
+## The recorded decision — `0.3.4`
+
+**Decision (owner-authorized, 2026-11-13): bump `0.3.3` → `0.3.4`.**
+
+Patch bump under RC discipline (`0.3.x` band): unified platform release —
+the bump packaged already-landed work: `mcp_verify_tool` declared in the
+agentic manifest (#108), typed `resources[]` declared in the agentic
+manifest (#105), `_forge_portal.py` syncs for the `/resources` op and
+legacy skills/agents promotion (#106, 5dcebee), and the 0.3.3 version-pin
+resync (#104). `VERSION_DUMP.unified-release.json` records the unified
+release. `v0.3.4` tag under the same owner directive.

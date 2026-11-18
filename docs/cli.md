@@ -295,23 +295,26 @@ plugin code is never imported (see
 
 ```text
 forge-doctor-api install [--scope S] [--host H] [--profile P] [--root DIR]
-                         [--components CSV] [--gateway-profile G] [--yes] [--dry-run]
-forge-doctor-api install status [--scope S] [--root DIR]
-forge-doctor-api install doctor [--scope S] [--root DIR]
-forge-doctor-api install repair [--scope S] [--root DIR] [--dry-run]
-forge-doctor-api install uninstall [--scope S] [--root DIR] [--purge] [--dry-run]
-forge-doctor-api install update [--to VER] [--repo DIR] [--dry-run]
-forge-doctor-api install mcp-verify
+                         [--components CSV] [--gateway-profile G] [--yes]
+                         [--no-input] [--json] [--dry-run]
+forge-doctor-api install status [--scope S] [--root DIR] [--json]
+forge-doctor-api install doctor [--scope S] [--root DIR] [--json]
+forge-doctor-api install repair [--scope S] [--root DIR] [--dry-run] [--json]
+forge-doctor-api install uninstall [--scope S] [--root DIR] [--purge] [--dry-run] [--json]
+forge-doctor-api install update [--to VER] [--repo DIR] [--dry-run] [--json]
+forge-doctor-api install mcp-verify [--json]
 ```
 
 Wheel-carried `forge/*` installation contract v1 (ADR-0006) — the same
 verbs, receipts and ownership ledger as the checkout-level
 `scripts/forge_install.py` adapter. `install` bare applies the plan:
 `--yes` approves non-interactively, `--dry-run` plans without writing,
-an interactive TTY gets a plan-confirm prompt. `update --to` is always
+an interactive TTY gets a plan-confirm prompt (`--no-input` skips it —
+non-interactive callers must pass `--yes`). `update --to` is always
 pinned — `latest` is refused. `uninstall` removes ledger-owned assets
 only. Everything emits the contract JSON (`forge/InstallReceipt/v1`,
-`forge/InstallationHealth/v1`); TTY renders it through the UI kit.
+`forge/InstallationHealth/v1`); TTY renders it through the UI kit and
+`--json` pins the JSON contract on any terminal.
 
 This is the path the `forge-cli` native/registry method delegates to
 (`{python} -m forge_doctor_api install ...`) — see

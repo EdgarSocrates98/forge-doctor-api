@@ -44,15 +44,23 @@ RootOpt = Annotated[
     typer.Option("--root", help="Target root (default: VCS root or cwd)."),
 ]
 DryRunOpt = Annotated[bool, typer.Option("--dry-run", help="Plan only — writes nothing.")]
+JsonOpt = Annotated[
+    bool,
+    typer.Option("--json", help="Force JSON output (already the non-TTY contract)."),
+]
 
 
-def _emit(doc: Any) -> None:
+def _emit(doc: Any, force_json: bool = False) -> None:
     """TTY humans (and TUI-captured subprocesses) get the rendered
-    forge/* doc; pipes and CI keep JSON."""
+    forge/* doc; pipes and CI keep JSON. ``--json`` pins the JSON
+    contract even on a TTY (orchestrator parity flag)."""
     import os
     import sys
 
-    human = sys.stdout.isatty() or bool(os.environ.get("FORGE_TEXT_OUTPUT"))
+    human = (
+        not force_json
+        and (sys.stdout.isatty() or bool(os.environ.get("FORGE_TEXT_OUTPUT")))
+    )
     if (
         human
         and isinstance(doc, dict)
@@ -91,6 +99,11 @@ def install_apply(
             help="Explicit approval; without it only --dry-run is allowed.",
         ),
     ] = False,
+    no_input: Annotated[
+        bool,
+        typer.Option("--no-input", help="Never prompt — requires --yes to mutate."),
+    ] = False,
+    json_out: JsonOpt = False,
     dry_run: DryRunOpt = False,
     components: Annotated[
         str | None,
@@ -111,7 +124,13 @@ def install_apply(
 
     comps = tuple(c.strip() for c in components.split(",") if c.strip()) if components else None
     approved = yes
-    if not yes and not dry_run and sys.stdin.isatty() and sys.stdout.isatty():
+    if (
+        not yes
+        and not dry_run
+        and not no_input
+        and sys.stdin.isatty()
+        and sys.stdout.isatty()
+    ):
         # Interactive approval: render the real plan, confirm once,
         # apply — one command instead of dry-run + apply.
         plan = _call(
@@ -125,7 +144,7 @@ def install_apply(
             dry_run=True,
             components=comps,
         )
-        _emit(plan)
+        _emit(plan, json_out)
         approved = typer.confirm("Apply this plan?", default=True)
         if not approved:
             typer.echo("declined — nothing written")
@@ -141,23 +160,27 @@ def install_apply(
         dry_run=dry_run,
         components=comps,
     )
-    _emit(doc)
+    _emit(doc, json_out)
     if doc.get("status") not in ("planned", "completed"):
         raise typer.Exit(1)
 
 
 @install_app.command(name="status")
-def install_status(scope: ScopeOpt = "project", root: RootOpt = None) -> None:
+def install_status(
+    scope: ScopeOpt = "project", root: RootOpt = None, json_out: JsonOpt = False
+) -> None:
     """Report drift/health of the resolved installation."""
     doc = _call(service.status, scope=scope, root=root)
-    _emit(doc)
+    _emit(doc, json_out)
 
 
 @install_app.command(name="doctor")
-def install_doctor(scope: ScopeOpt = "project", root: RootOpt = None) -> None:
+def install_doctor(
+    scope: ScopeOpt = "project", root: RootOpt = None, json_out: JsonOpt = False
+) -> None:
     """Run installation health checks (ledger, MCP availability)."""
     doc = _call(service.doctor, scope=scope, root=root)
-    _emit(doc)
+    _emit(doc, json_out)
     if doc.get("status") in ("degraded", "broken"):
         raise typer.Exit(1)
 
@@ -167,10 +190,11 @@ def install_repair(
     scope: ScopeOpt = "project",
     root: RootOpt = None,
     dry_run: DryRunOpt = False,
+    json_out: JsonOpt = False,
 ) -> None:
     """Restore missing managed assets; user-modified content is kept."""
     doc = _call(service.repair, scope=scope, root=root, dry_run=dry_run)
-    _emit(doc)
+    _emit(doc, json_out)
 
 
 @install_app.command(name="uninstall")
@@ -182,10 +206,11 @@ def install_uninstall(
         typer.Option("--purge", help="Also remove the forge state dir."),
     ] = False,
     dry_run: DryRunOpt = False,
+    json_out: JsonOpt = False,
 ) -> None:
     """Remove ledger-owned assets only; user content is preserved."""
     doc = _call(service.uninstall, scope=scope, root=root, purge=purge, dry_run=dry_run)
-    _emit(doc)
+    _emit(doc, json_out)
 
 
 @install_app.command(name="update")
@@ -199,19 +224,20 @@ def install_update(
         typer.Option("--repo", help="Checkout to upgrade from."),
     ] = None,
     dry_run: DryRunOpt = False,
+    json_out: JsonOpt = False,
 ) -> None:
     """Upgrade the bootstrapped runtime from its registered checkout."""
     doc = _call(service.update, to=to, repo=repo, dry_run=dry_run)
-    _emit(doc)
+    _emit(doc, json_out)
     if doc.get("status") in ("failed", "BLOCKED"):
         raise typer.Exit(1)
 
 
 @install_app.command(name="mcp-verify")
-def install_mcp_verify() -> None:
+def install_mcp_verify(json_out: JsonOpt = False) -> None:
     """Handshake the configured MCP server (PASS/BLOCKED/FAIL)."""
     doc = _call(service.mcp_verify)
-    _emit(doc)
+    _emit(doc, json_out)
     checks = doc.get("checks") or []
     if any(c.get("status") == "FAIL" for c in checks):
         raise typer.Exit(1)

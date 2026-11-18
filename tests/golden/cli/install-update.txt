@@ -1,3 +1,4 @@
 Usage: forge-doctor-api install update [OPTIONS] Upgrade the bootstrapped runtime from its
 registered checkout. Options --to <str> Pin a version (never 'latest'). --repo <path> Checkout to
-upgrade from. --dry-run Plan only — writes nothing. --help Show this message and exit.
+upgrade from. --dry-run Plan only — writes nothing. --json Force JSON output (already the non-TTY
+contract). --help Show this message and exit.

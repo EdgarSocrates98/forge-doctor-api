@@ -1,3 +1,4 @@
 Usage: forge-doctor-api install status [OPTIONS] Report drift/health of the resolved installation.
 Options --scope <str> project|workspace|user. [default: project] --root <path> Target root (default:
-VCS root or cwd). --help Show this message and exit.
+VCS root or cwd). --json Force JSON output (already the non-TTY contract). --help Show this message
+and exit.

@@ -195,6 +195,59 @@ def test_package_carries_install_surface() -> None:
     )
 
 
+def test_register_writes_declared_install21_fields(target: Path, home: Path) -> None:
+    """The checkout adapter's ``_register`` merges the forge.json install-2.1
+    declarations into ``~/.forge/installations/`` — parity with the wheel
+    surface (``test_install_cli.test_register_writes_declared_install21_fields``)."""
+    proc = _run("install", "--root", str(target), "--yes", env_home=home)
+    assert proc.returncode == 0, proc.stderr
+    manifest = json.loads(
+        (home / ".forge" / "installations" / "forge-doctor-api.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert manifest["installation_kind"] == "content"
+    assert manifest["install"]["approval"] == "--yes"
+    assert "--scope" in manifest["install"]["flags"]
+    assert manifest["depends_on"] == []
+    assert manifest["mcp"]["verify_tool"] == "doctor.get_reliability"
+
+
+def test_json_flag_emits_contract_doc(target: Path, home: Path) -> None:
+    """``--json`` pins the JSON contract (orchestrator parity flag); on a
+    pipe it is the no-op default."""
+    proc = _run(
+        "install", "--root", str(target), "--dry-run", "--json", env_home=home
+    )
+    assert proc.returncode == 0, proc.stderr
+    doc = _json(proc)
+    assert doc["status"] == "planned"
+
+
+def test_no_input_still_requires_approval(target: Path, home: Path) -> None:
+    """``--no-input`` suppresses prompting but never approves — fail-closed."""
+    proc = _run("install", "--root", str(target), "--no-input", env_home=home)
+    assert proc.returncode == 1
+    doc = _json(proc)
+    assert doc["error"]["kind"] == "FORGE-INSTALL-PLAN-NOT-APPROVED"
+    assert not (target / ".mcp.json").exists()
+
+
+def test_no_input_with_yes_applies(target: Path, home: Path) -> None:
+    proc = _run(
+        "install", "--root", str(target), "--no-input", "--yes", env_home=home
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert _json(proc)["status"] == "completed"
+
+
+def test_subcommand_json_flag(target: Path, home: Path) -> None:
+    _run("install", "--root", str(target), "--yes", env_home=home)
+    proc = _run("status", "--root", str(target), "--json", env_home=home)
+    assert proc.returncode == 0
+    assert _json(proc)["status"] == "healthy"
+
+
 def test_hosts_none_e_csv():
     """GAP-003: `none` nunca vira `all`; csv subconjunto e validado."""
     import importlib.util

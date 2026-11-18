@@ -1,4 +1,4 @@
 Usage: forge-doctor-api install repair [OPTIONS] Restore missing managed assets; user-modified
 content is kept. Options --scope <str> project|workspace|user. [default: project] --root <path>
-Target root (default: VCS root or cwd). --dry-run Plan only — writes nothing. --help Show this
-message and exit.
+Target root (default: VCS root or cwd). --dry-run Plan only — writes nothing. --json Force JSON
+output (already the non-TTY contract). --help Show this message and exit.

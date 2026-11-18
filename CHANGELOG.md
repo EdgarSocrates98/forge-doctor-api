@@ -5,12 +5,55 @@ format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 entries are grouped by factory spec wave and dated by git history —
 this file records what shipped, not what was planned.
 
-The package is `0.3.3`. The `0.x` line ships owner-authorized
+The package is `0.3.4`. The `0.x` line ships owner-authorized
 patch bumps; see
 [docs/versioning.md](docs/versioning.md) for the version decision
 record, [docs/release.md](docs/release.md) for release mechanics,
 and [docs/release-evidence.md](docs/release-evidence.md) for the
 verification matrix.
+
+## [Unreleased] — Cycle 16 Wave-12
+
+### Changed
+
+- **install-2.1 alignment**: `forge.json` now declares
+  `installation_kind: "content"`, a typed `install{}` surface
+  (operations/flags/hosts/scopes/profiles/gateway-profiles/approval),
+  `mcp_verify_tool: "doctor.get_reliability"` and `depends_on: []`;
+  both registration paths (`install/service.py` and
+  `scripts/forge_install.py`) copy those declarations verbatim into
+  `~/.forge/installations/forge-doctor-api.json` — the document the
+  orchestrator's typed delegation reads.
+- **`scripts/forge_bootstrap.py` re-vendored byte-identical** to the
+  canonical `the-forge/scripts/installkit/forge_bootstrap.py` (1.2.0):
+  the install-2.1 register-propagation block validates
+  `installation_kind` against `content|service|control-tool` and copies
+  `install`/`depends_on` into the registry document. This repo is the
+  canonical source for the sibling forges — a sha-256 parity gate in
+  `tests/test_forge_bootstrap.py` blocks future drift.
+- **`_installkit` re-vendored 1.0.4 → 1.0.6** (source stamp
+  `dd279c639576d015`, both copies in lockstep): workspace member
+  discovery is marker-based, not `.git`-only (`forge.json`,
+  `pyproject.toml`, `package.json` count — gitless members are
+  first-class); the walk is symlink/junction-safe and skips ignored
+  dirs; `--root` is authoritative for workspace scope (ancestor
+  markers can never pull the root above it); `manifest_for` accepts
+  and validates the install-2.1 fields; `InstallContext.exclude` lets
+  a consolidated plan skip cross-forge conflict losers with an honest
+  receipt note.
+- **CLI parity**: `install` accepts `--json` (forces the contract JSON
+  even on a TTY — already the non-TTY default) and `--no-input`
+  (suppresses the interactive prompt; never approves without `--yes`)
+  on both routes — `forge-doctor-api install …` and
+  `python scripts/forge_install.py install …`.
+
+### Fixed
+
+- Workspace-installation doc now describes marker-based gitless
+  discovery (previously `.git`-only); uninstall doc covers the wheel
+  CLI route and `--dry-run`; stale `blob/v0.2.5/` README pins removed;
+  `docs/versioning.md` gained retroactive owner rationales for the
+  `0.3.0`–`0.3.4` bumps.
 
 ## [0.3.4] — 2026-11-13
 

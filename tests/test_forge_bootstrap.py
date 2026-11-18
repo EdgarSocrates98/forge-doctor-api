@@ -1120,6 +1120,86 @@ def test_pipeline_report_carries_provenance_fields(
 
 
 # --------------------------------------------------------------------------
+# install-2.1 register propagation + canonical drift gate
+# --------------------------------------------------------------------------
+
+# SHA-256 of the canonical the-forge/scripts/installkit/forge_bootstrap.py.
+# This repo is the declared canonical source of the vendored copy for the
+# sibling forges — wave-12 made it byte-identical again after the register
+# block was ported. Any upstream change must land deliberately: update the
+# copy AND this pin in the same commit, never drift silently.
+_CANONICAL_BOOTSTRAP_SHA256 = "4fc1a6933b179b193336d1ad925a1f1a765a08ec42a6bd35d830feb55243df1c"
+
+
+def test_bootstrap_byte_parity_with_canonical() -> None:
+    """``scripts/forge_bootstrap.py`` is byte-identical to the canonical
+    the-forge installkit variant — the drift gate that would have made the
+    wave-09 forge-lens divergence patch unnecessary."""
+    digest = hashlib.sha256(SCRIPT.read_bytes()).hexdigest()
+    assert digest == _CANONICAL_BOOTSTRAP_SHA256, (
+        "scripts/forge_bootstrap.py drifted from the canonical "
+        "the-forge/scripts/installkit/forge_bootstrap.py — re-vendor the "
+        "canonical copy and update _CANONICAL_BOOTSTRAP_SHA256 together"
+    )
+
+
+def test_register_propagates_install21_fields(
+    fb: Any, repo: Path, forge_home: Path, pipeline: dict, capsys: pytest.CaptureFixture
+) -> None:
+    """forge.json install-2.1 declarations land verbatim in
+    ``~/.forge/installations/<id>.json`` — the surface the orchestrator's
+    typed delegation reads."""
+    _write_forge_json(
+        repo,
+        installation_kind="content",
+        install={
+            "operations": ["plan", "apply", "uninstall"],
+            "flags": ["--scope", "--root", "--yes", "--dry-run"],
+            "hosts": ["claude", "devin"],
+            "scopes": ["project", "workspace", "user"],
+            "profiles": ["minimal", "recommended", "full"],
+            "approval": "--yes",
+        },
+        depends_on=["the-forge"],
+    )
+    rc = fb.run(["--repo", str(repo), "--quiet"])
+    assert rc == 0
+    manifest = _manifest(forge_home)
+    assert manifest["installation_kind"] == "content"
+    assert manifest["install"]["operations"] == ["plan", "apply", "uninstall"]
+    assert manifest["install"]["approval"] == "--yes"
+    assert manifest["depends_on"] == ["the-forge"]
+
+
+def test_register_rejects_bad_installation_kind(
+    fb: Any, repo: Path, forge_home: Path, pipeline: dict, capsys: pytest.CaptureFixture
+) -> None:
+    """An undeclared/invalid installation_kind is a typed refusal
+    (FORGE-INSTALL-BAD-CONFIG), never a registered bad manifest."""
+    _write_forge_json(repo, installation_kind="widget")
+    rc = fb.run(["--repo", str(repo), "--quiet"])
+    assert rc == 2
+    doc = _stdout_json(capsys)
+    assert doc["error"]["kind"] == "FORGE-INSTALL-BAD-CONFIG"
+    assert "widget" in doc["error"]["detail"]
+    assert not (forge_home / ".forge" / "installations" / "forge-doctor-api.json").exists()
+
+
+def test_register_omits_empty_declared_fields(
+    fb: Any, repo: Path, forge_home: Path, pipeline: dict, capsys: pytest.CaptureFixture
+) -> None:
+    """Absent/empty declarations stay absent — ``depends_on: []`` is not
+    fabricated into the doc (the wheel `_register` declares it
+    explicitly; the bootstrap copies only real values)."""
+    rc = fb.run(["--repo", str(repo), "--quiet"])
+    assert rc == 0
+    manifest = _manifest(forge_home)
+    assert "installation_kind" not in manifest
+    assert "install" not in manifest
+    assert "depends_on" not in manifest
+
+
+# --------------------------------------------------------------------------
 # smoke() unit behavior
 # --------------------------------------------------------------------------
 
