@@ -1,0 +1,92 @@
+{
+  "forge_id": "forge-doctor-api",
+  "package": "forge_doctor_api",
+  "distribution": "forge-doctor-api",
+  "cli": "forge-doctor-api",
+  "python": ">=3.11",
+  "version": "0.3.4",
+  "extras": [
+    "mcp"
+  ],
+  "mcp_server_name": "forge-doctor-api",
+  "mcp_command": [
+    "forge-doctor-api",
+    "mcp"
+  ],
+  "mcp_verify_tool": "doctor.get_reliability",
+  "installation_kind": "content",
+  "install": {
+    "operations": [
+      "plan",
+      "apply",
+      "status",
+      "doctor",
+      "repair",
+      "update",
+      "uninstall",
+      "mcp-verify"
+    ],
+    "flags": [
+      "--scope",
+      "--root",
+      "--host",
+      "--profile",
+      "--components",
+      "--gateway-profile",
+      "--yes",
+      "--no-input",
+      "--dry-run",
+      "--json",
+      "--purge",
+      "--to",
+      "--repo"
+    ],
+    "hosts": [
+      "claude",
+      "devin",
+      "codex",
+      "copilot"
+    ],
+    "scopes": [
+      "project",
+      "workspace",
+      "user"
+    ],
+    "profiles": [
+      "minimal",
+      "recommended",
+      "full"
+    ],
+    "gateway_profiles": [
+      "economy",
+      "balanced",
+      "deep"
+    ],
+    "approval": "--yes"
+  },
+  "depends_on": [],
+  "install_command": [
+    "{python}",
+    "-m",
+    "forge_doctor_api",
+    "install"
+  ],
+  "lab": {
+    "command": [
+      "{python}",
+      "scripts/lab/forge_doctor_api_lab.py",
+      "--checkout",
+      "{checkout}",
+      "--mode",
+      "{mode}",
+      "--result-out",
+      "{receipt}"
+    ],
+    "receipt": ".forge/lab-result.json",
+    "modes": [
+      "A"
+    ],
+    "suite": "forge-doctor-api-lab",
+    "timeout_s": 300
+  }
+}
