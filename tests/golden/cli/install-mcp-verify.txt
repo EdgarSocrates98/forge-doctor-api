@@ -1,2 +1,3 @@
 Usage: forge-doctor-api install mcp-verify [OPTIONS] Handshake the configured MCP server
-(PASS/BLOCKED/FAIL). Options --help Show this message and exit.
+(PASS/BLOCKED/FAIL). Options --json Force JSON output (already the non-TTY contract). --help Show
+this message and exit.

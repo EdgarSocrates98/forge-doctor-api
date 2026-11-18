@@ -142,10 +142,14 @@ def _render_human(doc: Any) -> str | None:
         return None
 
 
-def _emit(doc: Any) -> None:
+def _emit(doc: Any, force_json: bool = False) -> None:
     """TTY humans (and TUI-captured runs) get the rendered forge/* doc;
-    pipes, CI and parsers keep JSON."""
-    human = sys.stdout.isatty() or bool(os.environ.get("FORGE_TEXT_OUTPUT"))
+    pipes, CI and parsers keep JSON. ``--json`` pins the JSON contract
+    even on a TTY (orchestrator parity flag)."""
+    human = (
+        not force_json
+        and (sys.stdout.isatty() or bool(os.environ.get("FORGE_TEXT_OUTPUT")))
+    )
     if (
         human
         and isinstance(doc, dict)
@@ -257,13 +261,19 @@ def cmd_install(a: argparse.Namespace) -> int:
             f"gateway_profile {a.gateway_profile!r}; {GATEWAY_PROFILES}",
         )
     approved = a.yes
-    if not a.yes and not a.dry_run and sys.stdin.isatty() and sys.stdout.isatty():
+    if (
+        not a.yes
+        and not a.dry_run
+        and not getattr(a, "no_input", False)
+        and sys.stdin.isatty()
+        and sys.stdout.isatty()
+    ):
         # Interactive approval: render the real plan, confirm once,
         # apply — one command instead of dry-run + apply.
         plan_ctx = _ctx(a, _hosts(a.host))
         with kit.acquire_lock(plan_ctx.state_dir):
             plan = kit.apply_install(plan_ctx, approved=False)
-        _emit(plan)
+        _emit(plan, getattr(a, "json", False))
         try:
             answer = input("Apply this plan? [Y/n] ").strip().lower()
         except (EOFError, KeyboardInterrupt):
@@ -283,12 +293,12 @@ def cmd_install(a: argparse.Namespace) -> int:
             _drop_stale_doc_entries(ctx)
             kit._write_receipt(ctx.state_dir, receipt)
             _register(ctx)
-    _emit(receipt)
+    _emit(receipt, getattr(a, "json", False))
     return 0 if receipt.get("status") in ("planned", "completed") else 1
 
 
 def cmd_status(a: argparse.Namespace) -> int:
-    _emit(kit.status(_ctx(a, ())))
+    _emit(kit.status(_ctx(a, ())), getattr(a, "json", False))
     return 0
 
 
@@ -309,14 +319,14 @@ def cmd_doctor(a: argparse.Namespace) -> int:
         ]
         if not any(c["status"] == "FAIL" for c in doc["checks"]):
             doc["status"] = "healthy" if doc["status"] != "broken" else doc["status"]
-    _emit(doc)
+    _emit(doc, getattr(a, "json", False))
     return 1 if doc.get("status") in ("degraded", "broken") else 0
 
 
 def cmd_repair(a: argparse.Namespace) -> int:
     ctx = _ctx(a, HOSTS)
     if a.dry_run:
-        _emit(kit.status(ctx))
+        _emit(kit.status(ctx), getattr(a, "json", False))
         return 0
     with kit.acquire_lock(ctx.state_dir):
         receipt = kit.repair(ctx)
@@ -365,7 +375,7 @@ def cmd_repair(a: argparse.Namespace) -> int:
             receipt.setdefault("checks", []).append(
                 {"id": "consumer-docs", "status": "BLOCKED", "detail": f"{exc.kind}: {exc.detail}"}
             )
-        _emit(receipt)
+        _emit(receipt, getattr(a, "json", False))
     return 0
 
 
@@ -384,7 +394,8 @@ def cmd_uninstall(a: argparse.Namespace) -> int:
                 "status": "planned",
                 "verification": {"status": "UNVERIFIED"},
                 "created_at": kit._utc_now(),
-            }
+            },
+            getattr(a, "json", False),
         )
         return 0
     with kit.acquire_lock(ctx.state_dir):
@@ -396,7 +407,7 @@ def cmd_uninstall(a: argparse.Namespace) -> int:
             doc.setdefault("checks", []).extend(checks)
             if any(c.get("status") == "BLOCKED" for c in checks):
                 doc["status"] = "failed"
-        _emit(doc)
+        _emit(doc, getattr(a, "json", False))
     return 0
 
 
@@ -407,7 +418,8 @@ def cmd_update(a: argparse.Namespace) -> int:
                 "update",
                 [{"id": "version", "status": "FAIL", "detail": "'latest' is never installable"}],
                 "failed",
-            )
+            ),
+            getattr(a, "json", False),
         )
         return 1
     manifest = _installation_manifest()
@@ -430,7 +442,8 @@ def cmd_update(a: argparse.Namespace) -> int:
                     }
                 ],
                 "BLOCKED",
-            )
+            ),
+            getattr(a, "json", False),
         )
         return 1
     venv_dir = manifest.get("venv")
@@ -446,7 +459,8 @@ def cmd_update(a: argparse.Namespace) -> int:
                     }
                 ],
                 "failed",
-            )
+            ),
+            getattr(a, "json", False),
         )
         return 1
     venv_py = Path(venv_dir) / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
@@ -456,7 +470,8 @@ def cmd_update(a: argparse.Namespace) -> int:
                 "update",
                 [{"id": "venv", "status": "FAIL", "detail": f"venv {venv_dir} incomplete"}],
                 "failed",
-            )
+            ),
+            getattr(a, "json", False),
         )
         return 1
     cmd = [str(venv_py), "-m", "pip", "install", "--upgrade", str(src)]
@@ -466,7 +481,8 @@ def cmd_update(a: argparse.Namespace) -> int:
                 "update",
                 [{"id": "pip", "status": "UNVERIFIED", "detail": " ".join(cmd)}],
                 "planned",
-            )
+            ),
+            getattr(a, "json", False),
         )
         return 0
     proc = subprocess.run(cmd, capture_output=True, text=True, timeout=900, check=False)
@@ -478,7 +494,7 @@ def cmd_update(a: argparse.Namespace) -> int:
         }
     ]
     doc = _receipt("update", checks, "completed" if proc.returncode == 0 else "failed")
-    _emit(doc)
+    _emit(doc, getattr(a, "json", False))
     return 0 if proc.returncode == 0 else 1
 
 
@@ -498,7 +514,8 @@ def cmd_mcp_verify(a: argparse.Namespace) -> int:
             "checks": [check],
             "checked_at": kit._utc_now(),
             "repair_hint": None,
-        }
+        },
+        getattr(a, "json", False),
     )
     return 1 if check["status"] == "FAIL" else 0
 
@@ -733,6 +750,11 @@ def main(argv: list[str] | None = None) -> int:
         p.add_argument("--scope", choices=SCOPES, default="project")
         p.add_argument("--root", default=None)
         p.add_argument("--dry-run", action="store_true")
+        p.add_argument(
+            "--json",
+            action="store_true",
+            help="force JSON output (already the non-TTY contract)",
+        )
 
     p = sub.add_parser("install", help="apply the portable install")
     _base(p)
@@ -751,6 +773,12 @@ def main(argv: list[str] | None = None) -> int:
         help="optional components csv: skills,agents,mcp,tui,graph-studio",
     )
     p.add_argument("--yes", "-y", action="store_true")
+    p.add_argument(
+        "--no-input",
+        action="store_true",
+        dest="no_input",
+        help="never prompt — requires --yes to mutate",
+    )
     p.set_defaults(fn=cmd_install)
 
     for name, fn in (("status", cmd_status), ("doctor", cmd_doctor), ("repair", cmd_repair)):
@@ -767,16 +795,26 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--to", default=None)
     p.add_argument("--repo", default=None)
     p.add_argument("--dry-run", action="store_true")
+    p.add_argument(
+        "--json",
+        action="store_true",
+        help="force JSON output (already the non-TTY contract)",
+    )
     p.set_defaults(fn=cmd_update)
 
     p = sub.add_parser("mcp-verify")
+    p.add_argument(
+        "--json",
+        action="store_true",
+        help="force JSON output (already the non-TTY contract)",
+    )
     p.set_defaults(fn=cmd_mcp_verify)
 
     args = ap.parse_args(argv)
     try:
         return args.fn(args)
     except kit.InstallError as exc:
-        _emit(exc.document(FORGE_ID))
+        _emit(exc.document(FORGE_ID), getattr(args, "json", False))
         return 1
 
 
