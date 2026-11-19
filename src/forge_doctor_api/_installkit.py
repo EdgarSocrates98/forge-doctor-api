@@ -39,7 +39,7 @@ from typing import Any
 _INSTALLKIT_VERSION = "1.0.6"
 # Filled by the vendor step (scripts/installkit/vendor.py) — the sha256 of
 # the canonical source body, so drift checks can compare vendored copies.
-_SOURCE_SHA256 = "6d4aae3ed63f73a9"
+_SOURCE_SHA256 = "canonical"
 
 SCHEMA_MANIFEST = "forge/InstallationManifest/v1"
 SCHEMA_RECEIPT = "forge/InstallReceipt/v1"
@@ -551,14 +551,38 @@ def mcp_set(
     return doc
 
 
+def _mcp_argv_resolved(ctx: "InstallContext") -> tuple[str, ...]:
+    """PATH-independent argv for the managed ``.mcp.json`` key (§9.3).
+
+    Resolution order:
+
+    1. the registered install manifest's ``cli.shim`` (absolute launcher
+       written by the bootstrap) → ``(shim, *mcp_command[1:])``;
+    2. ``(sys.executable, "-m", <package>, *mcp_command[1:])`` — the
+       current interpreter, absolute by construction, module-pinned.
+
+    Empty when the spec declares no MCP command at all.
+    """
+    if not ctx.spec.mcp_command:
+        return ()
+    tail = ctx.spec.mcp_command[1:]
+    manifest = _load_json(
+        installations_dir() / f"{ctx.spec.forge_id}.json", {})
+    shim = (manifest.get("cli") or {}).get("shim")
+    if isinstance(shim, str) and shim and Path(shim).is_absolute():
+        return (shim, *tail)
+    return (sys.executable, "-m", ctx.spec.package, *tail)
+
+
 def _mcp_argv(ctx: "InstallContext") -> tuple[str, ...]:
     """The argv written to the managed ``.mcp.json`` key.
 
-    ``InstallContext.mcp_command_resolved`` (absolute interpreter/shim —
-    the PATH-independent launch the spec asks for) wins; the declared
-    ``spec.mcp_command`` is the fallback and may be PATH-dependent, which
-    the mcp doctor check reports honestly instead of hiding."""
-    return tuple(ctx.mcp_command_resolved or ctx.spec.mcp_command)
+    ``InstallContext.mcp_command_resolved`` (explicit per-forge override)
+    wins; otherwise the auto-resolved PATH-independent argv
+    (:func:`_mcp_argv_resolved`) is used so hosts never depend on the
+    installer's PATH."""
+    resolved = ctx.mcp_command_resolved or _mcp_argv_resolved(ctx)
+    return tuple(resolved or ctx.spec.mcp_command)
 
 
 def mcp_unset(doc: dict[str, Any], key: str, tag: str) -> dict[str, Any]:
@@ -1171,8 +1195,59 @@ def _created_by(distribution: str) -> str:
         return distribution
 
 
+SCHEMA_LIFECYCLE = "forge/InstallLifecycle/v1"
+
+_BLOCKED_STATUSES = frozenset({"blocked", "refused", "unsupported", "declined"})
+"""Receipt ``status`` values that mean a gate refused the operation."""
+
+
+def _receipt_lifecycle(doc: dict[str, Any]) -> dict[str, Any]:
+    """Derive the ``forge/InstallLifecycle/v1`` block of a receipt.
+
+    The state is a *view* over ``status`` + ``verification`` — the same
+    closed derivation the-forge applies in ``install/lifecycle.py`` so a
+    reader recomputing it reaches the same answer. ``planned`` →
+    ``applied`` → ``verified`` is the success line; gate refusals are
+    ``blocked``, errors ``failed``, evidence gaps ``unverified``.
+    """
+    status = str(doc.get("status") or "")
+    verification = str((doc.get("verification") or {}).get("status") or "")
+    if status == "planned":
+        state, detail = "planned", "plan emitted — nothing written"
+    elif status in _BLOCKED_STATUSES:
+        state, detail = "blocked", f"gate refusal: {status}"
+    elif status == "completed":
+        if verification == "PASS":
+            state, detail = "verified", "writes executed and receipt checks pass"
+        elif verification == "FAIL":
+            state, detail = "failed", "writes executed but verification failed"
+        else:
+            state, detail = (
+                "applied",
+                f"writes executed; verification {verification or 'absent'}",
+            )
+    elif status == "failed":
+        checks = [c for c in doc.get("checks") or [] if isinstance(c, dict)]
+        if checks and all(
+            c.get("status") in ("BLOCKED", "UNVERIFIED", "NOT_APPLICABLE") for c in checks
+        ):
+            state, detail = "blocked", "every check gated — nothing applied"
+        else:
+            state, detail = "failed", "operation errored"
+    elif status == "unverified" or not status:
+        state, detail = "unverified", "no operation evidence"
+    else:
+        state, detail = (
+            "unverified",
+            f"status {status!r} outside the known receipt vocabulary",
+        )
+    return {"schema": SCHEMA_LIFECYCLE, "state": state, "detail": detail}
+
+
 def _write_receipt(state_dir: Path, receipt: dict[str, Any]) -> Path:
     ts = _utc_now().replace(":", "").replace("-", "")
+    # derived at write time — after the final status/verification is known
+    receipt["lifecycle"] = _receipt_lifecycle(receipt)
     path = state_dir / RECEIPTS_DIR / f"{receipt['operation']}-{ts}.json"
     _atomic_write(path, _json_bytes(receipt))
     return path
