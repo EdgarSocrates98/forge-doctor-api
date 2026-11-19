@@ -565,12 +565,34 @@ def _mcp_argv_resolved(ctx: "InstallContext") -> tuple[str, ...]:
     """
     if not ctx.spec.mcp_command:
         return ()
-    tail = ctx.spec.mcp_command[1:]
+    head, *tail = ctx.spec.mcp_command
+    if Path(head).is_absolute():
+        return tuple(ctx.spec.mcp_command)
     manifest = _load_json(
         installations_dir() / f"{ctx.spec.forge_id}.json", {})
     shim = (manifest.get("cli") or {}).get("shim")
     if isinstance(shim, str) and shim and Path(shim).is_absolute():
-        return (shim, *tail)
+        shim_path = Path(shim)
+        if head in {shim_path.name, shim_path.stem}:
+            return (shim, *tail)
+        for cand in (shim_path.parent / head, shim_path.parent / (head + ".exe")):
+            if cand.exists():
+                return (str(cand), *tail)
+    # entry-point module lookup keeps the argv a real target when the MCP
+    # console script lives beside the CLI shim (e.g. ``forge-mcp``).
+    try:
+        import importlib.metadata as _imd
+
+        for ep in _imd.entry_points(group="console_scripts"):
+            if ep.name == head and ep.module:
+                return (
+                    sys.executable,
+                    "-c",
+                    f"import sys; from {ep.module} import {ep.attr} as _f; sys.exit(_f())",
+                    *tail,
+                )
+    except Exception:  # noqa: BLE001 — metadata absence must not break install
+        pass
     return (sys.executable, "-m", ctx.spec.package, *tail)
 
 
@@ -1260,7 +1282,7 @@ def _write_receipt(state_dir: Path, receipt: dict[str, Any]) -> Path:
 
 def status(ctx: InstallContext) -> dict[str, Any]:
     ledger = Ledger.load(ctx.state_dir)
-    drift = ledger.drift(ctx.root, ctx.spec, mcp_argv=ctx.mcp_command_resolved)
+    drift = ledger.drift(ctx.root, ctx.spec, mcp_argv=_mcp_argv(ctx))
     ok = sum(1 for d in drift if d["status"] == "ok")
     bad = [d for d in drift if d["status"] != "ok"]
     receipts = (
@@ -1302,7 +1324,7 @@ def doctor(ctx: InstallContext) -> dict[str, Any]:
             "repairable": False,
         }
     )
-    for d in ledger.drift(ctx.root, ctx.spec, mcp_argv=ctx.mcp_command_resolved):
+    for d in ledger.drift(ctx.root, ctx.spec, mcp_argv=_mcp_argv(ctx)):
         if d["status"] != "ok":
             unsafe = d["status"] == "unsafe"
             checks.append(
@@ -1421,7 +1443,7 @@ def repair(ctx: InstallContext) -> dict[str, Any]:
     ledger = Ledger.load(ctx.state_dir)
     drift = [
         d
-        for d in ledger.drift(ctx.root, ctx.spec, mcp_argv=ctx.mcp_command_resolved)
+        for d in ledger.drift(ctx.root, ctx.spec, mcp_argv=_mcp_argv(ctx))
         if d["status"] != "ok"
     ]
     fixed, kept, skipped = [], [], []
