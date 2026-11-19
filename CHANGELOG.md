@@ -12,6 +12,39 @@ record, [docs/release.md](docs/release.md) for release mechanics,
 and [docs/release-evidence.md](docs/release-evidence.md) for the
 verification matrix.
 
+## [Unreleased] — Cycle 16.1.1 (wave-07f)
+
+### Fixed
+
+- **`setup.sh`**: the python probe
+  `PY="$(command -v python3 || command -v python || command -v py)"`
+  aborted the script with a silent rc=1 under `set -e` when no python
+  existed — the failed command substitution killed the assignment
+  before the `FORGE-PYTHON-NOT-FOUND` branch ran. Guarded with
+  `|| true`, the script now reaches its named refusal (rc=2 +
+  `FORGE-PYTHON-NOT-FOUND` on stderr). Reproduced and verified with a
+  PATH containing only `dirname`. The same probe remains open in the
+  canonical `the-forge/setup.sh` — the canonical fix is tracked
+  upstream; this vendored copy is patched in place (RC window:
+  packaging script, not public surface).
+- **`docs/installation/troubleshooting.{md,en.md}`**: documented
+  `FORGE-PYTHON-NOT-FOUND` (setup.sh rc=2) — install Python ≥3.11 and
+  reopen the shell.
+
+### Verified
+
+- `tests/test_forge_bootstrap.py::test_setup_sh_sem_python_recusa_nomeada`
+  — PATH-stripped `bash setup.sh` regression test asserting rc=2 and
+  the named refusal on stderr.
+- `src/forge_doctor_api/__main__.py` propagates exit codes correctly
+  (`main() -> None` drives typer `app()`; `python -m forge_doctor_api
+  bogus-verb` → rc=2). No change needed.
+- Vendored `ui/{kit,i18n,wizard}.py` at byte-parity with canonical
+  `the-forge/src/theforge/ui/` (after the `theforge.ui →
+  forge_doctor_api.ui` rewrite); `_installkit.py` header intact
+  (`_INSTALLKIT_VERSION = "1.0.6"`, `_SOURCE_SHA256` matches the
+  canonical body). No change needed.
+
 ## [Unreleased] — Cycle 16.1 Wave-13
 
 ### Changed
