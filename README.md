@@ -67,18 +67,21 @@ contract — clone once, setup once:
 ./setup.sh          # or .\setup.ps1 — venv + wheel + ~/.forge registry
 ```
 
-Installing the Forge into a *consumer* project (managed `.mcp.json` key +
-`AGENTS.md` marker block, sha256-ledgered) is deliberately a **checkout
-script**, not a `forge-doctor-api` verb: the package boundary bans
-`os`/`subprocess` imports across `src/` and the 0.2.x RC window forbids
-new CLI commands. Same verbs, same receipts as sibling forges:
+Installing the Forge into a *consumer* project (managed `.mcp.json` key
+with resolved absolute argv, `forge:*` doc blocks + `.forge/context/`
+registry, sha256-ledgered) ships in the wheel as `forge-doctor-api
+install` — same verbs, same receipts as the checkout adapter:
 
 ```bash
-python scripts/forge_install.py install --dry-run   # plan only
-python scripts/forge_install.py install --yes       # apply to a repo
-python scripts/forge_install.py status|doctor|repair
-python scripts/forge_install.py uninstall [--purge]
-python scripts/forge_install.py update|mcp-verify
+forge-doctor-api install --dry-run          # plan only
+forge-doctor-api install --yes              # apply to a repo
+forge-doctor-api install status|doctor|repair
+forge-doctor-api install uninstall [--purge]
+forge-doctor-api install update|mcp-verify
+
+# Checkout adapter — same engine, same receipts (bare source tree):
+python scripts/forge_install.py install --dry-run
+python scripts/forge_install.py install --yes
 
 # Optional local web UI over the same real services (127.0.0.1, session token)
 python scripts/forge_portal.py [--no-browser] [--port N] [--root DIR]

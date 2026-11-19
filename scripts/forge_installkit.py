@@ -32,14 +32,14 @@ import time
 import uuid
 from importlib import metadata as importlib_metadata
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path, PurePosixPath
 from typing import Any
 
 _INSTALLKIT_VERSION = "1.0.6"
 # Filled by the vendor step (scripts/installkit/vendor.py) — the sha256 of
 # the canonical source body, so drift checks can compare vendored copies.
-_SOURCE_SHA256 = "dd279c639576d015"
+_SOURCE_SHA256 = "b574efcfbc13c63e"
 
 SCHEMA_MANIFEST = "forge/InstallationManifest/v1"
 SCHEMA_RECEIPT = "forge/InstallReceipt/v1"
@@ -260,6 +260,11 @@ class InstallContext:
     # last-writer-wins — the loser skips the path and the receipt says so).
     # Orchestrator-set only; plan/apply report the skip, never silently drop.
     exclude: tuple[str, ...] = ()
+    # Resolved argv for the managed ``.mcp.json`` key — an absolute
+    # interpreter/shim path so a host never launches the forge through a
+    # PATH lookup. ``None`` falls back to ``spec.mcp_command`` (declared,
+    # possibly PATH-dependent — the doctor audit reports that honestly).
+    mcp_command_resolved: tuple[str, ...] | None = None
 
 
 # --------------------------------------------------------------------------
@@ -314,7 +319,10 @@ class Ledger:
     def owned_paths(self) -> list[str]:
         return sorted(p for p, e in self.doc["entries"].items() if e.get("managed"))
 
-    def drift(self, root: Path, spec: "ForgeSpec | None" = None) -> list[dict[str, str]]:
+    def drift(
+        self, root: Path, spec: "ForgeSpec | None" = None, *,
+        mcp_argv: tuple[str, ...] | None = None,
+    ) -> list[dict[str, str]]:
         """Per-file verdict. When ``spec`` is given the check is kind-aware:
         ``marker`` entries pass when their managed *block* is intact (user
         text outside the markers is never drift); ``mcp`` entries pass when
@@ -329,14 +337,17 @@ class Ledger:
             if not p.exists():
                 out.append({"path": rel, "status": "missing"})
                 continue
-            if spec is not None and _entry_intact(spec, e, rel, p):
+            if spec is not None and _entry_intact(spec, e, rel, p, mcp_argv):
                 out.append({"path": rel, "status": "ok"})
             else:
                 out.append({"path": rel, "status": "modified"})
         return out
 
 
-def _entry_intact(spec: "ForgeSpec", entry: dict[str, Any], rel: str, path: Path) -> bool:
+def _entry_intact(
+    spec: "ForgeSpec", entry: dict[str, Any], rel: str, path: Path,
+    mcp_argv: tuple[str, ...] | None = None,
+) -> bool:
     """Kind-aware health check for one ledger entry. Marker entries verify
     the managed block only; ``.mcp.json`` verifies the managed server key;
     everything else compares whole-file sha256."""
@@ -348,7 +359,8 @@ def _entry_intact(spec: "ForgeSpec", entry: dict[str, Any], rel: str, path: Path
         cur = _load_json(path, None)
         if not isinstance(cur, dict):
             return False
-        want = {"command": spec.mcp_command[0], "args": list(spec.mcp_command[1:])}
+        argv = mcp_argv or spec.mcp_command
+        want = {"command": argv[0], "args": list(argv[1:])}
         return bool(mcp_set(cur, spec.mcp_server_name, want, spec.tag) == cur)
     return bool(_sha_file(path) == entry["sha256"])
 
@@ -537,6 +549,16 @@ def mcp_set(
     managed[tag] = sorted(set(managed.get(tag, [])) | {f"mcpServers.{key}"})
     doc["_forge_managed"] = managed
     return doc
+
+
+def _mcp_argv(ctx: "InstallContext") -> tuple[str, ...]:
+    """The argv written to the managed ``.mcp.json`` key.
+
+    ``InstallContext.mcp_command_resolved`` (absolute interpreter/shim —
+    the PATH-independent launch the spec asks for) wins; the declared
+    ``spec.mcp_command`` is the fallback and may be PATH-dependent, which
+    the mcp doctor check reports honestly instead of hiding."""
+    return tuple(ctx.mcp_command_resolved or ctx.spec.mcp_command)
 
 
 def mcp_unset(doc: dict[str, Any], key: str, tag: str) -> dict[str, Any]:
@@ -888,6 +910,10 @@ def apply_install(ctx: InstallContext, *, approved: bool = False) -> dict[str, A
             "skill": 0, "agent": 0, "knowledge": 0, "rules": 0, "evals": 0,
             "managed": 0,
         }
+        # Incremental install (cycle 16.1 §7): the receipt must say how many
+        # assets were written vs. already byte-identical — reinstalls do not
+        # re-touch unchanged managed files.
+        written_bytes = 0
         excluded = set(ctx.exclude)
         for rel in sorted(assets):
             kind = _asset_kind(rel)
@@ -942,6 +968,7 @@ def apply_install(ctx: InstallContext, *, approved: bool = False) -> dict[str, A
                 created.append(target)
             target.parent.mkdir(parents=True, exist_ok=True)
             _atomic_write(target, data)
+            written_bytes += len(data)
             files.append(ledger.record(rel, data, kind, "updated" if existing_entry else "created"))
 
         # Marker blocks in AGENTS.md / CLAUDE.md — delimited, user content kept.
@@ -981,7 +1008,8 @@ def apply_install(ctx: InstallContext, *, approved: bool = False) -> dict[str, A
         mcp_entries: list[dict[str, Any]] = []
         if ctx.spec.mcp_server_name and "mcp" in kinds:
             mcp_file = ctx.root / ".mcp.json"
-            entry = {"command": ctx.spec.mcp_command[0], "args": list(ctx.spec.mcp_command[1:])}
+            argv = _mcp_argv(ctx)
+            entry = {"command": argv[0], "args": list(argv[1:])}
             if mcp_file.exists():
                 cur = _load_json(mcp_file, None)
                 if cur is None:
@@ -1009,6 +1037,7 @@ def apply_install(ctx: InstallContext, *, approved: bool = False) -> dict[str, A
                             "file": ".mcp.json",
                             "key": f"managed:{ctx.spec.tag}",
                             "action": "set",
+                            "argv": list(argv),
                         }
                     )
             else:
@@ -1022,6 +1051,7 @@ def apply_install(ctx: InstallContext, *, approved: bool = False) -> dict[str, A
                         "file": ".mcp.json",
                         "key": f"managed:{ctx.spec.tag}",
                         "action": "created",
+                        "argv": list(argv),
                     }
                 )
     except InstallError:
@@ -1084,6 +1114,11 @@ def apply_install(ctx: InstallContext, *, approved: bool = False) -> dict[str, A
                           "--scope user or `codex mcp add`",
             }
         )
+    counts: dict[str, int] = {}
+    for item in files:
+        action = item.get("action", "?")
+        counts[action] = counts.get(action, 0) + 1
+    counts["written"] = counts.get("created", 0) + counts.get("updated", 0)
     receipt = {
         "schema": SCHEMA_RECEIPT,
         "receipt_id": f"sha256:{_sha(_json_bytes({'f': files, 'm': markers}))}",
@@ -1098,6 +1133,9 @@ def apply_install(ctx: InstallContext, *, approved: bool = False) -> dict[str, A
         "managed_files": files,
         "managed_markers": markers,
         "mcp": mcp_entries,
+        # created/updated/unchanged/adopted/skipped + ``written`` (real
+        # byte writes) — incremental-install accounting, honest zeros.
+        "counts": counts | {"written_bytes": written_bytes},
         # Context-budget metrics — only what is observable at write time
         # (§13.2). Token counts are never invented: hosts that supply
         # them report through their own telemetry.
@@ -1147,7 +1185,7 @@ def _write_receipt(state_dir: Path, receipt: dict[str, Any]) -> Path:
 
 def status(ctx: InstallContext) -> dict[str, Any]:
     ledger = Ledger.load(ctx.state_dir)
-    drift = ledger.drift(ctx.root, ctx.spec)
+    drift = ledger.drift(ctx.root, ctx.spec, mcp_argv=ctx.mcp_command_resolved)
     ok = sum(1 for d in drift if d["status"] == "ok")
     bad = [d for d in drift if d["status"] != "ok"]
     receipts = (
@@ -1189,7 +1227,7 @@ def doctor(ctx: InstallContext) -> dict[str, Any]:
             "repairable": False,
         }
     )
-    for d in ledger.drift(ctx.root, ctx.spec):
+    for d in ledger.drift(ctx.root, ctx.spec, mcp_argv=ctx.mcp_command_resolved):
         if d["status"] != "ok":
             unsafe = d["status"] == "unsafe"
             checks.append(
@@ -1222,7 +1260,9 @@ def doctor(ctx: InstallContext) -> dict[str, Any]:
                     "repairable": True,
                 }
             )
-        mcp_check = mcp_verify(ctx.spec)
+        # The probe exercises the argv the managed key actually declares —
+        # a resolved absolute path, never a PATH guess.
+        mcp_check = mcp_verify(replace(ctx.spec, mcp_command=_mcp_argv(ctx)))
         checks.append(mcp_check)
         invoke = mcp_check.get("invoke")
         if isinstance(invoke, dict):  # hoisted so a FAIL degrades health
@@ -1290,7 +1330,8 @@ def _repair_content(
         cur = _load_json(target, {})
         if not isinstance(cur, dict):
             cur = {}
-        want = {"command": ctx.spec.mcp_command[0], "args": list(ctx.spec.mcp_command[1:])}
+        argv = _mcp_argv(ctx)
+        want = {"command": argv[0], "args": list(argv[1:])}
         new = mcp_set(cur, ctx.spec.mcp_server_name, want, ctx.spec.tag)
         return _json_bytes(new)
     return assets.get(rel)
@@ -1303,7 +1344,11 @@ def repair(ctx: InstallContext) -> dict[str, Any]:
     canonical source land in ``skipped`` as unrepairable; foreign content is
     never touched."""
     ledger = Ledger.load(ctx.state_dir)
-    drift = [d for d in ledger.drift(ctx.root, ctx.spec) if d["status"] != "ok"]
+    drift = [
+        d
+        for d in ledger.drift(ctx.root, ctx.spec, mcp_argv=ctx.mcp_command_resolved)
+        if d["status"] != "ok"
+    ]
     fixed, kept, skipped = [], [], []
     assets = ctx.spec.render_assets(ctx) if ctx.spec.render_assets else {}
     for d in drift:

@@ -224,6 +224,44 @@ def test_plan_reports_excluded_paths_without_writing(tmp_path: Path) -> None:
 
 
 # --------------------------------------------------------------------------
+# Incremental reinstall (cycle 16.1 §7.4) — receipt counts are honest:
+# re-apply writes nothing when every managed asset is byte-identical.
+# --------------------------------------------------------------------------
+
+
+def test_reinstall_reports_zero_writes(tmp_path: Path) -> None:
+    first = kit.apply_install(_ctx(tmp_path, render=_render, dry_run=False), approved=True)
+    assert first["status"] == "completed"
+    assert first["counts"]["created"] == 1
+    assert first["counts"]["written"] == 1
+    assert first["counts"]["written_bytes"] == len(b"# x\n")
+
+    asset = tmp_path / _ASSET
+    before = asset.read_bytes()
+    second = kit.apply_install(_ctx(tmp_path, render=_render, dry_run=False), approved=True)
+    assert second["status"] == "completed"
+    counts = second["counts"]
+    # Nothing re-touched: zero real writes, zero bytes, the one managed
+    # asset reports ``unchanged`` — reinstalls are incremental, not blind.
+    assert counts["written"] == 0
+    assert counts["written_bytes"] == 0
+    assert counts["unchanged"] == 1
+    assert asset.read_bytes() == before
+    actions = {f["path"]: f["action"] for f in second["managed_files"]}
+    assert actions[_ASSET] == "unchanged"
+
+
+def test_reinstall_rewrites_only_drifted_assets(tmp_path: Path) -> None:
+    kit.apply_install(_ctx(tmp_path, render=_render, dry_run=False), approved=True)
+    (tmp_path / _ASSET).write_bytes(b"# drifted\n")
+    receipt = kit.apply_install(_ctx(tmp_path, render=_render, dry_run=False), approved=True)
+    assert receipt["counts"]["updated"] == 1
+    assert receipt["counts"]["written"] == 1
+    assert receipt["counts"]["written_bytes"] == len(b"# x\n")
+    assert (tmp_path / _ASSET).read_bytes() == b"# x\n"
+
+
+# --------------------------------------------------------------------------
 # manifest_for — install-2.1 fields (v2)
 # --------------------------------------------------------------------------
 

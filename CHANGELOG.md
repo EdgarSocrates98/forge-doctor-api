@@ -12,6 +12,58 @@ record, [docs/release.md](docs/release.md) for release mechanics,
 and [docs/release-evidence.md](docs/release-evidence.md) for the
 verification matrix.
 
+## [Unreleased] — Cycle 16.1 Wave-13
+
+### Changed
+
+- **`_installkit` / `_forgecontext` re-vendored to the cycle-16.1
+  canonical** (`the-forge/scripts/installkit/`, stamps
+  `b574efcfbc13c63e` / `ec2a7a80d2467000`; both vendored copies —
+  `scripts/` and `src/` — in lockstep via `vendor.py`):
+  - install receipts now carry `counts`
+    (`created|updated|unchanged|adopted|skipped` + `written` +
+    `written_bytes`) — §7.4 accounting for rendered assets only (MCP,
+    context documents and state writes are outside these counters). A
+    reinstall of byte-identical rendered assets reports `written: 0`.
+  - `InstallContext.mcp_command_resolved` — the managed `.mcp.json`
+    key writes the **absolute** launch argv (registered `cli.shim`,
+    else `sys.executable -m forge_doctor_api mcp`), never a PATH lookup
+    (§9.3); drift and `mcp-verify` probe exactly the argv on disk.
+  - AGENTS.md per-forge blocks render via `_forge_block_compact` —
+    the routing-critical L0 minimum (identity, domains, manifest +
+    protocol pointers); interface detail stays in the capability
+    manifest (§8.1).
+- **`install/service.py` + `scripts/forge_install.py`**: both `_ctx`
+  builders now resolve `mcp_command_resolved` (shim → `python -m`
+  fallback, mirroring the-forge's service wrapper) and `mcp-verify`
+  probes the resolved argv — the checkout adapter stays byte-equivalent
+  to the wheel path.
+
+### Fixed
+
+- Install docs no longer claim host skill mirrors this forge does not
+  publish (`.claude/skills/`, `.agents/`, `~/.claude/`…): the installed
+  surface is the managed `.mcp.json` key, `.forge/context/` registry
+  and `forge:*` doc blocks — stated as observed.
+- Stale `forge-doctor-api:managed` marker references replaced by the
+  `forge:*` block contract; README no longer says the lifecycle is
+  checkout-only (it ships in the wheel since ADR-0006).
+
+### Verified
+
+- `forge/InstallLifecycle/v1` compatibility pinned by test: every
+  emitted `status`/`checks`/`verification` value stays inside the closed
+  vocabulary — the derived lifecycle state never falls to the
+  "outside vocabulary" branch.
+- Incremental reinstall proven end-to-end (second `install --yes` →
+  `counts.written=0`, `.mcp.json`/`AGENTS.md` byte-identical, `status`
+  healthy) and at the engine seam (`unchanged` actions, zero
+  `written_bytes`; drifted asset alone rewrites).
+- `scripts/forge_bootstrap.py` remains byte-identical to the canonical
+  copy (sha256 `02f20671…`, parity gate green).
+- Real install run: `mcp-handshake` PASS over the resolved absolute
+  argv; `doctor` healthy; `repair`/`uninstall --dry-run` honest.
+
 ## [Unreleased] — Cycle 16 Wave-12
 
 ### Changed

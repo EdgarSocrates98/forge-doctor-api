@@ -34,6 +34,7 @@ import json
 import os
 import subprocess
 import sys
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -89,6 +90,28 @@ def _spec() -> kit.ForgeSpec:
     )
 
 
+def _resolved_mcp_command(spec: kit.ForgeSpec) -> tuple[str, ...] | None:
+    """The PATH-independent argv for the managed ``.mcp.json`` key (§9.3).
+
+    Resolution order — same as the wheel ``install/service.py`` wrapper:
+
+    1. the registered install manifest's ``cli.shim`` (absolute launcher
+       written by the bootstrap) → ``(shim, *mcp_command[1:])``;
+    2. ``(sys.executable, "-m", <package>, *mcp_command[1:])`` — the
+       current interpreter, absolute by construction, module-pinned.
+
+    ``None`` when the spec declares no MCP command at all.
+    """
+    if not spec.mcp_command:
+        return None
+    tail = spec.mcp_command[1:]
+    manifest = kit._load_json(kit.installations_dir() / f"{FORGE_ID}.json", None)
+    shim = ((manifest or {}).get("cli") or {}).get("shim")
+    if isinstance(shim, str) and shim and Path(shim).is_absolute():
+        return (shim, *tail)
+    return (sys.executable, "-m", spec.package, *tail)
+
+
 def _ctx(args: argparse.Namespace, hosts: tuple[str, ...]) -> kit.InstallContext:
     spec = _spec()
     target = kit.resolve_scope(spec, args.scope, Path.cwd(), Path(args.root) if args.root else None)
@@ -109,6 +132,9 @@ def _ctx(args: argparse.Namespace, hosts: tuple[str, ...]) -> kit.InstallContext
         hosts=hosts,
         dry_run=getattr(args, "dry_run", False),
         options=options,
+        # Managed .mcp.json keys and MCP probes use the absolute argv,
+        # never a PATH guess (§9.3).
+        mcp_command_resolved=_resolved_mcp_command(spec),
     )
 
 
@@ -172,7 +198,11 @@ def _register(ctx: kit.InstallContext) -> None:
             "forge_id": FORGE_ID,
             "package": "forge_doctor_api",
             "distribution": FORGE_ID,
-            "cli": {"name": "forge-doctor-api", "version_cmd": ["forge-doctor-api", "--version"]},
+            "cli": {
+                **(doc.get("cli") or {}),
+                "name": "forge-doctor-api",
+                "version_cmd": ["forge-doctor-api", "--version"],
+            },
             "version": _VERSION,
             "updated_at": kit._utc_now(),
             "installed_at": doc.get("installed_at", kit._utc_now()),
@@ -499,7 +529,11 @@ def cmd_update(a: argparse.Namespace) -> int:
 
 
 def cmd_mcp_verify(a: argparse.Namespace) -> int:
-    check = kit.mcp_verify(_spec())
+    # The probe exercises the argv the managed key actually declares —
+    # the resolved absolute path, never a PATH guess (§9.3).
+    spec = _spec()
+    resolved = _resolved_mcp_command(spec)
+    check = kit.mcp_verify(replace(spec, mcp_command=resolved) if resolved else spec)
     _emit(
         {
             "schema": kit.SCHEMA_HEALTH,

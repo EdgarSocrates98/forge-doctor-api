@@ -69,8 +69,11 @@ def test_apply_writes_managed_regions(target: Path) -> None:
     assert doc["status"] == "completed"
     mcp = json.loads((target / ".mcp.json").read_text())
     entry = mcp["mcpServers"]["forge-doctor-api"]
-    assert entry["command"] == "forge-doctor-api"
-    assert entry["args"] == ["mcp"]
+    # §9.3 — the managed key never launches through a PATH lookup: with no
+    # registered shim the resolver falls back to `python -m` (absolute).
+    assert entry["command"] == sys.executable
+    assert Path(entry["command"]).is_absolute()
+    assert entry["args"] == ["-m", "forge_doctor_api", "mcp"]
     agents = (target / "AGENTS.md").read_text(encoding="utf-8")
     assert "forge:forge-doctor-api:begin" in agents
     assert "forge:ecosystem:begin" in agents
@@ -98,7 +101,13 @@ def test_repair_restores_missing_mcp(target: Path) -> None:
     assert code == 0
     assert ".mcp.json" in out["repaired"]
     new = json.loads(mcp.read_text())
-    assert new["mcpServers"]["forge-doctor-api"]["command"] == "forge-doctor-api"
+    # repair re-derives the managed key — same absolute resolved argv.
+    assert new["mcpServers"]["forge-doctor-api"]["command"] == sys.executable
+    assert new["mcpServers"]["forge-doctor-api"]["args"] == [
+        "-m",
+        "forge_doctor_api",
+        "mcp",
+    ]
     assert new["mcpServers"]["mine"] == {"command": "y"}
 
 
