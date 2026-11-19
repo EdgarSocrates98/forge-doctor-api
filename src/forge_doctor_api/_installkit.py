@@ -39,7 +39,7 @@ from typing import Any
 _INSTALLKIT_VERSION = "1.0.6"
 # Filled by the vendor step (scripts/installkit/vendor.py) — the sha256 of
 # the canonical source body, so drift checks can compare vendored copies.
-_SOURCE_SHA256 = "b574efcfbc13c63e"
+_SOURCE_SHA256 = "6d4aae3ed63f73a9"
 
 SCHEMA_MANIFEST = "forge/InstallationManifest/v1"
 SCHEMA_RECEIPT = "forge/InstallReceipt/v1"
@@ -1466,6 +1466,7 @@ def uninstall(ctx: InstallContext, *, purge_state: bool = False) -> dict[str, An
         ledger.save()
     receipt = {
         "schema": SCHEMA_RECEIPT,
+        "receipt_id": f"sha256:{_sha(_json_bytes({'r': removed, 'k': kept}))}",
         "forge_id": ctx.spec.forge_id,
         "operation": "uninstall",
         "scope": ctx.scope,
