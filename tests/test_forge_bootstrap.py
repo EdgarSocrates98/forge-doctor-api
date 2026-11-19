@@ -18,6 +18,7 @@ import hashlib
 import importlib.util
 import json
 import os
+import shutil
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -1635,3 +1636,40 @@ def test_packaged_module_exitstack_is_process_scoped() -> None:
     from forge_doctor_api.lab import packaged
 
     assert isinstance(packaged._RESOURCES, contextlib.ExitStack)
+
+
+# --------------------------------------------------------------------------
+# setup.sh — vendored POSIX entry point (cycle 16.1.1)
+# --------------------------------------------------------------------------
+
+
+def test_setup_sh_sem_python_recusa_nomeada(tmp_path: Path) -> None:
+    """``set -e`` must not kill the script before the named refusal.
+
+    Regression: ``PY="$(command -v python3 || command -v python || command -v py)"``
+    exits rc=1 silently when no python exists — the command substitution fails
+    and ``set -e`` aborts the assignment before the ``FORGE-PYTHON-NOT-FOUND``
+    branch runs. The probe must be guarded (``|| true``) so the script reaches
+    its named refusal: rc=2 + ``FORGE-PYTHON-NOT-FOUND`` on stderr.
+    """
+    bash = shutil.which("bash")
+    if not bash:
+        pytest.skip("bash indisponivel")
+    stub = tmp_path / "stubbin"
+    stub.mkdir()
+    # setup.sh runs `cd "$(dirname "$0")"` — dirname is the only binary the
+    # PATH-stripped environment still needs before the python probe.
+    dn = shutil.which("dirname")
+    if dn:
+        (stub / "dirname").symlink_to(dn)
+    out = subprocess.run(
+        [bash, "setup.sh"],
+        cwd=ROOT,
+        env={"PATH": str(stub), "HOME": str(tmp_path)},
+        capture_output=True,
+        text=True,
+        timeout=60,
+        check=False,
+    )
+    assert out.returncode == 2
+    assert "FORGE-PYTHON-NOT-FOUND" in out.stderr

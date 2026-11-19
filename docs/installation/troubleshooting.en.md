@@ -3,6 +3,7 @@
 | Symptom | Action |
 |---|---|
 | `command not found: forge-doctor-api` | run `./setup.sh` again; open a **new** terminal (launcher lands on PATH) |
+| `FORGE-PYTHON-NOT-FOUND` (setup.sh exits rc=2) | no Python on PATH — install Python >=3.11 and reopen the shell |
 | `FORGE-INSTALL-LOCKED` | another install is running or was interrupted; the lock expires and is recovered automatically — retry |
 | `FORGE-INSTALL-PLAN-NOT-APPROVED` | mutations require `--yes` after reviewing `--dry-run` |
 | `FORGE-INSTALL-NOT-A-REPO` | project scope needs a `.git` root or `--root` |
