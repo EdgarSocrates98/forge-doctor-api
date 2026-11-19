@@ -77,8 +77,11 @@ def test_apply_writes_managed_regions(target: Path, home: Path) -> None:
     assert receipt["status"] == "completed"
     mcp = json.loads((target / ".mcp.json").read_text())
     entry = mcp["mcpServers"]["forge-doctor-api"]
-    assert entry["command"] == "forge-doctor-api"
-    assert entry["args"] == ["mcp"]
+    # §9.3 — the managed key never launches through a PATH lookup: with no
+    # registered shim the resolver falls back to `python -m` (absolute).
+    assert entry["command"] == sys.executable
+    assert Path(entry["command"]).is_absolute()
+    assert entry["args"] == ["-m", "forge_doctor_api", "mcp"]
     # Consumer docs moved to the forge_context layer: `forge:*` blocks +
     # the shared workspace registry, not `forge-doctor-api:managed`.
     agents = (target / "AGENTS.md").read_text(encoding="utf-8")
@@ -100,6 +103,130 @@ def test_apply_preserves_foreign_mcp_servers(target: Path, home: Path) -> None:
     doc = json.loads((target / ".mcp.json").read_text())
     assert doc["mcpServers"]["other"] == {"command": "x"}
     assert doc["unrelated"] is True
+
+
+# --------------------------------------------------------------------------
+# cycle 16.1 — incremental reinstall, InstallLifecycle/v1 vocabulary,
+# minimal L0 context blocks
+# --------------------------------------------------------------------------
+
+# Closed receipt vocabulary of ``forge/InstallLifecycle/v1`` (the-forge
+# ``install/lifecycle.py`` — mirrored here as a pin: a receipt whose
+# ``status``/``verification``/``checks`` stay inside these sets always
+# derives a named lifecycle state, never the "outside vocabulary" branch).
+_LIFECYCLE_RECEIPT_STATUSES = {
+    "planned",
+    "blocked",
+    "refused",
+    "unsupported",
+    "completed",
+    "failed",
+    "unverified",
+}
+_LIFECYCLE_CHECK_STATUSES = {"PASS", "FAIL", "BLOCKED", "UNVERIFIED", "NOT_APPLICABLE"}
+_LIFECYCLE_HEALTH_STATUSES = {"healthy", "degraded", "broken", "unverified"}
+
+
+def _derive_state(receipt: dict) -> str:
+    """The ``forge/InstallLifecycle/v1`` ``receipt_state`` mapping, reduced
+    to the branches this adapter can emit."""
+    status = str(receipt.get("status") or "")
+    verification = str((receipt.get("verification") or {}).get("status") or "")
+    assert status in _LIFECYCLE_RECEIPT_STATUSES, f"{status!r} outside the lifecycle vocabulary"
+    if status == "planned":
+        return "planned"
+    if status in {"blocked", "refused", "unsupported"}:
+        return "blocked"
+    if status == "completed":
+        if verification == "PASS":
+            return "verified"
+        if verification == "FAIL":
+            return "failed"
+        return "applied"
+    if status == "failed":
+        checks = [c for c in receipt.get("checks") or [] if isinstance(c, dict)]
+        if checks and all(
+            c.get("status") in ("BLOCKED", "UNVERIFIED", "NOT_APPLICABLE") for c in checks
+        ):
+            return "blocked"
+        return "failed"
+    return "unverified"
+
+
+def test_reinstall_preserves_registered_shim(target: Path, home: Path) -> None:
+    registry = home / ".forge" / "installations"
+    registry.mkdir(parents=True)
+    manifest = registry / "forge-doctor-api.json"
+    shim = str(home / "bin" / "forge-doctor-api")
+    manifest.write_text(json.dumps({"cli": {"shim": shim}}))
+    for _ in range(2):
+        proc = _run("install", "--root", str(target), "--yes", env_home=home)
+        assert proc.returncode == 0, proc.stderr
+        assert json.loads(manifest.read_text())["cli"]["shim"] == shim
+        entry = json.loads((target / ".mcp.json").read_text())["mcpServers"]["forge-doctor-api"]
+        assert entry == {"command": shim, "args": ["mcp"]}
+
+
+def test_reinstall_is_incremental(target: Path, home: Path) -> None:
+    """§7.4 — a second install re-touches nothing byte-identical: the
+    receipt's ``counts`` reports zero writes/zero bytes honestly."""
+    first = _json(_run("install", "--root", str(target), "--yes", env_home=home))
+    assert first["status"] == "completed"
+    assert "counts" in first and "written" in first["counts"]
+    mcp_before = (target / ".mcp.json").read_bytes()
+    agents_before = (target / "AGENTS.md").read_bytes()
+
+    second = _json(_run("install", "--root", str(target), "--yes", env_home=home))
+    assert second["status"] == "completed"
+    counts = second["counts"]
+    assert counts["written"] == 0
+    assert counts["written_bytes"] == 0
+    # Managed surfaces stay byte-identical — reinstalls are not rewrites.
+    assert (target / ".mcp.json").read_bytes() == mcp_before
+    assert (target / "AGENTS.md").read_bytes() == agents_before
+    proc = _run("status", "--root", str(target), env_home=home)
+    assert _json(proc)["status"] == "healthy"
+
+
+def test_receipt_vocabulary_is_lifecycle_compatible(target: Path, home: Path) -> None:
+    """Every doc this adapter emits stays inside the closed
+    ``forge/InstallLifecycle/v1`` vocabulary — the orchestrator's derived
+    state never falls to the "outside vocabulary" branch."""
+    plan = _json(_run("install", "--root", str(target), "--dry-run", env_home=home))
+    assert plan["status"] in _LIFECYCLE_RECEIPT_STATUSES
+    assert _derive_state(plan) == "planned"
+    for check in plan.get("checks") or []:
+        assert check["status"] in _LIFECYCLE_CHECK_STATUSES
+
+    receipt = _json(_run("install", "--root", str(target), "--yes", env_home=home))
+    assert receipt["status"] in _LIFECYCLE_RECEIPT_STATUSES
+    for check in receipt["checks"]:
+        assert check["status"] in _LIFECYCLE_CHECK_STATUSES
+    assert receipt["verification"]["status"] in {"PASS", "FAIL", "UNVERIFIED", "BLOCKED"}
+    assert _derive_state(receipt) == "verified"  # completed + PASS
+
+    health = _json(_run("doctor", "--root", str(target), env_home=home))
+    assert health["status"] in _LIFECYCLE_HEALTH_STATUSES
+    for check in health["checks"]:
+        assert check["status"] in _LIFECYCLE_CHECK_STATUSES
+
+
+def test_agents_block_is_compact_l0(target: Path, home: Path) -> None:
+    """§8.1/§8.2 — the AGENTS.md ``forge:*`` block is the routing-critical
+    minimum (identity, domains, manifest + protocol pointers); interface
+    detail lives in the manifest, not in the permanent context."""
+    _run("install", "--root", str(target), "--yes", env_home=home)
+    agents = (target / "AGENTS.md").read_text(encoding="utf-8")
+    start = agents.index("forge:forge-doctor-api:begin")
+    end = agents.index("forge:forge-doctor-api:end")
+    block = agents[start:end]
+    assert "Domains:" in block
+    assert ".forge/context/capabilities/forge-doctor-api.json" in block
+    assert "AGENT_PROTOCOL.md" in block
+    # Compact L0: no CLI/MCP/discovery enumeration inside the permanent
+    # block — detail stays in the capability manifest it points to.
+    assert "Discovery:" not in block
+    assert "MCP server:" not in block
 
 
 def test_status_doctor_round_trip(target: Path, home: Path) -> None:
@@ -134,7 +261,13 @@ def test_repair_restores_missing_mcp(target: Path, home: Path) -> None:
     out = _json(proc)
     assert ".mcp.json" in out["repaired"]
     new = json.loads(mcp.read_text())
-    assert new["mcpServers"]["forge-doctor-api"]["command"] == ("forge-doctor-api")
+    # repair re-derives the managed key — same absolute resolved argv.
+    assert new["mcpServers"]["forge-doctor-api"]["command"] == sys.executable
+    assert new["mcpServers"]["forge-doctor-api"]["args"] == [
+        "-m",
+        "forge_doctor_api",
+        "mcp",
+    ]
     assert new["mcpServers"]["mine"] == {"command": "y"}
 
 

@@ -16,7 +16,7 @@ python scripts/forge_install.py doctor   # mostra o drift
 python scripts/forge_install.py repair   # reassegura regiões gerenciadas
 ```
 
-Repair restaura arquivos gerenciados removidos e cura blocos
-`forge-doctor-api:managed` dentro de arquivos seus — conteúdo fora do bloco nunca
-é tocado. Antes de sobrescrever, um snapshot vai para
-`<state_dir>/backups/`.
+Repair restaura arquivos gerenciados removidos e cura os blocos
+`forge:*` (`forge:forge-doctor-api`, `forge:ecosystem`) dentro de
+arquivos seus — conteúdo fora do bloco nunca é tocado. Antes de
+sobrescrever, um snapshot vai para `<state_dir>/backups/`.

@@ -41,10 +41,28 @@ mesmo engine vendored (`_installkit`, byte-parity garantida por
 `test_package_carries_install_surface`). Numa instalação via wheel, a
 delegação acima é o caminho suportado.
 
-O que acontece: assets gerenciados vão para `.agents/`, `.claude/`,
-`.devin/`, `.codex/` conforme os hosts detectados; `.mcp.json` ganha uma
-entrada gerenciada; `AGENTS.md` recebe um bloco delimitado
-`<!-- forge-doctor-api:managed -->` — conteúdo seu nunca é sobrescrito.
+O que acontece (observado na instalação real): `.mcp.json` ganha uma
+entrada gerenciada com argv **absoluto** (o shim registrado pelo
+bootstrap ou `python -m forge_doctor_api mcp` — nunca um PATH lookup,
+§9.3); `.forge/context/` recebe o registry de workspace
+(`registry.json`, `ROUTING.md`, `capabilities/forge-doctor-api.json`);
+`AGENTS.md` e `CLAUDE.md` recebem blocos delimitados
+`<!-- forge:ecosystem:* -->` / `<!-- forge:forge-doctor-api:* -->`
+(compactos — identidade, domínios e ponteiros, §8.1) e
+`AGENT_PROTOCOL.md` é gerado. Este forge hoje **não publica mirrors de
+skills/agents por host** (`.claude/`, `.devin/`, …) — `render_assets` é
+vazio de propósito. Conteúdo seu nunca é sobrescrito.
+
+Recibos `forge/InstallReceipt/v1` carregam `counts`
+(`created|updated|unchanged|adopted|skipped` + `written` +
+`written_bytes`) para assets renderizados pelo engine — não incluem
+MCP, documentos de contexto ou arquivos de estado. Como este forge não
+renderiza assets por host, esses contadores podem ser zero até na primeira
+instalação. A reinstalação preserva os bytes de MCP/documentos inalterados;
+o recibo e o ledger ainda podem ser atualizados.
+O vocabulário `status`/`checks`/`verification` permanece dentro de
+`forge/InstallLifecycle/v1` — o estado derivado (`planned` → `applied` →
+`verified` → `ready`) nunca cai no ramo "fora do vocabulário".
 
 Perfis: `minimal` (essencial) · `recommended` (workflow completo, padrão)
 · `full` (teto de disclosure — não é autorização extra).

@@ -22,6 +22,7 @@ from __future__ import annotations
 import importlib.util
 import subprocess  # install lifecycle only — never on the scan path
 import sys
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -62,6 +63,28 @@ def _spec() -> kit.ForgeSpec:
     )
 
 
+def _resolved_mcp_command(spec: kit.ForgeSpec) -> tuple[str, ...] | None:
+    """The PATH-independent argv for this forge's managed ``.mcp.json`` key.
+
+    §9.3 — a host must never launch the forge's MCP server through a PATH
+    lookup. Resolution order (same as the-forge's service wrapper):
+
+    1. the registered install manifest's ``cli.shim`` (absolute launcher
+       written by the bootstrap) → ``(shim, *mcp_command[1:])``;
+    2. ``(sys.executable, "-m", <package>, *mcp_command[1:])`` — the
+       current interpreter, absolute by construction, module-pinned.
+
+    ``None`` when the spec declares no MCP command at all.
+    """
+    if not spec.mcp_command:
+        return None
+    tail = spec.mcp_command[1:]
+    shim = (_installation_manifest().get("cli") or {}).get("shim")
+    if isinstance(shim, str) and shim and Path(shim).is_absolute():
+        return (shim, *tail)
+    return (sys.executable, "-m", spec.package, *tail)
+
+
 def _ctx(
     scope: str,
     root: Path | None,
@@ -84,6 +107,9 @@ def _ctx(
         hosts=hosts,
         dry_run=dry_run,
         options=options,
+        # Resolved once at ctx build: managed .mcp.json keys and MCP
+        # probes use the absolute argv, never a PATH guess (§9.3).
+        mcp_command_resolved=_resolved_mcp_command(spec),
     )
 
 
@@ -311,8 +337,13 @@ def update(
 
 
 def mcp_verify() -> dict[str, Any]:
-    """Health doc for the MCP handshake check — same shape the script emits."""
-    check = kit.mcp_verify(_spec())
+    """Health doc for the MCP handshake check — same shape the script emits.
+
+    The probe exercises the argv the managed key actually declares — the
+    resolved absolute path, never a PATH guess (§9.3)."""
+    spec = _spec()
+    resolved = _resolved_mcp_command(spec)
+    check = kit.mcp_verify(replace(spec, mcp_command=resolved) if resolved else spec)
     return {
         "schema": kit.SCHEMA_HEALTH,
         "forge_id": FORGE_ID,
@@ -372,6 +403,7 @@ def _register(ctx: kit.InstallContext) -> None:
             "package": "forge_doctor_api",
             "distribution": FORGE_ID,
             "cli": {
+                **(existing.get("cli") or {}),
                 "name": "forge-doctor-api",
                 "version_cmd": ["forge-doctor-api", "--version"],
             },
